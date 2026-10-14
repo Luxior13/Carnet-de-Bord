@@ -36,13 +36,13 @@
 .compactContent [data-radix-select-viewport] {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   height: auto;
   padding: 0;
 }
 
 .compactContent [data-slot='select-item'] {
-  min-height: 38px;
+  min-height: 34px;
   padding: 0 1.75rem 0 8px;
   color: var(--text-primary);
   font-size: 12px;

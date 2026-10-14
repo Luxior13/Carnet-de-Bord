@@ -94,7 +94,6 @@ async function main() {
     collection = "/api/systeme/parametres";
   const row = (page) =>
     page.locator('[data-setting-key="audit.retentionDays"]');
-  const edit = (page) => row(page).getByRole("button", { name: /^Modifier/ });
   const field = (page) => row(page).getByRole("spinbutton");
   const save = (page) =>
     row(page).getByRole("button", { name: /^Enregistrer/ });
@@ -277,7 +276,7 @@ async function main() {
     }
   }
   const open = async (page) => {
-    await edit(page).click();
+    await field(page).focus();
     await expect(field(page)).toBeFocused();
   };
   const write = async (page, value) => {
@@ -287,13 +286,20 @@ async function main() {
   const writes = (api) => api.requests.filter((r) => r.method === "PUT");
   for (const width of [320, 390, 768, 1024, 1440, 1920])
     await run("read-edit-keyboard-responsive", width, async ({ page, api }) => {
-      await expect(edit(page)).toBeVisible();
-      await expect(field(page)).toHaveCount(0);
+      await expect(field(page)).toBeVisible();
+      await expect(save(page)).toHaveCount(0);
+      await expect(
+        row(page).getByRole("button", { name: "Annuler", exact: true }),
+      ).toHaveCount(0);
+      await page.screenshot({
+        path: path.join(work, "repos-" + width + ".png"),
+        fullPage: true,
+      });
       const reading = await noOverflow(page);
-      await edit(page).focus();
-      await edit(page).press("Enter");
+      await field(page).focus();
       await expect(field(page)).toBeFocused();
-      await expect(save(page)).toBeDisabled();
+      await field(page).press("Enter");
+      assert.equal(writes(api).length, 0);
       await expect(field(page)).toHaveAttribute("autocomplete", "off");
       await expect(field(page)).toHaveAttribute("data-bwignore", "true");
       const less = row(page).getByRole("button", { name: /^Diminuer/ }),
@@ -330,7 +336,8 @@ async function main() {
       await row(page)
         .getByRole("button", { name: "Annuler", exact: true })
         .click();
-      await expect(edit(page)).toBeFocused();
+      await expect(field(page)).toBeFocused();
+      await expect(save(page)).toHaveCount(0);
       assert.equal(writes(api).length, 0);
       return { reading, editing };
     });
@@ -347,9 +354,54 @@ async function main() {
     });
     assert.equal(writes(api).length, 1);
     api.held.shift().resolve();
-    await expect(edit(page)).toBeFocused();
-    await expect(row(page).getByText(/^1\s200 jours$/)).toBeVisible();
+    await expect(field(page)).toBeFocused();
+    await expect(field(page)).toHaveValue("1200");
+    await expect(save(page)).toHaveCount(0);
   });
+  await run(
+    "save-preserves-deliberately-moved-focus",
+    390,
+    async ({ page, api }) => {
+      await write(page, 1200);
+      api.putMode = "hold";
+      await save(page).click();
+      await expect.poll(() => api.held.length).toBe(1);
+      const link = page.locator("#audit-leave");
+      await link.focus();
+      api.held.shift().resolve();
+      await expect(save(page)).toHaveCount(0);
+      await expect(link).toBeFocused();
+    },
+  );
+  await run(
+    "restore-default-from-saved-custom-value",
+    390,
+    async ({ page, api }) => {
+      await expect(field(page)).toHaveValue("1460");
+      await expect(save(page)).toHaveCount(0);
+      await row(page)
+        .getByRole("button", { name: /^Rétablir la valeur par défaut/ })
+        .click();
+      await expect(field(page)).toHaveValue("1095");
+      await expect(field(page)).toBeFocused();
+      await save(page).click();
+      await expect(page.getByRole("alertdialog")).toBeVisible();
+      assert.equal(writes(api).length, 0);
+      await page
+        .getByRole("button", {
+          name: "Conserver la durée actuelle",
+          exact: true,
+        })
+        .click();
+      await row(page)
+        .getByRole("button", { name: "Annuler", exact: true })
+        .click();
+      await expect(field(page)).toHaveValue("1460");
+      await expect(field(page)).toBeFocused();
+      await expect(save(page)).toHaveCount(0);
+    },
+    { item: { value: 1460, version: 1, updatedAt: "2026-10-14T12:00:00Z" } },
+  );
   await run("refresh-dirty-confirmation-focus", 390, async ({ page, api }) => {
     await write(page, 1200);
     await refresh(page).click();
@@ -369,7 +421,7 @@ async function main() {
     await refresh(page).press("Enter");
     await expect.poll(() => api.held.length).toBe(1);
     api.held.shift().resolve();
-    await expect(field(page)).toHaveCount(0);
+    await expect(field(page)).toHaveValue("1095");
     await expect(refresh(page)).toBeFocused();
   });
   await run("navigation-draft-cancel-and-leave", 390, async ({ page }) => {
@@ -398,17 +450,17 @@ async function main() {
     async ({ page, api }) => {
       await open(page);
       await field(page).fill("01095");
-      await expect(save(page)).toBeDisabled();
+      await expect(save(page)).toHaveCount(0);
       await refresh(page).click();
       await expect(page.getByRole("alertdialog")).toHaveCount(0);
-      await expect(field(page)).toHaveCount(0);
+      await expect(field(page)).toHaveValue("1095");
       await write(page, 1400);
       await row(page)
         .getByRole("button", { name: /^Rétablir la valeur par défaut/ })
         .click();
       await expect(field(page)).toHaveValue("1095");
       await expect(field(page)).toBeFocused();
-      await expect(save(page)).toBeDisabled();
+      await expect(save(page)).toHaveCount(0);
       await field(page).fill("900");
       await save(page).click();
       await page
@@ -434,7 +486,7 @@ async function main() {
       await page
         .getByRole("button", { name: "Réessayer", exact: true })
         .click();
-      await expect(edit(page)).toBeVisible();
+      await expect(field(page)).toBeVisible();
       const actual = await focus(page);
       assert.notEqual(actual.tag, "BODY", JSON.stringify(actual));
     },
@@ -475,7 +527,7 @@ async function main() {
         .getByRole("alertdialog")
         .getByRole("button", { name: "Abandonner et actualiser" })
         .click();
-      await expect(field(page)).toHaveCount(0);
+      await expect(field(page)).toHaveValue("1095");
       assert.notEqual((await focus(page)).tag, "BODY");
     },
   );
@@ -517,7 +569,8 @@ async function main() {
       await expect(field(page)).toHaveValue("1600");
       api.putMode = "success";
       await save(page).click();
-      await expect(edit(page)).toBeFocused();
+      await expect(field(page)).toBeFocused();
+      await expect(save(page)).toHaveCount(0);
       assert.equal(writes(api).at(-1).body.expectedVersion, 3);
     },
   );
@@ -531,12 +584,12 @@ async function main() {
       .click();
     await expect(field(page)).toHaveValue("1460");
     await expect(field(page)).toBeFocused();
-    await expect(save(page)).toBeDisabled();
+    await expect(save(page)).toHaveCount(0);
     assert.equal(writes(api).length, 1);
   });
   for (const mode of ["forbidden-json", "forbidden-html"])
     await run("refresh-denied-" + mode, 390, async ({ page, api }) => {
-      await edit(page).waitFor();
+      await field(page).waitFor();
       api.getMode = mode;
       await refresh(page).click();
       await expect(row(page)).toHaveCount(0);
@@ -555,6 +608,7 @@ async function main() {
         exact: true,
       });
       await expect(verify).toBeVisible();
+      await expect(field(page)).toBeFocused();
       assert.equal(writes(api).length, 1);
       api.putMode = "success";
       await verify.click();
@@ -575,14 +629,34 @@ async function main() {
         .click();
       await expect(field(page)).toBeFocused();
       if (mode === "commit-abort") {
-        await expect(save(page)).toBeDisabled();
+        await expect(save(page)).toHaveCount(0);
         assert.equal(writes(api).length, 1);
       } else {
         await save(page).click();
-        await expect(edit(page)).toBeFocused();
+        await expect(field(page)).toBeFocused();
+        await expect(save(page)).toHaveCount(0);
         assert.equal(writes(api).length, 2);
       }
     });
+  await run("uncertain-cancel-keeps-verification", 390, async ({ page, api }) => {
+    await write(page, 1600);
+    api.putMode = "commit-abort";
+    await save(page).click();
+    const verify = row(page).getByRole("button", { name: "Vérifier la valeur actuelle", exact: true });
+    await expect(verify).toBeVisible();
+    const cancel = row(page).getByRole("button", { name: "Annuler", exact: true });
+    await cancel.click();
+    await expect(field(page)).toHaveValue("1095");
+    await expect(field(page)).toBeFocused();
+    await expect(cancel).toBeDisabled();
+    await expect(save(page)).toBeDisabled();
+    await verify.click();
+    await row(page).getByRole("button", { name: "Utiliser la valeur actuelle", exact: true }).click();
+    await expect(field(page)).toHaveValue("1600");
+    await expect(field(page)).toBeFocused();
+    await expect(save(page)).toHaveCount(0);
+    assert.equal(writes(api).length, 1);
+  });
   await run(
     "reduction-stepup-invalid-then-valid",
     390,
@@ -607,7 +681,8 @@ async function main() {
       await password.fill("FICTIF-preuve!2026");
       await password.press("Enter");
       await expect(dialog).toHaveCount(0);
-      await expect(edit(page)).toBeFocused();
+      await expect(field(page)).toBeFocused();
+      await expect(save(page)).toHaveCount(0);
       assert.equal(writes(api).length, 2);
       assert.equal(
         api.requests.filter((r) => r.path === "/api/auth/step-up").length,
@@ -621,10 +696,10 @@ async function main() {
     await save(page).click();
     await expect.poll(() => api.held.length).toBe(1);
     await page.evaluate(() => window.__auditSetActor({ id: "audit-actor-b" }));
-    await expect(edit(page)).toBeVisible();
+    await expect(field(page)).toBeEnabled();
     api.held.shift().resolve();
-    await expect(field(page)).toHaveCount(0);
-    await expect(row(page).getByText(/^1\s095 jours$/)).toBeVisible();
+    await expect(field(page)).toHaveValue("1095");
+    await expect(save(page)).toHaveCount(0);
     await expect(page.getByText(/mis à jour avec succès/)).toHaveCount(0);
   });
   await run(
@@ -656,8 +731,8 @@ async function main() {
     320,
     async ({ page }) => {
       await expect(row(page)).toBeVisible();
-      await expect(edit(page)).toBeVisible();
-      await expect(field(page)).toHaveCount(0);
+      await expect(field(page)).toBeEnabled();
+      await expect(save(page)).toHaveCount(0);
       return noOverflow(page);
     },
     {
@@ -684,10 +759,12 @@ async function main() {
     1920,
     async ({ page }) => {
       await open(page);
+      await field(page).fill("1200");
       await row(page)
         .getByRole("button", { name: "Annuler", exact: true })
         .click();
-      await expect(edit(page)).toBeFocused();
+      await expect(field(page)).toBeFocused();
+      await expect(save(page)).toHaveCount(0);
       return noOverflow(page);
     },
     { strict: true },
@@ -733,11 +810,9 @@ async function main() {
     390,
     async ({ page, api }) => {
       await expect(
-        row(page).getByText("Valeur à réparer", { exact: true }),
+        row(page).getByText("Valeur à réparer.", { exact: true }),
       ).toBeVisible();
-      await expect(
-        row(page).getByText("Durée proposée", { exact: true }),
-      ).toBeVisible();
+      await expect(field(page)).toHaveAccessibleName(/Durée proposée/);
       await expect(
         row(page).getByText("Durée appliquée", { exact: true }),
       ).toHaveCount(0);
@@ -767,12 +842,11 @@ async function main() {
       await dialog.locator("input[type=password]").fill("FICTIF-preuve!2026");
       await dialog.locator("input[type=password]").press("Enter");
       await expect(dialog).toHaveCount(0);
-      await expect(edit(page)).toBeFocused();
+      await expect(field(page)).toBeFocused();
+      await expect(save(page)).toHaveCount(0);
+      await expect(field(page)).toHaveAccessibleName(/Durée de conservation/);
       await expect(
-        row(page).getByText("Durée appliquée", { exact: true }),
-      ).toBeVisible();
-      await expect(
-        row(page).getByText("Valeur à réparer", { exact: true }),
+        row(page).getByText("Valeur à réparer.", { exact: true }),
       ).toHaveCount(0);
       assert.equal(api.item.isStoredValueInvalid, false);
       assert.equal(api.item.value, 1095);

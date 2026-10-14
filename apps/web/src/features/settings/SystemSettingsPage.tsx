@@ -1,7 +1,7 @@
 'use client';
 
 import { RefreshCw, Settings } from 'lucide-react';
-import React, { type FC, useEffect, useMemo } from 'react';
+import React, { type FC, useEffect } from 'react';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
 import { ContentState } from '$components/layout/ContentState';
@@ -32,7 +32,6 @@ import { Skeleton } from '$ui/skeleton';
 
 import {
   formatSettingValue,
-  SECTION_DEFINITIONS,
   SYSTEM_SETTING_KEYS,
 } from './system-settings-page.helpers';
 import { SystemSettingRow } from './SystemSettingRow';
@@ -49,17 +48,13 @@ const SettingsSkeleton: FC = () => (
     className="space-y-5"
     role="status"
   >
-    {SECTION_DEFINITIONS.map((section) => (
+    {SYSTEM_SETTING_KEYS.map((key) => (
       <div
         className="border-border-content overflow-hidden rounded-[10px] border"
-        key={section.id}
+        key={key}
       >
         <Skeleton className="h-20 rounded-none" />
-        {SYSTEM_SETTING_KEYS.filter(
-          (key) => getSystemSettingDefinition(key).section === section.id,
-        ).map((key) => (
-          <Skeleton className="mt-px h-36 rounded-none" key={key} />
-        ))}
+        <Skeleton className="mt-px h-48 rounded-none" />
       </div>
     ))}
   </div>
@@ -79,7 +74,6 @@ const SystemSettingsContent: FC<{
     conflicts,
     contentRef,
     drafts,
-    editingKeys,
     handleSaveRequest,
     isLoading,
     loadError,
@@ -95,7 +89,6 @@ const SystemSettingsContent: FC<{
     saveErrors,
     savingKey,
     setDrafts,
-    setEditingKeys,
     setPendingPasswordAction,
     setPendingReduction,
     setSaveErrors,
@@ -120,7 +113,7 @@ const SystemSettingsContent: FC<{
       return;
     }
     const target = contentRef.current?.querySelector<HTMLElement>(
-      'input[type="number"]:not(:disabled), button[data-setting-edit]:not(:disabled)',
+      'input[type="number"]:not(:disabled)',
     );
     if (target) {
       event.preventDefault();
@@ -128,16 +121,6 @@ const SystemSettingsContent: FC<{
     }
   };
 
-  const renderedSections = useMemo(
-    () =>
-      SECTION_DEFINITIONS.map((section) => ({
-        ...section,
-        keys: SYSTEM_SETTING_KEYS.filter(
-          (key) => getSystemSettingDefinition(key).section === section.id,
-        ),
-      })),
-    [],
-  );
   const pendingReductionDefinition = pendingReduction
     ? getSystemSettingDefinition(pendingReduction.key)
     : null;
@@ -162,7 +145,7 @@ const SystemSettingsContent: FC<{
   return (
     <div ref={contentRef}>
       <PageShell className="py-0">
-        <PageCanvas contentClassName="space-y-5">
+        <PageCanvas contentClassName="space-y-4">
           <PageIdentityHero
             actions={
               <Button
@@ -186,6 +169,7 @@ const SystemSettingsContent: FC<{
                 Actualiser
               </Button>
             }
+            compact
             description="Réglages globaux de Noctambule."
             icon={<Settings aria-hidden="true" />}
             title={item.label}
@@ -229,97 +213,54 @@ const SystemSettingsContent: FC<{
                   title="Actualisation impossible"
                 />
               )}
-              {renderedSections.map((section) => (
-                <section
-                  aria-labelledby={`settings-${section.id}-title`}
-                  className="border-border-content bg-surface-panel overflow-hidden rounded-[10px] border"
-                  key={section.id}
-                >
-                  <div className="border-border-divider bg-surface-panel-header border-b px-4 py-4 @min-[40rem]/page:px-5">
-                    <h2
-                      className="text-foreground text-base font-semibold"
-                      id={`settings-${section.id}-title`}
-                    >
-                      {section.title}
-                    </h2>
-                    <p className="text-muted-foreground mt-1 text-sm leading-6">
-                      {section.description}
-                    </p>
-                  </div>
-                  <div className="divide-border-divider divide-y">
-                    {section.keys.map((key) => {
-                      const setting = settings.get(key);
-                      if (!setting) return null;
+              {SYSTEM_SETTING_KEYS.map((key) => {
+                const setting = settings.get(key);
+                if (!setting) return null;
 
-                      return (
-                        <SystemSettingRow
-                          canUpdate={canUpdate}
-                          conflict={conflicts.get(key)?.status ?? 'none'}
-                          conflictReason={conflicts.get(key)?.reason}
-                          disabled={
-                            isLoading ||
-                            savingKey !== null ||
-                            checkingKey !== null
-                          }
-                          draft={drafts.get(key) ?? String(setting.value)}
-                          error={saveErrors.get(key)}
-                          isEditing={editingKeys.has(key)}
-                          isSaving={savingKey === key && checkingKey !== key}
-                          isRefreshing={checkingKey === key}
-                          key={key}
-                          onCancel={() => {
-                            if (requestRef.current) return;
-                            setDrafts((current) =>
-                              new Map(current).set(key, String(setting.value)),
-                            );
-                            if (conflicts.get(key)?.status !== 'unavailable')
-                              clearSettingFeedback(key);
-                            setEditingKeys((current) => {
-                              const next = new Set(current);
-                              next.delete(key);
-
-                              return next;
-                            });
-                          }}
-                          onChange={(value) => {
-                            if (requestRef.current) return;
-                            setDrafts((current) =>
-                              new Map(current).set(key, value),
-                            );
-                            setSaveErrors((current) => {
-                              const next = new Map(current);
-                              next.delete(key);
-
-                              return next;
-                            });
-                          }}
-                          onEdit={() =>
-                            setEditingKeys((current) =>
-                              new Set(current).add(key),
-                            )
-                          }
-                          onKeepDraft={() => clearSettingFeedback(key)}
-                          onReloadConflict={() => void reloadConflict(key)}
-                          onReset={() => {
-                            setDrafts((current) =>
-                              new Map(current).set(key, String(setting.value)),
-                            );
-                            clearSettingFeedback(key);
-                          }}
-                          onSave={() => handleSaveRequest(key)}
-                          setting={setting}
-                        />
+                return (
+                  <SystemSettingRow
+                    canUpdate={canUpdate}
+                    conflict={conflicts.get(key)?.status ?? 'none'}
+                    conflictReason={conflicts.get(key)?.reason}
+                    disabled={
+                      isLoading || savingKey !== null || checkingKey !== null
+                    }
+                    draft={drafts.get(key) ?? String(setting.value)}
+                    error={saveErrors.get(key)}
+                    isSaving={savingKey === key && checkingKey !== key}
+                    isRefreshing={checkingKey === key}
+                    key={key}
+                    onCancel={() => {
+                      if (requestRef.current) return;
+                      setDrafts((current) =>
+                        new Map(current).set(key, String(setting.value)),
                       );
-                    })}
-                  </div>
-                  {section.id === 'retention' && (
-                    <p className="text-muted-foreground border-border-divider border-t px-4 py-3 text-xs leading-5 @min-[40rem]/page:px-5">
-                      Une augmentation de durée ne restaure pas les données déjà
-                      supprimées.
-                    </p>
-                  )}
-                </section>
-              ))}
+                      if (conflicts.get(key)?.status !== 'unavailable')
+                        clearSettingFeedback(key);
+                    }}
+                    onChange={(value) => {
+                      if (requestRef.current) return;
+                      setDrafts((current) => new Map(current).set(key, value));
+                      setSaveErrors((current) => {
+                        const next = new Map(current);
+                        next.delete(key);
+
+                        return next;
+                      });
+                    }}
+                    onKeepDraft={() => clearSettingFeedback(key)}
+                    onReloadConflict={() => void reloadConflict(key)}
+                    onReset={() => {
+                      setDrafts((current) =>
+                        new Map(current).set(key, String(setting.value)),
+                      );
+                      clearSettingFeedback(key);
+                    }}
+                    onSave={() => handleSaveRequest(key)}
+                    setting={setting}
+                  />
+                );
+              })}
             </>
           ) : null}
         </PageCanvas>

@@ -60,9 +60,6 @@ export const useSystemSettings = (canUpdate: boolean) => {
   const [drafts, setDrafts] = useState<Map<SystemSettingKey, string>>(
     () => new Map(),
   );
-  const [editingKeys, setEditingKeys] = useState<Set<SystemSettingKey>>(
-    () => new Set(),
-  );
   const [saveErrors, setSaveErrors] = useState<Map<SystemSettingKey, string>>(
     () => new Map(),
   );
@@ -94,10 +91,10 @@ export const useSystemSettings = (canUpdate: boolean) => {
 
         return setting
           ? isSettingDraftChanged(drafts.get(key) ?? '', setting.value) ||
-              (editingKeys.has(key) && setting.isStoredValueInvalid)
+              (canUpdate && setting.isStoredValueInvalid)
           : false;
       }),
-    [drafts, editingKeys, settings],
+    [canUpdate, drafts, settings],
   );
   const {
     cancelPendingNavigation,
@@ -115,7 +112,6 @@ export const useSystemSettings = (canUpdate: boolean) => {
     setAccessDenied(true);
     setSettings(null);
     setDrafts(new Map());
-    setEditingKeys(new Set());
     setConflicts(new Map());
     setSaveErrors(new Map());
     setPendingReduction(null);
@@ -162,7 +158,6 @@ export const useSystemSettings = (canUpdate: boolean) => {
       setSettings(normalizedSettings);
       setSaveErrors(new Map());
       setConflicts(new Map());
-      setEditingKeys(new Set());
       setDrafts(
         new Map(
           SYSTEM_SETTING_KEYS.map((key) => {
@@ -351,12 +346,6 @@ export const useSystemSettings = (canUpdate: boolean) => {
 
           return nextDrafts;
         });
-        setEditingKeys((current) => {
-          const next = new Set(current);
-          next.delete(key);
-
-          return next;
-        });
         toast.success(
           `Paramètre « ${getSystemSettingDefinition(key).label} » mis à jour avec succès`,
         );
@@ -417,7 +406,6 @@ export const useSystemSettings = (canUpdate: boolean) => {
   const handleSaveRequest = (key: SystemSettingKey): void => {
     if (
       !canUpdate ||
-      !editingKeys.has(key) ||
       !settings ||
       isLoading ||
       savingKey ||
@@ -457,7 +445,6 @@ export const useSystemSettings = (canUpdate: boolean) => {
     conflicts,
     contentRef,
     drafts,
-    editingKeys,
     handleSaveRequest,
     isLoading,
     loadError,
@@ -473,7 +460,6 @@ export const useSystemSettings = (canUpdate: boolean) => {
     saveErrors,
     savingKey,
     setDrafts,
-    setEditingKeys,
     setPendingPasswordAction,
     setPendingReduction,
     setSaveErrors,

@@ -8,8 +8,8 @@ export async function expectSystemSettingDurationControls(
   max: number,
 ): Promise<void> {
   const input = row.getByRole('spinbutton');
-  const decrease = row.getByRole('button', { name: /^Diminuer d’un jour/ });
-  const increase = row.getByRole('button', { name: /^Augmenter d’un jour/ });
+  const decrease = row.getByRole('button', { name: /^Diminuer d.un jour/ });
+  const increase = row.getByRole('button', { name: /^Augmenter d.un jour/ });
   const save = row.getByRole('button', { name: /^Enregistrer/ });
   await expect(input).toHaveValue(String(initial));
   await increase.click();
@@ -19,7 +19,7 @@ export async function expectSystemSettingDurationControls(
   await decrease.press('Enter');
   await expect(input).toHaveValue(String(initial));
   await expect(input).toBeFocused();
-  await expect(save).toBeDisabled();
+  await expect(save).toHaveCount(0);
   await input.press('ArrowUp');
   await expect(input).toHaveValue(String(initial + 1));
   await input.press('ArrowDown');
@@ -157,29 +157,27 @@ export async function expectSystemSettingsDraftSafety(
     await page.goto('/systeme/parametres');
     const auditRow = page.locator('[data-setting-key="audit.retentionDays"]');
     const input = auditRow.getByRole('spinbutton');
-    const edit = auditRow.getByRole('button', { name: /^Modifier/ });
     const save = auditRow.getByRole('button', { name: /^Enregistrer/ });
-    await expect(edit).toBeVisible();
-    await expect(page.getByRole('spinbutton')).toHaveCount(0);
+    await expect(input).toBeVisible();
     await expect(
       page.getByRole('button', { name: /^Enregistrer/ }),
     ).toHaveCount(0);
-    await expect(auditRow.getByText(/^1\s095 jours$/)).toBeVisible();
-    await edit.focus();
-    await edit.press('Enter');
+    await input.focus();
+    await input.press('Enter');
     await expect(input).toHaveValue('1095');
     await expect(input).toBeFocused();
-    await expect(save).toBeDisabled();
+    await expect(save).toHaveCount(0);
     await expectSystemSettingDurationControls(auditRow, 1_095, 365, 3_650);
     expect(writes).toHaveLength(0);
+    await input.fill('1200');
     await auditRow
       .getByRole('button', { exact: true, name: 'Annuler' })
       .click();
-    await expect(edit).toBeFocused();
-    await expect(input).toHaveCount(0);
+    await expect(input).toBeFocused();
+    await expect(input).toHaveValue('1095');
+    await expect(save).toHaveCount(0);
     expect(writes).toHaveLength(0);
 
-    await edit.click();
     await expect(
       page.getByText('Interface générale', { exact: true }),
     ).toHaveCount(0);
@@ -187,16 +185,17 @@ export async function expectSystemSettingsDraftSafety(
       page.getByText('Lignes par page', { exact: true }),
     ).toHaveCount(0);
 
-    // An unchanged leading-zero draft keeps the action disabled.
+    // Numeric equivalence keeps the action bar hidden.
     await input.fill('01095');
-    await expect(save).toBeDisabled();
+    await expect(save).toHaveCount(0);
     await page.getByRole('button', { exact: true, name: 'Actualiser' }).click();
-    await expect(input).toHaveCount(0);
-    await expect(page.getByRole('heading', { level: 2 }).first()).toBeFocused();
+    await expect(input).toHaveValue('1095');
+    await expect(
+      page.getByRole('button', { exact: true, name: 'Actualiser' }),
+    ).toBeFocused();
     await expect(page.getByRole('alertdialog')).toHaveCount(0);
 
     mode = 'error';
-    await edit.click();
     await input.fill('1200');
     await save.click();
     await expect(
@@ -232,15 +231,10 @@ export async function expectSystemSettingsDraftSafety(
       .click();
     await expect(input).toHaveValue('1460');
     await expect(input).toBeFocused();
-    await expect(save).toBeDisabled();
+    await expect(save).toHaveCount(0);
     expect(writes).toHaveLength(writeCount);
-    await auditRow
-      .getByRole('button', { exact: true, name: 'Annuler' })
-      .click();
-    await expect(edit).toBeFocused();
 
     // Reducing retention requires an explicit confirmation before any PUT.
-    await edit.click();
     await input.fill('730');
     await save.click();
     const confirmation = page.getByRole('alertdialog');
@@ -263,13 +257,12 @@ export async function expectSystemSettingsDraftSafety(
     await auditRow
       .getByRole('button', { exact: true, name: 'Annuler' })
       .click();
-    await expect(edit).toBeFocused();
-    // A confirmed reduction closes the editor only after server acknowledgement.
+    await expect(input).toBeFocused();
+    // A confirmed reduction hides the action bar after server acknowledgement.
     mode = 'success';
     writeGate = new Promise<void>((resolve) => {
       finishWrite = resolve;
     });
-    await edit.click();
     await input.fill('730');
     await save.click();
     await confirmation
@@ -278,20 +271,17 @@ export async function expectSystemSettingsDraftSafety(
     await expect(input).toBeDisabled();
     await expect(save).toBeDisabled();
     await expect(
-      auditRow.getByRole('button', { name: /^Diminuer d’un jour/ }),
+      auditRow.getByRole('button', { name: /^Diminuer d.un jour/ }),
     ).toBeDisabled();
     await expect(
-      auditRow.getByRole('button', { name: /^Augmenter d’un jour/ }),
+      auditRow.getByRole('button', { name: /^Augmenter d.un jour/ }),
     ).toBeDisabled();
-    await expect(edit).toHaveCount(0);
     await expect.poll(() => writes.length).toBe(writeCount + 1);
     finishWrite();
     writeGate = undefined;
-    await expect(edit).toBeFocused();
-    await expect(input).toHaveCount(0);
-    await expect(
-      auditRow.getByText('730 jours', { exact: true }),
-    ).toBeVisible();
+    await expect(input).toBeFocused();
+    await expect(input).toHaveValue('730');
+    await expect(save).toHaveCount(0);
 
     // Two submit events in the same task must start only one mutation, before
     // React has had time to render the disabled controls.
@@ -299,7 +289,6 @@ export async function expectSystemSettingsDraftSafety(
     writeGate = new Promise<void>((resolve) => {
       finishWrite = resolve;
     });
-    await edit.click();
     await input.fill('731');
     await auditRow.evaluate((form) => {
       for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -313,7 +302,8 @@ export async function expectSystemSettingsDraftSafety(
     await expect(auditRow).toHaveAttribute('aria-busy', 'true');
     finishWrite();
     writeGate = undefined;
-    await expect(edit).toBeVisible();
+    await expect(input).toBeFocused();
+    await expect(save).toHaveCount(0);
     expect(writes).toHaveLength(countBeforeDoubleSubmit + 1);
   } finally {
     finishWrite();

@@ -114,7 +114,7 @@ const SelectItem: FC<SelectItemProps> = ({ children, className, ...props }) => {
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "data-[state=checked]:bg-surface-navigation-active data-[state=checked]:text-foreground focus:bg-surface-tile-hover focus:text-accent-foreground data-[state=checked]:focus:bg-surface-navigation-active [&_svg:not([class*='text-'])]:text-muted-foreground relative flex min-h-10 w-full cursor-default items-center gap-2 rounded-[4px] py-2 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 lg:min-h-0 lg:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "data-[state=checked]:bg-surface-navigation-active data-[state=checked]:text-foreground focus:bg-surface-tile-hover focus:text-accent-foreground data-[state=checked]:focus:bg-surface-navigation-active [&_svg:not([class*='text-'])]:text-muted-foreground relative flex min-h-8 w-full cursor-default items-center gap-2 rounded-[4px] py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 lg:min-h-0 lg:py-1 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className,
       )}
       {...props}

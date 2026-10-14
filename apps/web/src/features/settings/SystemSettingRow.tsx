@@ -1,13 +1,15 @@
-'use client';
+﻿'use client';
 
-import { Minus, Plus } from 'lucide-react';
+import { History, Minus, Plus } from 'lucide-react';
 import React, { type FC, useEffect, useRef } from 'react';
 
 import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { getSystemSettingDefinition } from '$constants/system-setting-catalog.constants';
 import { Button } from '$ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
+import { ServiceIcon } from '$ui/service-icon';
 
 import {
   formatSettingValue,
@@ -26,12 +28,10 @@ type SystemSettingRowProps = {
   disabled: boolean;
   draft: string;
   error?: string;
-  isEditing: boolean;
   isRefreshing?: boolean;
   isSaving: boolean;
   onCancel: () => void;
   onChange: (value: string) => void;
-  onEdit: () => void;
   onKeepDraft: () => void;
   onReloadConflict: () => void;
   onReset: () => void;
@@ -50,12 +50,10 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   disabled,
   draft,
   error,
-  isEditing,
   isRefreshing = false,
   isSaving,
   onCancel,
   onChange,
-  onEdit,
   onKeepDraft,
   onReloadConflict,
   onReset,
@@ -64,20 +62,29 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
 }) => {
   const definition = getSystemSettingDefinition(setting.key);
   const inputRef = useRef<HTMLInputElement>(null);
-  const editButtonRef = useRef<HTMLButtonElement>(null);
-  const wasEditing = useRef(false);
-  const wasRefreshing = useRef(false);
-  const editing = canUpdate && isEditing;
+  const wasBusy = useRef(false);
+  const editing = canUpdate;
+  const busy = isSaving || isRefreshing;
   const unconfirmed =
     conflict === 'unavailable' && conflictReason === 'unknown';
+
   useEffect(() => {
-    if (editing) {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    } else if (wasEditing.current && document.activeElement === document.body) {
-      editButtonRef.current?.focus();
+    if (
+      wasBusy.current &&
+      !busy &&
+      !disabled &&
+      editing &&
+      document.activeElement === document.body &&
+      !document.querySelector(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+      )
+    ) {
+      inputRef.current?.focus({ preventScroll: true });
     }
-    wasEditing.current = editing;
+    wasBusy.current = busy;
+  }, [busy, disabled, editing]);
+
+  useEffect(() => {
     if (!editing) return;
 
     const input = inputRef.current;
@@ -95,25 +102,16 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
 
     return (): void => input?.removeEventListener('wheel', preventWheelStep);
   }, [editing]);
-  useEffect(() => {
-    if (
-      wasRefreshing.current &&
-      !isRefreshing &&
-      editing &&
-      document.activeElement === document.body
-    ) {
-      inputRef.current?.focus();
-    }
-    wasRefreshing.current = isRefreshing;
-  }, [editing, isRefreshing]);
+
   const resetDraft = (): void => {
     onReset();
     inputRef.current?.focus();
   };
   const presentation = getSettingPresentation(setting.key);
-  const dirty =
-    isSettingDraftChanged(draft, setting.value) ||
-    (editing && setting.isStoredValueInvalid);
+  const draftChanged = isSettingDraftChanged(draft, setting.value);
+  const dirty = draftChanged || (canUpdate && setting.isStoredValueInvalid);
+  const showActions =
+    editing && (dirty || conflict !== 'none' || busy || !!error);
   const validation = getValidationMessage(setting.key, draft);
   const parsed = getDraftNumber(draft);
   const canStep = !disabled && parsed !== null && !validation;
@@ -137,9 +135,9 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   return (
     <form
       autoComplete="off"
-      aria-busy={isSaving || isRefreshing || undefined}
+      aria-busy={busy || undefined}
       aria-labelledby={`${id}-title`}
-      className="p-4 @min-[40rem]/page:p-5"
+      className="space-y-4"
       data-setting-key={setting.key}
       noValidate
       onSubmit={(event) => {
@@ -148,119 +146,121 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
           onSave();
       }}
     >
-      <div className="grid min-w-0 gap-4 @min-[56rem]/page:grid-cols-[minmax(0,1fr)_16rem] @min-[56rem]/page:gap-8">
-        <div className="min-w-0 space-y-2">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <h3
-              className="text-foreground text-sm font-semibold"
-              id={`${id}-title`}
-            >
-              {definition.label}
-            </h3>
-            {setting.isStoredValueInvalid ? (
-              <span className="text-warning text-xs">Valeur à réparer</span>
-            ) : dirty ? (
-              <span className="text-warning border-warning/40 rounded-[4px] border px-1.5 text-xs leading-5">
-                Non enregistré
-              </span>
-            ) : (
-              <span className="text-muted-foreground text-xs">
-                {setting.value === definition.defaultValue
-                  ? 'Valeur par défaut'
-                  : 'Personnalisée'}
-              </span>
-            )}
+      <Card>
+        <CardHeader className="p-3.5 sm:p-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <ServiceIcon className="size-8">
+              <History aria-hidden="true" className="size-4" />
+            </ServiceIcon>
+            <div className="min-w-0">
+              <CardTitle id={`${id}-title`}>{presentation.title}</CardTitle>
+              <p className="text-muted-foreground mt-1 text-xs leading-5">
+                {presentation.description}
+              </p>
+            </div>
           </div>
-          <p
-            className="text-muted-foreground max-w-2xl text-sm leading-6"
-            id={`${id}-impact`}
-          >
-            {presentation.impact}
-          </p>
+        </CardHeader>
+        <CardContent className="space-y-4 p-4 sm:p-5">
           {setting.isStoredValueInvalid && (
             <p className="text-warning text-sm leading-6" role="alert">
-              La valeur enregistrée est invalide. Le nettoyage du journal est
-              bloqué tant que ce réglage n’est pas réparé. La durée affichée est
-              le défaut logiciel proposé, pas une durée appliquée.
+              <strong className="font-medium">Valeur à réparer.</strong> Le
+              nettoyage du journal est bloqué. La durée proposée ci-dessous est
+              le défaut logiciel, pas une durée appliquée.
             </p>
           )}
-          {!editing && unconfirmed && (
+          {unconfirmed && (
             <p className="text-warning text-sm leading-6" role="status">
-              Le dernier enregistrement reste à vérifier. Ouvrez le réglage pour
-              relire sa valeur avant une nouvelle modification.
+              Le dernier enregistrement reste à vérifier. Vérifiez la valeur
+              affichée avant une nouvelle modification.
             </p>
           )}
-          {!editing && (
-            <p className="text-muted-foreground text-xs leading-5">
-              Entre {formatSettingValue(definition.min, definition.unit)} et{' '}
-              {formatSettingValue(definition.max, definition.unit)}. Défaut :{' '}
-              {formatSettingValue(definition.defaultValue, definition.unit)}.
-            </p>
-          )}
-          {(dirty || setting.version > 0) && (
-            <p className="text-muted-foreground text-xs leading-5">
-              {dirty && !setting.isStoredValueInvalid
-                ? `Valeur appliquée : ${formatSettingValue(setting.value, definition.unit)}.`
-                : `Modifié le ${formatUpdatedAt(setting.updatedAt)}.`}
-            </p>
-          )}
-        </div>
-        {editing ? (
-          <div className="w-full max-w-64 min-w-0 space-y-2">
-            <Label
-              className="text-muted-foreground text-xs leading-5"
-              htmlFor={id}
-            >
-              Durée de conservation
-              <span className="sr-only"> — {definition.label}</span>
-            </Label>
-            <div className="flex items-center gap-2">
-              <div className="flex min-w-0 flex-1 items-center">
-                <Button
-                  aria-controls={id}
-                  aria-label={`Diminuer d’un jour — ${definition.label}`}
-                  className={`${stepButtonClass} rounded-l-[6px] rounded-r-none`}
-                  disabled={!canStep || parsed === definition.min}
-                  onClick={() => stepDuration(-1)}
-                  size="icon"
-                  type="button"
-                  variant="outline"
-                >
-                  <Minus aria-hidden="true" className="size-4" />
-                </Button>
-                <Input
-                  aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}${error ? ` ${id}-error` : ''}${conflict !== 'none' ? ` ${id}-conflict` : ''}`}
-                  aria-invalid={validation ? true : undefined}
-                  className="h-11 min-w-0 flex-1 [appearance:textfield] rounded-none border-x-0 px-2 text-center tabular-nums focus-visible:relative focus-visible:z-10 lg:h-10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  disabled={disabled}
-                  id={id}
-                  inputMode="numeric"
-                  max={definition.max}
-                  min={definition.min}
-                  onChange={(event) => onChange(event.target.value)}
-                  required
-                  ref={inputRef}
-                  step={1}
-                  type="number"
-                  value={draft}
-                />
-                <Button
-                  aria-controls={id}
-                  aria-label={`Augmenter d’un jour — ${definition.label}`}
-                  className={`${stepButtonClass} rounded-l-none rounded-r-[6px]`}
-                  disabled={!canStep || parsed === definition.max}
-                  onClick={() => stepDuration(1)}
-                  size="icon"
-                  type="button"
-                  variant="outline"
-                >
-                  <Plus aria-hidden="true" className="size-4" />
-                </Button>
+          <div className="space-y-2">
+            {editing ? (
+              <>
+                <Label className="text-sm" htmlFor={id}>
+                  {setting.isStoredValueInvalid
+                    ? 'Durée proposée'
+                    : 'Durée de conservation'}
+                  <span className="sr-only"> — {definition.label}</span>
+                </Label>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <div className="flex w-full max-w-80 items-center gap-2">
+                    <div className="flex min-w-0 flex-1 items-center">
+                      <Button
+                        aria-controls={id}
+                        aria-label={`Diminuer d'un jour — ${definition.label}`}
+                        className={`${stepButtonClass} rounded-l-[6px] rounded-r-none`}
+                        disabled={!canStep || parsed === definition.min}
+                        onClick={() => stepDuration(-1)}
+                        size="icon"
+                        type="button"
+                        variant="outline"
+                      >
+                        <Minus aria-hidden="true" className="size-4" />
+                      </Button>
+                      <Input
+                        aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}${error ? ` ${id}-error` : ''}${conflict !== 'none' ? ` ${id}-conflict` : ''}`}
+                        aria-invalid={validation ? true : undefined}
+                        className="h-11 min-w-0 flex-1 [appearance:textfield] rounded-none border-x-0 px-2 text-center tabular-nums focus-visible:relative focus-visible:z-10 lg:h-10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        disabled={disabled}
+                        id={id}
+                        inputMode="numeric"
+                        max={definition.max}
+                        min={definition.min}
+                        onChange={(event) => onChange(event.target.value)}
+                        required
+                        ref={inputRef}
+                        step={1}
+                        type="number"
+                        value={draft}
+                      />
+                      <Button
+                        aria-controls={id}
+                        aria-label={`Augmenter d'un jour — ${definition.label}`}
+                        className={`${stepButtonClass} rounded-l-none rounded-r-[6px]`}
+                        disabled={!canStep || parsed === definition.max}
+                        onClick={() => stepDuration(1)}
+                        size="icon"
+                        type="button"
+                        variant="outline"
+                      >
+                        <Plus aria-hidden="true" className="size-4" />
+                      </Button>
+                    </div>
+                    <span className="text-muted-foreground text-sm">
+                      {definition.unit === 'days' ? 'jours' : 'lignes'}
+                    </span>
+                  </div>
+                  {conflict === 'none' &&
+                    parsed !== definition.defaultValue && (
+                      <Button
+                        aria-label={`Rétablir la valeur par défaut — ${definition.label}`}
+                        className={actionClass}
+                        disabled={disabled}
+                        onClick={() => {
+                          onChange(String(definition.defaultValue));
+                          inputRef.current?.focus();
+                        }}
+                        type="button"
+                        variant="ghost"
+                      >
+                        Rétablir le défaut
+                      </Button>
+                    )}
+                </div>
+              </>
+            ) : (
+              <div>
+                <p className="text-muted-foreground text-xs">
+                  {setting.isStoredValueInvalid
+                    ? 'Durée proposée'
+                    : 'Durée appliquée'}
+                </p>
+                <p className="text-foreground text-xl font-semibold tabular-nums">
+                  {formatSettingValue(setting.value, definition.unit)}
+                </p>
               </div>
-              <span className="text-muted-foreground text-sm">
-                {definition.unit === 'days' ? 'jours' : 'lignes'}
-              </span>
-            </div>
+            )}
             <p
               className="text-muted-foreground text-xs leading-5"
               id={`${id}-help`}
@@ -272,7 +272,13 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 {formatSettingValue(definition.defaultValue, definition.unit)}.
               </span>
             </p>
-            {validation && (
+            {dirty && !setting.isStoredValueInvalid && (
+              <p className="text-muted-foreground text-xs leading-5">
+                {unconfirmed ? 'Dernière valeur connue' : 'Valeur appliquée'} :{' '}
+                {formatSettingValue(setting.value, definition.unit)}.
+              </p>
+            )}
+            {editing && validation && (
               <p
                 className="text-destructive text-xs leading-5"
                 id={`${id}-validation`}
@@ -281,148 +287,128 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 {validation}
               </p>
             )}
-            <SectionActionBar
-              cancelDisabled={false}
-              disabled={disabled}
-              hasChanges={dirty}
-              isSaving={isSaving}
-              isResolvingConflict={isRefreshing}
-              label={`Enregistrement — ${definition.label}`}
-              onCancel={onCancel}
-              placement="inline"
-              saveAriaLabel={`Enregistrer — ${definition.label}`}
-              saveDisabled={!!validation || conflict !== 'none'}
-              saveDisabledReason={
-                conflict !== 'none'
-                  ? 'Résolvez le conflit ci-dessous avant d’enregistrer.'
-                  : undefined
-              }
-              saveType="submit"
-              extraActions={
-                conflict === 'none' &&
-                parsed !== definition.defaultValue && (
+          </div>
+          {reducing && parsed !== null && conflict === 'none' && (
+            <p className="text-warning mt-3 text-sm leading-6" role="status">
+              {setting.isStoredValueInvalid ? 'Après réparation, les' : 'Les'}{' '}
+              données dépassant {formatSettingValue(parsed, definition.unit)}{' '}
+              pourront être supprimées à la prochaine maintenance. Une
+              confirmation sera demandée.
+            </p>
+          )}
+          {editing && conflict !== 'none' && (
+            <div
+              className="border-warning/40 mt-4 space-y-2 rounded-[8px] border p-3"
+              id={`${id}-conflict`}
+              role="alert"
+            >
+              <p className="text-warning text-sm font-medium">
+                {conflictReason === 'unknown'
+                  ? 'Le résultat de l’enregistrement doit être vérifié.'
+                  : 'Ce réglage a été modifié par un autre administrateur.'}
+              </p>
+              <p className="text-muted-foreground text-sm leading-6">
+                {isRefreshing
+                  ? 'Vérification de la valeur actuelle…'
+                  : conflict === 'ready'
+                    ? `Valeur actuelle : ${formatSettingValue(setting.value, definition.unit)}. Vérifiez votre saisie avant de l’enregistrer.`
+                    : 'Impossible de récupérer la valeur actuelle. Réessayez pour résoudre le conflit.'}{' '}
+                Vos saisies ont été conservées.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {conflict === 'ready' ? (
+                  <>
+                    <Button
+                      className={`${actionClass} h-auto min-h-11 whitespace-normal lg:h-auto lg:min-h-10`}
+                      disabled={disabled}
+                      onClick={resetDraft}
+                      type="button"
+                      variant="outline"
+                    >
+                      Utiliser la valeur actuelle
+                    </Button>
+                    <Button
+                      className={`${actionClass} h-auto min-h-11 whitespace-normal lg:h-auto lg:min-h-10`}
+                      disabled={disabled}
+                      onClick={() => {
+                        onKeepDraft();
+                        inputRef.current?.focus();
+                      }}
+                      type="button"
+                      variant="outline"
+                    >
+                      Conserver ma saisie
+                    </Button>
+                  </>
+                ) : (
                   <Button
-                    aria-label={`Rétablir la valeur par défaut — ${definition.label}`}
-                    className={actionClass}
+                    className={`${actionClass} h-auto min-h-11 whitespace-normal lg:h-auto lg:min-h-10`}
                     disabled={disabled}
-                    onClick={() => {
-                      onChange(String(definition.defaultValue));
-                      inputRef.current?.focus();
-                    }}
+                    onClick={onReloadConflict}
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                   >
-                    Rétablir le défaut
+                    {isRefreshing
+                      ? 'Vérification…'
+                      : 'Vérifier la valeur actuelle'}
                   </Button>
-                )
-              }
-            />
-          </div>
-        ) : (
-          <div className="flex w-full max-w-64 min-w-0 flex-wrap items-center justify-between gap-3 self-start">
-            <div>
-              <p className="text-muted-foreground text-xs leading-5">
-                {unconfirmed
-                  ? 'Dernière valeur connue'
-                  : setting.isStoredValueInvalid
-                    ? 'Durée proposée'
-                    : 'Durée appliquée'}
-              </p>
-              <p className="text-foreground text-xl font-semibold tabular-nums">
-                {formatSettingValue(setting.value, definition.unit)}
-              </p>
+                )}
+              </div>
             </div>
-            {canUpdate && (
-              <Button
-                aria-label={`Modifier — ${definition.label}`}
-                className={actionClass}
-                data-setting-edit
-                disabled={disabled}
-                onClick={onEdit}
-                ref={editButtonRef}
-                type="button"
-                variant="outline"
-              >
-                Modifier
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-      {reducing && parsed !== null && conflict === 'none' && (
-        <p className="text-warning mt-3 text-sm leading-6" role="status">
-          {setting.isStoredValueInvalid ? 'Après réparation, les' : 'Les'}{' '}
-          données dépassant {formatSettingValue(parsed, definition.unit)}{' '}
-          pourront être supprimées à la prochaine maintenance. Une confirmation
-          sera demandée.
-        </p>
-      )}
-      {editing && conflict !== 'none' && (
-        <div
-          className="border-warning/40 mt-4 space-y-2 rounded-[8px] border p-3"
-          id={`${id}-conflict`}
-          role="alert"
-        >
-          <p className="text-warning text-sm font-medium">
-            {conflictReason === 'unknown'
-              ? 'Le résultat de l’enregistrement doit être vérifié.'
-              : 'Ce réglage a été modifié par un autre administrateur.'}
+          )}
+          {editing && error && (
+            <p
+              className="text-destructive mt-3 text-sm leading-6"
+              id={`${id}-error`}
+              role="alert"
+            >
+              {error}
+            </p>
+          )}
+        </CardContent>
+        <CardFooter className="flex-col items-start gap-2 px-4 py-3 sm:px-5 sm:py-3">
+          <p
+            className="text-muted-foreground text-xs leading-5"
+            id={`${id}-impact`}
+          >
+            {presentation.impact}
           </p>
-          <p className="text-muted-foreground text-sm leading-6">
-            {isRefreshing
-              ? 'Vérification de la valeur actuelle…'
-              : conflict === 'ready'
-                ? `Valeur actuelle : ${formatSettingValue(setting.value, definition.unit)}. Vérifiez votre saisie avant de l’enregistrer.`
-                : 'Impossible de récupérer la valeur actuelle. Réessayez pour résoudre le conflit.'}{' '}
-            Vos saisies ont été conservées.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {conflict === 'ready' ? (
-              <>
-                <Button
-                  className={`${actionClass} h-auto min-h-11 whitespace-normal lg:h-auto lg:min-h-10`}
-                  disabled={disabled}
-                  onClick={resetDraft}
-                  type="button"
-                  variant="outline"
-                >
-                  Utiliser la valeur actuelle
-                </Button>
-                <Button
-                  className={`${actionClass} h-auto min-h-11 whitespace-normal lg:h-auto lg:min-h-10`}
-                  disabled={disabled}
-                  onClick={() => {
-                    onKeepDraft();
-                    inputRef.current?.focus();
-                  }}
-                  type="button"
-                  variant="outline"
-                >
-                  Conserver ma saisie
-                </Button>
-              </>
-            ) : (
-              <Button
-                className={`${actionClass} h-auto min-h-11 whitespace-normal lg:h-auto lg:min-h-10`}
-                disabled={disabled}
-                onClick={onReloadConflict}
-                type="button"
-                variant="outline"
-              >
-                {isRefreshing ? 'Vérification…' : 'Vérifier la valeur actuelle'}
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
-      {editing && error && (
-        <p
-          className="text-destructive mt-3 text-sm leading-6"
-          id={`${id}-error`}
-          role="alert"
-        >
-          {error}
-        </p>
+          {setting.version > 0 && (
+            <p className="text-muted-foreground text-xs leading-5">
+              Dernière modification le {formatUpdatedAt(setting.updatedAt)}.
+            </p>
+          )}
+        </CardFooter>
+      </Card>
+      {showActions && (
+        <SectionActionBar
+          cancelDisabled={!draftChanged && conflict !== 'ready'}
+          disabled={disabled}
+          hasChanges={dirty}
+          isSaving={isSaving}
+          isResolvingConflict={isRefreshing}
+          label={`Enregistrement — ${definition.label}`}
+          onCancel={() => {
+            onCancel();
+            inputRef.current?.focus();
+          }}
+          placement="inline"
+          saveAriaLabel={`Enregistrer — ${definition.label}`}
+          saveDisabled={!!validation || conflict !== 'none'}
+          saveDisabledReason={
+            conflict !== 'none'
+              ? 'Vérifiez la valeur actuelle avant d’enregistrer.'
+              : undefined
+          }
+          saveType="submit"
+          status={
+            conflict !== 'none'
+              ? 'Enregistrement suspendu'
+              : setting.isStoredValueInvalid
+                ? 'Réparation à enregistrer'
+                : undefined
+          }
+        />
       )}
     </form>
   );

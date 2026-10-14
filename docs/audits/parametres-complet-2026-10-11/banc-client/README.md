@@ -1,5 +1,23 @@
 # Banc client — Paramètres système
 
+## Évolution du banc — 14 octobre 2026
+
+Le script suit désormais la saisie directe et la barre conditionnelle de la
+[refonte des paramètres](../../../qualite/pages/systeme-parametres.md).
+Il contient 33 scénarios : les 30 parcours adaptés, conservation d'un focus
+déplacé pendant l'attente, rétablissement du défaut depuis une valeur
+personnalisée et annulation d'un brouillon après résultat d'écriture incertain.
+Les attentes de bouton Modifier et de fermeture de l'éditeur sont retirées.
+
+[Résultats du 14 octobre](preuves/interface-2026-10-14.json) : 30 scénarios
+exécutés ensemble, trois compléments et deux reprises ciblées, tous réussis.
+La synthèse conserve la dernière observation de chaque scénario ; elle ne
+prétend pas être une exécution unique. Les preuves de 2026-10-12 ci-dessous
+restent historiques, sans écrasement. Les nouvelles captures sont liées depuis
+le suivi de page. API, acteur, shell et navigation restent simulés.
+
+## Exécution historique du 12 octobre 2026
+
 Revue commencée le 11 octobre 2026 au commit `c67e055`. Passe finale exécutée
 le **12 octobre 2026 à 00 h 03, Europe/Paris**, avec les corrections locales de
 la revue. Le dossier conserve la date de début.
@@ -19,7 +37,7 @@ node docs/audits/parametres-complet-2026-10-11/banc-client/run.cjs
 
 Le script affiche son dossier temporaire, ferme le serveur et Chromium en fin
 d'exécution et fournit observations JSON/captures. `AUDIT_ONLY` filtre les noms
-des scénarios ; retirer cette variable pour exécuter les 30 parcours. Les champs
+des scénarios ; retirer cette variable pour exécuter les 33 parcours actuels. Les champs
 de preuve sont exclus des charges utiles consignées. Les erreurs de navigateur
 peuvent citer une valeur fictive de test, jamais une preuve réelle.
 

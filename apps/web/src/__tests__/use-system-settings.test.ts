@@ -85,7 +85,6 @@ const mount = async (initial = setting()): Promise<Controller> => {
 };
 const draft = (value: string): Controller => {
   const current = runtime().render();
-  current.setEditingKeys(new Set([key]));
   current.setDrafts(new Map([[key, value]]));
 
   return runtime().render();
@@ -132,7 +131,6 @@ describe('system settings request lifecycle', () => {
     await first;
     const done = runtime().render();
     expect(done.settings?.get(key)?.value).toBe(1200);
-    expect(done.editingKeys.has(key)).toBe(false);
     expect(done.savingKey).toBeNull();
     expect(mocks.success).toHaveBeenCalledTimes(1);
   });
@@ -148,7 +146,6 @@ describe('system settings request lifecycle', () => {
       expect(denied.accessDenied).toBe(true);
       expect(denied.settings).toBeNull();
       expect(denied.drafts.size).toBe(0);
-      expect(denied.editingKeys.size).toBe(0);
       expect(denied.isLoading).toBe(false);
     },
   );
@@ -216,7 +213,6 @@ describe('system settings request lifecycle', () => {
     expect(runtime().render().settings?.get(key)?.isStoredValueInvalid).toBe(
       false,
     );
-    expect(runtime().render().editingKeys.has(key)).toBe(false);
   });
 
   it('releases loading after a 15-second read timeout and retains verification after a 30-second write timeout', async () => {

@@ -1,5 +1,122 @@
 # Suivi de page — Paramètres système
 
+## Refonte de l'interface — 14 octobre 2026
+
+L'utilisateur a autorisé la proposition issue de l'analyse ci-dessous (« go »).
+Le bandeau est compact ; une carte « Conservation du journal » regroupe portée,
+champ et aide unique. La saisie directe reste disponible. La barre partagée,
+hors de la carte et sur toute la largeur, apparaît pour un brouillon, une
+réparation, une attente, une erreur ou un conflit. Rétablir le défaut reste
+accessible depuis une valeur personnalisée, même sans brouillon.
+
+Le focus revient au champ après annulation et après enregistrement ou
+vérification lorsque l'attente l'a laissé sur BODY. Un focus déplacé volontairement
+et une modale ouverte sont respectés. Les réglages serveur, bornes, confirmation
+de réduction, preuve de mot de passe et gestion de concurrence sont inchangés.
+
+PAR-UI-01 à PAR-UI-05 sont **clos après vérification dans le périmètre client** :
+composition revue, répétitions retirées, actions contextuelles, perte de focus
+corrigée, suivi et scénarios réconciliés avec la saisie directe. Aucune correction
+des composants partagés ni modification des changements locaux du sélecteur.
+
+Preuves du 14 octobre, séparées des anciennes exécutions :
+
+- [33 scénarios Chromium](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-2026-10-14.json)
+  réussis : passe de 30, trois compléments et deux reprises ciblées. Rendu et
+  clavier de 320 à 1 920 px, sauvegarde lente/double soumission, annulation,
+  défaut depuis une valeur personnalisée, conflit, réponse perdue, réduction,
+  preuve, réparation et changement d'acteur. Annuler sans nouveau brouillon
+  reste désactivé si une écriture incertaine exige encore une vérification.
+- Captures inspectées : [repos bureau](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-repos-1440-2026-10-14.png),
+  [repos mobile](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-repos-390-2026-10-14.png),
+  [modification bureau](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-edition-1440-2026-10-14.png)
+  et [modification à 320 px](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-edition-320-2026-10-14.png).
+- 14 tests de contrôleur/contrats réussis ; TypeScript, lint ciblé et budget
+  d'architecture réussis. Le contrôle documentaire est exécuté après mise à jour.
+- Documentation React officielle consultée via Context7 : manipulation des refs
+  après commit dans un effet, compatible avec React 19.1.8 installé. Aucun
+  nouvel API ou changement de dépendance.
+
+Limites : le banc utilise les composants/styles réels avec API, session,
+navigation et shell simulés, et Arial en remplacement de Geist. Le helper E2E
+est mis à jour mais le parcours Next authentifié n'est pas rejoué ; pas de
+nouveau contrôle serveur/base, Safari/iOS, lecteur d'écran ou charge. Les
+preuves antérieures conservent leur date. La sélection Q01–Q30 de l'analyse
+reste applicable ; la refonte est fonctionnelle côté interface, sans migration.
+
+## Analyse ciblée de l'interface — 14 octobre 2026
+
+Demande utilisateur : expliquer les problèmes de `/systeme/parametres`, dont
+l'interface ne convient pas, avec `/membres/repertoire/[id]` comme exemple.
+Cette passe analyse et propose ; elle ne réalise pas de refonte.
+
+État examiné : branche `main`, commit `09f256c`, avec les six modifications
+locales préexistantes dans les paramètres, leur test de contrôleur et le
+sélecteur partagé. Aucun de ces fichiers n'est modifié par cette analyse.
+Le code actuel affiche directement le champ aux administrateurs
+(`editing = canUpdate`). Les descriptions d'un bouton Modifier et d'une édition
+qui se referme, conservées plus bas, ne décrivent donc plus ce rendu local.
+L'origine de cette évolution n'est pas déduite du seul diff.
+
+Périmètre : Q01–Q04, Q06–Q07 et Q27, pour composition, textes, saisie, actions,
+retours et clavier ; Q30 pour la cohérence documentaire. Q05, Q08, Q20–Q21,
+Q24 et Q26 non applicables à cette revue d'un réglage numérique isolé.
+Q09–Q19, Q22–Q23, Q25 et Q28–Q29 hors périmètre de validation : droits,
+persistance, maintenance, historique des personnes et exploitation conservent
+leurs preuves datées ; les clics simulés ne les requalifient pas.
+
+### Constats initiaux — clos par la refonte ci-dessus
+
+Les observations ci-dessous décrivent l'état avant correction. Tous les points
+étaient P2 ; les choix esthétiques proposés restent distincts des défauts
+reproduits. Les preuves de clôture et leurs limites sont indiquées plus haut.
+
+| ID | Nature et observation | Preuve / attendu | Suite proposée |
+| --- | --- | --- | --- |
+| PAR-UI-01 | Composition à améliorer : une large explication et un bloc de saisie/actions limité à 256 px ; la barre d'actions reste visible au repos et grandit lorsque Rétablir le défaut apparaît | Chromium 1 440/1 920 px et `SystemSettingRow` ; la fiche membre affiche ses actions seulement après modification ou conflit, en dehors de la carte | Reprendre la hiérarchie de formulaire de la fiche et rendre les actions contextuelles ; ne pas ajouter de navigation pour un seul groupe |
+| PAR-UI-02 | Redondance confirmée : bornes et défaut affichés à gauche puis sous le champ ; état non enregistré répété dans le titre et la barre | Deux paragraphes distincts dans `SystemSettingRow`, visibles à 390 et 1 440 px ; le champ arrive après l'ensemble de l'explication en mobile | Regrouper aide et bornes auprès du champ, raccourcir l'explication tout en conservant portée et prise d'effet |
+| PAR-UI-03 | Action sans effet au repos : Annuler est actif alors qu'aucun brouillon n'est modifié ; il ne ferme plus d'éditeur | `cancelDisabled={false}` et annulation simulée : retour à 1 095 sans PUT, bouton toujours actif ; la saisie directe est aussi utilisée par la fiche membre et n'est pas en soi un défaut | Afficher les actions quand il existe un changement ou une reprise nécessaire ; conserver l'accès à la réparation/conflit |
+| PAR-UI-04 | Défaut clavier : le focus est perdu après un enregistrement réussi par Entrée | Saisir 1 200 depuis 1 095, Entrée, attendre la réponse et deux trames de rendu : champ réactivé mais `document.activeElement` reste BODY ; reproduction distincte confirmée | Restaurer le focus sur une cible utile après réactivation ; contrôler aussi erreurs et réponses lentes lors de la correction |
+| PAR-UI-05 | Dette documentaire et de banc : le suivi et les scénarios historiques attendent encore Modifier et la fermeture de l'édition | Lecture du suivi et du banc client du 11 octobre face au code local courant ; les anciens 30/30 ne sont pas rejoués ni présentés comme résultat courant | Après choix de composition, réconcilier décisions, tests de parcours et rendu ; ne pas rétablir l'ancien modèle uniquement pour satisfaire un test |
+
+Sources examinées :
+[page](../../../apps/web/src/features/settings/SystemSettingsPage.tsx),
+[réglage](../../../apps/web/src/features/settings/SystemSettingRow.tsx),
+[contrôleur](../../../apps/web/src/features/settings/useSystemSettings.ts),
+[textes](../../../apps/web/src/features/settings/system-settings-page.helpers.ts),
+[barre partagée](../../../apps/web/src/components/layout/SectionActionBar.tsx),
+[fiche membre](../../../apps/web/src/features/persons/components/PersonIdentitySection.tsx)
+et [cadre de fiche](../../../apps/web/src/components/layout/EntityDetailLayout.tsx).
+
+### Vérifications et limites de cette passe
+
+Montages temporaires dérivés des bancs existants, sans modifier leurs preuves :
+composants et styles courants, Chromium, API/session/navigation et shell
+simulés, police de repli Arial, aucune base ni authentification réelle.
+
+- Sept scénarios ciblés exécutés : rendu à 390, 1 024, 1 440 et 1 920 px,
+  annulation puis enregistrement, valeur hors borne et annulation d'une
+  réduction. Aucun débordement horizontal dans ces quatre montages ; un seul
+  PUT simulé après Entrée, aucun après annulation, valeur 364 refusée,
+  confirmation de réduction conservée. La réussite de ces assertions ne
+  signifie pas que l'ensemble de la page est validé : le focus perdu est
+  relevé séparément dans PAR-UI-04.
+- Reproduction supplémentaire de PAR-UI-04 après deux trames de rendu :
+  retour au BODY confirmé, défaut ouvert.
+- Deux comparaisons de la fiche membre à 390 et 1 440 px : champs directement
+  disponibles, barre absente au repos puis visible après modification.
+  Captures bureau des deux pages et capture mobile des paramètres inspectées.
+- Pas de nouveau contrôle serveur, de concurrence, de lecteur d'écran, de
+  zoom natif, de Safari/iOS ni de performance. Les anciennes preuves SQL/HTTP
+  gardent leur date et leur portée.
+
+Direction proposée lors de l'analyse, autorisée ensuite : bandeau compact comme
+la fiche, carte centrée sur la conservation du journal, champ accompagné d'une
+seule aide et actions visibles au moment utile. Les boutons −/+ par jour peuvent
+être réexaminés pour une durée de plusieurs années, sans supprimer la saisie
+exacte ni changer l'unité stockée. Préserver les confirmations, les bornes,
+la distinction entre valeur appliquée et brouillon et les reprises existantes.
+
 ## État courant — clôture du socle du 13 octobre 2026
 
 La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
@@ -51,7 +168,7 @@ les résultats finaux d'intégration et les limites. La revue a commencé le
 11 octobre ; ces exécutions ont lieu le 12 octobre, heure de Paris. Les anciennes
 preuves datées restent inchangées.
 
-## Actions du réglage — 11 octobre 2026
+## Actions du réglage — historique du 11 octobre 2026
 
 L'édition locale utilise `SectionActionBar` en placement inline. Annuler reste
 disponible même avant toute modification pour fermer l'éditeur. L'action de
@@ -111,36 +228,38 @@ SQL n'est nécessaire. Une ancienne page de paramètres ouverte doit être recha
 après déploiement. Le cache local dédié à cette clé est supprimé ; les durées
 restent relues en base avant utilisation.
 
-### Composition retenue
+### Composition retenue — actualisée le 14 octobre 2026
 
-- Bandeau partagé `PageIdentityHero`, description courte « Réglages globaux de
+- Bandeau partagé `PageIdentityHero` compact, description courte « Réglages globaux de
   Noctambule. » et Actualiser secondaire, suivant le Répertoire.
-- Un panneau compact : Conservation des données, avec le réglage du journal.
+- Une carte « Conservation du journal » avec les primitives Card de la fiche
+  membre ; portée courte dans l'en-tête, conséquences et date réelle en pied.
 - Corps `surface-panel`, en-tête `surface-panel-header`, bordures communes,
   panneau et confirmations à 10 px. Boutons partagés à 8 px ; extrémités du
   contrôle numérique à 6 px, centre jointif à 0 px avec le focus commun de l'Input.
   Pas d'ombre sur les panneaux ni de nouvelle palette locale.
-- Explication à gauche, champ/unité/action à droite quand la largeur le permet ;
-  empilement sur petit écran. Sidebar et géométrie globale inchangées.
-- Au repos : durée appliquée lisible et bouton Modifier par réglage pour les
-  administrateurs autorisés. Aucun champ ou bouton Enregistrer permanent.
+- Champ directement modifiable sous l'en-tête, contrôle limité à 20 rem et à
+  la largeur disponible, actions d'enregistrement hors de la carte. Sidebar
+  et géométrie globale inchangées.
+- Au repos : champ de durée disponible aux administrateurs autorisés ; aucune
+  barre d'enregistrement sans modification, réparation ou reprise nécessaire.
   En cas de valeur stockée invalide, « Durée proposée » remplace « Durée
-  appliquée » et un avertissement explique le blocage du nettoyage. Un résultat
+  de conservation » et un avertissement explique le blocage du nettoyage. Un résultat
   d'écriture encore incertain est présenté comme « Dernière valeur connue ».
 - Bornes et défaut sont aussi visibles au repos. Le texte précise que la durée
   concerne l'historique des personnes et les détails associés ; l'enregistrement
   ne déclenche pas de suppression immédiate.
-- Modifier ouvre la saisie et place le focus dans le champ. Annuler reste disponible
-  même sans changement ; il abandonne ce seul brouillon et referme son édition.
-  Un succès confirmé referme le réglage ; erreur, conflit et confirmation annulée
-  le gardent ouvert. Les autres brouillons restent indépendants.
+- Annuler abandonne le brouillon et rend le focus au champ ; la barre disparaît
+  lorsqu'aucune reprise n'est nécessaire. Sans brouillon ni conflit relu à
+  abandonner, Annuler est désactivé. Un succès confirmé masque la barre ;
+  erreur, conflit ou réparation la conservent. Les brouillons restent indépendants.
 - Hauteur des actions de réglage : 40 px sur grand écran, 44 px en mobile.
-- En édition, Annuler précède immédiatement Enregistrer dans un même groupe
-  aligné à droite, sous le champ et son aide. Le groupe reste sur une seule ligne
-  en mobile ; Rétablir le défaut peut passer sur une ligne séparée.
-- Bloc de valeur limité à 16 rem, empilé sous l'explication sur petit écran.
-  En édition, le libellé visible « Durée de conservation » précède le champ ;
-  son nom accessible précise le réglage. Bornes et défaut indiquent les jours.
+- Annuler précède immédiatement Enregistrer dans une barre de pleine largeur,
+  alignée à droite sur bureau et empilée sur mobile. Rétablir le défaut reste
+  près du contrôle, y compris pour une valeur personnalisée sans brouillon.
+- Le libellé visible « Durée de conservation » précède le champ ; son nom
+  accessible précise le réglage. Bornes et défaut, en jours, ne sont affichés
+  qu'une fois sous le contrôle, en lecture comme en saisie.
 - Champ de durée composé « − valeur + », avec unité à droite et flèches natives
   masquées localement. Pas d'un jour ; saisie directe conservée pour les écarts
   importants. Boutons de 40 px sur grand écran et 44 px sur petit écran,
@@ -154,8 +273,8 @@ restent relues en base avant utilisation.
   une durée par accident, sans retirer le focus. Le défilement doit alors se faire
   hors de cette cible ; le geste de zoom avec Ctrl/Cmd n'est pas intercepté.
   Le comportement reste local au réglage de durée, sans modifier la primitive Input.
-- État « Non enregistré » discret, sans fond coloré ; valeur appliquée affichée
-  lorsqu'elle diffère. « Valeur par défaut » remplace « Recommandé ».
+- État « Modifications non enregistrées » dans la barre uniquement ; valeur
+  appliquée affichée lorsqu'elle diffère. Le défaut logiciel est nommé « Défaut ».
   Aucun « Jamais modifié » au repos : seule une modification réelle affiche sa date.
 - Avertissement contextualisé pour une diminution ; rappel d'irréversibilité
   commun. Pas de rail statistique, de recherche ou d'onglets injustifiés.
@@ -183,21 +302,22 @@ restent relues en base avant utilisation.
 - Les lectures du client sont limitées à 15 secondes et le PUT à 30 secondes.
   Une expiration libère l'interface ; pour une écriture, elle conserve l'état
   incertain et l'exigence de vérification. Ces délais n'annulent pas le serveur.
-- Annuler referme aussi une édition en conflit. Une vérification encore
-  indisponible reste exigée à sa prochaine ouverture ; fermer l'éditeur ne
-  transforme pas une ancienne valeur en résultat confirmé.
+- Annuler réinitialise le brouillon. Une vérification encore indisponible reste
+  visible et exigée ; cette annulation ne transforme pas une ancienne valeur
+  en résultat confirmé.
 - Les erreurs de sauvegarde restent dans le réglage et les saisies sont conservées.
   Les succès gardent leur toast ; aucun nouvel événement de notification.
 - Erreur et conflit sont reliés au champ par `aria-describedby`. Le formulaire
   annonce l'attente ; Enregistrement et Vérification/Actualisation sont distincts.
 - Une même comparaison numérique pilote le garde de navigation et la sauvegarde :
   `025` et `25` ne créent plus un faux changement ; une saisie invalide reste protégée.
-- Entrée soumet le réglage. Le focus revient à Modifier après annulation ou succès,
-  et au champ après restauration du défaut ou résolution du conflit. Une
-  actualisation réussie referme les éditions ; le bouton Actualiser garde le focus
+- Entrée soumet le réglage modifié. Le focus revient au champ après annulation,
+  succès, restauration du défaut ou résolution du conflit, sans voler un focus
+  déplacé volontairement. Une actualisation réussie réinitialise les brouillons ;
+  le bouton Actualiser garde le focus
   pendant la lecture, reste annoncé occupé et ignore les activations répétées.
 - Après fermeture d'une confirmation de réduction ou de mot de passe, le focus
-  revient au champ disponible, ou à Modifier après sauvegarde. La confirmation
+  revient au champ disponible. La confirmation
   d'actualisation revient à Actualiser ; Rester rend le focus au lien de départ.
   Le passage vers une nouvelle confirmation conserve son focus, sans le rendre
   au champ derrière la modale. Une preuve refusée est refocalisée après
@@ -220,7 +340,7 @@ valeur invalide, le GET conserve sa version mais renvoie le défaut logiciel
 comme **proposition** ; la purge SQL reste bloquée. Le contenu JSON invalide
 brut n'est ni exposé au navigateur ni recopié dans l'audit.
 
-Modifier ouvre alors une réparation enregistrable même si la saisie reste
+La page propose alors une réparation enregistrable même si la saisie reste
 `1095`. Elle exige une confirmation explicite et une preuve récente de mot de
 passe, quelle que soit la comparaison avec ce nombre proposé. La réparation
 réussie écrit une valeur valide, augmente la version et produit l'audit dans la

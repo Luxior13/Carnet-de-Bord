@@ -2,13 +2,14 @@ import {
   getSystemSettingDefinition,
   isSystemSettingKey,
   type SystemSettingKey,
-  type SystemSettingSection,
   type SystemSettingUnit,
 } from '$constants/system-setting-catalog.constants';
 import type { SystemSettingItem } from '$types/platform.types';
 
 type SettingPresentation = {
+  description: string;
   impact: string;
+  title: string;
 };
 
 export type NormalizedSystemSettingItem = Omit<SystemSettingItem, 'value'> & {
@@ -19,23 +20,13 @@ export type NormalizedSystemSettingItem = Omit<SystemSettingItem, 'value'> & {
 
 const SETTING_PRESENTATION = {
   'audit.retentionDays': {
+    description:
+      'Connexions, sécurité, administration et historique des personnes.',
     impact:
-      'Cette durée couvre les connexions, la sécurité, l’administration et l’historique des personnes. Supprimer un événement supprime aussi les détails des changements associés.',
+      'La durée s’applique au prochain nettoyage, sans suppression immédiate. Les événements et leurs détails sont supprimés ensemble. Une durée plus longue ne restaure pas les données déjà supprimées.',
+    title: 'Conservation du journal',
   },
 } as const satisfies Record<SystemSettingKey, SettingPresentation>;
-
-export const SECTION_DEFINITIONS: ReadonlyArray<{
-  description: string;
-  id: SystemSettingSection;
-  title: string;
-}> = [
-  {
-    description:
-      'La durée enregistrée s’applique au prochain nettoyage de maintenance. Enregistrer ne déclenche aucune suppression immédiate.',
-    id: 'retention',
-    title: 'Conservation des données',
-  },
-];
 
 export const SYSTEM_SETTING_KEYS = [
   'audit.retentionDays',
