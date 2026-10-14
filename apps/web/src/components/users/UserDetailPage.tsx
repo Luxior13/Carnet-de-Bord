@@ -1,7 +1,7 @@
-'use client';
+﻿'use client';
 
 import { UserRole } from '@repo/shared';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import React, {
@@ -22,6 +22,14 @@ import { PageSectionNavigation } from '$components/layout/PageSectionNavigation'
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
+import { useUserDetailAudit } from '$components/users/user-detail/useUserDetailAudit';
+import { useUserDetailSessions } from '$components/users/user-detail/useUserDetailSessions';
+import {
+  UserDeleteDialog,
+  UserLoginChangeDialog,
+  UserPasswordResetDialog,
+  UserRevokeSessionsDialog,
+} from '$components/users/user-detail/UserDetailDialogs';
 import {
   analyzeUserAccessMutationBatch,
 } from '$components/users/user-detail/user-access-editor-policy';
@@ -33,10 +41,8 @@ import {
 import {
   ACCESS_PERMISSION_KEYS,
   ACCOUNT_PERMISSION_KEYS,
-  appendUserAuditFilters,
   buildUserDetailSectionHref,
   getUserAuditFiltersFromParams,
-  getUserAuditFiltersKey,
   havePermissionOverridesChangedForKeys,
   normalizePermissionPageKey,
   resetPermissionOverridesForKeys,
@@ -59,10 +65,6 @@ import {
   type UserDetailSectionId,
 } from '$components/users/user-detail/UserDetailNavigation';
 import {
-  type UserHistoryFacets,
-  type UserHistoryFilters,
-} from '$components/users/user-detail/UserHistoryTab';
-import {
   UserMutationFeedback,
   useUserMutationFeedback,
 } from '$components/users/user-detail/UserMutationFeedback';
@@ -81,25 +83,9 @@ import { useUser } from '$context/UserContext';
 import { UserAccessBadge } from '$features/users/user-badges';
 import { getUserDetailScope } from '$features/users/user-detail-scope';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
-import type {
-  AuditLogEntry,
-  UserSessionInfo,
-  UserType,
-} from '$types/auth.types';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '$ui/alert-dialog';
+import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
-import { Input } from '$ui/input';
-import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { ApiClientError } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
@@ -189,11 +175,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
   const permissionPageKey = normalizePermissionPageKey(
     searchParams.get('permissionPage'),
   );
-  const requestedAuditFilters = useMemo(
-    () =>
-      getUserAuditFiltersFromParams(new URLSearchParams(currentQueryString)),
-    [currentQueryString],
-  );
   const {
     applyUserUpdate,
     isLoading: isCurrentUserLoading,
@@ -217,9 +198,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     useState<UserDetailSectionId>(requestedSection);
   const [showLoginChangeConfirm, setShowLoginChangeConfirm] = useState(false);
   const userAbortControllerRef = useRef<AbortController | null>(null);
-  const auditAbortControllerRef = useRef<AbortController | null>(null);
-  const sessionsAbortControllerRef = useRef<AbortController | null>(null);
-  const hasLoadedAuditLogsRef = useRef(false);
   const mountedRef = useRef(true);
   const mutationAbortControllerRef = useRef(new AbortController());
 
@@ -235,32 +213,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [auditNextCursor, setAuditNextCursor] = useState<string | null>(null);
-  const [auditHasMore, setAuditHasMore] = useState(false);
-  const [isExportingAudit, setIsExportingAudit] = useState(false);
-  const [auditFacets, setAuditFacets] = useState<UserHistoryFacets | null>(
-    null,
-  );
-  const [auditFilters, setAuditFilters] = useState<UserHistoryFilters>(() =>
-    getUserAuditFiltersFromParams(searchParams),
-  );
-  const [isLoadingAudit, setIsLoadingAudit] = useState(false);
-  const [isLoadingMoreAudit, setIsLoadingMoreAudit] = useState(false);
-  const [auditError, setAuditError] = useState<string | null>(null);
-  const [securitySessions, setSecuritySessions] = useState<UserSessionInfo[]>(
-    [],
-  );
-  const [isLoadingSecuritySessions, setIsLoadingSecuritySessions] =
-    useState(false);
-  const [hasLoadedSecuritySessions, setHasLoadedSecuritySessions] =
-    useState(false);
-  const [securitySessionsError, setSecuritySessionsError] = useState<
-    string | null
-  >(null);
-  const [securitySessionsNotice, setSecuritySessionsNotice] = useState<
-    string | null
-  >(null);
   const sessionsMutationFocusRef = useRef(false);
   const sessionsStepUpFocusRef = useRef(false);
   const [isRevokingSecuritySessions, setIsRevokingSecuritySessions] =
@@ -308,6 +260,43 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     loginReadOnlyHint,
     visibleUserDetailSections,
   } = useUserDetailCapabilities(currentUser, user, userId);
+  const {
+    auditError,
+    auditFacets,
+    auditFilters,
+    auditLogs,
+    handleAuditExport,
+    handleAuditFiltersChange,
+    hasMoreAuditLogs,
+    isExportingAudit,
+    isLoadingMoreAudit,
+    onLoadMoreAudit,
+    onRetryAudit,
+    refreshAuditAfterMutation,
+    shouldShowAuditLoading,
+  } = useUserDetailAudit({
+    activeSection,
+    canFetchUserAudit,
+    currentQueryString,
+    initialFilters: getUserAuditFiltersFromParams(searchParams),
+    pathname,
+    requestStepUpForResponse,
+    userId,
+  });
+  const {
+    fetchSecuritySessions,
+    hasLoadedSecuritySessions,
+    isLoadingSecuritySessions,
+    securitySessions,
+    securitySessionsError,
+    securitySessionsNotice,
+    setSecuritySessions,
+    setSecuritySessionsError,
+    setSecuritySessionsNotice,
+  } = useUserDetailSessions({
+    canViewTargetSessions,
+    userId,
+  });
   const passwordReset = useUserPasswordReset({
     beginMutation: mutation.start,
     canReset: canResetTargetPassword,
@@ -472,17 +461,12 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
 
   const discardUserSnapshot = useCallback((): void => {
     mutationAbortControllerRef.current.abort();
-    sessionsAbortControllerRef.current?.abort();
-    auditAbortControllerRef.current?.abort();
     clearUserState();
     clearPassword();
     clearMutationFeedback();
     cancelPendingStepUpAction();
     setSecuritySessions([]);
     setSecuritySessionsNotice(null);
-    setHasLoadedSecuritySessions(false);
-    setAuditLogs([]);
-    setAuditFacets(null);
     setShowResetConfirm(false);
     setShowResetMfa(false);
     setShowRevokeSessionsConfirm(false);
@@ -500,6 +484,8 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     clearPassword,
     clearUserState,
     mutationInFlight,
+    setSecuritySessions,
+    setSecuritySessionsNotice,
   ]);
 
   const fetchUser = useCallback(
@@ -595,212 +581,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     [canViewUsers, discardUserSnapshot, syncUserState, userId],
   );
 
-  const fetchAuditData = useCallback(async (): Promise<void> => {
-    auditAbortControllerRef.current?.abort();
-    auditAbortControllerRef.current = null;
-
-    if (!canFetchUserAudit) {
-      setAuditLogs([]);
-      setAuditNextCursor(null);
-      setAuditHasMore(false);
-      setAuditFacets(null);
-      setAuditError(null);
-      setIsLoadingAudit(false);
-      setIsLoadingMoreAudit(false);
-      hasLoadedAuditLogsRef.current = false;
-
-      return;
-    }
-
-    const controller = new AbortController();
-    auditAbortControllerRef.current = controller;
-
-    try {
-      setIsLoadingAudit(true);
-      setIsLoadingMoreAudit(false);
-      setAuditError(null);
-      const auditParams = new URLSearchParams({
-        includeFacets: 'true',
-        includeStats: 'false',
-      });
-      appendUserAuditFilters(auditParams, auditFilters);
-
-      const response = await fetch(
-        `/api/users/${userId}/audit?${auditParams.toString()}`,
-        {
-          signal: controller.signal,
-        },
-      );
-      const data = await response.json();
-
-      if (controller.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        const loadedLogs = data.data.logs as AuditLogEntry[];
-
-        setAuditLogs(loadedLogs);
-        setAuditNextCursor(data.data.nextCursor ?? null);
-        setAuditHasMore(data.data.hasMore === true);
-        setAuditFacets(data.data.facets ?? null);
-        hasLoadedAuditLogsRef.current = true;
-      } else {
-        setAuditError(
-          data.error?.message || "Impossible de charger l'historique",
-        );
-      }
-    } catch {
-      if (controller.signal.aborted) return;
-
-      setAuditError("Impossible de charger l'historique");
-    } finally {
-      if (auditAbortControllerRef.current !== controller) return;
-
-      auditAbortControllerRef.current = null;
-      setIsLoadingAudit(false);
-    }
-  }, [auditFilters, canFetchUserAudit, userId]);
-
-  const fetchMoreAuditData = useCallback(async (): Promise<void> => {
-    if (!canFetchUserAudit || isLoadingMoreAudit) return;
-    if (!auditHasMore || !auditNextCursor) return;
-
-    auditAbortControllerRef.current?.abort();
-
-    const controller = new AbortController();
-    const auditParams = new URLSearchParams({
-      cursor: auditNextCursor,
-      includeFacets: 'false',
-      includeStats: 'false',
-    });
-    appendUserAuditFilters(auditParams, auditFilters);
-    auditAbortControllerRef.current = controller;
-
-    try {
-      setIsLoadingMoreAudit(true);
-      setAuditError(null);
-
-      const response = await fetch(
-        `/api/users/${userId}/audit?${auditParams.toString()}`,
-        { signal: controller.signal },
-      );
-      const data = await response.json();
-
-      if (controller.signal.aborted) return;
-      if (!response.ok || !data.success) {
-        setAuditError(
-          data.error?.message || "Impossible de charger plus d'historique",
-        );
-
-        return;
-      }
-
-      const nextLogs = data.data.logs as AuditLogEntry[];
-
-      setAuditLogs((currentLogs) => {
-        const knownIds = new Set(currentLogs.map((entry) => entry.id));
-
-        return [
-          ...currentLogs,
-          ...nextLogs.filter((entry) => !knownIds.has(entry.id)),
-        ];
-      });
-      setAuditNextCursor(data.data.nextCursor ?? null);
-      setAuditHasMore(data.data.hasMore === true);
-    } catch {
-      if (controller.signal.aborted) return;
-
-      setAuditError("Impossible de charger plus d'historique");
-    } finally {
-      if (auditAbortControllerRef.current !== controller) return;
-
-      auditAbortControllerRef.current = null;
-      setIsLoadingMoreAudit(false);
-    }
-  }, [
-    auditFilters,
-    auditHasMore,
-    auditNextCursor,
-    canFetchUserAudit,
-    isLoadingMoreAudit,
-    userId,
-  ]);
-
-  const handleAuditFiltersChange = useCallback(
-    (nextFilters: UserHistoryFilters): void => {
-      auditAbortControllerRef.current?.abort();
-      auditAbortControllerRef.current = null;
-      hasLoadedAuditLogsRef.current = false;
-      setAuditFilters(nextFilters);
-      setAuditLogs([]);
-      setAuditNextCursor(null);
-      setAuditHasMore(false);
-      setAuditFacets(null);
-      setAuditError(null);
-      setIsLoadingAudit(false);
-      setIsLoadingMoreAudit(false);
-
-      const nextParams = new URLSearchParams(currentQueryString);
-      nextParams.delete('scope');
-      nextParams.delete('period');
-      nextParams.delete('poleKey');
-      nextParams.delete('pageKey');
-      appendUserAuditFilters(nextParams, nextFilters);
-      window.history.replaceState(
-        null,
-        '',
-        `${pathname}?${nextParams.toString()}`,
-      );
-    },
-    [currentQueryString, pathname],
-  );
-
-  const fetchSecuritySessions = useCallback(async (): Promise<void> => {
-    sessionsAbortControllerRef.current?.abort();
-    sessionsAbortControllerRef.current = null;
-
-    if (!canViewTargetSessions) {
-      setSecuritySessions([]);
-      setSecuritySessionsError(null);
-      setIsLoadingSecuritySessions(false);
-      setHasLoadedSecuritySessions(true);
-
-      return;
-    }
-
-    const controller = new AbortController();
-    sessionsAbortControllerRef.current = controller;
-
-    try {
-      setIsLoadingSecuritySessions(true);
-      setSecuritySessionsError(null);
-      const data = await securityRequest<{ sessions: UserSessionInfo[] }>(
-        `/api/users/${userId}/sessions`,
-        controller.signal,
-        { cache: 'no-store' },
-      );
-      if (controller.signal.aborted) return;
-      setSecuritySessions(data.sessions);
-    } catch (failure) {
-      if (controller.signal.aborted) return;
-      if (
-        failure instanceof ApiClientError &&
-        [401, 403, 404].includes(failure.status)
-      )
-        setSecuritySessions([]);
-      setSecuritySessionsError('Impossible de charger les sessions');
-    } finally {
-      if (sessionsAbortControllerRef.current !== controller) return;
-
-      sessionsAbortControllerRef.current = null;
-      setHasLoadedSecuritySessions(true);
-      setIsLoadingSecuritySessions(false);
-    }
-  }, [canViewTargetSessions, userId]);
-
-  const refreshAuditAfterMutation = useCallback((): void => {
-    hasLoadedAuditLogsRef.current = false;
-    if (activeSection === 'history') void fetchAuditData();
-  }, [activeSection, fetchAuditData]);
 
   useEffect((): (() => void) => {
     mountedRef.current = true;
@@ -811,11 +591,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       mountedRef.current = false;
       mutationAbortControllerRef.current.abort();
       userAbortControllerRef.current?.abort();
-      auditAbortControllerRef.current?.abort();
-      sessionsAbortControllerRef.current?.abort();
       userAbortControllerRef.current = null;
-      auditAbortControllerRef.current = null;
-      sessionsAbortControllerRef.current = null;
     };
   }, []);
 
@@ -823,48 +599,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     if (initialUser?.id === userId) return;
     void fetchUser();
   }, [fetchUser, initialUser?.id, userId]);
-
-  useEffect(() => {
-    hasLoadedAuditLogsRef.current = false;
-    setAuditLogs([]);
-    setAuditNextCursor(null);
-    setAuditHasMore(false);
-    setAuditFacets(null);
-    setAuditError(null);
-    setIsLoadingAudit(false);
-    setIsLoadingMoreAudit(false);
-    setSecuritySessions([]);
-    setSecuritySessionsError(null);
-    setSecuritySessionsNotice(null);
-    setHasLoadedSecuritySessions(false);
-    setRevokingSecuritySessionId(null);
-  }, [userId]);
-
-  useEffect(() => {
-    if (
-      getUserAuditFiltersKey(requestedAuditFilters) ===
-      getUserAuditFiltersKey(auditFilters)
-    ) {
-      return;
-    }
-
-    auditAbortControllerRef.current?.abort();
-    auditAbortControllerRef.current = null;
-    hasLoadedAuditLogsRef.current = false;
-    setAuditFilters(requestedAuditFilters);
-    setAuditLogs([]);
-    setAuditNextCursor(null);
-    setAuditHasMore(false);
-    setAuditFacets(null);
-    setAuditError(null);
-    setIsLoadingAudit(false);
-    setIsLoadingMoreAudit(false);
-  }, [auditFilters, requestedAuditFilters]);
-
-  useEffect(() => {
-    if (activeSection !== 'history' || hasLoadedAuditLogsRef.current) return;
-    void fetchAuditData();
-  }, [activeSection, fetchAuditData]);
 
   useEffect(() => {
     if (user && activeSection === 'security' && !hasLoadedSecuritySessions) {
@@ -1661,79 +1395,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     );
   };
 
-  const auditExportParams = new URLSearchParams({ format: 'csv' });
-  appendUserAuditFilters(auditExportParams, auditFilters);
-  const auditExportHref = `/api/users/${userId}/audit?${auditExportParams.toString()}`;
-
-  async function handleAuditExport(): Promise<void> {
-    if (isExportingAudit) return;
-
-    try {
-      setIsExportingAudit(true);
-      const response = await fetch(auditExportHref, { cache: 'no-store' });
-
-      if (!response.ok) {
-        let errorBody: unknown = null;
-        try {
-          errorBody = await response.clone().json();
-        } catch {
-          // Infrastructure errors are not guaranteed to be JSON.
-        }
-
-        if (
-          requestStepUpForResponse(errorBody, {
-            description:
-              'L’export contient l’historique de sécurité de ce compte.',
-            execute: handleAuditExport,
-            title: 'Confirmer l’export du journal',
-          })
-        ) {
-          return;
-        }
-
-        const errorMessage = (
-          errorBody as { error?: { message?: unknown } } | null
-        )?.error?.message;
-        throw new Error(
-          typeof errorMessage === 'string'
-            ? errorMessage
-            : 'Impossible d’exporter l’activité de cet utilisateur',
-        );
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = `activite-utilisateur_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(objectUrl);
-
-      if (response.headers.get('X-Export-Truncated') === 'true') {
-        toast.warning('Export limité aux 50 000 événements les plus récents');
-      } else {
-        toast.success('Export complet prêt');
-      }
-    } catch (exportError) {
-      toast.error(
-        exportError instanceof Error
-          ? exportError.message
-          : 'Impossible d’exporter l’activité de cet utilisateur',
-      );
-    } finally {
-      setIsExportingAudit(false);
-    }
-  }
-
-  const hasMoreAuditLogs = auditHasMore;
-  const shouldShowAuditLoading =
-    isLoadingAudit ||
-    (!hasLoadedAuditLogsRef.current &&
-      auditError === null &&
-      auditLogs.length === 0);
-
   const renderContent = (): React.ReactNode => {
     if (!user) return null;
 
@@ -1854,8 +1515,8 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
                   }
                 : undefined
             }
-            onLoadMore={() => void fetchMoreAuditData()}
-            onRetry={() => void fetchAuditData()}
+            onLoadMore={onLoadMoreAudit}
+            onRetry={onRetryAudit}
             perspective={isSelf ? 'personal' : 'managed'}
             totalAuditLogs={auditLogs.length}
             userId={userId}
@@ -2074,43 +1735,14 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
               : 'Les modifications non enregistrées seront perdues. Vous pouvez rester pour les enregistrer ou les annuler.'
         }
       />
-      <AlertDialog
+      <UserLoginChangeDialog
         open={showLoginChangeConfirm}
         onOpenChange={setShowLoginChangeConfirm}
-      >
-        <AlertDialogContent className="overflow-y-auto p-0">
-          <div className="p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <AlertTriangle size={16} className="text-warning" />
-                </div>
-                Modifier l&apos;identifiant de connexion ?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                Toutes les sessions de cet utilisateur seront fermées. Il devra
-                ensuite utiliser le nouvel identifiant{' '}
-                <strong>{editForm.loginName.trim().toLowerCase()}</strong> pour
-                se reconnecter.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel className="border-border">
-                Annuler
-              </AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-warning text-warning-foreground hover:bg-warning/90"
-                onClick={() => {
-                  setShowLoginChangeConfirm(false);
-                  void handleSaveProfile(true);
-                }}
-              >
-                Modifier et déconnecter
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+        loginName={editForm.loginName.trim().toLowerCase()}
+        onConfirm={() => {
+          void handleSaveProfile(true);
+        }}
+      />
       <AdminMfaResetDialog
         actorLoginName={currentUser?.loginName ?? ''}
         onCheck={() => fetchUser({ background: true })}
@@ -2140,162 +1772,47 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
         proofKind={pendingStepUpAction?.proofKind ?? 'full'}
         title={pendingStepUpAction?.title ?? 'Confirmer votre identité'}
       />
-      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-        <AlertDialogContent className="overflow-y-auto p-0">
-          <div className="p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <AlertTriangle size={16} className="text-warning" />
-                </div>
-                Réinitialiser le mot de passe ?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                Un nouveau mot de passe temporaire sera généré.
-                L&apos;utilisateur devra le changer à sa prochaine connexion.
-                Toutes ses sessions actives seront invalidées.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel className="border-border">
-                Annuler
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleResetPassword}
-                disabled={isResetting}
-                className="bg-warning text-warning-foreground hover:bg-warning/90"
-              >
-                {isResetting && (
-                  <Loader2 size={16} className="mr-2 animate-spin" />
-                )}
-                Réinitialiser
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog
+      <UserPasswordResetDialog
+        open={showResetConfirm}
+        onOpenChange={setShowResetConfirm}
+        isResetting={isResetting}
+        onConfirm={handleResetPassword}
+      />
+      <UserRevokeSessionsDialog
         open={showRevokeSessionsConfirm}
         onOpenChange={(open) => {
           if (!isRevokingSecuritySessions) setShowRevokeSessionsConfirm(open);
         }}
-      >
-        <AlertDialogContent
-          className="overflow-y-auto p-0"
-          onCloseAutoFocus={(event) => {
-            if (!sessionsMutationFocusRef.current) return;
-            sessionsMutationFocusRef.current = false;
-            event.preventDefault();
-            if (document.querySelector('[role="dialog"][data-state="open"]'))
-              return;
-            focusSecuritySessionsHeading();
-          }}
-        >
-          <div className="p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="bg-warning/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <AlertTriangle size={16} className="text-warning" />
-                </div>
-                Révoquer les sessions ?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                Toutes les sessions actives de cet utilisateur seront
-                déconnectées. Il devra se reconnecter.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel
-                className="border-border"
-                disabled={isRevokingSecuritySessions}
-              >
-                Annuler
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(event) => {
-                  event.preventDefault();
-                  void handleRevokeSecuritySession();
-                }}
-                disabled={isRevokingSecuritySessions}
-                className="bg-warning text-warning-foreground hover:bg-warning/90"
-              >
-                {isRevokingSecuritySessions && (
-                  <Loader2 size={16} className="mr-2 animate-spin" />
-                )}
-                Révoquer
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog
+        isRevoking={isRevokingSecuritySessions}
+        onConfirm={() => {
+          void handleRevokeSecuritySession();
+        }}
+        onCloseAutoFocus={(event) => {
+          if (!sessionsMutationFocusRef.current) return;
+          sessionsMutationFocusRef.current = false;
+          event.preventDefault();
+          if (document.querySelector('[role="dialog"][data-state="open"]'))
+            return;
+          focusSecuritySessionsHeading();
+        }}
+      />
+      <UserDeleteDialog
         open={showDeleteConfirm}
         onOpenChange={(open) => {
           if (isDeleting && !open) return;
           setShowDeleteConfirm(open);
           if (!open) setDeleteConfirmation('');
         }}
-      >
-        <AlertDialogContent className="overflow-y-auto p-0">
-          <div className="p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <AlertTriangle size={16} className="text-destructive" />
-                </div>
-                Supprimer définitivement cet utilisateur ?
-              </AlertDialogTitle>
-              <AlertDialogDescription className="text-muted-foreground">
-                Le compte de{' '}
-                <strong>
-                  {user.firstName} {user.lastName}
-                </strong>{' '}
-                sera supprimé de manière irréversible et ne pourra pas être
-                restauré. Son profil sera anonymisé et ses secrets
-                d’authentification supprimés. Les traces indispensables au
-                journal d’audit et la réservation de son identifiant seront
-                conservées.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <div className="mt-4 space-y-2">
-              <Label htmlFor="delete-user-confirmation">
-                Pour confirmer, saisissez <strong>{user.loginName}</strong>
-              </Label>
-              <Input
-                autoComplete="off"
-                id="delete-user-confirmation"
-                disabled={isDeleting}
-                onChange={(event) => setDeleteConfirmation(event.target.value)}
-                placeholder={user.loginName}
-                value={deleteConfirmation}
-              />
-            </div>
-            <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel
-                className="border-border"
-                disabled={isDeleting}
-              >
-                Annuler
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(event) => {
-                  event.preventDefault();
-                  void handleDelete();
-                }}
-                disabled={
-                  isDeleting || deleteConfirmation.trim() !== user.loginName
-                }
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleting && (
-                  <Loader2 size={16} className="mr-2 animate-spin" />
-                )}
-                Supprimer définitivement
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+        confirmation={deleteConfirmation}
+        onConfirmationChange={setDeleteConfirmation}
+        firstName={user.firstName}
+        lastName={user.lastName}
+        loginName={user.loginName}
+        isDeleting={isDeleting}
+        onConfirm={() => {
+          void handleDelete();
+        }}
+      />
     </AuthenticatedLayout>
   );
 };

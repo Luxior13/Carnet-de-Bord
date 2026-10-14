@@ -2,10 +2,18 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
-// Test-owned paths only; neither URL receives external input.
+// Test-owned paths only; no URL receives external input.
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const userDetailSource = readFileSync(
   new URL('../components/users/UserDetailPage.tsx', import.meta.url),
+  'utf8',
+);
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const auditHookSource = readFileSync(
+  new URL(
+    '../components/users/user-detail/useUserDetailAudit.ts',
+    import.meta.url,
+  ),
   'utf8',
 );
 // eslint-disable-next-line security/detect-non-literal-fs-filename
@@ -19,36 +27,36 @@ const historySource = readFileSync(
 
 describe('managed user audit UX contracts', () => {
   it('renders one server-sized page immediately without sequential prefetch', () => {
-    expect(userDetailSource).not.toContain('USER_AUDIT_PAGE_SIZE');
-    expect(userDetailSource).not.toContain('USER_AUDIT_SUMMARY_PAGE_SIZE');
-    expect(userDetailSource).not.toContain('USER_AUDIT_MAX_PREFETCH_PAGES');
-    expect(userDetailSource).toContain(
+    expect(auditHookSource).not.toContain('USER_AUDIT_PAGE_SIZE');
+    expect(auditHookSource).not.toContain('USER_AUDIT_SUMMARY_PAGE_SIZE');
+    expect(auditHookSource).not.toContain('USER_AUDIT_MAX_PREFETCH_PAGES');
+    expect(auditHookSource).toContain(
       "if (activeSection !== 'history' || hasLoadedAuditLogsRef.current) return",
     );
-    expect(userDetailSource).not.toMatch(
+    expect(auditHookSource).not.toMatch(
       /for\s*\(let page = 2; page <= pagesToFetch/,
     );
-    expect(userDetailSource).toContain('setAuditLogs(loadedLogs)');
-    expect(userDetailSource).toContain(
+    expect(auditHookSource).toContain('setAuditLogs(loadedLogs)');
+    expect(auditHookSource).toContain(
       'setAuditNextCursor(data.data.nextCursor ?? null)',
     );
-    expect(userDetailSource).toContain(
+    expect(auditHookSource).toContain(
       'setAuditHasMore(data.data.hasMore === true)',
     );
   });
 
   it('supports progressive loading, server filters and protected export', () => {
-    expect(userDetailSource).toContain('fetchMoreAuditData');
-    expect(userDetailSource).toContain("includeStats: 'false'");
-    expect(userDetailSource).toContain('cursor: auditNextCursor');
-    expect(userDetailSource).not.toContain('page: String(nextPage)');
-    expect(userDetailSource).toContain('appendUserAuditFilters');
+    expect(auditHookSource).toContain('fetchMoreAuditData');
+    expect(auditHookSource).toContain("includeStats: 'false'");
+    expect(auditHookSource).toContain('cursor: auditNextCursor');
+    expect(auditHookSource).not.toContain('page: String(nextPage)');
+    expect(auditHookSource).toContain('appendUserAuditFilters');
     expect(userDetailSource).toContain(
       'onFiltersChange={handleAuditFiltersChange}',
     );
-    expect(userDetailSource).toContain('fetch(auditExportHref');
-    expect(userDetailSource).toContain('requestStepUpForResponse');
-    expect(userDetailSource).toContain('X-Export-Truncated');
+    expect(auditHookSource).toContain('fetch(auditExportHref');
+    expect(auditHookSource).toContain('requestStepUpForResponse');
+    expect(auditHookSource).toContain('X-Export-Truncated');
     expect(userDetailSource).toContain('onExport={');
     expect(historySource).toContain('isServerFiltering');
     expect(historySource).toContain('isExporting');
@@ -56,7 +64,7 @@ describe('managed user audit UX contracts', () => {
 
   it('shows a loading state before the first audit effect can run', () => {
     expect(userDetailSource).toContain('shouldShowAuditLoading');
-    expect(userDetailSource).toContain('!hasLoadedAuditLogsRef.current');
+    expect(auditHookSource).toContain('!hasLoadedAuditLogsRef.current');
     expect(userDetailSource).toContain('isLoading={shouldShowAuditLoading}');
   });
 

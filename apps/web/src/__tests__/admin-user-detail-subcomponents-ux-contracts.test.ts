@@ -44,6 +44,9 @@ const userAccessSource = readSourceFile(
 const userDetailSource = readSourceFile(
   '../components/users/UserDetailPage.tsx',
 );
+const dialogsSource = readSourceFile(
+  '../components/users/user-detail/UserDetailDialogs.tsx',
+);
 
 describe('administrative user detail subcomponent UX contracts', () => {
   it('shares the compact fiche scaffold used by the internal directory', () => {
@@ -168,7 +171,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(userDetailSource).toContain(
       'deleteConfirmation.trim() !== user.loginName',
     );
-    expect(userDetailSource).toContain(
+    expect(dialogsSource).toContain(
       'Supprimer définitivement cet utilisateur ?',
     );
     expect(
