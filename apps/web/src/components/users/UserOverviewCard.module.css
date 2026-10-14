@@ -18,12 +18,22 @@
 
 @media (min-width: 48rem) {
   .values {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .values.withProtection {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 47.999rem) {
+  .value:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
   }
 }
 
 @media (min-width: 118rem) {
-  .values {
+  .values,
+  .values.withProtection {
     grid-template-columns: minmax(0, 1fr);
   }
   .value {

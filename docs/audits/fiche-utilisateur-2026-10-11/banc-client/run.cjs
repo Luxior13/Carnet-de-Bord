@@ -306,11 +306,15 @@ async function main() {
       `status-actionbar-page-scroll-${height}`,
       width,
       async ({ page }) => {
-        await page.getByRole("switch", { name: "Compte actif" }).click();
         const bar = page.getByRole("group", {
           name: "Enregistrement de l’état du compte",
           exact: true,
         });
+        await expect(
+          page.getByRole("switch", { name: "Compte actif" }),
+        ).toBeVisible();
+        await expect(bar).toHaveCount(0);
+        await page.getByRole("switch", { name: "Compte actif" }).click();
         const measure = () =>
           bar.evaluate((element) => {
             let scroller = element.parentElement;
@@ -404,11 +408,54 @@ async function main() {
         await expect(
           page.getByRole("switch", { name: "Compte actif" }),
         ).toBeChecked();
-        await expect(bar).toHaveAttribute("data-dirty", "false");
-        assert.equal((await measure()).position, "static");
+        await expect(bar).toHaveCount(0);
         return { initial, middle, lower, end, expectedSticky: sticky };
       },
       { section: "security", height },
+    );
+  }
+  for (const width of [390, 1440]) {
+    await run(
+      "status-actionbar-lifecycle",
+      width,
+      async ({ page, api }) => {
+        const toggle = page.getByRole("switch", { name: "Compte actif" });
+        const bar = page.getByRole("group", {
+          name: "Enregistrement de l’état du compte",
+          exact: true,
+        });
+        await expect(toggle).toBeVisible();
+        await expect(bar).toHaveCount(0);
+        await toggle.click();
+        await expect(bar).toBeVisible();
+        await toggle.click();
+        await expect(bar).toHaveCount(0);
+        await expect(toggle).toBeFocused();
+        assert.equal(
+          api.requests.filter((r) => r.method === "PATCH").length,
+          0,
+        );
+        await toggle.click();
+        api.patchMode = "hold";
+        await bar
+          .getByRole("button", { name: "Désactiver le compte", exact: true })
+          .click();
+        await expect.poll(() => api.held.length).toBe(1);
+        await expect(bar).toBeVisible();
+        await expect(toggle).toBeDisabled();
+        await expect(
+          bar.getByRole("button", { name: "Annuler", exact: true }),
+        ).toBeDisabled();
+        api.held.shift()();
+        await expect(bar).toHaveCount(0);
+        await expect(toggle).toBeFocused();
+        await expect(toggle).not.toBeChecked();
+        assert.equal(
+          api.requests.filter((r) => r.method === "PATCH").length,
+          1,
+        );
+      },
+      { section: "security" },
     );
   }
   for (const width of [320, 390, 768, 1440, 1920]) {
@@ -563,7 +610,9 @@ async function main() {
       await expect(
         page.getByText("Windows - Chrome", { exact: true }),
       ).toBeVisible();
-      await expect(page.locator("#user-security-sessions-heading")).toBeFocused();
+      await expect(
+        page.locator("#user-security-sessions-heading"),
+      ).toBeFocused();
       await page
         .getByRole("button", {
           name: "Révoquer la session Windows Chrome",
@@ -591,7 +640,9 @@ async function main() {
       await expect(
         page.getByText("Windows - Chrome", { exact: true }),
       ).toHaveCount(0);
-      await expect(page.locator("#user-security-sessions-heading")).toBeFocused();
+      await expect(
+        page.locator("#user-security-sessions-heading"),
+      ).toBeFocused();
     },
     { section: "security", sessionsMode: "error" },
   );

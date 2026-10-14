@@ -1,5 +1,99 @@
 # Suivi — Utilisateurs : liste, création et fiche
 
+## Double authentification dans la synthèse — 14 octobre 2026
+
+À la demande de l'utilisateur, `UserOverviewCard` affiche la double
+authentification à côté du mot de passe : « Activée » (vert), « À configurer »
+(jaune) ou « Masquée » si `securityDetailsVisible` vaut `false`. L'état vient
+de `mfaEnabledAt`, déjà fourni et filtré par le service de lecture ; aucune
+permission, donnée ou requête supplémentaire. La synthèse suit la fiche courante.
+
+La grille conserve deux colonnes sur mobile, avec la dernière case seule sur
+toute la largeur ; elle passe à cinq colonnes dès 48 rem, six avec la protection
+du compte racine. Le rail reste vertical à partir de 118 rem.
+
+Contrôles ciblés : cinq formats Chromium existants réussis de 320 à 1920 px,
+inspection des trois états et des six cases du compte racine (768/1920 px,
+depuis Profil), aucun débordement mesuré des cases. TypeScript, lint et format
+réussis. Données/API et shell simulés ; règles serveur examinées dans le code,
+sans nouvelle validation serveur/base. Sélection légère Q01–Q04, Q09, Q27 et
+Q30 ; autres sujets hors impact de cet ajout en lecture seule.
+
+## Allègement visuel de l'onglet Sécurité — 14 octobre 2026
+
+L'utilisateur apprécie la présentation actuelle, puis valide les allègements
+proposés après une lecture visuelle. Les cinq rubriques sont conservées : état
+du compte, mot de passe/verrouillage, double authentification, sessions et
+suppression. L'objectif est de réduire les répétitions et les niveaux visuels.
+
+Décisions appliquées dans `UserSecurityTab` :
+
+- L'impact du reset de mot de passe est une aide près du bouton, reliée par
+  `aria-describedby` ; la confirmation détaillée reste en place.
+- La récupération superadmin devient une aide près de l'action, également
+  reliée au bouton. La restriction au compte racine et les conditions de perte
+  restent explicites. Sans MFA configurée, l'état obligatoire suffit ; sans
+  droit de récupération, aucun bouton n'est ajouté.
+- Le verrouillage regroupe son état, son échéance éventuelle et le compteur
+  de tentatives non nul, affiché une seule fois. Le texte « Aucun verrouillage
+  en cours » ne répète plus le badge « Aucun ».
+- Les informations ordinaires utilisent une liste de descriptions, sans
+  sous-carte ni icône encadrée. Les badges d'état et les en-têtes de section
+  gardent leurs repères. L'interrupteur du compte n'a plus de cadre imbriqué ;
+  sa conséquence reste explicite et accentuée en cas de désactivation.
+- À la demande de l'utilisateur, le badge partagé `UserStatusBadge` apparaît
+  juste à gauche de l'interrupteur : « Actif » en vert ou « Désactivé » en jaune.
+  Il suit la valeur du brouillon comme l'interrupteur ; la vue d'ensemble
+  conserve l'état enregistré jusqu'au succès. Libellé et commandes partagent
+  une ligne, avec la conséquence dessous sur toute la largeur, même à 320 px.
+- Appareil, dernière activité, IP et révocation des sessions restent visibles.
+  La date d'ouverture rejoint les échéances dans « Détails de la session »,
+  avec le format de date français déjà utilisé pour ces échéances.
+
+Contrôles après modification : **quinze scénarios Chromium existants réussis**
+(`AUDIT_ONLY=security`, `mfa-reset`, `session`, `secret-copy`, `status-actionbar`),
+dont cinq largeurs de 320 à 1920 px ; inspection des captures à 390 et 1440 px.
+Inspection ponctuelle supplémentaire à 320 px : verrouillage et MFA à configurer
+visibles, compteur présent une fois, date d'ouverture accessible avec Entrée,
+repli avec Espace et focus conservé. **Quinze tests de contrats**, TypeScript
+et lint ciblé réussis. La passe complète du banc n'a pas été rejouée.
+
+Complément après ajout du badge : dix scénarios existants réussis
+(`responsive-security` et `status-actionbar`), TypeScript et lint ciblé réussis.
+Rendu actif inspecté à 320 px ; annulation, sauvegarde et focus revérifiés par
+les parcours existants. Même périmètre simulé et mêmes limites que ci-dessus.
+
+Sélection légère : Q01–Q04, Q06, Q22 et Q27 examinés ; Q30 pour le suivi.
+Les autres sujets sont hors impact de cette composition : aucune modification
+des permissions, requêtes, confirmations, données, composants partagés ni
+dépendances. `Card`, `Button`, `Disclosure`, les jetons et la barre commune
+restent réutilisés. API, acteur et shell simulés ; aucun nouveau contrôle
+serveur/base, lecteur d'écran ou appareil physique. La correction de barre
+ci-dessous conserve sa trace et ses preuves antérieures.
+
+## Barre de l'onglet Sécurité — 14 octobre 2026
+
+Correction ciblée de `/systeme/utilisateurs/[id]?section=security`, demandée
+après constat d'une barre d'enregistrement permanente. `UserSecurityTab`
+affiche désormais `SectionActionBar` seulement lorsque l'état « Compte actif »
+diffère de la valeur enregistrée, avec les droits existants. Revenir à la valeur
+initiale, annuler ou enregistrer avec succès masque la barre. Pendant une
+écriture ou un conflit, le brouillon conserve ses actions et leurs verrous.
+Après enregistrement, le focus revient à l'interrupteur s'il a été perdu ; un
+autre contrôle focalisé ou une modale ouverte garde son focus.
+
+Contrôles du 14 octobre : **six scénarios Chromium réussis** (trois formats
+de défilement, deux parcours repos/modification/retour/écriture lente/succès,
+une reprise après conflit), **onze tests de contrats**, TypeScript et lint
+ciblé réussis. [Preuves client](../../audits/fiche-utilisateur-2026-10-11/banc-client/preuves/barre-conditionnelle-2026-10-14.json).
+API, acteur, navigation et shell simulés ; aucun statut réel modifié et aucune
+nouvelle validation serveur/base ou lecteur d'écran. Les anciennes preuves
+de barre toujours présente restent historiques.
+
+Sélection proportionnée : Q01–Q04, Q06 et Q27 examinés ; Q30 pour le suivi.
+Autres sujets hors impact de cette condition d'affichage et du retour de focus :
+pas de nouvelle action, règle d'accès, mutation, donnée ou composant partagé.
+
 ## État courant — clôture du socle du 13 octobre 2026
 
 La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est
@@ -763,9 +857,10 @@ réactive pas Activité et n'étend pas les capacités de gestion du compte.
   `UsersAdminHero` a été supprimé.
 - Une carte « Vue d'ensemble » (même gabarit que `/systeme/utilisateurs`)
   est placée dans le rail droit (`PageAsideLayout`) comme sur la liste, et
-  regroupe état, protection, mot de passe et dates. Empilée, elle utilise deux
-  colonnes puis quatre dès 48 rem ; le rail vertical commence à 118 rem.
-  À 390 px avec un nom court, elle mesure environ 149 px au lieu de 210 px.
+  regroupe état, protection, mot de passe, double authentification (ajout du
+  14 octobre) et dates. Empilée, elle utilise deux colonnes puis cinq dès
+  48 rem, six avec protection ; le rail vertical commence à 118 rem.
+  La mesure historique de 149 px à 390 px précédait l'ajout de la MFA.
   Un état de sécurité non visible s'affiche « Masqué », sans conclure « À jour ».
 - Contrat de source `admin-user-detail-subcomponents-ux-contracts.test.ts`
   actualisé.

@@ -1,5 +1,21 @@
 # Banc client — fiche utilisateur, 11 octobre 2026
 
+Complément du 14 octobre : la barre Sécurité est désormais absente au repos
+et après annulation/succès. Les trois scénarios de défilement vérifient cette
+condition ; deux parcours `status-actionbar-lifecycle` couvrent aussi le retour
+manuel au statut initial, l'écriture lente et le focus après succès.
+[Six contrôles ciblés réussis](preuves/barre-conditionnelle-2026-10-14.json),
+avec la reprise après conflit. Les résultats et descriptions historiques
+ci-dessous conservent leur date ; le banc courant comporte 48 scénarios.
+
+Allègement visuel du 14 octobre, après cette correction : aides de reset près
+des boutons, états sans sous-cartes, compteur d'échecs regroupé et ouverture
+des sessions dans les détails. Quinze scénarios existants réussis avec les
+filtres `security`, `mfa-reset`, `session`, `secret-copy` et `status-actionbar`.
+Cette passe partielle et l'inspection ponctuelle des alertes/détails à 320 px
+sont consignées dans le [suivi courant](../../../qualite/pages/systeme-utilisateurs.md).
+Les captures historiques ci-dessous précèdent cet allègement.
+
 Le banc charge `UserDetailPage`, ses composants différés, les contrôleurs réels,
 les primitives et les feuilles de style du dépôt. API, session, navigation Next,
 layout authentifié et presse-papiers sont simulés. Les identités, adresses IP de
@@ -14,8 +30,8 @@ node docs/audits/fiche-utilisateur-2026-10-11/banc-client/run.cjs
 Le dossier temporaire contenant les observations et captures est affiché au
 démarrage. Le serveur et Chromium sont fermés en fin d’exécution. `AUDIT_ONLY`
 permet d’exécuter les scénarios dont le nom contient la valeur fournie ; retirer
-la variable pour la passe complète. Le script contient désormais 46 scénarios,
-dont trois ajoutés pour le défilement de la barre d’enregistrement.
+la variable pour la passe complète. Le script contient désormais 48 scénarios,
+dont trois pour le défilement et deux pour l'affichage conditionnel de la barre.
 
 ## Preuves exécutées
 

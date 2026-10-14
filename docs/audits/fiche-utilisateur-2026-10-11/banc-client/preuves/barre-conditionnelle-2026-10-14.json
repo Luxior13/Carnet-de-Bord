@@ -1,0 +1,168 @@
+﻿{
+    "date":  "2026-10-14",
+    "scope":  "Barre conditionnelle de Sécurité ; API et session simulées",
+    "execution":  "Cinq parcours de barre puis une reprise après conflit",
+    "passed":  6,
+    "total":  6,
+    "observations":  [
+                         {
+                             "name":  "status-actionbar-page-scroll-900",
+                             "width":  1440,
+                             "pass":  true,
+                             "detail":  {
+                                            "initial":  {
+                                                            "insideCard":  false,
+                                                            "position":  "sticky",
+                                                            "top":  818,
+                                                            "bottom":  884,
+                                                            "viewportTop":  0,
+                                                            "viewportBottom":  900,
+                                                            "scrollTop":  0,
+                                                            "scrollMax":  858
+                                                        },
+                                            "middle":  {
+                                                           "insideCard":  false,
+                                                           "position":  "sticky",
+                                                           "top":  818,
+                                                           "bottom":  884,
+                                                           "viewportTop":  0,
+                                                           "viewportBottom":  900,
+                                                           "scrollTop":  343,
+                                                           "scrollMax":  858
+                                                       },
+                                            "lower":  {
+                                                          "insideCard":  false,
+                                                          "position":  "sticky",
+                                                          "top":  818,
+                                                          "bottom":  884,
+                                                          "viewportTop":  0,
+                                                          "viewportBottom":  900,
+                                                          "scrollTop":  644,
+                                                          "scrollMax":  858
+                                                      },
+                                            "end":  {
+                                                        "insideCard":  false,
+                                                        "position":  "sticky",
+                                                        "top":  797.703125,
+                                                        "bottom":  863.703125,
+                                                        "viewportTop":  0,
+                                                        "viewportBottom":  900,
+                                                        "scrollTop":  858,
+                                                        "scrollMax":  858
+                                                    },
+                                            "expectedSticky":  true
+                                        }
+                         },
+                         {
+                             "name":  "status-actionbar-page-scroll-844",
+                             "width":  390,
+                             "pass":  true,
+                             "detail":  {
+                                            "initial":  {
+                                                            "insideCard":  false,
+                                                            "position":  "static",
+                                                            "top":  2167.046875,
+                                                            "bottom":  2269.046875,
+                                                            "viewportTop":  0,
+                                                            "viewportBottom":  844,
+                                                            "scrollTop":  0,
+                                                            "scrollMax":  1453
+                                                        },
+                                            "middle":  {
+                                                           "insideCard":  false,
+                                                           "position":  "static",
+                                                           "top":  1586.046875,
+                                                           "bottom":  1688.046875,
+                                                           "viewportTop":  0,
+                                                           "viewportBottom":  844,
+                                                           "scrollTop":  581,
+                                                           "scrollMax":  1453
+                                                       },
+                                            "lower":  {
+                                                          "insideCard":  false,
+                                                          "position":  "static",
+                                                          "top":  1077.046875,
+                                                          "bottom":  1179.046875,
+                                                          "viewportTop":  0,
+                                                          "viewportBottom":  844,
+                                                          "scrollTop":  1090,
+                                                          "scrollMax":  1453
+                                                      },
+                                            "end":  {
+                                                        "insideCard":  false,
+                                                        "position":  "static",
+                                                        "top":  714.046875,
+                                                        "bottom":  816.046875,
+                                                        "viewportTop":  0,
+                                                        "viewportBottom":  844,
+                                                        "scrollTop":  1453,
+                                                        "scrollMax":  1453
+                                                    },
+                                            "expectedSticky":  false
+                                        }
+                         },
+                         {
+                             "name":  "status-actionbar-page-scroll-550",
+                             "width":  1440,
+                             "pass":  true,
+                             "detail":  {
+                                            "initial":  {
+                                                            "insideCard":  false,
+                                                            "position":  "static",
+                                                            "top":  1655.703125,
+                                                            "bottom":  1721.703125,
+                                                            "viewportTop":  0,
+                                                            "viewportBottom":  550,
+                                                            "scrollTop":  0,
+                                                            "scrollMax":  1208
+                                                        },
+                                            "middle":  {
+                                                           "insideCard":  false,
+                                                           "position":  "static",
+                                                           "top":  1172.703125,
+                                                           "bottom":  1238.703125,
+                                                           "viewportTop":  0,
+                                                           "viewportBottom":  550,
+                                                           "scrollTop":  483,
+                                                           "scrollMax":  1208
+                                                       },
+                                            "lower":  {
+                                                          "insideCard":  false,
+                                                          "position":  "static",
+                                                          "top":  749.703125,
+                                                          "bottom":  815.703125,
+                                                          "viewportTop":  0,
+                                                          "viewportBottom":  550,
+                                                          "scrollTop":  906,
+                                                          "scrollMax":  1208
+                                                      },
+                                            "end":  {
+                                                        "insideCard":  false,
+                                                        "position":  "static",
+                                                        "top":  447.703125,
+                                                        "bottom":  513.703125,
+                                                        "viewportTop":  0,
+                                                        "viewportBottom":  550,
+                                                        "scrollTop":  1208,
+                                                        "scrollMax":  1208
+                                                    },
+                                            "expectedSticky":  false
+                                        }
+                         },
+                         {
+                             "name":  "status-actionbar-lifecycle",
+                             "width":  390,
+                             "pass":  true
+                         },
+                         {
+                             "name":  "status-actionbar-lifecycle",
+                             "width":  1440,
+                             "pass":  true
+                         },
+                         {
+                             "name":  "conflict-refresh-security",
+                             "width":  390,
+                             "pass":  true
+                         }
+                     ]
+}

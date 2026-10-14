@@ -34,7 +34,9 @@ export const UserOverviewCard: FC<{ user: UserType }> = ({ user }) => (
     >
       Vue d&apos;ensemble
     </h2>
-    <div className={styles.values}>
+    <div
+      className={cn(styles.values, user.isProtected && styles.withProtection)}
+    >
       <div className={styles.value}>
         <span className="text-muted-foreground text-xs">État</span>
         <UserStatusBadge isActive={user.isActive} />
@@ -72,6 +74,31 @@ export const UserOverviewCard: FC<{ user: UserType }> = ({ user }) => (
             : user.mustChangePassword
               ? 'À changer'
               : 'À jour'}
+        </span>
+      </div>
+      <div className={styles.value}>
+        <span className="text-muted-foreground text-xs">
+          Double authentification
+        </span>
+        <span
+          className={cn(
+            'inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
+            user.securityDetailsVisible === false
+              ? 'border-border text-muted-foreground'
+              : user.mfaEnabledAt
+                ? 'border-success/40 bg-success/15 text-success'
+                : 'border-warning/40 bg-warning/15 text-warning',
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className="size-1.5 shrink-0 rounded-full bg-current"
+          />
+          {user.securityDetailsVisible === false
+            ? 'Masquée'
+            : user.mfaEnabledAt
+              ? 'Activée'
+              : 'À configurer'}
         </span>
       </div>
       <div className={styles.value}>
