@@ -1,5 +1,9 @@
 'use client';
 
+// Load the editor stylesheet with the detail page, before a tab is mounted.
+// Its layout must not depend on the CSS chunk of the lazy access section.
+import '../PermissionsEditor.module.css';
+
 import dynamic from 'next/dynamic';
 
 export const AdminMfaResetDialog = dynamic(() =>

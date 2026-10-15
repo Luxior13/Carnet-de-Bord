@@ -1,5 +1,33 @@
 # Suivi — Utilisateurs : liste, création et fiche
 
+## Styles intermittents dans Autorisations — 15 octobre 2026
+
+Signalement utilisateur : au changement d'onglet, parfois, l'éditeur perd sa
+mise en page jusqu'à un rafraîchissement. La capture montre les styles communs
+présents, mais pas les espacements, fonds et grilles de
+`PermissionsEditor.module.css`. Son seul chemin de chargement passait par
+`UserAccessTab`, importé à la demande.
+
+Correction ciblée : `UserDetailLazySections` importe aussi cette feuille dès
+le chargement de la fiche. Les composants restent différés et les classes,
+couleurs, données et permissions sont inchangées. Le module CSS reste local ;
+aucune nouvelle dépendance ni modification globale de Next.js.
+
+Vérification avec un banc temporaire **Next.js 15.5.23 réel**, en développement
+puis après compilation de production : feuille absente avant ouverture de
+l'onglet dans l'état initial, présente avant ouverture avec le correctif.
+Premier affichage, quatre fermetures/réouvertures et aller-retour par une autre
+route sans rafraîchissement réussis ; espacement et disposition de l'en-tête
+conservés, aucune erreur JavaScript. Données fictives, sans session ni base
+réelle. Le chargement anticipé est vérifié ; **l'incident intermittent exact
+n'a pas été reproduit spontanément**, sa disparition en session reste à confirmer.
+
+Cinq formats du banc client existant rejoués pour Autorisations (320 à 1920 px),
+TypeScript, lint et format réussis. Le build de production est celui du banc
+isolé, pas une nouvelle validation complète de l'application. Sélection Q01–Q04,
+Q17–Q19, Q27 et Q30 ; les autres sujets sont hors impact de cette correction de
+chargement CSS. La reprise antérieure des droits et ses preuves restent datées.
+
 ## Compteur d'autorisations dans la synthèse — 15 octobre 2026
 
 À la demande de l'utilisateur, la Vue d'ensemble de la fiche administrative
