@@ -20,8 +20,15 @@
   .values {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
-  .values.withProtection {
+  .values.withProtection,
+  .values.withAccess {
     grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .values.withProtection.withAccess {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .values.withProtection.withAccess .value:first-child {
+    grid-column: span 2;
   }
 }
 
@@ -31,9 +38,20 @@
   }
 }
 
+@media (min-width: 80rem) {
+  .values.withProtection.withAccess {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .values.withProtection.withAccess .value:first-child {
+    grid-column: auto;
+  }
+}
+
 @media (min-width: 118rem) {
   .values,
-  .values.withProtection {
+  .values.withProtection,
+  .values.withAccess,
+  .values.withProtection.withAccess {
     grid-template-columns: minmax(0, 1fr);
   }
   .value {

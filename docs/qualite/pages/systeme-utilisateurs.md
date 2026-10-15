@@ -1,5 +1,98 @@
 # Suivi — Utilisateurs : liste, création et fiche
 
+## Compteur d'autorisations dans la synthèse — 15 octobre 2026
+
+À la demande de l'utilisateur, la Vue d'ensemble de la fiche administrative
+affiche « Autorisations : X / Y ». Le calcul est partagé avec l'éditeur :
+autorisations administratives utilisables après résolution des dépendances,
+sur le catalogue actuellement présenté dans cet onglet (pages disponibles et
+droits transversaux d'historique). Les réglages de compte personnel sont exclus.
+Un compte racine possède implicitement toutes ces autorisations.
+
+Le compteur utilise la fiche enregistrée : modifier le brouillon ne le change
+pas ; il évolue après confirmation de l'enregistrement. Sans
+`canViewTargetAccess`, la case indique « Masquées » et aucun total n'est calculé.
+Aucune nouvelle requête ni règle serveur. Le composant est aussi utilisé dans
+Compte personnel : l'absence de la propriété optionnelle `canViewAccess` y
+conserve la synthèse existante, sans ajouter ce compteur administratif.
+
+La fiche affiche désormais six cases, sept pour le compte racine. Deux colonnes
+sur mobile ; six dès 48 rem pour un compte ordinaire. Pour le compte racine,
+quatre colonnes sur deux lignes dès 48 rem (état sur deux colonnes), puis sept
+colonnes dès 80 rem. Le rail vertical à 118 rem est conservé. Le nombre possède
+une formulation complète pour les lecteurs d'écran, sans dépendre d'une couleur.
+
+**14 cas Chromium réussis** avec API/session et shell simulés : comparaison
+avec l'éditeur et absence de débordement à 320, 390, 768, 1024, 1440 et 1920 px
+pour un USER et le compte racine ; masquage pour un acteur sans lecture des
+droits ; passage de 0/28 à 2/28 après enregistrement seulement, y compris avec
+une réponse retardée. Captures inspectées en mobile, tablette et rail.
+**20 tests existants réussis** (`permission-editor-view` et
+`permission-editor-policy`), TypeScript, lint et format vérifiés. Pas de nouvelle
+preuve serveur/base : leurs règles sont inchangées. Sélection légère Q01–Q05,
+Q09, Q19, Q27 et Q30 ; autres sujets hors impact de cet ajout en lecture seule.
+
+## Vérification des droits dans Autorisations — 15 octobre 2026
+
+Prolongement demandé de la vérification des suppressions, au commit `a3641a6`
+(seul le suivi documentaire de la passe précédente était modifié). Les gardes
+de consultation, d'édition et de rôle concordent sur le périmètre examiné :
+
+- Superadmin sur USER/ADMIN : gestion des droits et du rôle ; les capacités
+  fixes liées au rôle restent non modifiables individuellement.
+- Admin sur USER : attribution/retrait selon ses capacités effectives ; sur
+  un autre ADMIN ou soi-même, consultation autorisée mais aucune édition.
+- Compte racine : droits implicites, aucune édition manuelle de ses accès.
+- Lecture seule si les droits de gestion sont retirés ; délégation possible
+  à un USER, sans lui permettre de modifier un ADMIN ni son propre compte.
+- Accorder exige de posséder l'autorisation ; retirer, accorder et déléguer
+  restent distincts. Seul le compte racine peut transmettre le droit de
+  délégation lui-même ou changer un rôle. Promotion et gains critiques exigent
+  une MFA complète de la cible ; les dépendances sont évaluées avec le lot.
+
+Lecture des capacités client, de la politique de l'éditeur, de la projection
+de lecture, du PATCH et de son autorisation des mutations. **123 tests réussis**
+(104 dans `users-access-hardening`, 13 de politique d'éditeur et six de preuve).
+**12 parcours Chromium réussis** : neuf combinaisons acteur/cible en lecture,
+puis dépendances et séparation des portées, MFA avant promotion et conflit.
+Aucun défaut constaté ni correction fonctionnelle nécessaire dans cette passe.
+
+API/session/Prisma simulés dans les tests, API et shell simulés au navigateur ;
+aucun droit réel modifié, pas de nouvelle preuve PostgreSQL ou de concurrence
+réelle. Sélection Q01–Q02, Q06, Q09–Q10, Q27 et Q30 ; les autres sujets sont
+hors impact de cette vérification. Les preuves antérieures restent datées.
+
+## Vérification des droits de suppression — 15 octobre 2026
+
+Question ciblée de l'utilisateur : bouton disponible pour le superadmin et
+pour un admin sur un compte standard, mais absent entre administrateurs.
+Examen du commit `a3641a6`, arbre propre au départ ; aucune correction de code
+nécessaire sur ce périmètre.
+
+- Le superadmin peut demander la suppression d'un utilisateur ou d'un admin.
+- Un admin peut supprimer un utilisateur standard avec `users:delete_account`
+  (accordée par défaut, révocable), jamais un autre admin.
+- Aucun acteur ne peut supprimer son propre compte ni le compte racine protégé.
+- Le bouton reste visible pour une cible autorisée active, mais désactivé
+  jusqu'à sa désactivation enregistrée, y compris pour le superadmin.
+- Nuance de la politique existante : un compte USER explicitement doté du droit
+  et de ses dépendances peut aussi supprimer un autre USER. Ce n'est pas une
+  capacité strictement réservée au rôle ADMIN.
+
+Concordance examinée entre `useUserDetailCapabilities`, `UserDeletionCard`,
+la route DELETE et `user-deletion` : garde de rôle, permission, cible protégée,
+soi-même, état enregistré et preuve récente de mot de passe. La transaction
+relit l'autorité et conditionne l'écriture à l'état/version de la cible.
+[Règle canonique](../../references/PERMISSIONS.md).
+
+**12 cas Chromium réussis**, avec acteurs/cibles fictifs, présence/absence et
+désactivation du bouton ; aucun appel de mutation. **13 tests ciblés réussis**
+dans `users-access-hardening.test.ts` (filtre `delet|inactive|irreversibly|recent
+password even`, 91 autres tests non exécutés). Ces tests de route simulent la
+session et Prisma ; aucune suppression réelle ni nouvelle preuve PostgreSQL.
+Sélection : Q01–Q02, Q06, Q09–Q10, Q16, Q27 et Q30 ; les autres sujets sont
+hors impact de cette vérification sans modification fonctionnelle.
+
 ## Double authentification dans la synthèse — 14 octobre 2026
 
 À la demande de l'utilisateur, `UserOverviewCard` affiche la double

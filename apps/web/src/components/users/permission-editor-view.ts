@@ -97,3 +97,17 @@ export const countCategoryPermissionResults = (
   ready: category.permissions.filter((item) => effective.get(item.key)).length,
   total: category.permissions.length,
 });
+
+/** Use the same live administrative scope in the editor and the saved overview. */
+export const countUsablePermissions = (
+  effective: ReadonlyMap<string, boolean>,
+): Pick<PermissionCategoryResult, 'ready' | 'total'> => {
+  const permissions = PERMISSION_EDITOR_CATEGORIES.flatMap(
+    (category) => category.permissions,
+  );
+
+  return {
+    ready: permissions.filter((item) => effective.get(item.key)).length,
+    total: permissions.length,
+  };
+};

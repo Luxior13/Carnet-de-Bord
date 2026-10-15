@@ -30,6 +30,7 @@ import {
 import {
   buildPermissionEditorState,
   countCategoryPermissionResults,
+  countUsablePermissions,
   PERMISSION_EDITOR_CATEGORIES,
 } from './permission-editor-view';
 import { PermissionDecisionButton } from './PermissionDecisionButton';
@@ -69,19 +70,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     () => new Map(Object.entries(permissions ?? {})),
     [permissions],
   );
-  const categoryResults = PERMISSION_EDITOR_CATEGORIES.map((category) =>
-    countCategoryPermissionResults(category, state.configured, state.effective),
-  );
   const customPermissionCount = [...permissionsMap.keys()].filter((key) =>
     ACCESS_KEYS.has(key),
   ).length;
-  const readyCount = categoryResults.reduce(
-    (total, result) => total + result.ready,
-    0,
-  );
-  const totalCount = categoryResults.reduce(
-    (total, result) => total + result.total,
-    0,
+  const { ready: readyCount, total: totalCount } = countUsablePermissions(
+    state.effective,
   );
   const accessiblePages = PERMISSION_EDITOR_CATEGORIES.filter(
     (category) =>

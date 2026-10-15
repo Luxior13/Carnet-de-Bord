@@ -22,18 +22,7 @@ import { PageSectionNavigation } from '$components/layout/PageSectionNavigation'
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
-import { useUserDetailAudit } from '$components/users/user-detail/useUserDetailAudit';
-import { useUserDetailSessions } from '$components/users/user-detail/useUserDetailSessions';
-import {
-  UserDeleteDialog,
-  UserLoginChangeDialog,
-  UserPasswordResetDialog,
-  UserRevokeSessionsDialog,
-} from '$components/users/user-detail/UserDetailDialogs';
-import {
-  analyzeUserAccessMutationBatch,
-} from '$components/users/user-detail/user-access-editor-policy';
-import { useUserDetailCapabilities } from '$components/users/user-detail/useUserDetailCapabilities';
+import { analyzeUserAccessMutationBatch } from '$components/users/user-detail/user-access-editor-policy';
 import {
   getProfileFieldErrors,
   userProfileSchema,
@@ -50,6 +39,12 @@ import {
 } from '$components/users/user-detail/user-detail-page.helpers';
 import { requestUserDetailMutation } from '$components/users/user-detail/user-detail-request';
 import { focusUserSecurityElement } from '$components/users/user-detail/user-security-focus';
+import {
+  UserDeleteDialog,
+  UserLoginChangeDialog,
+  UserPasswordResetDialog,
+  UserRevokeSessionsDialog,
+} from '$components/users/user-detail/UserDetailDialogs';
 import {
   AdminMfaResetDialog,
   AdminStepUpDialog,
@@ -70,14 +65,15 @@ import {
 } from '$components/users/user-detail/UserMutationFeedback';
 import { UserPasswordResetFeedback } from '$components/users/user-detail/UserPasswordResetFeedback';
 import type { ProfileForm } from '$components/users/user-detail/UserProfileTab';
+import { useUserDetailAudit } from '$components/users/user-detail/useUserDetailAudit';
+import { useUserDetailCapabilities } from '$components/users/user-detail/useUserDetailCapabilities';
 import { useUserDetailDraft } from '$components/users/user-detail/useUserDetailDraft';
+import { useUserDetailSessions } from '$components/users/user-detail/useUserDetailSessions';
 import { useUserPasswordReset } from '$components/users/user-detail/useUserPasswordReset';
 import { UserAvatar } from '$components/users/UserAvatar';
 import { UserOverviewCard } from '$components/users/UserOverviewCard';
 import { FEATURES } from '$constants/feature-registry.constants';
-import {
-  type PermissionsData,
-} from '$constants/permissions.constants';
+import { type PermissionsData } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
 import { UserAccessBadge } from '$features/users/user-badges';
@@ -580,7 +576,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     },
     [canViewUsers, discardUserSnapshot, syncUserState, userId],
   );
-
 
   useEffect((): (() => void) => {
     mountedRef.current = true;
@@ -1639,7 +1634,10 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
               }
               aside={
                 <div className={cn(directoryStyles.directory, 'min-w-0')}>
-                  <UserOverviewCard user={user} />
+                  <UserOverviewCard
+                    canViewAccess={canViewTargetAccess}
+                    user={user}
+                  />
                 </div>
               }
             >
