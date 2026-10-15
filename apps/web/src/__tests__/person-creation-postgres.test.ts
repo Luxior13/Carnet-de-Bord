@@ -86,6 +86,8 @@ describe.skipIf(!target)('person creation on fully migrated PostgreSQL', () => {
         passwordHash: 'unused-password-fixture',
         permissions: {
           [PERMISSIONS.PERSONS.CREATE]: true,
+          [PERMISSIONS.PERSONS.VIEW_CONTACT]: true,
+          [PERMISSIONS.PERSONS.UPDATE_CONTACT]: true,
           [PERMISSIONS.PERSONS.VIEW]: true,
         },
         ...overrides,

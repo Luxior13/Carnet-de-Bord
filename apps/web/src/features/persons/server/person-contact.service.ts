@@ -44,7 +44,7 @@ export const addPersonEmail = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const current = await requirePersonDetailRecord(transaction, personId);
@@ -129,7 +129,7 @@ export const addPersonEmail = async (
 
     return {
       duplicateWarning,
-      person: await mapPersonDetail(transaction, updated),
+      person: await mapPersonDetail(transaction, updated, actor),
     };
   });
 
@@ -146,7 +146,7 @@ export const updatePersonEmail = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const person = await requirePersonDetailRecord(transaction, personId);
@@ -168,7 +168,7 @@ export const updatePersonEmail = async (
     ) {
       return {
         duplicateWarning: { duplicateFound: false },
-        person: await mapPersonDetail(transaction, person),
+        person: await mapPersonDetail(transaction, person, actor),
       };
     }
     const duplicateWarning = await getDuplicateWarning(transaction, {
@@ -242,7 +242,7 @@ export const updatePersonEmail = async (
 
     return {
       duplicateWarning,
-      person: await mapPersonDetail(transaction, updated),
+      person: await mapPersonDetail(transaction, updated, actor),
     };
   });
 
@@ -256,7 +256,7 @@ export const deletePersonEmail = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const person = await requirePersonDetailRecord(transaction, personId);
@@ -324,7 +324,7 @@ export const deletePersonEmail = async (
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
 
-    return mapPersonDetail(transaction, updated);
+    return mapPersonDetail(transaction, updated, actor);
   });
 
 export const addPersonPhone = async (
@@ -339,7 +339,7 @@ export const addPersonPhone = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const current = await requirePersonDetailRecord(transaction, personId);
@@ -423,7 +423,7 @@ export const addPersonPhone = async (
 
     return {
       duplicateWarning,
-      person: await mapPersonDetail(transaction, updated),
+      person: await mapPersonDetail(transaction, updated, actor),
     };
   });
 
@@ -440,7 +440,7 @@ export const updatePersonPhone = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const person = await requirePersonDetailRecord(transaction, personId);
@@ -463,7 +463,7 @@ export const updatePersonPhone = async (
     ) {
       return {
         duplicateWarning: { duplicateFound: false },
-        person: await mapPersonDetail(transaction, person),
+        person: await mapPersonDetail(transaction, person, actor),
       };
     }
     const duplicateWarning = await getDuplicateWarning(transaction, {
@@ -537,7 +537,7 @@ export const updatePersonPhone = async (
 
     return {
       duplicateWarning,
-      person: await mapPersonDetail(transaction, updated),
+      person: await mapPersonDetail(transaction, updated, actor),
     };
   });
 
@@ -551,7 +551,7 @@ export const deletePersonPhone = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const person = await requirePersonDetailRecord(transaction, personId);
@@ -620,5 +620,5 @@ export const deletePersonPhone = async (
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
 
-    return mapPersonDetail(transaction, updated);
+    return mapPersonDetail(transaction, updated, actor);
   });

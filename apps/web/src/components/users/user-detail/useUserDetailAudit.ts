@@ -72,7 +72,8 @@ export function useUserDetailAudit({
   const [auditError, setAuditError] = useState<string | null>(null);
 
   const requestedAuditFilters = useMemo(
-    () => getUserAuditFiltersFromParams(new URLSearchParams(currentQueryString)),
+    () =>
+      getUserAuditFiltersFromParams(new URLSearchParams(currentQueryString)),
     [currentQueryString],
   );
 
@@ -333,7 +334,7 @@ export function useUserDetailAudit({
     } finally {
       setIsExportingAudit(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auditExportHref, isExportingAudit, requestStepUpForResponse]);
 
   const hasMoreAuditLogs = auditHasMore;

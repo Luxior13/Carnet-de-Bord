@@ -97,7 +97,9 @@ describe('direct Person page permission boundaries', () => {
       canCreate: true,
       canDelete: true,
       canUpdate: true,
+      canUpdateContact: false,
       canView: true,
+      canViewContact: false,
       canViewProvenance: true,
     });
     expect(
@@ -130,6 +132,7 @@ describe('direct Person page permission boundaries', () => {
     expect(mocks.personsList).toHaveBeenCalledWith(
       {
         canCreate: true,
+        canViewContact: false,
         createHref:
           '/membres/repertoire/nouveau?returnTo=%2Fmembres%2Frepertoire',
         initialState: undefined,

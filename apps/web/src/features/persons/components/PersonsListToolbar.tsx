@@ -75,6 +75,7 @@ type Props = {
     sort: PersonListSort,
     missingContacts?: boolean,
   ) => void;
+  canViewContact?: boolean;
   draftQuery: string;
   error: Error | null;
   isRefreshing: boolean;
@@ -87,6 +88,7 @@ type Props = {
 
 export const PersonsListToolbar: FC<Props> = ({
   applyFilters,
+  canViewContact = false,
   draftQuery,
   error,
   isRefreshing,
@@ -130,11 +132,17 @@ export const PersonsListToolbar: FC<Props> = ({
         role="search"
       >
         <ListSearchField
-          ariaLabel="Rechercher par pseudo, nom ou coordonnée"
+          ariaLabel={
+            canViewContact
+              ? 'Rechercher par pseudo, nom ou coordonnée'
+              : 'Rechercher par pseudo ou nom'
+          }
           maxLength={100}
           onClear={() => applyFilters('', status, sort)}
           onValueChange={setDraftQuery}
-          placeholder="Pseudo, nom ou coordonnée…"
+          placeholder={
+            canViewContact ? 'Pseudo, nom ou coordonnée…' : 'Pseudo ou nom…'
+          }
           value={draftQuery}
         />
         <div className={directoryStyles.filterSelects}>
@@ -159,7 +167,7 @@ export const PersonsListToolbar: FC<Props> = ({
             aria-label="Réinitialiser les filtres"
             className={cn(
               directoryStyles.iconButton,
-              !hasActiveToolbarFilters && 'invisible pointer-events-none',
+              !hasActiveToolbarFilters && 'pointer-events-none invisible',
             )}
             onClick={() => {
               applyFilters('', 'ALL', 'name', false);

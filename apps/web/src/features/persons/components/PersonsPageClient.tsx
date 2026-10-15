@@ -43,7 +43,8 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
     refreshFeatureAvailability,
   } = useFeatureAvailability();
   const { userData } = useUser();
-  const { canCreate, canView } = getPersonCapabilities(userData);
+  const { canCreate, canView, canViewContact } =
+    getPersonCapabilities(userData);
   const searchParamsString = searchParams?.toString() ?? '';
   const returnHref = `${PAGE_PATHS.persons}${searchParamsString ? `?${searchParamsString}` : ''}`;
   const createHref = `${PAGE_PATHS.newPerson}?${new URLSearchParams({ returnTo: returnHref })}`;
@@ -96,6 +97,7 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
           <PageAsideLayout
             aside={
               <PersonOverview
+                canViewContact={canViewContact}
                 isLoading={overview.isLoading}
                 query={searchParamsString}
                 stats={overview.stats}
@@ -121,6 +123,7 @@ const PersonsPageContent: FC<PersonsPageClientProps> = ({ initialState }) => {
           >
             <PersonsList
               canCreate={canCreate}
+              canViewContact={canViewContact}
               createHref={createHref}
               initialState={initialState}
               navigationScope={userData?.id ?? ''}
@@ -147,7 +150,7 @@ export const PersonsPageClient: FC<PersonsPageClientProps> = ({
 }) => {
   const { authorizationRevision, userData } = useUser();
   const [initialAuthorizationRevision] = useState(authorizationRevision);
-  const { canView } = getPersonCapabilities(userData);
+  const { canView, canViewContact } = getPersonCapabilities(userData);
 
   return (
     <AuthenticatedLayout
@@ -158,7 +161,7 @@ export const PersonsPageClient: FC<PersonsPageClientProps> = ({
     >
       <Suspense fallback={<ListPageSkeleton />}>
         <PersonsPageContent
-          key={`${userData?.id ?? ''}:${authorizationRevision}:${canView}`}
+          key={`${userData?.id ?? ''}:${authorizationRevision}:${canView}:${canViewContact}`}
           initialState={
             initialState?.scope === userData?.id &&
             authorizationRevision === initialAuthorizationRevision

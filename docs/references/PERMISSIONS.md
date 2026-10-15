@@ -5,6 +5,15 @@ exécutable reste `apps/web/src/shared/constants/permissions.constants.ts`.
 Toute divergence doit être corrigée dans le même changement que le code, les
 politiques serveur et les tests concernés.
 
+L'[audit du 15 octobre 2026](../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md)
+examine uniquement les pages utilisables et les capacités encore présentées dans
+leur éditeur. Après accord de l'utilisateur, les corrections du 15 octobre sont
+appliquées : retrait des quatre droits d'activité sans écran actuel, provenance
+rattachée au Répertoire et séparation des coordonnées. L'éditeur présente
+**27 capacités administratives** (25 délégables et deux liées au rôle) et
+**sept capacités personnelles** (une configurable et six garanties de base).
+La migration conserve les accès effectifs aux coordonnées des comptes existants.
+
 ## Principes
 
 - Refus par défaut : une clé inconnue ou seulement planifiée vaut toujours
@@ -43,9 +52,8 @@ Autorisation**.
 
 - pôles `Membres` et `Système` ;
 - pages `Répertoire`, `Utilisateurs` et `Paramètres système` ;
-- fonction transverse `Historique et provenance`, sans accès de page commun :
-  `audit:view` et `audit:view_field_history` conservent leurs usages indépendants.
-  Le Journal global prévu n'est pas compté comme une page accessible ;
+- provenance des informations dans la page `Répertoire`, dépendante de son
+  accès ; aucune fonction de journal global ni d'activité n'est présentée ;
 - rubriques telles que `Annuaire`, `Profil et contact`, `Sécurité` ou
   `Autorisations` ;
 - autorisations formulées avec un verbe d'action : `Consulter`, `Créer`,
@@ -58,8 +66,10 @@ désigne son résultat effectif (page accessible ou inaccessible).
 
 ## Trois ensembles à ne pas confondre
 
-1. `PERMISSIONS` contient toutes les clés actives reconnues par
-   `hasPermission` : socle, autonomie personnelle, administration et API.
+1. `PERMISSIONS` contient les identifiants techniques. Leur présence seule ne
+   rend pas un droit actif : les anciennes clés d'activité y subsistent pour
+   identifier les événements historiques, mais sont inconnues du moteur actif,
+   non attribuables et refusées pour les comptes non protégés.
 2. `PERMISSION_CATEGORIES` regroupe les autorisations administratives du catalogue
    technique, dont des entrées historiques de pages prévues. La projection
    `PERMISSION_EDITOR_CATEGORIES` distingue pages livrées et droits transverses
@@ -110,7 +120,6 @@ Légende :
 | `account:change_password` | mot de passe propre                   | `account:view_security` | sensible  | Oui, socle | Oui, socle | Oui, implicite | Non       |
 | `account:manage_mfa`      | MFA et récupération propres           | `account:view_security` | sensible  | Oui, socle | Oui, socle | Oui, implicite | Non       |
 | `account:manage_sessions` | sessions propres                      | `account:view_security` | sensible  | Oui, socle | Oui, socle | Oui, implicite | Non       |
-| `account:view_activity`   | activité propre                       | —                       | `default` | Oui, socle | Oui, socle | Oui, implicite | Non       |
 
 La modification du contact propre exige en plus la confirmation du mot de
 passe. Les capacités personnelles ne donnent aucun droit sur un autre compte.
@@ -130,20 +139,28 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:update_profile`        | modifier prénom et nom                          | `users:view`                                | sensible  | Non               |
 | `users:update_contact`        | modifier une adresse de contact                 | `users:view`, `users:view_contact`          | sensible  | Non               |
 | `users:update_login`          | modifier l'identifiant et fermer les sessions   | `users:view`                                | critique  | Oui               |
-| `users:view_security`         | voir verrouillage, mot de passe et MFA          | `users:view`                                | sensible  | Non               |
+| `users:view_security`         | voir verrouillage, état du mot de passe et MFA          | `users:view`                                | sensible  | Non               |
 | `users:update_status`         | désactiver ou réactiver un compte               | `users:view`, `users:view_security`         | critique  | Oui               |
 | `users:view_access`           | consulter les autorisations administratives     | `users:view`                                | sensible  | Non               |
-| `users:grant_access`          | accorder des autorisations administratives      | `users:view_access`                         | critique  | Oui               |
-| `users:revoke_access`         | retirer des autorisations administratives       | `users:view_access`                         | critique  | Oui               |
-| `users:delegate_access`       | déléguer l'attribution et le retrait des accès  | `users:grant_access`, `users:revoke_access` | critique  | Oui               |
+| `users:grant_access`          | accorder des autorisations administratives      | `users:view_access`                         | critique  | Mot de passe selon les changements, voir ci-dessous |
+| `users:revoke_access`         | retirer des autorisations administratives       | `users:view_access`                         | critique  | Mot de passe selon les changements, voir ci-dessous |
+| `users:delegate_access`       | déléguer l'attribution et le retrait des accès  | `users:grant_access`, `users:revoke_access` | critique  | Mot de passe récent |
 | `users:view_account_policy`   | voir l'autonomie personnelle                    | `users:view`                                | sensible  | Non               |
-| `users:update_account_policy` | modifier les options personnelles configurables | `users:view_account_policy`                 | sensible  | Oui               |
+| `users:update_account_policy` | autoriser/interdire l'édition du prénom et du nom propres | `users:view_account_policy`                 | sensible  | Non pour cette seule modification |
 | `users:reset_password`        | émettre un mot de passe temporaire              | `users:view_security`                       | critique  | Oui               |
 | `users:view_sessions`         | voir les sessions actives                       | `users:view_security`                       | sensible  | Non               |
 | `users:revoke_sessions`       | révoquer une ou toutes les sessions             | `users:view_sessions`                       | critique  | Oui               |
-| `users:view_activity`         | voir l'activité d'un autre compte               | `users:view`                                | sensible  | Non               |
-| `users:export_activity`       | exporter l'activité d'un autre compte           | `users:view_activity`                       | critique  | Oui               |
 | `users:delete_account`        | supprimer irréversiblement un compte désactivé  | `users:view_security`                       | critique  | Mot de passe récent |
+
+Pour la modification des autorisations administratives, la preuve est classée
+sur le résultat du lot : mot de passe récent pour un changement de rôle, une
+modification de droits administratifs d'un ADMIN, un changement des pouvoirs
+d'accorder/retirer/déléguer, ou le gain/retrait effectif d'un droit critique.
+Un changement ordinaire sur USER et la seule modification de l'option personnelle
+prénom/nom n'exigent pas de preuve additionnelle. Cela ne supprime ni les gardes
+de cible ni l'exigence de MFA complète avant attribution d'un accès critique.
+Le classificateur courant est
+`shared/server/user-permission-mutation-authorization.ts`.
 
 La désactivation via `users:update_status` est la seule opération réversible.
 La suppression exige un compte déjà désactivé, anonymise sa ligne technique,
@@ -183,27 +200,44 @@ restent hors de ce mécanisme : seul le compte racine peut les modifier.
 
 Chaque modification enregistre séparément les clés effectivement accordées et
 effectivement retirées, y compris les effets indirects des dépendances ou d'un
-changement de rôle. Ces listes sont des métadonnées d'audit sensibles : elles
-ne sont visibles que dans la projection détaillée autorisée par `audit:view`.
+changement de rôle. Ces métadonnées sensibles restent conservées dans l'audit ;
+aucun écran ni endpoint courant ne les expose comme journal détaillé.
 
 ### Page Répertoire
 
-Les quatre permissions acceptent une surcharge individuelle. Leur preset est
-`false` pour USER et `true` pour ADMIN. Le compte racine les possède
-implicitement.
+Les sept permissions (dont la provenance) acceptent une surcharge individuelle.
+Leur preset est `false` pour USER et `true` pour ADMIN. Le compte racine les
+possède implicitement.
 
-| Clé canonique    | Action couverte                                       | Dépend de      | Risque   | Step-up à l'usage |
-| ---------------- | ----------------------------------------------------- | -------------- | -------- | ----------------- |
-| `persons:view`   | consulter la liste et la fiche complète               | —              | sensible | Non               |
-| `persons:create` | créer une fiche et choisir son statut                 | `persons:view` | sensible | Non               |
-| `persons:update` | modifier l'identité, le statut et les coordonnées     | `persons:view` | sensible | Non               |
-| `persons:delete` | supprimer définitivement une fiche et ses coordonnées | `persons:view` | critique | Non               |
+| Clé canonique | Action couverte | Dépend de | Risque | Step-up à l'usage |
+| --- | --- | --- | --- | --- |
+| `persons:view` | consulter liste, identité, date de naissance et statut | — | sensible | Non |
+| `persons:create` | créer une fiche avec identité et statut | `persons:view` | sensible | Non |
+| `persons:update` | modifier identité et statut | `persons:view` | sensible | Non |
+| `persons:view_contact` | consulter et rechercher emails, téléphones et profils sociaux | `persons:view` | sensible | Non |
+| `persons:update_contact` | ajouter, modifier ou retirer ces coordonnées | `persons:view`, `persons:view_contact` | sensible | Non |
+| `audit:view_field_history` | consulter auteur, action et date du dernier changement d'un champ autorisé | `persons:view` | sensible | Non |
+| `persons:delete` | supprimer définitivement une fiche et ses coordonnées | `persons:view` | critique | Non |
 
-`persons:view` donne accès à toutes les données de la fiche détaillée, mais les
-listes et suggestions n'exposent ni coordonnées privées ni date de naissance.
-La suppression exige une confirmation explicite et une version courante ; elle
-ne demande pas de nouvelle preuve à l'usage. Comme toute permission critique,
-son attribution reste soumise aux protections générales du moteur.
+Sans lecture des coordonnées, la fiche et les retours de mutation contiennent
+des collections vides ; leurs compteurs sont masqués, la recherche ne porte que
+sur l'identité, et le filtre « sans coordonnées » est refusé. La provenance des
+coordonnées exige également `persons:view_contact`. Le détail conserve la date
+de naissance dans l'identité ; aucun droit supplémentaire n'a été créé pour ce
+champ. Les listes n'exposent ni cette date ni les valeurs de contact.
+
+Le formulaire de création actuel ne renseigne que l'identité et le statut.
+Une création par API contenant des coordonnées exige aussi
+`persons:update_contact`. La suppression complète reste distincte des droits
+d'édition et exige confirmation explicite et version courante, sans nouvelle
+preuve à l'usage. Son attribution reste soumise aux protections des droits
+critiques.
+
+La migration `20261015190000_current_site_permissions` reprend la lecture des
+coordonnées depuis l'ancien droit effectif de consultation, et leur écriture
+depuis l'ancien droit effectif de modification. Elle respecte les nouveaux
+choix explicites déjà présents, exclut le compte protégé et les tombstones
+supprimés, et ne réécrit aucun audit.
 
 ### Page Sponsors & partenaires (planifiée)
 
@@ -213,47 +247,41 @@ de `hasPermission`, ni des presets, ni des surcharges acceptées, et la page
 correspondante n'existe plus. La spécification complète est conservée dans
 `features/pages/bureau-juridique/sponsors-partenaires.md`.
 
-### Journal global et historique contextuel
+### Provenance et anciennes capacités d'activité
 
-| Clé canonique              | Action couverte                                          | Dépend de    | Risque   | USER | ADMIN     | Racine         | Surcharge | Step-up |
-| -------------------------- | -------------------------------------------------------- | ------------ | -------- | ---- | --------- | -------------- | --------- | ------- |
-| `audit:view`               | consulter le journal global et ses détails autorisés     | —            | critique | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
-| `audit:view_field_history` | voir deux changements d'un champ sur une page autorisée | dynamique    | sensible | Non  | Oui, rôle | Oui, implicite | Oui       | Non     |
+La provenance du Répertoire transmet au plus **un changement**, limité à
+l'auteur autorisé, l'action, la date et l'identifiant de la trace. Les anciennes
+et nouvelles valeurs ne sont ni chargées ni déchiffrées pour cette infobulle.
+Les traces stockées restent intactes.
 
-`audit:export` et l'export du journal global ont été retirés le 9 octobre 2026
-avec la page `/systeme/journal-activite`.
+Dans toutes les réponses Personnes (liste, fiche, provenance et retours de
+mutation), un auteur protégé est présenté comme « Superadministrateur », sans
+identifiant de connexion, sauf lorsque le lecteur est ce compte protégé.
+L'identité originale demeure dans les snapshots d'audit.
 
-`audit:view_field_history` ne dépend statiquement d'aucune page : chaque route
-contextuelle exige simultanément ce droit et le droit de consulter l'entité
-concernée, par exemple `persons:view`. Il n'accorde jamais l'accès au journal
-global. `audit:view` suffit en revanche à consulter la projection globale
-détaillée sans permission métier supplémentaire. Les secrets
-d'authentification ne sont jamais enregistrés. Le droit de consulter l'activité
-d'un utilisateur ne permet jamais de lire l'activité privée du compte racine :
-seul son propriétaire y accède.
+`audit:view`, `users:view_activity`, `users:export_activity` et
+`account:view_activity` sont retirés du catalogue actif et des presets.
+L'ancien endpoint `/api/users/[id]/audit` répond uniformément **410**, sans
+lecture de base ni export CSV. La migration retire les surcharges de ces clés
+et de leurs alias `system:audit` et `users:export` des comptes courants.
+Les libellés historiques restent disponibles pour interpréter les anciennes
+traces ; ils ne sont pas des permissions attribuables.
+`audit:export` et la page du journal global avaient déjà été retirés.
 
-Pour la fiche personne, la limite actuelle de l'API est de **deux changements**
-par champ ; l'infobulle affiche seulement la provenance de la dernière entrée.
-La revue du 12 octobre 2026 conserve ce contrat existant et corrige l'ancienne
-mention de trois changements, sans ajouter un écran d'historique complet.
-Voir les [décisions courantes du Répertoire](../qualite/pages/membres-repertoire.md).
+### Paramètres système : droits attachés au rôle
 
-### API actives sans écran d'administration
-
-Ces permissions protègent une API opérationnelle, mais aucun écran actif ne
-permet encore d'en configurer l'usage individuellement. Elles sont donc
-connues, non `grantable`, absentes de l'éditeur et impossibles à ajouter ou
-retirer par surcharge.
+La page `/systeme/parametres` et son API sont actives. Ces deux permissions sont
+présentées en lecture seule dans l'éditeur administratif : connues, non
+`grantable`, elles restent impossibles à ajouter ou retirer par surcharge.
 
 | Clé canonique        | API                                 | Dépend de       | Risque   | USER | ADMIN     | Racine         | Step-up |
 | -------------------- | ----------------------------------- | --------------- | -------- | ---- | --------- | -------------- | ------- |
 | `settings:view`      | `GET /api/systeme/parametres`       | —               | sensible | Non  | Oui, rôle | Oui, implicite | Non     |
-| `settings:update`    | `PUT /api/systeme/parametres/[key]` | `settings:view` | critique | Non  | Oui, rôle | Oui, implicite | Oui     |
+| `settings:update`    | `PUT /api/systeme/parametres/[key]` | `settings:view` | critique | Non  | Oui, rôle | Oui, implicite | Mot de passe récent pour réduction ou réparation d'une valeur invalide |
 
-Lorsqu'un écran correspondant deviendra actif, la possibilité d'une surcharge
-individuelle devra être décidée explicitement. La seule présence de l'API ou du
-futur écran ne doit pas transformer automatiquement ces droits de rôle en
-droits individuels.
+Une augmentation ordinaire de la durée ne demande pas de nouvelle preuve.
+La présence de la page et de ses capacités dans l'éditeur ne les transforme
+pas en droits délégables individuellement.
 
 ## Pages actives et contrôles attendus
 
@@ -267,7 +295,7 @@ droits individuels.
 | `/recherche`                                         | redirection vers `/` ; la navigation rapide de l’en-tête reste sans permission supplémentaire et filtre chaque destination autorisée                       |
 | `/membres/repertoire`                            | `persons:view` pour consulter et rechercher le répertoire                                                                                                  |
 | `/membres/repertoire/nouveau`                    | `persons:create`, donc aussi `persons:view`                                                                                                                |
-| `/membres/repertoire/[id]`                       | `persons:view` pour la fiche ; les mutations exigent `persons:update` ou `persons:delete`                                                                  |
+| `/membres/repertoire/[id]`                       | `persons:view` pour l'identité ; coordonnées via `persons:view_contact` ; mutations via `persons:update`, `persons:update_contact` ou `persons:delete`                                                                  |
 | `/tableau-de-bord`                                   | alias de support redirigeant vers `/` ; aucune permission supplémentaire                                                                                   |
 | `/administration`                                    | route de support redirigeant vers les utilisateurs                                                                                                         |
 | `/systeme/utilisateurs`                       | `users:view`                                                                                                                                               |
@@ -276,7 +304,7 @@ droits individuels.
 | `/systeme/utilisateurs/[id]?section=security` | sécurité, statut, sessions, mot de passe et suppression définitive via les clés `users:*` correspondantes                                                  |
 | `/systeme/utilisateurs/[id]?section=access`   | `users:view_access` pour lire ; `users:grant_access` pour accorder ; `users:revoke_access` pour retirer ; `users:delegate_access` pour déléguer la gestion |
 | `/systeme/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
-| `/systeme/utilisateurs/[id]?section=history`  | `users:view_activity` ; `users:export_activity` pour le CSV                                                                                                |
+| `/systeme/utilisateurs/[id]?section=history` | ancien onglet normalisé vers Profil ; endpoint d'activité fermé (410), aucune capacité active |
 | `/systeme/parametres`                                | `settings:view` pour lire ; `settings:update` pour modifier ; droits exclusivement liés au rôle ADMIN                                                      |
 | `/systeme/journal-activite`                          | redirection vers `/systeme/feuille-de-route` ; la vue globale est replanifiée, sans permission active                                                       |
 | pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |

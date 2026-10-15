@@ -495,6 +495,7 @@ describe('person contact optimistic concurrency and primary invariants', () => {
     const result = await mapPersonDetail(
       mocks.transaction as never,
       personRecord([]) as never,
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
     );
 
     expect(result.lastChange).toEqual({
@@ -509,6 +510,7 @@ describe('person contact optimistic concurrency and primary invariants', () => {
         actorDisplayNameSnapshot: true,
         actorLoginNameSnapshot: true,
         createdAt: true,
+        user: { select: { id: true, isProtected: true } },
       },
       where: { entityId: 'person-1', entityType: 'PERSON' },
     });

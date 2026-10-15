@@ -40,7 +40,9 @@ export const PERMISSIONS = {
     CREATE: 'persons:create',
     DELETE: 'persons:delete',
     UPDATE: 'persons:update',
+    UPDATE_CONTACT: 'persons:update_contact',
     VIEW: 'persons:view',
+    VIEW_CONTACT: 'persons:view_contact',
   },
   SETTINGS: {
     UPDATE: 'settings:update',
@@ -415,34 +417,15 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
     ],
     tone: 'internal',
   },
-  {
-    description: 'Historique visible depuis son propre compte.',
-    icon: 'History',
-    key: 'account-activity',
-    label: 'Activité personnelle',
-    permissions: [
-      activePermission({
-        action: 'view',
-        alwaysEnabled: true,
-        description:
-          'Consulter le journal de sécurité et les actions liées à son propre compte',
-        grantable: false,
-        key: PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
-        label: "Consulter son journal d'activité",
-        module: 'Activité',
-        risk: 'default',
-        route: '/mon-compte',
-        surface: 'self',
-      }),
-    ],
-    tone: 'internal',
-  },
 ];
 
 /** All live administrative pages shown in the per-user access overview. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   INTERNAL_NEWS_PERMISSION_CATEGORY,
-  createPersonsPermissionCategory(PERMISSIONS.PERSONS),
+  createPersonsPermissionCategory(
+    PERMISSIONS.PERSONS,
+    PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
+  ),
   {
     accessPermissionKey: PERMISSIONS.USERS.VIEW,
     assignment: 'delegable',
@@ -532,7 +515,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         action: 'view',
         dependencies: [PERMISSIONS.USERS.VIEW],
         description:
-          'Consulter le verrouillage, le mot de passe et la double authentification',
+          'Consulter le verrouillage, l’état du mot de passe et de la double authentification',
         grantable: true,
         key: PERMISSIONS.USERS.VIEW_SECURITY,
         label: 'Consulter la sécurité des comptes',
@@ -615,7 +598,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
           "Consulter les actions qu'un utilisateur peut effectuer sur son propre compte",
         grantable: true,
         key: PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY,
-        label: "Consulter l'autonomie du compte",
+        label: 'Consulter les droits du compte personnel',
         module: 'Compte personnel',
         risk: 'sensitive',
         route: `${PAGE_PATHS.users}/[id]?section=account`,
@@ -625,7 +608,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW_ACCOUNT_POLICY],
         description:
-          "Définir les actions optionnelles qu'un utilisateur peut effectuer sur son propre compte",
+          'Autoriser ou interdire la modification personnelle du prénom et du nom',
         grantable: true,
         key: PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
         label: "Modifier l'autonomie du compte",
@@ -673,31 +656,6 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
         surface: 'page',
       }),
       activePermission({
-        action: 'view',
-        dependencies: [PERMISSIONS.USERS.VIEW],
-        description: "Consulter l'activité liée à un compte utilisateur",
-        grantable: true,
-        key: PERMISSIONS.USERS.VIEW_ACTIVITY,
-        label: "Consulter l'activité d'un utilisateur",
-        module: 'Activité',
-        risk: 'sensitive',
-        route: `${PAGE_PATHS.users}/[id]?section=history`,
-        surface: 'page',
-      }),
-      activePermission({
-        action: 'export',
-        dependencies: [PERMISSIONS.USERS.VIEW_ACTIVITY],
-        description: "Exporter en CSV le journal d'activité d'un utilisateur",
-        grantable: true,
-        key: PERMISSIONS.USERS.EXPORT_ACTIVITY,
-        label: "Exporter l'activité d'un utilisateur",
-        module: 'Activité',
-        risk: 'critical',
-        route: `${PAGE_PATHS.users}/[id]?section=history`,
-        stepUpOnUse: true,
-        surface: 'page',
-      }),
-      activePermission({
         action: 'delete',
         dependencies: [PERMISSIONS.USERS.VIEW_SECURITY],
         description:
@@ -726,45 +684,6 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     permissions: SETTINGS_PERMISSION_ITEMS,
     poleKey: 'system',
     routes: ['/systeme/parametres'],
-    surface: 'page',
-    tone: 'system',
-  },
-  {
-    accessPermissionKey: PERMISSIONS.AUDIT.VIEW,
-    assignment: 'delegable',
-    description:
-      "Journal global détaillé, origine des informations et export d'activité.",
-    icon: 'History',
-    key: 'system-activity',
-    label: "Journal d'activité",
-    permissions: [
-      activePermission({
-        action: 'view',
-        description:
-          "Consulter le journal d'activité global et tous ses détails autorisés",
-        grantable: true,
-        key: PERMISSIONS.AUDIT.VIEW,
-        label: "Consulter le journal d'activité global détaillé",
-        module: 'Consultation',
-        risk: 'critical',
-        route: '/systeme/journal-activite',
-        surface: 'page',
-      }),
-      activePermission({
-        action: 'view',
-        description:
-          'Voir qui a renseigné ou modifié une information et à quelle date sur une page déjà autorisée',
-        grantable: true,
-        key: PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
-        label: "Consulter l'origine des informations",
-        module: 'Provenance contextuelle',
-        risk: 'sensitive',
-        route: 'Pages autorisées',
-        surface: 'page',
-      }),
-    ],
-    poleKey: 'system',
-    routes: ['/systeme/journal-activite'],
     surface: 'page',
     tone: 'system',
   },
@@ -829,14 +748,14 @@ const TARGET_MFA_PERMISSION_KEYS = ALL_PERMISSION_ITEMS.filter(
 export const LEGACY_PERMISSION_ALIASES: Readonly<
   Record<string, readonly string[]>
 > = {
-  'system:audit': [PERMISSIONS.AUDIT.VIEW],
+  'system:audit': [],
   'system:settings': [PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE],
   'users:edit_permissions': [
     PERMISSIONS.USERS.GRANT_ACCESS,
     PERMISSIONS.USERS.REVOKE_ACCESS,
     PERMISSIONS.USERS.DELEGATE_ACCESS,
   ],
-  'users:export': [PERMISSIONS.USERS.EXPORT_ACTIVITY],
+  'users:export': [],
   'users:manage_account_policy': [PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY],
   'users:manage_status': [PERMISSIONS.USERS.UPDATE_STATUS],
   'users:update_access': [
@@ -847,6 +766,15 @@ export const LEGACY_PERMISSION_ALIASES: Readonly<
 };
 
 const LEGACY_PERMISSION_DISPLAY_LABEL_MAP = new Map<string, string>([
+  ['audit:view', 'Consulter le journal global (historique)'],
+  ['system:audit', 'Consulter le journal global (historique)'],
+  ['users:view_activity', 'Consulter l’activité d’un utilisateur (historique)'],
+  [
+    'users:export_activity',
+    'Exporter l’activité d’un utilisateur (historique)',
+  ],
+  ['users:export', 'Exporter l’activité d’un utilisateur (historique)'],
+  ['account:view_activity', 'Consulter son activité (historique)'],
   ['audit:export', "Exporter le journal d'activité global (historique)"],
   [
     'audit:view_sensitive',
@@ -904,6 +832,10 @@ const ROADMAP_PERMISSION_KEYS = Object.values(ROADMAP_PERMISSIONS).flatMap(
   (family) => Object.values(family),
 );
 const HISTORICAL_ONLY_PERMISSION_KEYS = [
+  'audit:view',
+  'users:view_activity',
+  'users:export_activity',
+  'account:view_activity',
   'audit:export',
   'audit:view_sensitive',
   'members:update',
@@ -1047,7 +979,7 @@ export const getNonAssignablePermissionKeys = (
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   ADMIN: [
-    ...Object.values(PERMISSIONS.ACCOUNT),
+    ...ACCOUNT_PERMISSION_KEYS,
     PERMISSIONS.DASHBOARD.VIEW,
     PERMISSIONS.INTERNAL_NEWS.VIEW,
     PERMISSIONS.INTERNAL_NEWS.MANAGE,
@@ -1056,7 +988,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
     ...ACCESS_PERMISSION_KEYS,
   ],
   USER: [
-    ...Object.values(PERMISSIONS.ACCOUNT),
+    ...ACCOUNT_PERMISSION_KEYS,
     PERMISSIONS.DASHBOARD.VIEW,
     PERMISSIONS.INTERNAL_NEWS.VIEW,
   ],

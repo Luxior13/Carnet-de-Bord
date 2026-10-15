@@ -12,20 +12,9 @@ import {
   type PermissionsData,
 } from '$constants/permissions.constants';
 
-/** The global journal is planned; its existing API/contextual rights remain usable. */
+/** Only capabilities belonging to currently usable pages are presented. */
 export const PERMISSION_EDITOR_CATEGORIES = PERMISSION_CATEGORIES.flatMap(
   (category): Array<PermissionCategory & { scope: 'page' | 'cross-page' }> => {
-    if (category.key === 'system-activity') {
-      return [
-        {
-          ...category,
-          description:
-            'Détails des historiques autorisés et origine des informations. Ces droits ne donnent pas accès à une page supplémentaire.',
-          label: 'Historique et provenance',
-          scope: 'cross-page',
-        },
-      ];
-    }
     if (getFeatureById(category.key)?.availability !== 'live') return [];
 
     return [{ ...category, scope: 'page' }];

@@ -50,7 +50,7 @@ describe('hasPermission', () => {
     expect(hasPermission('USER', PERMISSIONS.DASHBOARD.VIEW)).toBe(true);
 
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.CREATE)).toBe(true);
-    expect(hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT_ACTIVITY)).toBe(
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.REVOKE_SESSIONS)).toBe(
       true,
     );
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.UPDATE_LOGIN)).toBe(true);
@@ -62,7 +62,7 @@ describe('hasPermission', () => {
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.DELEGATE_ACCESS)).toBe(
       true,
     );
-    expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW)).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW)).toBe(false);
     expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY)).toBe(
       true,
     );
@@ -77,7 +77,7 @@ describe('hasPermission', () => {
     expect(hasPermission('USER', PERMISSIONS.USERS.DELEGATE_ACCESS)).toBe(
       false,
     );
-    expect(hasPermission('USER', PERMISSIONS.USERS.EXPORT_ACTIVITY)).toBe(
+    expect(hasPermission('USER', PERMISSIONS.USERS.REVOKE_SESSIONS)).toBe(
       false,
     );
     expect(hasPermission('USER', PERMISSIONS.AUDIT.VIEW)).toBe(false);
@@ -87,9 +87,10 @@ describe('hasPermission', () => {
   it('lets grantable overrides change access when dependencies are effective', () => {
     const customPermissions = {
       [PERMISSIONS.USERS.CREATE]: false,
-      [PERMISSIONS.USERS.EXPORT_ACTIVITY]: true,
+      [PERMISSIONS.USERS.REVOKE_SESSIONS]: true,
       [PERMISSIONS.USERS.VIEW]: true,
-      [PERMISSIONS.USERS.VIEW_ACTIVITY]: true,
+      [PERMISSIONS.USERS.VIEW_SESSIONS]: true,
+      [PERMISSIONS.USERS.VIEW_SECURITY]: true,
     };
 
     expect(
@@ -101,13 +102,13 @@ describe('hasPermission', () => {
     expect(
       hasPermission(
         'USER',
-        PERMISSIONS.USERS.EXPORT_ACTIVITY,
+        PERMISSIONS.USERS.REVOKE_SESSIONS,
         customPermissions,
       ),
     ).toBe(true);
     expect(
-      hasPermission('ADMIN', PERMISSIONS.USERS.EXPORT_ACTIVITY, {
-        [PERMISSIONS.USERS.EXPORT_ACTIVITY]: false,
+      hasPermission('ADMIN', PERMISSIONS.USERS.REVOKE_SESSIONS, {
+        [PERMISSIONS.USERS.REVOKE_SESSIONS]: false,
       }),
     ).toBe(false);
   });
@@ -181,12 +182,14 @@ describe('hasPermission', () => {
       Object.entries(userRoleBasePermissions),
     );
 
-    for (const permissionKey of Object.values(PERMISSIONS.ACCOUNT)) {
+    for (const permissionKey of Object.values(PERMISSIONS.ACCOUNT).filter(
+      isKnownPermissionKey,
+    )) {
       expect(userRoleBasePermissionsMap.get(permissionKey)).toBe(true);
     }
     expect(userRoleBasePermissions[PERMISSIONS.DASHBOARD.VIEW]).toBe(true);
     expect(userRoleBasePermissions[PERMISSIONS.USERS.VIEW]).toBe(false);
-    expect(userRoleBasePermissions[PERMISSIONS.AUDIT.VIEW]).toBe(false);
+    expect(userRoleBasePermissions).not.toHaveProperty(PERMISSIONS.AUDIT.VIEW);
     expect(userRoleBasePermissions).not.toHaveProperty(
       ROADMAP_PERMISSIONS.INTERNAL.VIEW,
     );
@@ -266,13 +269,14 @@ describe('hasPermission', () => {
     expect(
       hasPermission('USER', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY, {
         [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
+        [PERMISSIONS.PERSONS.VIEW]: true,
       }),
     ).toBe(true);
     expect(
       requiresMfaForAccess('USER', {
         [PERMISSIONS.AUDIT.VIEW]: true,
       }),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it('enforces the persons read dependency without coupling contextual audit', () => {
@@ -289,7 +293,7 @@ describe('hasPermission', () => {
     ).toBe(true);
     expect(
       getPermissionItem(PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY)?.dependencies,
-    ).toBeUndefined();
+    ).toEqual([PERMISSIONS.PERSONS.VIEW]);
   });
 
   it('keeps essential personal account actions enabled despite deny overrides', () => {
@@ -450,10 +454,7 @@ describe('permission catalogue', () => {
   });
 
   it('keeps critical journal and person deletion free of per-use step-up', () => {
-    for (const permissionKey of [
-      PERMISSIONS.AUDIT.VIEW,
-      PERMISSIONS.PERSONS.DELETE,
-    ]) {
+    for (const permissionKey of [PERMISSIONS.PERSONS.DELETE]) {
       expect(getPermissionItem(permissionKey)).toMatchObject({
         requiresTargetMfa: true,
         risk: 'critical',
@@ -472,6 +473,9 @@ describe('permission catalogue', () => {
       'persons:view',
       'persons:create',
       'persons:update',
+      'persons:view_contact',
+      'persons:update_contact',
+      'audit:view_field_history',
       'persons:delete',
       'users:view',
       'users:create',
@@ -490,11 +494,7 @@ describe('permission catalogue', () => {
       'users:reset_password',
       'users:view_sessions',
       'users:revoke_sessions',
-      'users:view_activity',
-      'users:export_activity',
       'users:delete_account',
-      'audit:view',
-      'audit:view_field_history',
       'account:view_profile',
       'account:update_profile',
       'account:update_contact',
@@ -502,7 +502,6 @@ describe('permission catalogue', () => {
       'account:change_password',
       'account:manage_mfa',
       'account:manage_sessions',
-      'account:view_activity',
     ]);
   });
 
@@ -512,11 +511,10 @@ describe('permission catalogue', () => {
       'persons',
       'users',
       'system-settings',
-      'system-activity',
     ]);
     expect(
       DELEGABLE_PERMISSION_CATEGORIES.map((category) => category.key),
-    ).toEqual(['persons', 'users', 'system-activity']);
+    ).toEqual(['persons', 'users']);
     expect(getAccessPermissionKeys()).toEqual(
       DELEGABLE_PERMISSION_CATEGORIES.flatMap((category) =>
         category.permissions.map((permission) => permission.key),
@@ -598,7 +596,6 @@ describe('permission catalogue', () => {
       'Répertoire',
       'Utilisateurs',
       'Paramètres système',
-      "Journal d'activité",
     ]);
     expect(
       getAllPermissionKeys()
@@ -630,7 +627,7 @@ describe('permission catalogue', () => {
     ).toEqual([]);
 
     for (const canonicalKeys of Object.values(LEGACY_PERMISSION_ALIASES)) {
-      expect(canonicalKeys.length).toBeGreaterThan(0);
+      // Retired aliases resolve to no active capabilities.
       expect(canonicalKeys.every(isKnownPermissionKey)).toBe(true);
     }
   });
@@ -682,10 +679,7 @@ describe('permission catalogue', () => {
         'system:settings': true,
         'users:export': true,
       }),
-    ).toEqual({
-      [PERMISSIONS.AUDIT.VIEW]: true,
-      [PERMISSIONS.USERS.EXPORT_ACTIVITY]: true,
-    });
+    ).toBeNull();
     expect(
       normalizePermissionOverrides({
         'users:update_access': true,
@@ -797,7 +791,7 @@ describe('permission catalogue', () => {
     expect(isKnownPermissionKey('users:archive')).toBe(false);
     expect(isKnownPermissionKey('users:delete')).toBe(false);
     expect(getPermissionDisplayLabel('system:audit')).toBe(
-      getPermissionItem(PERMISSIONS.AUDIT.VIEW)?.label,
+      'Consulter le journal global (historique)',
     );
     expect(getPermissionDisplayLabel('users:update_access')).toBe(
       'Modifier les autorisations administratives (historique)',
@@ -849,13 +843,14 @@ describe('permission catalogue', () => {
       PERMISSIONS.ACCOUNT.CHANGE_PASSWORD,
       PERMISSIONS.ACCOUNT.MANAGE_MFA,
       PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
-      PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
     ]);
   });
 
   it('defines neutral role presets without roadmap permissions', () => {
     expect(ROLE_PERMISSIONS.ADMIN).toEqual([
-      ...Object.values(PERMISSIONS.ACCOUNT),
+      ...ACCOUNT_PERMISSION_CATEGORIES.flatMap((category) =>
+        category.permissions.map((item) => item.key),
+      ),
       PERMISSIONS.DASHBOARD.VIEW,
       PERMISSIONS.INTERNAL_NEWS.VIEW,
       PERMISSIONS.INTERNAL_NEWS.MANAGE,
@@ -864,7 +859,9 @@ describe('permission catalogue', () => {
       ...getAccessPermissionKeys(),
     ]);
     expect(ROLE_PERMISSIONS.USER).toEqual([
-      ...Object.values(PERMISSIONS.ACCOUNT),
+      ...ACCOUNT_PERMISSION_CATEGORIES.flatMap((category) =>
+        category.permissions.map((item) => item.key),
+      ),
       PERMISSIONS.DASHBOARD.VIEW,
       PERMISSIONS.INTERNAL_NEWS.VIEW,
     ]);

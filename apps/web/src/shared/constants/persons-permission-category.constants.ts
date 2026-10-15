@@ -9,7 +9,9 @@ type PersonPermissionKeys = Readonly<{
   CREATE: string;
   DELETE: string;
   UPDATE: string;
+  UPDATE_CONTACT: string;
   VIEW: string;
+  VIEW_CONTACT: string;
 }>;
 
 const permission = (
@@ -23,6 +25,7 @@ const permission = (
 /** Keeps the growing central catalogue composable one live feature at a time. */
 export const createPersonsPermissionCategory = (
   keys: PersonPermissionKeys,
+  provenanceKey: string,
 ): PermissionCategory => ({
   accessPermissionKey: keys.VIEW,
   assignment: 'delegable',
@@ -35,7 +38,7 @@ export const createPersonsPermissionCategory = (
     permission({
       action: 'view',
       description:
-        'Consulter les fiches, leur identité, leur statut et leurs coordonnées',
+        'Consulter les fiches, leur identité, leur date de naissance et leur statut',
       grantable: true,
       key: keys.VIEW,
       label: 'Consulter le répertoire',
@@ -48,7 +51,7 @@ export const createPersonsPermissionCategory = (
       action: 'create',
       dependencies: [keys.VIEW],
       description:
-        'Créer une fiche avec son identité, son statut et ses coordonnées',
+        'Créer une fiche avec son identité et son statut ; les coordonnées demandent leur droit de modification',
       grantable: true,
       key: keys.CREATE,
       label: 'Ajouter des fiches au répertoire',
@@ -60,12 +63,50 @@ export const createPersonsPermissionCategory = (
     permission({
       action: 'update',
       dependencies: [keys.VIEW],
-      description:
-        "Modifier l'identité, le statut, les coordonnées et les réseaux sociaux",
+      description: "Modifier l'identité et le statut des personnes",
       grantable: true,
       key: keys.UPDATE,
       label: 'Modifier les fiches du répertoire',
       module: 'Gestion des fiches',
+      risk: 'sensitive',
+      route: `${PAGE_PATHS.persons}/[id]`,
+      surface: 'page',
+    }),
+    permission({
+      action: 'view',
+      dependencies: [keys.VIEW],
+      description:
+        'Consulter et rechercher les emails, téléphones et profils sociaux',
+      grantable: true,
+      key: keys.VIEW_CONTACT,
+      label: 'Consulter les coordonnées',
+      module: 'Coordonnées',
+      risk: 'sensitive',
+      route: `${PAGE_PATHS.persons}/[id]?section=coordonnees`,
+      surface: 'page',
+    }),
+    permission({
+      action: 'update',
+      dependencies: [keys.VIEW, keys.VIEW_CONTACT],
+      description:
+        'Ajouter, modifier ou retirer des emails, téléphones et profils sociaux',
+      grantable: true,
+      key: keys.UPDATE_CONTACT,
+      label: 'Modifier les coordonnées',
+      module: 'Coordonnées',
+      risk: 'sensitive',
+      route: `${PAGE_PATHS.persons}/[id]?section=coordonnees`,
+      surface: 'page',
+    }),
+    permission({
+      action: 'view',
+      dependencies: [keys.VIEW],
+      description:
+        'Voir l’auteur, la date et l’action à l’origine des champs autorisés du répertoire',
+      grantable: true,
+      key: provenanceKey,
+      label: 'Consulter la provenance des informations',
+      module: 'Provenance',
       risk: 'sensitive',
       route: `${PAGE_PATHS.persons}/[id]`,
       surface: 'page',

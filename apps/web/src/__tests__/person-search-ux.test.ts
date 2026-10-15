@@ -197,7 +197,10 @@ describe('person indexed search', () => {
   });
 
   it('uses exact, prefix, and trigram-compatible LIKE branches on normalized identity columns', async () => {
-    await listPersons({ limit: 25, q: 'Élo' });
+    await listPersons(
+      { limit: 25, q: 'Élo' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const sql = getLastSql();
 
     expect(sql.text).toContain('p."normalizedNickname" =');
@@ -209,17 +212,23 @@ describe('person indexed search', () => {
   });
 
   it('uses prefix-friendly contact predicates and an exact hash for a social URL', async () => {
-    await listPersons({ limit: 25, q: 'MEMBER@EXAMPLE.COM' });
+    await listPersons(
+      { limit: 25, q: 'MEMBER@EXAMPLE.COM' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const emailSql = getLastSql();
     expect(emailSql.text).toContain('email."normalizedEmail" =');
     expect(emailSql.text).toContain('email."normalizedEmail" LIKE');
     expect(emailSql.values).toContain('member@example.com');
     expect(emailSql.values).toContain('member@example.com%');
 
-    await listPersons({
-      limit: 25,
-      q: 'HTTPS://Example.COM:443/member/#private',
-    });
+    await listPersons(
+      {
+        limit: 25,
+        q: 'HTTPS://Example.COM:443/member/#private',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const urlSql = getLastSql();
     const expectedHash = createHash('sha256')
       .update('https://example.com/member', 'utf8')
@@ -231,11 +240,14 @@ describe('person indexed search', () => {
   });
 
   it('filters status in SQL and keeps multi-child search in correlated EXISTS clauses', async () => {
-    await listPersons({
-      limit: 25,
-      q: '+336',
-      structureStatus: 'IN_STRUCTURE',
-    });
+    await listPersons(
+      {
+        limit: 25,
+        q: '+336',
+        structureStatus: 'IN_STRUCTURE',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const sql = getLastSql();
 
     expect(sql.text).toContain(
@@ -257,21 +269,30 @@ describe('person indexed search', () => {
   });
 
   it('uses stable indexed orders for every directory sort', async () => {
-    await listPersons({ limit: 25, q: '', sort: 'name' });
+    await listPersons(
+      { limit: 25, q: '', sort: 'name' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const alphabeticalSql = getLastSql();
     expect(alphabeticalSql.text).toContain(
       'ORDER BY p."sortName" ASC, p."id" ASC',
     );
     expect(alphabeticalSql.text).toContain('p."updatedAt" <=');
 
-    await listPersons({ limit: 25, q: '', sort: 'updated' });
+    await listPersons(
+      { limit: 25, q: '', sort: 'updated' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const updatedSql = getLastSql();
     expect(updatedSql.text).toContain(
       'ORDER BY p."updatedAt" DESC, p."id" DESC',
     );
     expect(updatedSql.text).toContain('p."updatedAt" <=');
 
-    await listPersons({ limit: 25, q: '', sort: 'created' });
+    await listPersons(
+      { limit: 25, q: '', sort: 'created' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const createdSql = getLastSql();
     expect(createdSql.text).toContain(
       'ORDER BY p."createdAt" DESC, p."id" DESC',
@@ -280,18 +301,27 @@ describe('person indexed search', () => {
   });
 
   it('does not depend on an asynchronous deletion table', async () => {
-    await listPersons({ limit: 25, q: '' });
+    await listPersons(
+      { limit: 25, q: '' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const listSql = getLastSql();
     expect(listSql.text).not.toContain('PersonDeletionRequest');
 
-    await listPersons({ limit: 25, q: 'private@example.com' });
+    await listPersons(
+      { limit: 25, q: 'private@example.com' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const searchedSql = getLastSql();
     expect(searchedSql.text).not.toContain('PersonDeletionRequest');
   });
 
   it('rejects invalid or filter-mismatched cursors before issuing a database query', async () => {
     await expect(
-      listPersons({ cursor: 'not-a-signed-cursor', limit: 25, q: '' }),
+      listPersons(
+        { cursor: 'not-a-signed-cursor', limit: 25, q: '' },
+        { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+      ),
     ).rejects.toThrow('INVALID_CURSOR');
     expect(mocks.queryRaw).not.toHaveBeenCalled();
 
@@ -327,16 +357,22 @@ describe('person indexed search', () => {
         version: 1,
       },
     ]);
-    const firstPage = await listPersons({ limit: 1, q: '' });
+    const firstPage = await listPersons(
+      { limit: 1, q: '' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(firstPage.pagination.nextCursor).toBeTruthy();
     mocks.queryRaw.mockClear();
 
     await expect(
-      listPersons({
-        cursor: firstPage.pagination.nextCursor ?? undefined,
-        limit: 1,
-        q: 'different-filter',
-      }),
+      listPersons(
+        {
+          cursor: firstPage.pagination.nextCursor ?? undefined,
+          limit: 1,
+          q: 'different-filter',
+        },
+        { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+      ),
     ).rejects.toThrow('INVALID_CURSOR');
     expect(mocks.queryRaw).not.toHaveBeenCalled();
   });
@@ -380,7 +416,10 @@ describe('person indexed search', () => {
       },
     ]);
 
-    const firstPage = await listPersons({ limit: 1, q: 'private' });
+    const firstPage = await listPersons(
+      { limit: 1, q: 'private' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(firstPage.items).toEqual([
       {
         contactCounts: {
@@ -406,11 +445,14 @@ describe('person indexed search', () => {
     expect(firstPage.pagination.hasMore).toBe(true);
 
     mocks.queryRaw.mockResolvedValueOnce([]);
-    await listPersons({
-      cursor: firstPage.pagination.nextCursor ?? undefined,
-      limit: 1,
-      q: 'private',
-    });
+    await listPersons(
+      {
+        cursor: firstPage.pagination.nextCursor ?? undefined,
+        limit: 1,
+        q: 'private',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     const nextSql = getLastSql();
     expect(nextSql.text).toContain('p."updatedAt" <=');
     expect(nextSql.text).toContain('p."sortName" >');
@@ -644,7 +686,9 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(
       entityDetailLayoutSource.match(/<PageSectionNavigation/g),
     ).toHaveLength(1);
-    expect(detailPageSource).toContain('sections={PERSON_DETAIL_SECTIONS}');
+    expect(detailPageSource).toContain(
+      'sections={PERSON_DETAIL_SECTIONS.filter',
+    );
     expect(detailPageSource).not.toContain('<ScrollableTabsList');
     expect(detailPageSource).not.toContain('<PageHero\n          actions=');
     expect(newPersonPageSource).not.toContain('<PageBackNavigation');

@@ -1,5 +1,29 @@
 # Suivi — Mon compte (`/mon-compte`)
 
+## Catalogue personnel corrigé — 15 octobre 2026
+
+Après accord utilisateur, AUT-S02 est corrigé : `account:view_activity` n'est
+plus actif ni garanti par le socle et l'ancien endpoint d'activité est fermé
+(410). Le volet Compte personnel présente sept capacités utilisées : six
+garanties et l'option prénom/nom configurable. Aucune nouvelle fonction n'est
+créée. Tests du catalogue et de fermeture API réussis dans la suite web
+(1 335 réussis, 142 intégrations facultatives non exécutées).
+Les parcours MFA personnels n'ont pas été rejoués par navigateur pour ce lot.
+Le [rapport transverse](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md#corrections-après-accord--15-octobre-2026)
+porte les preuves communes. Les constats initiaux ci-dessous restent datés.
+
+## Autorisations personnelles actuelles — 15 octobre 2026
+
+L'[audit transverse des autorisations](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md)
+conserve les garanties de profil, contact, sécurité, mot de passe, MFA et sessions,
+avec la seule option configurable actuelle pour modifier prénom/nom.
+AUT-S02 signale la capacité `account:view_activity` encore présentée dans
+l'éditeur de compte personnel sans journal utilisable dans Mon compte. Son retrait
+de la présentation est recommandé ; l'API encore joignable doit être traitée
+avant de supprimer une garde. Suivi propriétaire Utilisateurs, responsable à
+attribuer. Aucune politique personnelle modifiée ; tests simulés uniquement pour
+cette passe, sans réutiliser les anciennes preuves réelles comme validation nouvelle.
+
 ## État courant — clôture du socle du 13 octobre 2026
 
 La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est

@@ -47,7 +47,7 @@ export async function GET(
     await assertPersonFeatureReady();
 
     return withPrivateNoStore(
-      apiSuccess(await getPersonFieldHistory(id, parsed.data)),
+      apiSuccess(await getPersonFieldHistory(id, parsed.data, auth.user)),
     );
   } catch (error) {
     return withPrivateNoStore(

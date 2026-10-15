@@ -11,12 +11,14 @@ import type { PersonOverview as PersonOverviewStats } from '../types/person.type
 import styles from './PersonOverview.module.css';
 
 type PersonOverviewProps = {
+  canViewContact?: boolean;
   isLoading?: boolean;
   query?: string;
   stats: PersonOverviewStats | null;
 };
 
 export const PersonOverview: FC<PersonOverviewProps> = ({
+  canViewContact = false,
   isLoading = false,
   query = '',
   stats,
@@ -99,28 +101,34 @@ export const PersonOverview: FC<PersonOverviewProps> = ({
         </Button>
       </div>
       <div className={styles.counters}>
-        {counters.map((counter) => (
-          <Button
-            asChild
-            variant="ghost"
-            key={counter.label}
-            className={styles.counter}
-          >
-            <Link
-              href={counter.href}
-              scroll={false}
-              aria-label={`Afficher les fiches : ${counter.label}, ${countLabel(counter.value)}`}
-              aria-current={counter.active ? 'page' : undefined}
+        {counters
+          .filter(
+            (counter) =>
+              counter.value !== null &&
+              (counter.label !== 'Sans coordonnées' || canViewContact),
+          )
+          .map((counter) => (
+            <Button
+              asChild
+              variant="ghost"
+              key={counter.label}
+              className={styles.counter}
             >
-              <span className="text-muted-foreground text-[11px] font-normal">
-                {counter.label}
-              </span>
-              <span className="text-sm font-semibold tabular-nums">
-                {value(counter.value)}
-              </span>
-            </Link>
-          </Button>
-        ))}
+              <Link
+                href={counter.href}
+                scroll={false}
+                aria-label={`Afficher les fiches : ${counter.label}, ${countLabel(counter.value ?? undefined)}`}
+                aria-current={counter.active ? 'page' : undefined}
+              >
+                <span className="text-muted-foreground text-[11px] font-normal">
+                  {counter.label}
+                </span>
+                <span className="text-sm font-semibold tabular-nums">
+                  {value(counter.value ?? undefined)}
+                </span>
+              </Link>
+            </Button>
+          ))}
       </div>
     </aside>
   );

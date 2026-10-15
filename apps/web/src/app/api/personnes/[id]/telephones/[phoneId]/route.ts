@@ -28,7 +28,10 @@ export async function PATCH(
 ): Promise<NextResponse> {
   const auth = await requireAuth();
   if (!auth.success) return auth.response;
-  const permission = requirePermission(auth.user, PERMISSIONS.PERSONS.UPDATE);
+  const permission = requirePermission(
+    auth.user,
+    PERMISSIONS.PERSONS.UPDATE_CONTACT,
+  );
   if (!permission.success) return permission.response;
   const body = await parseJsonBody(request);
   if (!body.success) return body.response;
@@ -63,7 +66,10 @@ export async function DELETE(
 ): Promise<NextResponse> {
   const auth = await requireAuth();
   if (!auth.success) return auth.response;
-  const permission = requirePermission(auth.user, PERMISSIONS.PERSONS.UPDATE);
+  const permission = requirePermission(
+    auth.user,
+    PERMISSIONS.PERSONS.UPDATE_CONTACT,
+  );
   if (!permission.success) return permission.response;
   const body = await parseJsonBody(request);
   if (!body.success) return body.response;

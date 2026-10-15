@@ -136,35 +136,6 @@ const buildUser = (
 });
 
 const USER_REVISION = '2026-03-01T00:00:00.000Z';
-const SYSTEM_SAFE_AUDIT_METADATA = {
-  pageKey: 'users',
-  pageLabel: 'Utilisateurs',
-  poleKey: 'system',
-  poleLabel: 'Système',
-  tabKey: 'profile',
-  tabLabel: 'Profil',
-};
-const SYSTEM_SENSITIVE_AUDIT_METADATA = {
-  ...SYSTEM_SAFE_AUDIT_METADATA,
-  after: {
-    contactEmail: 'new@example.com',
-    firstName: 'Jeanne',
-    isActive: true,
-  },
-  before: {
-    contactEmail: 'old@example.com',
-    firstName: 'Jean',
-    isActive: false,
-  },
-  changes: ['contactEmail', 'firstName', 'isActive'],
-  requestId: 'private-request-id',
-};
-const PROTECTED_ACCOUNT_AUDIT_EXCLUSION = {
-  NOT: [
-    { user: { is: { isProtected: true } } },
-    { targetUser: { is: { isProtected: true } } },
-  ],
-};
 
 const stringifyRequestBody = (body: Record<string, unknown>): string =>
   JSON.stringify({
@@ -2415,15 +2386,15 @@ describe('users access hardening', () => {
   it('allows reducing critical access after the target loses complete MFA', async () => {
     const existingPermissions = {
       [PERMISSIONS.USERS.DELETE_ACCOUNT]: true,
-      [PERMISSIONS.USERS.EXPORT_ACTIVITY]: true,
+      [PERMISSIONS.USERS.REVOKE_SESSIONS]: true,
       [PERMISSIONS.USERS.VIEW]: true,
-      [PERMISSIONS.USERS.VIEW_ACTIVITY]: true,
+      [PERMISSIONS.USERS.VIEW_SESSIONS]: true,
       [PERMISSIONS.USERS.VIEW_SECURITY]: true,
     };
     const reducedPermissions = {
-      [PERMISSIONS.USERS.EXPORT_ACTIVITY]: true,
+      [PERMISSIONS.USERS.REVOKE_SESSIONS]: true,
       [PERMISSIONS.USERS.VIEW]: true,
-      [PERMISSIONS.USERS.VIEW_ACTIVITY]: true,
+      [PERMISSIONS.USERS.VIEW_SESSIONS]: true,
       [PERMISSIONS.USERS.VIEW_SECURITY]: true,
     };
     const existingUser = buildUser({
@@ -3781,272 +3752,15 @@ describe('users access hardening', () => {
     expect(mockPrisma.totpCredential.deleteMany).not.toHaveBeenCalled();
   });
 
-  it('redacts ip and user-agent for other users when viewer is not protected', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
-    mockPrisma.auditLog.count.mockResolvedValue(1);
-    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
-      {
-        action: 'LOGIN_SUCCESS',
-        category: 'AUTH',
-        createdAt: new Date('2026-03-02T00:00:00.000Z'),
-        description: 'Connexion reussie',
-        id: 'log-1',
-        ipAddress: '1.2.3.4',
-        metadata: SYSTEM_SENSITIVE_AUDIT_METADATA,
-        userAgent: 'TestAgent',
-        userId: 'target-1',
-      },
-    ]);
-    const route = await import('$app/api/users/[id]/audit/route');
-    const response = await route.GET(
-      new Request('http://localhost/api/users/target-1/audit') as never,
-      { params: Promise.resolve({ id: 'target-1' }) },
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.data.logs[0].ipAddress).toBeNull();
-    expect(body.data.logs[0].userAgent).toBeNull();
-    expect(mockRequirePermission).toHaveBeenCalledWith(
-      expect.any(Object),
-      PERMISSIONS.USERS.VIEW_ACTIVITY,
-    );
-  });
-
-  it('uses audit:view consistently for detailed another-user journals', async () => {
-    mockRequireAuth.mockResolvedValueOnce({
-      session: buildRecentSensitiveSession(),
-      success: true,
-      user: buildUser({
-        deletedAt: undefined,
-        id: 'auditor-1',
-        isProtected: false,
-        passwordHash: undefined,
-        permissions: { [PERMISSIONS.AUDIT.VIEW]: true },
-        role: 'ADMIN',
-      }),
-    });
-    mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
-    mockPrisma.auditLog.count.mockResolvedValue(1);
-    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
-      {
-        action: 'USER_UPDATE',
-        category: 'USER',
-        createdAt: new Date('2026-03-02T00:00:00.000Z'),
-        description: 'Adresse privée modifiée',
-        id: 'log-sensitive',
-        ipAddress: '1.2.3.4',
-        metadata: {
-          before: { apiKey: 'never-visible', firstName: 'Jean' },
-          pageKey: 'users',
-          requestId: 'legacy-private-request',
-        },
-        targetUserId: 'target-1',
-        userAgent: 'TestAgent',
-        userId: 'auditor-1',
-      },
-    ]);
-
-    const route = await import('$app/api/users/[id]/audit/route');
-    const response = await route.GET(
-      new Request('http://localhost/api/users/target-1/audit') as never,
-      { params: Promise.resolve({ id: 'target-1' }) },
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.data.logs[0]).toMatchObject({
-      description: 'Adresse privée modifiée',
-      ipAddress: '1.2.3.4',
-      metadata: { before: { firstName: 'Jean' }, pageKey: 'users' },
-      userAgent: 'TestAgent',
-    });
-    expect(body.data.logs[0].metadata).not.toHaveProperty('requestId');
-  });
-
-  it('does not expose old admin actions on other accounts through own history', async () => {
-    mockRequireAuth.mockResolvedValueOnce({
-      session: null,
-      success: true,
-      user: buildUser({
-        deletedAt: undefined,
-        id: 'former-admin',
-        passwordHash: undefined,
-        permissions: {},
-        role: 'USER',
-      }),
-    });
-    mockPrisma.user.findUnique.mockResolvedValue(
-      buildUser({ id: 'former-admin' }),
-    );
-    mockPrisma.auditLog.count.mockResolvedValue(1);
-    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
-      {
-        action: 'USER_UPDATE',
-        category: 'USER',
-        createdAt: new Date('2026-03-02T00:00:00.000Z'),
-        description: 'Adresse modifiée: private@example.com',
-        id: 'old-admin-action',
-        ipAddress: '1.2.3.4',
-        metadata: {
-          before: { contactEmail: 'private@example.com' },
-          pageKey: 'users',
-        },
-        targetUserId: 'someone-else',
-        userAgent: 'PrivateAgent',
-        userId: 'former-admin',
-      },
-    ]);
-
-    const route = await import('$app/api/users/[id]/audit/route');
-    const response = await route.GET(
-      new Request('http://localhost/api/users/former-admin/audit') as never,
-      { params: Promise.resolve({ id: 'former-admin' }) },
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.data.logs[0]).toMatchObject({
-      description: 'Compte utilisateur modifié',
-      ipAddress: null,
-      metadata: { pageKey: 'users' },
-      userAgent: null,
-    });
-    expect(body.data.logs[0].metadata).not.toHaveProperty('before');
-  });
-
-  it('allows users to view their own audit logs with personal activity permission', async () => {
-    mockRequireAuth.mockResolvedValueOnce({
-      session: null,
-      success: true,
-      user: buildUser({
-        deletedAt: undefined,
-        id: 'target-1',
-        passwordHash: undefined,
-        permissions: {},
-      }),
-    });
-    mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
-    mockPrisma.auditLog.count
-      .mockResolvedValueOnce(1)
-      .mockResolvedValueOnce(0)
-      .mockResolvedValueOnce(0);
-    mockPrisma.auditLog.findMany.mockResolvedValueOnce([
-      {
-        action: 'USER_UPDATE',
-        category: 'USER',
-        createdAt: new Date('2026-03-02T00:00:00.000Z'),
-        description: 'Profil mis a jour',
-        id: 'log-1',
-        ipAddress: '1.2.3.4',
-        metadata: {
-          pageLabel: 'Mon compte',
-          poleLabel: 'Espace personnel',
-          tabLabel: 'Profil',
-        },
-        targetUserId: 'target-1',
-        userAgent: 'TestAgent',
-        userId: 'target-1',
-      },
-    ]);
-
-    const route = await import('$app/api/users/[id]/audit/route');
-    const response = await route.GET(
-      new Request('http://localhost/api/users/target-1/audit') as never,
-      { params: Promise.resolve({ id: 'target-1' }) },
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.data.logs[0].ipAddress).toBe('1.2.3.4');
-    expect(body.data.logs[0].userAgent).toBe('TestAgent');
-    expect(mockRequirePermission).toHaveBeenCalledWith(
-      expect.any(Object),
-      PERMISSIONS.ACCOUNT.VIEW_ACTIVITY,
-    );
-    expect(mockPrisma.auditLog.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: {
-          AND: [
-            {
-              AND: [
-                {
-                  OR: [{ userId: 'target-1' }, { targetUserId: 'target-1' }],
-                },
-                PROTECTED_ACCOUNT_AUDIT_EXCLUSION,
-              ],
-            },
-            { createdAt: { lte: expect.any(Date) } },
-          ],
-        },
-      }),
-    );
-  });
-
-  it('keeps protected-account activity private from delegated administrators', async () => {
-    mockRequireAuth.mockResolvedValueOnce({
-      session: null,
-      success: true,
-      user: buildUser({
-        deletedAt: undefined,
-        id: 'admin-1',
-        passwordHash: undefined,
-        permissions: { [PERMISSIONS.USERS.VIEW_ACTIVITY]: true },
-        role: 'ADMIN',
-      }),
-    });
-    mockPrisma.user.findUnique.mockResolvedValueOnce({
-      id: 'root-1',
-      isProtected: true,
-    });
-
-    const route = await import('$app/api/users/[id]/audit/route');
-    const response = await route.GET(
-      new Request('http://localhost/api/users/root-1/audit') as never,
-      { params: Promise.resolve({ id: 'root-1' }) },
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe(ErrorCode.FORBIDDEN);
-    expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
-    expect(mockPrisma.auditLog.count).not.toHaveBeenCalled();
-  });
-
-  it('normalizes invalid audit pagination params', async () => {
-    mockPrisma.user.findUnique.mockResolvedValue(buildUser({ id: 'target-1' }));
-    mockPrisma.auditLog.count.mockResolvedValue(0);
-    mockPrisma.auditLog.findMany
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([]);
-
-    const route = await import('$app/api/users/[id]/audit/route');
-    const response = await route.GET(
-      new Request(
-        'http://localhost/api/users/target-1/audit?page=bad&pageSize=bad',
-      ) as never,
-      { params: Promise.resolve({ id: 'target-1' }) },
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.success).toBe(true);
-    expect(body.data.pagination).toEqual({
-      page: 1,
-      pageSize: 25,
-      total: null,
-      totalPages: null,
-    });
-    expect(mockPrisma.auditLog.findMany).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({
-        take: 26,
-      }),
-    );
-    expect(mockPrisma.auditLog.findMany.mock.calls[0]?.[0]).not.toHaveProperty(
-      'skip',
-    );
+  it('closes the unused activity API including CSV without reading account data', async () => {
+    const { GET } = await import('$app/api/users/[id]/audit/route');
+    for (const query of ['', '?format=csv']) {
+      const response = await GET(
+        new Request('http://localhost/api/users/root/audit' + query) as never,
+        { params: Promise.resolve({ id: 'root' }) },
+      );
+      expect(response.status).toBe(410);
+      expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
+    }
   });
 });

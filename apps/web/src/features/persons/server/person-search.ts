@@ -21,6 +21,7 @@ export type PersonSearchFragments = {
 
 export const buildPersonSearchFragments = (
   rawQuery: string,
+  includeContacts = true,
 ): PersonSearchFragments => {
   const normalizedQuery = normalizePersonSearchValue(rawQuery);
   const normalizedEmailQuery = normalizePersonEmail(rawQuery);
@@ -73,7 +74,8 @@ export const buildPersonSearchFragments = (
             AND social_url."normalizedProfileUrl" = ${normalizedProfileUrl}
         )`
       : Prisma.empty;
-  const contactSearchClause = Prisma.sql`
+  const contactSearchClause = includeContacts
+    ? Prisma.sql`
         EXISTS (
           SELECT 1 FROM "PersonEmail" email
           WHERE email."personId" = p."id"
@@ -92,7 +94,8 @@ export const buildPersonSearchFragments = (
             )
         )
         ${profileUrlSearchClause}
-  `;
+  `
+    : Prisma.sql`FALSE`;
   // Every identity word must match this person; contact queries stay intact.
   const words = [...new Set(normalizedQuery.split(/\s+/u).filter(Boolean))];
   const multiwordIdentityClause =

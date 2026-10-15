@@ -31,10 +31,10 @@ import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Separator } from '$ui/separator';
 import { ServiceIcon } from '$ui/service-icon';
 
-export const NewUserForm: FC<{ returnHref: string; userData: UserType | null }> = ({
-  returnHref,
-  userData,
-}) => {
+export const NewUserForm: FC<{
+  returnHref: string;
+  userData: UserType | null;
+}> = ({ returnHref, userData }) => {
   const canCreateUsers = userData
     ? userData.isProtected ||
       hasPermission(

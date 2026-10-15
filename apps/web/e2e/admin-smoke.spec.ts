@@ -881,9 +881,8 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
   const history =
     await readApiData<PersonFieldHistoryResponse>(historyResponse);
   expect(history.items.length).toBeGreaterThan(0);
-  expect(history.items.some((item) => item.after === updatedNickname)).toBe(
-    true,
-  );
+  expect(history.items[0]).not.toHaveProperty('after');
+  expect(history.items[0]).not.toHaveProperty('before');
   await expect.poll(() => contextualHistoryRequests).toBe(1);
   await expect(page.getByRole('tooltip')).toContainText(
     'Dernière modification',

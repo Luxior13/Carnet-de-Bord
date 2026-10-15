@@ -95,7 +95,7 @@ describe('user permission mutation proof classification', () => {
       }),
     ).toBe('password');
     for (const permissionKey of [
-      PERMISSIONS.AUDIT.VIEW,
+      PERMISSIONS.USERS.REVOKE_SESSIONS,
       PERMISSIONS.PERSONS.DELETE,
     ]) {
       expect(

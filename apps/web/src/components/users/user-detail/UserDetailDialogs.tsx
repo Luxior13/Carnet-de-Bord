@@ -45,8 +45,8 @@ export const UserLoginChangeDialog: React.FC<UserLoginChangeDialogProps> = ({
           </AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground">
             Toutes les sessions de cet utilisateur seront fermées. Il devra
-            ensuite utiliser le nouvel identifiant{' '}
-            <strong>{loginName}</strong> pour se reconnecter.
+            ensuite utiliser le nouvel identifiant <strong>{loginName}</strong>{' '}
+            pour se reconnecter.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">
@@ -90,9 +90,9 @@ export const UserPasswordResetDialog: React.FC<
             Réinitialiser le mot de passe ?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground">
-            Un nouveau mot de passe temporaire sera généré.
-            L&apos;utilisateur devra le changer à sa prochaine connexion.
-            Toutes ses sessions actives seront invalidées.
+            Un nouveau mot de passe temporaire sera généré. L&apos;utilisateur
+            devra le changer à sa prochaine connexion. Toutes ses sessions
+            actives seront invalidées.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">
@@ -104,9 +104,7 @@ export const UserPasswordResetDialog: React.FC<
             disabled={isResetting}
             className="bg-warning text-warning-foreground hover:bg-warning/90"
           >
-            {isResetting && (
-              <Loader2 size={16} className="mr-2 animate-spin" />
-            )}
+            {isResetting && <Loader2 size={16} className="mr-2 animate-spin" />}
             Réinitialiser
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -144,15 +142,12 @@ export const UserRevokeSessionsDialog: React.FC<
             Révoquer les sessions ?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground">
-            Toutes les sessions actives de cet utilisateur seront
-            déconnectées. Il devra se reconnecter.
+            Toutes les sessions actives de cet utilisateur seront déconnectées.
+            Il devra se reconnecter.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">
-          <AlertDialogCancel
-            className="border-border"
-            disabled={isRevoking}
-          >
+          <AlertDialogCancel className="border-border" disabled={isRevoking}>
             Annuler
           </AlertDialogCancel>
           <AlertDialogAction
@@ -163,9 +158,7 @@ export const UserRevokeSessionsDialog: React.FC<
             disabled={isRevoking}
             className="bg-warning text-warning-foreground hover:bg-warning/90"
           >
-            {isRevoking && (
-              <Loader2 size={16} className="mr-2 animate-spin" />
-            )}
+            {isRevoking && <Loader2 size={16} className="mr-2 animate-spin" />}
             Révoquer
           </AlertDialogAction>
         </AlertDialogFooter>
@@ -237,10 +230,7 @@ export const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
           />
         </div>
         <AlertDialogFooter className="mt-4">
-          <AlertDialogCancel
-            className="border-border"
-            disabled={isDeleting}
-          >
+          <AlertDialogCancel className="border-border" disabled={isDeleting}>
             Annuler
           </AlertDialogCancel>
           <AlertDialogAction
@@ -251,9 +241,7 @@ export const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
             disabled={isDeleting || confirmation.trim() !== loginName}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting && (
-              <Loader2 size={16} className="mr-2 animate-spin" />
-            )}
+            {isDeleting && <Loader2 size={16} className="mr-2 animate-spin" />}
             Supprimer définitivement
           </AlertDialogAction>
         </AlertDialogFooter>

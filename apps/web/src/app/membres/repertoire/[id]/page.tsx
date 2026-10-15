@@ -42,7 +42,7 @@ export default async function PersonPage({
   if (user && !user.mustChangePassword && capabilities.canView) {
     try {
       await assertPersonFeatureReady();
-      initialPerson = await getPerson(id);
+      initialPerson = await getPerson(id, user);
     } catch {
       // The client preserves the established not-found/unavailable/retry
       // states when the server cannot produce a safe initial snapshot.

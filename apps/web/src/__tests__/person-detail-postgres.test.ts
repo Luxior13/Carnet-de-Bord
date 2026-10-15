@@ -29,9 +29,8 @@ import {
   PATCH as updatePhone,
 } from '$app/api/personnes/[id]/telephones/[phoneId]/route';
 import { POST as addPhone } from '$app/api/personnes/[id]/telephones/route';
-import { POST as create } from '$app/api/personnes/route';
+import { GET as listPeople, POST as create } from '$app/api/personnes/route';
 import { PERMISSIONS } from '$constants/permissions.constants';
-import { PERSON_LIMITS } from '$features/persons/person.constants';
 import type {
   PersonDetail,
   PersonMutationResponse,
@@ -181,27 +180,36 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
   const signIn = async (
     overrides: Partial<Prisma.UserCreateInput> = {},
   ): Promise<User> => {
-    const user = await db.user.create({
-      data: {
-        firstName: 'Fiche fictive',
-        loginName: 'detail.' + randomUUID().replaceAll('-', '').slice(0, 20),
-        mfaEnabledAt: new Date(),
-        passwordHash: 'unused-password-fixture',
-        permissions: {
-          [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
-          [PERMISSIONS.PERSONS.CREATE]: true,
-          [PERMISSIONS.PERSONS.DELETE]: true,
-          [PERMISSIONS.PERSONS.UPDATE]: true,
-          [PERMISSIONS.PERSONS.VIEW]: true,
+    const existingRoot = overrides.isProtected
+      ? await db.user.findFirst({ where: { isProtected: true } })
+      : null;
+    const user =
+      existingRoot ??
+      (await db.user.create({
+        data: {
+          firstName: 'Fiche fictive',
+          loginName: 'detail.' + randomUUID().replaceAll('-', '').slice(0, 20),
+          mfaEnabledAt: new Date(),
+          passwordHash: 'unused-password-fixture',
+          permissions: {
+            [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
+            [PERMISSIONS.PERSONS.CREATE]: true,
+            [PERMISSIONS.PERSONS.VIEW_CONTACT]: true,
+            [PERMISSIONS.PERSONS.UPDATE_CONTACT]: true,
+            [PERMISSIONS.PERSONS.DELETE]: true,
+            [PERMISSIONS.PERSONS.UPDATE]: true,
+            [PERMISSIONS.PERSONS.VIEW]: true,
+          },
+          ...overrides,
         },
-        ...overrides,
-      },
-    });
-    await db.totpCredential.create({
-      data: {
+      }));
+    await db.totpCredential.upsert({
+      create: {
         ...encryptTotpSecret(generateTotpSecret(), user.id),
         userId: user.id,
       },
+      update: {},
+      where: { userId: user.id },
     });
     const token = randomUUID();
     await db.session.create({
@@ -325,6 +333,173 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     expect(responses.map((response) => response.status)).toEqual([
       401, 401, 401, 401,
     ]);
+  });
+
+  it('masks the root author in detail, list and provenance while retaining the stored snapshot', async () => {
+    const root = await signIn({
+      firstName: 'PrivateRootMarker',
+      isProtected: true,
+      role: 'ADMIN',
+    });
+    const person = await fixture({ emails: [families[0]?.value(8)] });
+    expect(person.lastChange?.actor.loginName).toBe(root.loginName);
+    await signIn({
+      permissions: {
+        [PERMISSIONS.PERSONS.VIEW]: true,
+        [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
+      },
+    });
+    const detail = await read(person.id);
+    expect(detail.lastChange?.actor).toEqual({
+      displayName: 'Superadministrateur',
+      loginName: null,
+    });
+    expect(detail.emails).toEqual([]);
+    const list = await listPeople(
+      new NextRequest(
+        'http://localhost/api/personnes?q=' +
+          encodeURIComponent(person.nickname ?? ''),
+      ),
+    );
+    const listed = (await list.json()).data;
+    expect(JSON.stringify(listed)).not.toContain(root.loginName);
+    expect(JSON.stringify(listed)).not.toContain(root.firstName);
+    expect(listed.overview.noContacts).toBeNull();
+    expect(listed.items[0].lastModifiedBy).toEqual({
+      displayName: 'Superadministrateur',
+      loginName: null,
+    });
+    const response = await history(
+      request(undefined, 'GET', '?fieldKey=nickname&sectionKey=identity'),
+      context(person.id),
+    );
+    const provenance = (await response.json()).data.items[0];
+    expect(provenance.actor).toEqual({
+      displayName: 'Superadministrateur',
+      loginName: null,
+    });
+    expect(provenance).not.toHaveProperty('before');
+    expect(provenance).not.toHaveProperty('after');
+    const stored = await db.auditLog.findFirstOrThrow({
+      where: { entityId: person.id, entityType: 'PERSON' },
+    });
+    expect(stored.actorLoginNameSnapshot).toBe(root.loginName);
+    expect(stored.actorDisplayNameSnapshot).toContain(root.firstName);
+  });
+
+  it('separates identity writes, coordinate writes and contact provenance', async () => {
+    await signIn();
+    const person = await fixture({ emails: [families[0]?.value(9)] });
+    await signIn({
+      permissions: {
+        [PERMISSIONS.PERSONS.VIEW]: true,
+        [PERMISSIONS.PERSONS.UPDATE]: true,
+        [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
+      },
+    });
+    const changed = (
+      await mutation(
+        await PATCH(
+          request(identity(person, { nickname: 'Identity only' })),
+          context(person.id),
+        ),
+      )
+    ).person;
+    expect(changed.emails).toEqual([]);
+    expect(
+      (
+        await addEmail(
+          request(
+            { email: 'forbidden@example.test', version: changed.version },
+            'POST',
+          ),
+          context(person.id),
+        )
+      ).status,
+    ).toBe(403);
+    expect(
+      (
+        await history(
+          request(
+            undefined,
+            'GET',
+            '?fieldKey=email&sectionKey=contacts&recordId=' +
+              person.emails[0]?.id,
+          ),
+          context(person.id),
+        )
+      ).status,
+    ).toBe(403);
+    const searched = await listPeople(
+      new NextRequest(
+        'http://localhost/api/personnes?q=' +
+          encodeURIComponent(person.emails[0]?.email ?? ''),
+      ),
+    );
+    expect((await searched.json()).data.items).toHaveLength(0);
+    expect(
+      (
+        await listPeople(
+          new NextRequest('http://localhost/api/personnes?contacts=missing'),
+        )
+      ).status,
+    ).toBe(403);
+    await signIn({
+      permissions: {
+        [PERMISSIONS.PERSONS.VIEW]: true,
+        [PERMISSIONS.PERSONS.VIEW_CONTACT]: true,
+        [PERMISSIONS.PERSONS.UPDATE_CONTACT]: true,
+      },
+    });
+    expect(
+      (
+        await PATCH(
+          request(identity(changed, { nickname: 'Not permitted' })),
+          context(person.id),
+        )
+      ).status,
+    ).toBe(403);
+    const result = await mutation(
+      await addEmail(
+        request(
+          {
+            email: 'allowed@example.test',
+            label: 'Personnel',
+            personVersion: changed.version,
+          },
+          'POST',
+        ),
+        context(person.id),
+      ),
+      201,
+    );
+    expect(
+      result.person.emails.some(
+        (email) => email.email === 'allowed@example.test',
+      ),
+    ).toBe(true);
+  });
+
+  it('refuses initial coordinates for a creator without contact write authority', async () => {
+    await signIn({
+      permissions: {
+        [PERMISSIONS.PERSONS.VIEW]: true,
+        [PERMISSIONS.PERSONS.CREATE]: true,
+      },
+    });
+    const response = await create(
+      request(
+        {
+          emails: [families[0]?.value(10)],
+          nickname: 'Refused initial contact',
+        },
+        'POST',
+      ),
+    );
+    expect(response.status).toBe(403);
+    expect(
+      await db.person.count({ where: { nickname: 'Refused initial contact' } }),
+    ).toBe(0);
   });
 
   it.each(
@@ -505,7 +680,9 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
       id: person.id,
       version: 1,
     });
-    expect(result.emails[0]).not.toHaveProperty('normalizedEmail');
+    expect(result.emails).toEqual([]);
+    expect(result.phones).toEqual([]);
+    expect(result.socialProfiles).toEqual([]);
     expect(result).not.toHaveProperty('normalizedNickname');
     expect(result.lastChange?.actor.loginName).toBe(actor.loginName);
     for (const family of families) {
@@ -602,8 +779,7 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     );
     expect(response.status).toBe(200);
     expect((await response.json()).data.items[0]).toMatchObject({
-      after: null,
-      before: 'Lovelace',
+      action: 'UPDATE',
     });
   });
 
@@ -971,8 +1147,9 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     );
     expect(response.status).toBe(200);
     const items = (await response.json()).data.items;
-    expect(items).toHaveLength(PERSON_LIMITS.fieldHistory);
-    expect(items[0]).toMatchObject({ after: 'Quatrième', before: 'Troisième' });
+    expect(items).toHaveLength(1);
+    expect(items[0]).not.toHaveProperty('after');
+    expect(items[0]).not.toHaveProperty('before');
     const stored = await db.auditFieldChange.findMany({
       where: { entityId: person.id, fieldKey: 'nickname' },
     });

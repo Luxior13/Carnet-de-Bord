@@ -7,6 +7,7 @@ import { PERMISSIONS } from '$constants/permissions.constants';
 import { prisma } from '$server/prisma';
 
 import { PERSON_AUDIT_KEYS } from '../person.constants';
+import { getPersonCapabilities } from '../person.permissions';
 import { calculateCivilAge, serializeCivilDate } from '../person.utils';
 import type {
   CreatePersonInput,
@@ -34,6 +35,11 @@ import {
   normalizePersonSocialUrl,
   personIdentityData,
 } from './person-normalization';
+import {
+  type PersonReader,
+  projectPersonAuditActor,
+  requirePersonRead,
+} from './person-visibility';
 
 type PersonClient = Prisma.TransactionClient | PrismaClient;
 
@@ -96,6 +102,7 @@ const toSocialProfileItem = (
 const getLastPersonChange = async (
   client: PersonClient,
   personId: string,
+  reader: PersonReader,
 ): Promise<PersonLastChange> => {
   const audit = await client.auditLog.findFirst({
     orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -104,6 +111,7 @@ const getLastPersonChange = async (
       actorDisplayNameSnapshot: true,
       actorLoginNameSnapshot: true,
       createdAt: true,
+      user: { select: { id: true, isProtected: true } },
     },
     where: {
       entityId: personId,
@@ -114,13 +122,7 @@ const getLastPersonChange = async (
 
   return {
     action: audit.action,
-    actor: {
-      displayName:
-        audit.actorDisplayNameSnapshot ??
-        audit.actorLoginNameSnapshot ??
-        'Compte indisponible',
-      loginName: audit.actorLoginNameSnapshot,
-    },
+    actor: projectPersonAuditActor(audit, reader),
     at: audit.createdAt.toISOString(),
   };
 };
@@ -128,7 +130,10 @@ const getLastPersonChange = async (
 export const mapPersonDetail = async (
   client: PersonClient,
   person: PersonDetailRecord,
+  reader: PersonReader,
 ): Promise<PersonDetail> => {
+  requirePersonRead(reader);
+  const { canViewContact } = getPersonCapabilities(reader);
   const birthDate = serializeCivilDate(person.birthDate);
   const age = calculateCivilAge(birthDate);
 
@@ -136,15 +141,17 @@ export const mapPersonDetail = async (
     age,
     birthDate,
     createdAt: person.createdAt.toISOString(),
-    emails: person.emails.map(toEmailItem),
+    emails: canViewContact ? person.emails.map(toEmailItem) : [],
     firstName: person.firstName,
     id: person.id,
     isAdult: age === null ? null : age >= 18,
-    lastChange: await getLastPersonChange(client, person.id),
+    lastChange: await getLastPersonChange(client, person.id, reader),
     lastName: person.lastName,
     nickname: person.nickname,
-    phones: person.phones.map(toPhoneItem),
-    socialProfiles: person.socialProfiles.map(toSocialProfileItem),
+    phones: canViewContact ? person.phones.map(toPhoneItem) : [],
+    socialProfiles: canViewContact
+      ? person.socialProfiles.map(toSocialProfileItem)
+      : [],
     structureStatus: person.structureStatus,
     updatedAt: person.updatedAt.toISOString(),
     version: person.version,
@@ -212,12 +219,16 @@ const normalizeInitialSocialPrimaries = <
   }));
 };
 
-export const getPerson = async (personId: string): Promise<PersonDetail> =>
+export const getPerson = async (
+  personId: string,
+  reader: PersonReader,
+): Promise<PersonDetail> =>
   prisma.$transaction(
     async (transaction) => {
+      requirePersonRead(reader);
       const person = await requirePersonDetailRecord(transaction, personId);
 
-      return mapPersonDetail(transaction, person);
+      return mapPersonDetail(transaction, person, reader);
     },
     // Identity, coordinates and provenance must describe the same version.
     { isolationLevel: 'RepeatableRead' },
@@ -236,6 +247,17 @@ export const createPerson = async (
       actor,
       PERMISSIONS.PERSONS.CREATE,
     );
+    if (
+      input.emails.length ||
+      input.phones.length ||
+      input.socialProfiles.length
+    ) {
+      await authorizePersonMutation(
+        transaction,
+        actor,
+        PERMISSIONS.PERSONS.UPDATE_CONTACT,
+      );
+    }
     const emails = normalizeInitialPrimary(input.emails);
     const phones = normalizeInitialPrimary(input.phones);
     const socialProfiles = normalizeInitialSocialPrimaries(
@@ -497,7 +519,7 @@ export const createPerson = async (
         ...(duplicateFields.length > 0 ? { fields: duplicateFields } : {}),
         ...(duplicateMatches.length > 0 ? { matches: duplicateMatches } : {}),
       },
-      person: await mapPersonDetail(transaction, refreshed),
+      person: await mapPersonDetail(transaction, refreshed, actor),
     };
   });
 
@@ -569,7 +591,8 @@ export const updatePerson = async (
     if (current.version !== input.version) {
       throw personErrors.versionConflict();
     }
-    if (changes.length === 0) return mapPersonDetail(transaction, current);
+    if (changes.length === 0)
+      return mapPersonDetail(transaction, current, actor);
 
     const updatedIdentity = await transaction.person.updateMany({
       data: {
@@ -588,5 +611,5 @@ export const updatePerson = async (
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
 
-    return mapPersonDetail(transaction, updated);
+    return mapPersonDetail(transaction, updated, actor);
   });

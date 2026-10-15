@@ -4,7 +4,17 @@ Un fichier par page, groupe cohérent de routes ou composant partagé suivi ; un
 mériter son propre suivi si ses règles diffèrent fortement de celles de la liste.
 Utiliser un nom stable compréhensible, sans multiplier les copies datées.
 
-## État courant — 13 octobre 2026
+## Complément courant — 15 octobre 2026
+
+L'[audit transverse des autorisations des pages actuelles](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md)
+ouvre des corrections de confidentialité de provenance et de cohérence du
+catalogue/compteur. Analyse droit par droit, 400 tests existants et trois sondes
+simulées ; aucune correction applicative ni nouvelle validation réelle globale.
+Les points ouverts sont liés dans Utilisateurs, Répertoire, Mon compte et
+Paramètres. Les conclusions du 13 octobre ci-dessous restent datées et ne
+closent pas ces nouveaux constats.
+
+## Clôture datée du socle — 13 octobre 2026
 
 La [clôture du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) reprend les
 onze suivis actifs et transverses ci-dessous, pour poursuivre le développement
@@ -34,13 +44,13 @@ inclut aussi connexion et MFA depuis la correction du 11 octobre ;
 | Fenêtres modales — transverse | [modales.md](modales.md) | Socle revu le 13 octobre ; MOD-INT réconcilié sans prétendre chaque dialogue joué par HTTP, MOD-A11Y conservé ; reprises et responsabilités des composants inchangées |
 | Accueil / Mon travail | [accueil.md](accueil.md) | Parcours réel du 13 octobre réussi ; identité issue du contexte courant, aucun widget futur ajouté ; anciennes corrections et preuves conservées |
 | Connexion | [connexion.md](connexion.md) | Connexion/MFA réelles et contrôles SQL rejoués pour la clôture ; échéances et source revérifiées après les verrous ; AUTH-02 et limites d'exploitation conservés |
-| Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | 15 octobre : styles d'Autorisations chargés avec la fiche, contrôlés sur Next réel dev/production isolé ; disparition de l'incident intermittent à confirmer en session ; compteur et droits précédemment vérifiés, preuves PostgreSQL antérieures non rejouées |
-| Paramètres système | [systeme-parametres.md](systeme-parametres.md) | Refonte UI du 14 octobre : carte simplifiée, actions contextuelles et focus corrigé ; PAR-UI-01 à PAR-UI-05 clos sur 33 scénarios client simulés, preuves serveur du 13 octobre conservées et non rejouées |
+| Utilisateurs — liste, création et fiche | [systeme-utilisateurs.md](systeme-utilisateurs.md) | 15 octobre : AUT-S02/S03 corrigés, AUT-S05 appliqué ; catalogue administratif 27/personnel 7, anciennes API d'activité fermées. Tests et parcours réels ciblés, migration appliquée ; limites du correctif CSS antérieur conservées |
+| Paramètres système | [systeme-parametres.md](systeme-parametres.md) | 15 octobre : droits fixes ADMIN et preuve conditionnelle documentés selon le code, tests simulés ; refonte UI du 14 octobre conservée, preuves serveur réelles antérieures non rejouées |
 | Feuille de route | [systeme-feuille-de-route.md](systeme-feuille-de-route.md) | Page et composants revérifiés dans la clôture du 13 octobre ; catalogue livré inchangé, chantiers futurs non activés |
 | Journal d’activité | [systeme-journal-activite.md](systeme-journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; suivi conservé comme historique |
 | Navigation générale — sidebar, header et sections | [navigation-generale.md](navigation-generale.md) | Clôture du 13 octobre : focus compact du fil d'Ariane corrigé ; Rubriques confirmé, gardes et déconnexion conservées ; preuves et limite du scroll natif précisées |
-| Mon compte | [mon-compte.md](mon-compte.md) | Parcours actuel revérifié le 13 octobre ; garde transactionnelle personnelle/MFA renforcée ; remplacement MFA avec perte de réponse combinés HTTP encore hors preuve ; Bitwarden reste résolu |
-| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** avec Utilisateurs ; trois pages reprises le 13 octobre, droits/source au moment d'écrire et identité normalisée corrigés ; preuves client/SQL/HTTP et volumes bornés dans le rapport |
+| Mon compte | [mon-compte.md](mon-compte.md) | 15 octobre : capacité d'activité sans écran retirée ; sept capacités personnelles dont une configurable ; garanties maintenues, nouveaux tests de catalogue/API et anciennes preuves MFA distinctes |
+| Membres — liste, création et fiche | [membres-repertoire.md](membres-repertoire.md) | **Référence visuelle et UX** ; 15 octobre : confidentialité de provenance et minimisation corrigées, lecture/écriture des coordonnées séparées ; 82 tests SQL et parcours réels ciblés, accès existants préservés par migration |
 | Erreur, page introuvable et chargement | [etats-techniques.md](etats-techniques.md) | États client et 404 réelle revérifiés dans la clôture du 13 octobre ; pannes racines et reprises antérieures restent datées, sans qualification de disponibilité en déploiement |
 
 Pour commencer un nouveau suivi : [modèle de revue](../modeles/revue-page.md).

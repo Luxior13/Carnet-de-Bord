@@ -1,5 +1,16 @@
 # Suivi de page — Paramètres système
 
+## Autorisations actuelles — 15 octobre 2026
+
+L'[audit transverse du site actuel](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md)
+confirme par lecture du code et tests simulés que `settings:view` et
+`settings:update` restent liés au rôle ADMIN, sans surcharge individuelle.
+Leur présentation fixe dans l'éditeur est utile pour expliquer ce rôle.
+La preuve récente de mot de passe concerne une réduction de conservation ou
+la réparation d'une valeur invalide. La référence Permissions est réconciliée
+avec cet état et avec l'existence de la page. Aucune règle ni interface modifiée,
+aucune nouvelle purge ou vérification PostgreSQL exécutée.
+
 ## Refonte de l'interface — 14 octobre 2026
 
 L'utilisateur a autorisé la proposition issue de l'analyse ci-dessous (« go »).

@@ -30,6 +30,8 @@ const ContactCount: FC<{
 );
 
 export const PersonContacts: FC<{ person: PersonSummary }> = ({ person }) => {
+  if (!person.contactCounts)
+    return <span className="text-muted-foreground text-xs">Masquées</span>;
   const { emails, phones, socialProfiles } = person.contactCounts;
   const total = emails + phones + socialProfiles;
 

@@ -36,7 +36,10 @@ const reader = {
   id: 'reader-one',
   isProtected: false,
   mustChangePassword: false,
-  permissions: { [PERMISSIONS.PERSONS.VIEW]: true },
+  permissions: {
+    [PERMISSIONS.PERSONS.VIEW]: true,
+    [PERMISSIONS.PERSONS.VIEW_CONTACT]: true,
+  },
   role: 'USER',
 };
 const data: PersonsListResponse = {
@@ -86,13 +89,16 @@ describe('directory server preload boundary', () => {
         structureStatus: 'IN_STRUCTURE',
       }),
     })) as PageElement;
-    expect(mocks.listPersons).toHaveBeenCalledWith({
-      contacts: 'missing',
-      limit: 25,
-      q: 'Élodie',
-      sort: 'updated',
-      structureStatus: 'IN_STRUCTURE',
-    });
+    expect(mocks.listPersons).toHaveBeenCalledWith(
+      {
+        contacts: 'missing',
+        limit: 25,
+        q: 'Élodie',
+        sort: 'updated',
+        structureStatus: 'IN_STRUCTURE',
+      },
+      reader,
+    );
     expect(result.props.initialState).toEqual({
       data,
       request: {

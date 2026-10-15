@@ -45,7 +45,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     await assertPersonFeatureReady();
 
-    return withPrivateNoStore(apiSuccess(await listPersons(parsed.data)));
+    return withPrivateNoStore(
+      apiSuccess(await listPersons(parsed.data, auth.user)),
+    );
   } catch (error) {
     return handlePersonApiError('PERSON_LIST', error, request);
   }

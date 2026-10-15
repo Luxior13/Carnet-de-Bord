@@ -1,5 +1,50 @@
 # Suivi — Utilisateurs : liste, création et fiche
 
+## Corrections des autorisations actuelles — 15 octobre 2026
+
+Après accord utilisateur « ok go », AUT-S02/S03 sont corrigés et vérifiés,
+AUT-S05 appliqué. L'éditeur et la synthèse comptent **27 droits administratifs** :
+sept pour Répertoire, dix-huit pour Utilisateurs et deux fixes de Paramètres.
+Le volet personnel comporte sept capacités, dont seule l'édition prénom/nom est
+configurable. La provenance dépend du Répertoire ; ses prérequis participent
+aux ajouts/retraits automatiques et au calcul des droits utilisables.
+
+Les quatre capacités d'activité sans écran actuel sont retirées des catalogues
+et presets. L'ancienne API répond 410, sans SQL ni CSV ; ses anciens tests sont
+remplacés par le contrat de fermeture. Les descriptions du compte personnel et
+de l'état du mot de passe sont précisées. Les règles de cible, rôle, délégation
+et preuve récente restent celles de [Permissions](../../references/PERMISSIONS.md).
+
+Migration appliquée à la base de travail après sauvegarde signée : accès
+préservés pour quatre comptes concernés, comptes protégés/supprimés inchangés,
+54 migrations appliquées et aucune en attente. Preuves : 1 335 tests web
+réussis (142 intégrations facultatives non exécutées), 33 tests database,
+82 tests PostgreSQL Répertoire/migration inclus dans la suite et cinq parcours
+Chromium/Next de production/PostgreSQL isolés, à 1440 px. Sessions préparées,
+sans rejouer connexion/MFA ni toutes les combinaisons de cibles.
+Le [complément du rapport](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md#corrections-après-accord--15-octobre-2026)
+remplace les états ouverts de la passe initiale conservée ci-dessous.
+
+## Audit transverse des autorisations actuelles — 15 octobre 2026
+
+L'utilisateur demande une analyse en profondeur des droits des **pages utilisables
+aujourd'hui uniquement**. Les fonctions prévues et les écrans absents ne justifient
+pas de permissions dans la présentation actuelle. Le
+[rapport droit par droit](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md)
+porte les preuves, propositions et états de cette passe ; aucune règle applicative
+n'a été modifiée.
+
+Points ouverts de ce suivi : AUT-S02 (trois droits administratifs et une capacité
+personnelle affichés sans écran actuel), AUT-S03 (provenance comptée utilisable
+sans accès au Répertoire) et proposition AUT-S05 (descriptions des droits
+personnels et des états de sécurité). Les contrôles d'attribution, retrait,
+délégation, cibles administrateurs et compte racine restent pertinents dans les
+tests exercés. Le défaut de confidentialité AUT-S01 appartient au Répertoire.
+
+400 tests existants réussis et trois sondes simulées pour cette passe ; pas de
+nouvelle preuve navigateur/session/PostgreSQL. La vérification ciblée antérieure
+ne vaut pas clôture des nouveaux constats. Responsables des corrections à attribuer.
+
 ## Styles intermittents dans Autorisations — 15 octobre 2026
 
 Signalement utilisateur : au changement d'onglet, parfois, l'éditeur perd sa

@@ -10,12 +10,18 @@ import {
 import { prisma } from '$server/prisma';
 
 import { PERSON_AUDIT_KEYS } from '../person.constants';
+import { getPersonCapabilities } from '../person.permissions';
 import type {
   PersonListSort,
   PersonsListResponse,
   PersonSummary,
 } from '../types/person.types';
 import { buildPersonSearchFragments } from './person-search';
+import {
+  type PersonReader,
+  projectPersonAuditActor,
+  requirePersonRead,
+} from './person-visibility';
 
 type PersonListRow = {
   createdAt: Date;
@@ -23,7 +29,9 @@ type PersonListRow = {
   firstName: string | null;
   id: string;
   lastModifiedByDisplayName: string | null;
+  lastModifiedById: string | null;
   lastModifiedByLoginName: string | null;
+  lastModifiedByProtected: boolean | null;
   lastName: string | null;
   matchedByContact: boolean;
   nickname: string | null;
@@ -36,24 +44,35 @@ type PersonListRow = {
   version: number;
 };
 
-const toPersonSummary = (person: PersonListRow): PersonSummary => ({
-  contactCounts: {
-    emails: person.emailCount,
-    phones: person.phoneCount,
-    socialProfiles: person.socialProfileCount,
-  },
+const toPersonSummary = (
+  person: PersonListRow,
+  reader: PersonReader,
+): PersonSummary => ({
+  contactCounts: getPersonCapabilities(reader).canViewContact
+    ? {
+        emails: person.emailCount,
+        phones: person.phoneCount,
+        socialProfiles: person.socialProfileCount,
+      }
+    : null,
   createdAt: person.createdAt.toISOString(),
   firstName: person.firstName,
   id: person.id,
   lastModifiedBy:
     person.lastModifiedByDisplayName || person.lastModifiedByLoginName
-      ? {
-          displayName:
-            person.lastModifiedByDisplayName ??
-            person.lastModifiedByLoginName ??
-            'Compte indisponible',
-          loginName: person.lastModifiedByLoginName,
-        }
+      ? projectPersonAuditActor(
+          {
+            actorDisplayNameSnapshot: person.lastModifiedByDisplayName,
+            actorLoginNameSnapshot: person.lastModifiedByLoginName,
+            user: person.lastModifiedById
+              ? {
+                  id: person.lastModifiedById,
+                  isProtected: person.lastModifiedByProtected === true,
+                }
+              : null,
+          },
+          reader,
+        )
       : null,
   lastName: person.lastName,
   matchedByContact: person.matchedByContact,
@@ -63,18 +82,24 @@ const toPersonSummary = (person: PersonListRow): PersonSummary => ({
   version: person.version,
 });
 
-export const listPersons = async (input: {
-  contacts?: 'missing';
-  cursor?: string;
-  limit: number;
-  q: string;
-  sort?: PersonListSort;
-  structureStatus?: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
-}): Promise<PersonsListResponse> => {
+export const listPersons = async (
+  input: {
+    contacts?: 'missing';
+    cursor?: string;
+    limit: number;
+    q: string;
+    sort?: PersonListSort;
+    structureStatus?: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE';
+  },
+  reader: PersonReader,
+): Promise<PersonsListResponse> => {
+  requirePersonRead(reader, input.contacts === 'missing');
+  const { canViewContact } = getPersonCapabilities(reader);
   const sort = input.sort ?? 'name';
   const { contactSearchClause, normalizedQuery, searchClause } =
-    buildPersonSearchFragments(input.q);
+    buildPersonSearchFragments(input.q, canViewContact);
   const filterHash = hashCursorFilters({
+    canViewContact,
     ...(input.contacts ? { contacts: input.contacts } : {}),
     // Identity ignores accents/case, but contact identifiers and URL paths
     // do not share that normalization. Bind the cursor to the full input.
@@ -163,6 +188,8 @@ export const listPersons = async (input: {
       p."updatedAt",
       last_change."actorDisplayNameSnapshot" AS "lastModifiedByDisplayName",
       last_change."actorLoginNameSnapshot" AS "lastModifiedByLoginName",
+      last_change."userId" AS "lastModifiedById",
+      last_change."isProtected" AS "lastModifiedByProtected",
       (SELECT COUNT(*)::integer FROM "PersonEmail" email_count
         WHERE email_count."personId" = p."id") AS "emailCount",
       (SELECT COUNT(*)::integer FROM "PersonPhone" phone_count
@@ -176,8 +203,11 @@ export const listPersons = async (input: {
     LEFT JOIN LATERAL (
       SELECT
         audit."actorDisplayNameSnapshot",
-        audit."actorLoginNameSnapshot"
+        audit."actorLoginNameSnapshot",
+        audit."userId",
+        author."isProtected"
       FROM "AuditLog" audit
+      LEFT JOIN "User" author ON author."id" = audit."userId"
       WHERE audit."entityType" = ${PERSON_AUDIT_KEYS.entityType}
         AND audit."entityId" = p."id"
       ORDER BY audit."createdAt" DESC, audit."id" DESC
@@ -213,19 +243,21 @@ export const listPersons = async (input: {
     await Promise.all([
       prisma.person.count({ where: { structureStatus: 'IN_STRUCTURE' } }),
       prisma.person.count({ where: { structureStatus: 'OUTSIDE_STRUCTURE' } }),
-      prisma.person.count({
-        where: {
-          AND: [
-            { emails: { none: {} } },
-            { phones: { none: {} } },
-            { socialProfiles: { none: {} } },
-          ],
-        },
-      }),
+      canViewContact
+        ? prisma.person.count({
+            where: {
+              AND: [
+                { emails: { none: {} } },
+                { phones: { none: {} } },
+                { socialProfiles: { none: {} } },
+              ],
+            },
+          })
+        : Promise.resolve(null),
     ]);
 
   return {
-    items: paginated.items.map(toPersonSummary),
+    items: paginated.items.map((person) => toPersonSummary(person, reader)),
     overview: {
       inStructure: inStructureCount,
       noContacts: noContactsCount,

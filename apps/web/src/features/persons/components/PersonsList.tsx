@@ -27,7 +27,10 @@ import {
 
 import { formatPersonDateTime, getPersonDisplayName } from '../person.ui';
 import { retainPersonsCursors } from '../person-list-navigation';
-import { MAX_PERSONS_PAGE, type PersonsListRequest } from '../person-list-state';
+import {
+  MAX_PERSONS_PAGE,
+  type PersonsListRequest,
+} from '../person-list-state';
 import type {
   PersonOverview,
   PersonsListResponse,
@@ -46,6 +49,7 @@ import { usePersonsListState } from './usePersonsListState';
 
 type PersonsListProps = {
   canCreate: boolean;
+  canViewContact?: boolean;
   createHref: string;
   initialState?: {
     data: PersonsListResponse;
@@ -69,6 +73,7 @@ const buildPersonHref = (personId: string, returnHref: string): string => {
 
 export const PersonsList: FC<PersonsListProps> = ({
   canCreate,
+  canViewContact = false,
   createHref,
   initialState,
   navigationScope = '',
@@ -82,6 +87,7 @@ export const PersonsList: FC<PersonsListProps> = ({
 
   const {
     appliedQuery,
+    applyFilters,
     cursorStack,
     data,
     dataPageIndex,
@@ -90,16 +96,15 @@ export const PersonsList: FC<PersonsListProps> = ({
     isDataCurrent,
     isLoading,
     isUrlInSync,
+    load,
     missingContacts,
     pageIndex,
     retryRequestedRef,
-    sort,
-    status,
-    applyFilters,
-    load,
     setCursorStack,
     setDraftQuery,
     setPageIndex,
+    sort,
+    status,
     updateUrl,
   } = usePersonsListState({
     cancelPageChangeRef,
@@ -117,11 +122,7 @@ export const PersonsList: FC<PersonsListProps> = ({
     cursors: cursorStack,
     href: returnHref,
     ready:
-      !isLoading &&
-      !error &&
-      data !== null &&
-      isDataCurrent &&
-      isUrlInSync,
+      !isLoading && !error && data !== null && isDataCurrent && isUrlInSync,
     restoreCursors: setCursorStack,
     scope: navigationScope,
   });
@@ -145,7 +146,9 @@ export const PersonsList: FC<PersonsListProps> = ({
     [returnHref],
   );
 
-  const isFiltered = Boolean(appliedQuery || status !== 'ALL' || missingContacts);
+  const isFiltered = Boolean(
+    appliedQuery || status !== 'ALL' || missingContacts,
+  );
   const isRefreshing = (isLoading || !isDataCurrent) && data !== null && !error;
   const previousCursor = cursorStack.get(pageIndex - 1);
   const canGoPrevious =
@@ -217,6 +220,7 @@ export const PersonsList: FC<PersonsListProps> = ({
 
   const toolbar = (
     <PersonsListToolbar
+      canViewContact={canViewContact}
       applyFilters={applyFilters}
       draftQuery={draftQuery}
       error={error}
@@ -244,6 +248,7 @@ export const PersonsList: FC<PersonsListProps> = ({
         </DataTableSection>
       );
     }
+
     return <PersonsListSkeleton />;
   }
 
@@ -303,7 +308,9 @@ export const PersonsList: FC<PersonsListProps> = ({
                         icon={<Users aria-hidden="true" className="size-5" />}
                         layout="panel"
                         title={
-                          isFiltered ? 'Aucune fiche trouvée' : 'Répertoire vide'
+                          isFiltered
+                            ? 'Aucune fiche trouvée'
+                            : 'Répertoire vide'
                         }
                       />
                     </TableCell>
@@ -377,7 +384,9 @@ export const PersonsList: FC<PersonsListProps> = ({
                                 aria-hidden="true"
                                 className="size-3 shrink-0"
                               />
-                              <span>Trouvée par email, téléphone ou réseau</span>
+                              <span>
+                                Trouvée par email, téléphone ou réseau
+                              </span>
                             </p>
                           )}
                         </div>
@@ -410,8 +419,8 @@ export const PersonsList: FC<PersonsListProps> = ({
           ariaLabel="Pagination des membres"
           canNext={Boolean(
             data.pagination.hasMore &&
-              data.pagination.nextCursor &&
-              pageIndex + 1 < MAX_PERSONS_PAGE,
+            data.pagination.nextCursor &&
+            pageIndex + 1 < MAX_PERSONS_PAGE,
           )}
           canPrevious={canGoPrevious}
           disabled={Boolean(error) || !isDataCurrent}

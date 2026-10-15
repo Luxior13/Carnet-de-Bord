@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PERSON_LIMITS } from '$features/persons/person.constants';
-
 const mocks = vi.hoisted(() => ({
   decodePlainPersonAuditValues: vi.fn(),
   decryptPersonAuditValues: vi.fn(),
@@ -38,7 +36,16 @@ describe('person contextual field history', () => {
     'rejects inherited section %s before accessing stored history',
     async (sectionKey) => {
       await expect(
-        getPersonFieldHistory('person-1', { fieldKey: 'nickname', sectionKey }),
+        getPersonFieldHistory(
+          'person-1',
+          { fieldKey: 'nickname', sectionKey },
+          {
+            id: 'reader',
+            isProtected: false,
+            permissions: null,
+            role: 'ADMIN',
+          },
+        ),
       ).rejects.toThrow('INVALID_PERSON_HISTORY_FIELD');
       expect(mocks.requirePersonDetailRecord).not.toHaveBeenCalled();
       expect(mocks.findMany).not.toHaveBeenCalled();
@@ -75,11 +82,15 @@ describe('person contextual field history', () => {
       before: 'old@example.com',
     });
 
-    const result = await getPersonFieldHistory('person-1', {
-      fieldKey: 'email',
-      recordId: 'cmqr17jek0006uwfcqetuq78v',
-      sectionKey: 'contacts',
-    });
+    const result = await getPersonFieldHistory(
+      'person-1',
+      {
+        fieldKey: 'email',
+        recordId: 'cmqr17jek0006uwfcqetuq78v',
+        sectionKey: 'contacts',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
 
     expect(mocks.requirePersonDetailRecord).toHaveBeenCalledWith(
       expect.anything(),
@@ -88,7 +99,7 @@ describe('person contextual field history', () => {
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        take: PERSON_LIMITS.fieldHistory,
+        take: 1,
         where: {
           entityId: 'person-1',
           entityType: 'PERSON',
@@ -103,9 +114,7 @@ describe('person contextual field history', () => {
         {
           action: 'UPDATE',
           actor: { displayName: 'Ada Admin', loginName: 'ada.admin' },
-          after: 'new@example.com',
           at: '2026-07-21T10:00:00.000Z',
-          before: 'old@example.com',
           id: 'change-1',
         },
       ],
@@ -142,15 +151,19 @@ describe('person contextual field history', () => {
       before: 'Personnel',
     });
 
-    const result = await getPersonFieldHistory('person-1', {
-      fieldKey: 'label',
-      recordId: 'cmqr17jek0006uwfcqetuq78v',
-      sectionKey: 'contacts',
-    });
+    const result = await getPersonFieldHistory(
+      'person-1',
+      {
+        fieldKey: 'label',
+        recordId: 'cmqr17jek0006uwfcqetuq78v',
+        sectionKey: 'contacts',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
 
     expect(mocks.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        take: PERSON_LIMITS.fieldHistory,
+        take: 1,
         where: {
           entityId: 'person-1',
           entityType: 'PERSON',
@@ -162,18 +175,21 @@ describe('person contextual field history', () => {
     );
     expect(result.items[0]).toEqual(
       expect.objectContaining({
-        after: 'Professionnel',
-        before: 'Personnel',
+        actor: { displayName: 'Ada Admin', loginName: 'ada.admin' },
       }),
     );
   });
 
   it('rejects an unreviewed field before reading a person or audit data', async () => {
     await expect(
-      getPersonFieldHistory('person-1', {
-        fieldKey: 'passwordHash',
-        sectionKey: 'identity',
-      }),
+      getPersonFieldHistory(
+        'person-1',
+        {
+          fieldKey: 'passwordHash',
+          sectionKey: 'identity',
+        },
+        { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+      ),
     ).rejects.toThrow('INVALID_PERSON_HISTORY_FIELD');
     expect(mocks.requirePersonDetailRecord).not.toHaveBeenCalled();
     expect(mocks.findMany).not.toHaveBeenCalled();
@@ -209,10 +225,14 @@ describe('person contextual field history', () => {
       before: 'OUTSIDE_STRUCTURE',
     });
 
-    const result = await getPersonFieldHistory('person-1', {
-      fieldKey: 'structureStatus',
-      sectionKey: 'structure',
-    });
+    const result = await getPersonFieldHistory(
+      'person-1',
+      {
+        fieldKey: 'structureStatus',
+        sectionKey: 'structure',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
 
     expect(result.items[0]?.actor).toEqual({
       displayName: 'deleted.admin',

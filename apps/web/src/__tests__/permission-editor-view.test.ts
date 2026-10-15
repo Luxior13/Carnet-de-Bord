@@ -101,14 +101,24 @@ describe('permission editor configured and effective access', () => {
       PERMISSION_EDITOR_CATEGORIES.find(
         (category) => category.key === 'system-activity',
       )?.scope,
-    ).toBe('cross-page');
+    ).toBeUndefined();
   });
   it('keeps contextual provenance independent of global audit access', () => {
     const state = buildPermissionEditorState(UserRole.USER, {
       'audit:view': false,
       'audit:view_field_history': true,
+      'persons:view': true,
     });
     expect(state.effective.get('audit:view_field_history')).toBe(true);
-    expect(state.effective.get('audit:view')).toBe(false);
+    expect(state.effective.has('audit:view')).toBe(false);
+  });
+  it('does not count provenance without directory access and presents 27 current capabilities', () => {
+    const state = buildPermissionEditorState(UserRole.USER, {
+      'audit:view_field_history': true,
+    });
+    expect(state.effective.get('audit:view_field_history')).toBe(false);
+    expect(
+      PERMISSION_EDITOR_CATEGORIES.flatMap((category) => category.permissions),
+    ).toHaveLength(27);
   });
 });

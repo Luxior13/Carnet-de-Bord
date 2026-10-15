@@ -55,7 +55,7 @@ export type PersonSummary = {
     emails: number;
     phones: number;
     socialProfiles: number;
-  };
+  } | null;
   createdAt: string;
   firstName: string | null;
   id: string;
@@ -95,7 +95,7 @@ export type PersonsListResponse = {
 
 export type PersonOverview = {
   inStructure: number;
-  noContacts: number;
+  noContacts: number | null;
   outsideStructure: number;
   total: number;
 };
@@ -121,9 +121,7 @@ export type PersonMutationResponse = {
 export type PersonFieldHistoryItem = {
   action: string;
   actor: PersonAuditActor;
-  after: unknown | null;
   at: string;
-  before: unknown | null;
   id: string;
 };
 

@@ -70,7 +70,8 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
     await db.$executeRaw`CREATE TABLE "PersonPhone" ("id" text, "personId" text, "normalizedPhone" text)`;
     await db.$executeRaw`CREATE TABLE "PersonSocialProfile" ("id" text, "personId" text,
       "normalizedIdentifier" text, "normalizedProfileUrlHash" text, "normalizedProfileUrl" text)`;
-    await db.$executeRaw`CREATE TABLE "AuditLog" ("id" text, "entityType" text, "entityId" text,
+    await db.$executeRaw`CREATE TABLE "User" ("id" text PRIMARY KEY, "isProtected" boolean NOT NULL)`;
+    await db.$executeRaw`CREATE TABLE "AuditLog" ("id" text, "userId" text, "entityType" text, "entityId" text,
       "createdAt" timestamp(3), "actorDisplayNameSnapshot" text, "actorLoginNameSnapshot" text)`;
     mocks.query.mockImplementation((query: Prisma.Sql) => db.$queryRaw(query));
     mocks.count.mockImplementation((args: Prisma.PersonCountArgs) =>
@@ -114,7 +115,10 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       await db.$executeRaw`UPDATE "Person" SET "nickname" = 'Phoenix', "normalizedNickname" = 'phoenix',
         "firstName" = 'Élodie', "normalizedFirstName" = 'elodie',
         "lastName" = 'Martin', "normalizedLastName" = 'martin' WHERE "id" = 'person-001'`;
-      const page = await listPersons({ limit: 25, q });
+      const page = await listPersons(
+        { limit: 25, q },
+        { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+      );
       expect(page.items.map((person) => person.id)).toEqual(['person-001']);
       expect(page.items[0]?.matchedByContact).toBe(false);
     },
@@ -124,7 +128,19 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
     await db.$executeRaw`UPDATE "Person" SET "normalizedFirstName" = 'ada',
       "normalizedLastName" = 'lovelace' WHERE "id" = 'person-001'`;
     for (const q of ['Ada Hopper', 'Ada %', 'Ada _', 'Ada \\']) {
-      expect((await listPersons({ limit: 25, q })).items).toEqual([]);
+      expect(
+        (
+          await listPersons(
+            { limit: 25, q },
+            {
+              id: 'reader',
+              isProtected: false,
+              permissions: null,
+              role: 'ADMIN',
+            },
+          )
+        ).items,
+      ).toEqual([]);
     }
   });
 
@@ -142,19 +158,40 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       ("id", "personId", "normalizedIdentifier", "normalizedProfileUrl", "normalizedProfileUrlHash")
       SELECT 'social-' || "id", "id", ${profileUrl ? null : q}, ${profileUrl}, ${hash}
       FROM "Person"`;
-      const first = await listPersons({ limit: 25, q });
+      const first = await listPersons(
+        { limit: 25, q },
+        { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+      );
       expect(first.pagination.total).toBe(60);
       expect(first.pagination.nextCursor).not.toBeNull();
       expect(
-        (await listPersons({ limit: 25, q: changedQuery })).pagination.total,
+        (
+          await listPersons(
+            { limit: 25, q: changedQuery },
+            {
+              id: 'reader',
+              isProtected: false,
+              permissions: null,
+              role: 'ADMIN',
+            },
+          )
+        ).pagination.total,
       ).toBe(0);
 
       await expect(
-        listPersons({
-          cursor: first.pagination.nextCursor ?? undefined,
-          limit: 25,
-          q: changedQuery,
-        }),
+        listPersons(
+          {
+            cursor: first.pagination.nextCursor ?? undefined,
+            limit: 25,
+            q: changedQuery,
+          },
+          {
+            id: 'reader',
+            isProtected: false,
+            permissions: null,
+            role: 'ADMIN',
+          },
+        ),
       ).rejects.toThrow('INVALID_CURSOR');
     },
   );
@@ -164,13 +201,19 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
     await db.$executeRaw`INSERT INTO "PersonPhone" VALUES ('ph1', 'person-002', '+33600000000')`;
     await db.$executeRaw`INSERT INTO "PersonSocialProfile" ("id", "personId", "normalizedIdentifier")
       VALUES ('sp1', 'person-003', 'member')`;
-    const first = await listPersons({ contacts: 'missing', limit: 25, q: '' });
-    const next = await listPersons({
-      contacts: 'missing',
-      cursor: first.pagination.nextCursor ?? undefined,
-      limit: 25,
-      q: '',
-    });
+    const first = await listPersons(
+      { contacts: 'missing', limit: 25, q: '' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
+    const next = await listPersons(
+      {
+        contacts: 'missing',
+        cursor: first.pagination.nextCursor ?? undefined,
+        limit: 25,
+        q: '',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(first.pagination.total).toBe(57);
     expect(next.pagination.total).toBe(57);
     expect(first.items[0]?.id).toBe('person-004');
@@ -180,12 +223,15 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       outsideStructure: 20,
       total: 60,
     });
-    const outside = await listPersons({
-      contacts: 'missing',
-      limit: 25,
-      q: 'Membre',
-      structureStatus: 'OUTSIDE_STRUCTURE',
-    });
+    const outside = await listPersons(
+      {
+        contacts: 'missing',
+        limit: 25,
+        q: 'Membre',
+        structureStatus: 'OUTSIDE_STRUCTURE',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(outside.pagination.total).toBe(19);
     expect(
       outside.items.every(
@@ -193,11 +239,14 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       ),
     ).toBe(true);
     await expect(
-      listPersons({
-        cursor: first.pagination.nextCursor ?? undefined,
-        limit: 25,
-        q: '',
-      }),
+      listPersons(
+        {
+          cursor: first.pagination.nextCursor ?? undefined,
+          limit: 25,
+          q: '',
+        },
+        { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+      ),
     ).rejects.toThrow('INVALID_CURSOR');
   });
 
@@ -207,7 +256,15 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       const ids: string[] = [];
       let cursor: string | undefined;
       for (const size of [25, 25, 10]) {
-        const page = await listPersons({ cursor, limit: 25, q: '', sort });
+        const page = await listPersons(
+          { cursor, limit: 25, q: '', sort },
+          {
+            id: 'reader',
+            isProtected: false,
+            permissions: null,
+            role: 'ADMIN',
+          },
+        );
         expect(page.pagination.total).toBe(60);
         expect(page.items).toHaveLength(size);
         ids.push(...page.items.map((person) => person.id));
@@ -226,7 +283,15 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       let cursor: string | undefined;
       const ids: string[] = [];
       for (const size of [25, 25, 10]) {
-        const page = await listPersons({ cursor, limit: 25, q: '', sort });
+        const page = await listPersons(
+          { cursor, limit: 25, q: '', sort },
+          {
+            id: 'reader',
+            isProtected: false,
+            permissions: null,
+            role: 'ADMIN',
+          },
+        );
         expect(page.items).toHaveLength(size);
         ids.push(...page.items.map((person) => person.id));
         cursor = page.pagination.nextCursor ?? undefined;
@@ -243,7 +308,10 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       "createdAt" = (${future} AT TIME ZONE 'UTC'),
       "updatedAt" = (${future} AT TIME ZONE 'UTC') WHERE "id" = 'person-060'`;
     for (const sort of ['name', 'created', 'updated'] as const) {
-      const page = await listPersons({ limit: 100, q: '', sort });
+      const page = await listPersons(
+        { limit: 100, q: '', sort },
+        { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+      );
       expect(page.pagination.total).toBe(59);
       expect(page.items.some((person) => person.id === 'person-060')).toBe(
         false,
@@ -257,11 +325,19 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       q: 'MEMBRE 0',
       structureStatus: 'OUTSIDE_STRUCTURE' as const,
     };
-    const first = await listPersons(request);
-    const next = await listPersons({
-      ...request,
-      cursor: first.pagination.nextCursor ?? undefined,
+    const first = await listPersons(request, {
+      id: 'reader',
+      isProtected: false,
+      permissions: null,
+      role: 'ADMIN',
     });
+    const next = await listPersons(
+      {
+        ...request,
+        cursor: first.pagination.nextCursor ?? undefined,
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(first.pagination.total).toBe(20);
     expect(next.pagination.total).toBe(20);
     expect(
@@ -270,12 +346,18 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       ),
     ).toBe(true);
     expect(first.overview.total).toBe(60);
-    const narrower = await listPersons({ ...request, q: 'membre 00' });
+    const narrower = await listPersons(
+      { ...request, q: 'membre 00' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(narrower.pagination.total).toBe(3);
   });
 
   it('returns an empty list and zero when nothing matches', async () => {
-    const page = await listPersons({ limit: 25, q: 'absent' });
+    const page = await listPersons(
+      { limit: 25, q: 'absent' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(page.items).toEqual([]);
     expect(page.pagination).toMatchObject({
       hasMore: false,
@@ -287,12 +369,15 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
   it('finds contact matches without returning contact values and resolves the latest author stably', async () => {
     const email = 'private-contact@example.test';
     await db.$executeRaw`INSERT INTO "PersonEmail" VALUES ('e1', 'person-001', ${email})`;
-    await db.$executeRaw`INSERT INTO "AuditLog" VALUES
+    await db.$executeRaw`INSERT INTO "AuditLog" ("id", "entityType", "entityId", "createdAt", "actorDisplayNameSnapshot", "actorLoginNameSnapshot") VALUES
       ('audit-a', 'PERSON', 'person-001', timestamp '2026-01-02', 'Premier auteur', 'first.test'),
       ('audit-z', 'PERSON', 'person-001', timestamp '2026-01-02', 'Dernier auteur', 'last.test'),
       ('audit-other', 'USER', 'person-001', timestamp '2026-02-01', 'Autre ressource', 'other.test')`;
 
-    const page = await listPersons({ limit: 25, q: email });
+    const page = await listPersons(
+      { limit: 25, q: email },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(page.items).toHaveLength(1);
     expect(page.items[0]).toMatchObject({
       contactCounts: { emails: 1, phones: 0, socialProfiles: 0 },
@@ -312,19 +397,34 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
       expect(page.items[0]).not.toHaveProperty(key);
     }
     expect(
-      (await listPersons({ limit: 25, q: 'Membre 002' })).items[0]
-        ?.lastModifiedBy,
+      (
+        await listPersons(
+          { limit: 25, q: 'Membre 002' },
+          {
+            id: 'reader',
+            isProtected: false,
+            permissions: null,
+            role: 'ADMIN',
+          },
+        )
+      ).items[0]?.lastModifiedBy,
     ).toBeNull();
   });
 
   it('preserves the remaining filtered total even if the cursor page becomes empty', async () => {
-    const first = await listPersons({ limit: 25, q: '' });
+    const first = await listPersons(
+      { limit: 25, q: '' },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     await db.$executeRaw`DELETE FROM "Person" WHERE "id" > 'person-025'`;
-    const next = await listPersons({
-      cursor: first.pagination.nextCursor ?? undefined,
-      limit: 25,
-      q: '',
-    });
+    const next = await listPersons(
+      {
+        cursor: first.pagination.nextCursor ?? undefined,
+        limit: 25,
+        q: '',
+      },
+      { id: 'reader', isProtected: false, permissions: null, role: 'ADMIN' },
+    );
     expect(next.items).toEqual([]);
     expect(next.pagination).toMatchObject({
       hasMore: false,

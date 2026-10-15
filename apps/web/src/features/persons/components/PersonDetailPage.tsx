@@ -141,7 +141,7 @@ const PersonContactSummary: FC<{ person: PersonDetail }> = ({ person }) => {
 };
 
 const PersonDetailContent: FC<PersonDetailPageProps> = ({
-  activeSection,
+  activeSection: requestedSection,
   initialPerson,
   personId,
   returnHref,
@@ -158,8 +158,15 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
     initialPerson ?? null,
   );
   const [identityDirty, setIdentityDirty] = useState(false);
-  const { canDelete, canUpdate, canView, canViewProvenance } =
-    getPersonCapabilities(userData);
+  const {
+    canDelete,
+    canUpdate,
+    canUpdateContact,
+    canView,
+    canViewContact,
+    canViewProvenance,
+  } = getPersonCapabilities(userData);
+  const activeSection = canViewContact ? requestedSection : 'identite';
   const featureOperational = operationalFeatureIds.has(FEATURES.persons.id);
   const available = !featureAvailabilityLoaded || featureOperational;
   const mountedRef = useRef(false);
@@ -355,7 +362,9 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
         }
         dirtySections={identityDirty ? ['identite'] : []}
         ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
-        heroActions={<PersonContactSummary person={person} />}
+        heroActions={
+          canViewContact ? <PersonContactSummary person={person} /> : undefined
+        }
         heroIcon={
           <PersonAvatar className="size-full rounded-md" person={person} />
         }
@@ -363,7 +372,9 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
         heroTitle={getPersonDisplayName(person)}
         navigationAriaLabel="Navigation de la fiche du répertoire"
         sectionHref={sectionHref}
-        sections={PERSON_DETAIL_SECTIONS}
+        sections={PERSON_DETAIL_SECTIONS.filter(
+          (section) => section.id !== 'coordonnees' || canViewContact,
+        )}
       >
         {activeSection === 'identite' ? (
           <section aria-label="Identité" className="space-y-5">
@@ -393,7 +404,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
           <section aria-label="Coordonnées" className="space-y-5">
             <PersonCollectionsSection
               available={available}
-              canUpdate={canUpdate}
+              canUpdate={canUpdateContact}
               canViewProvenance={canViewProvenance}
               onChange={acceptPerson}
               onReload={load}
@@ -438,6 +449,8 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = (props) => {
     authorizationRevision,
     capabilities.canView,
     capabilities.canUpdate,
+    capabilities.canViewContact,
+    capabilities.canUpdateContact,
     capabilities.canDelete,
     capabilities.canViewProvenance,
   ].join(':');

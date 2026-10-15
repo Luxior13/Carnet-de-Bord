@@ -5,13 +5,8 @@ import {
   decideUserAccessMutation,
   getUserAccessMutationCapabilities,
 } from '$components/users/user-detail/user-access-editor-policy';
-import {
-  USER_DETAIL_SECTIONS,
-} from '$components/users/user-detail/UserDetailNavigation';
-import {
-  hasPermission,
-  PERMISSIONS,
-} from '$constants/permissions.constants';
+import { USER_DETAIL_SECTIONS } from '$components/users/user-detail/UserDetailNavigation';
+import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import { isUserIdentityMasked } from '$utils/user-display.utils';
 
@@ -79,7 +74,10 @@ export function useUserDetailCapabilities(
         currentUser.permissions,
       )
     : false;
-  const accessCaps = getUserAccessMutationCapabilities(currentUser ?? null, isProtectedActor);
+  const accessCaps = getUserAccessMutationCapabilities(
+    currentUser ?? null,
+    isProtectedActor,
+  );
   const canViewUserAccountPolicy = currentUser
     ? isProtectedActor ||
       hasPermission(

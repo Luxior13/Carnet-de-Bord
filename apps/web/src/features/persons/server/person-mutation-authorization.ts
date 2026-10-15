@@ -20,6 +20,7 @@ export const authorizePersonMutation = async (
   permission:
     | typeof PERMISSIONS.PERSONS.CREATE
     | typeof PERMISSIONS.PERSONS.DELETE
+    | typeof PERMISSIONS.PERSONS.UPDATE_CONTACT
     | typeof PERMISSIONS.PERSONS.UPDATE,
   personId?: string,
 ): Promise<void> => {
@@ -32,7 +33,7 @@ export const authorizePersonMutation = async (
   // after any wait on Person, User or Session has completed.
   await authorizeUserAction(
     transaction,
-    { actorId: actor.id, session: actor.session },
+    { actorId: actor.id, authorization: actor, session: actor.session },
     permission,
   );
 };

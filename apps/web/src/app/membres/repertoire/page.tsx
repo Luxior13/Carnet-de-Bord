@@ -58,7 +58,7 @@ export default async function PersonsPage({
   ) {
     try {
       await assertPersonFeatureReady();
-      const data = await listPersons(parsed.data);
+      const data = await listPersons(parsed.data, user);
       initialState = {
         data,
         request: {

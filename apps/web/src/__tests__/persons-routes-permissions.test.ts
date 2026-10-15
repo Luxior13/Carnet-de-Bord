@@ -311,16 +311,19 @@ describe('person API permission boundaries', () => {
       service: mocks.deletePersonSocialProfile,
       title: 'delete social profile',
     },
-  ])('uses persons:update for child operation: $title', async (testCase) => {
-    const response = await testCase.invoke();
+  ])(
+    'uses persons:update_contact for child operation: $title',
+    async (testCase) => {
+      const response = await testCase.invoke();
 
-    expect(response.status).toBe(403);
-    expect(mocks.requirePermission).toHaveBeenCalledWith(
-      actor,
-      PERMISSIONS.PERSONS.UPDATE,
-    );
-    expect(testCase.service).not.toHaveBeenCalled();
-  });
+      expect(response.status).toBe(403);
+      expect(mocks.requirePermission).toHaveBeenCalledWith(
+        actor,
+        PERMISSIONS.PERSONS.UPDATE_CONTACT,
+      );
+      expect(testCase.service).not.toHaveBeenCalled();
+    },
+  );
 
   it('requires both field-history and person visibility for field history', async () => {
     mocks.requirePermission
@@ -368,13 +371,16 @@ describe('person API permission boundaries', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
     expect(response.headers.get('Pragma')).toBe('no-cache');
-    expect(mocks.listPersons).toHaveBeenCalledWith({
-      cursor: undefined,
-      limit: 25,
-      q: '',
-      sort: 'name',
-      structureStatus: 'IN_STRUCTURE',
-    });
+    expect(mocks.listPersons).toHaveBeenCalledWith(
+      {
+        cursor: undefined,
+        limit: 25,
+        q: '',
+        sort: 'name',
+        structureStatus: 'IN_STRUCTURE',
+      },
+      actor,
+    );
   });
 
   it.each([
@@ -411,7 +417,7 @@ describe('person API permission boundaries', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
-    expect(mocks.getPerson).toHaveBeenCalledWith('person-1');
+    expect(mocks.getPerson).toHaveBeenCalledWith('person-1', actor);
     expect(mocks.getPersonFieldHistory).not.toHaveBeenCalled();
   });
 
@@ -431,10 +437,14 @@ describe('person API permission boundaries', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
     expect(response.headers.get('Pragma')).toBe('no-cache');
-    expect(mocks.getPersonFieldHistory).toHaveBeenCalledWith('person-1', {
-      fieldKey: 'nickname',
-      sectionKey: 'identity',
-    });
+    expect(mocks.getPersonFieldHistory).toHaveBeenCalledWith(
+      'person-1',
+      {
+        fieldKey: 'nickname',
+        sectionKey: 'identity',
+      },
+      actor,
+    );
     expect(mocks.requirePermission).toHaveBeenNthCalledWith(
       1,
       actor,

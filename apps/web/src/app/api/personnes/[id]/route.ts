@@ -38,7 +38,7 @@ export async function GET(
   try {
     await assertPersonFeatureReady();
 
-    return withPrivateNoStore(apiSuccess(await getPerson(id)));
+    return withPrivateNoStore(apiSuccess(await getPerson(id, auth.user)));
   } catch (error) {
     return withPrivateNoStore(
       await handlePersonApiError('PERSON_GET', error, request),

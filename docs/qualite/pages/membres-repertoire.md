@@ -1,5 +1,62 @@
 # Suivi — Répertoire des membres (`/membres/repertoire`)
 
+## Corrections et séparation des coordonnées — 15 octobre 2026
+
+Après accord utilisateur, AUT-S01/S03/S04 sont corrigés et vérifiés ; AUT-S06
+est adopté. Ces décisions remplacent les anciennes descriptions couplant
+identité et contacts ou mentionnant deux valeurs de provenance.
+
+- `persons:view` permet identité, date de naissance et statut ;
+  `persons:update` permet leur modification.
+- `persons:view_contact`, dépendant de la lecture du Répertoire, ouvre emails,
+  téléphones et profils sociaux. Sans lui : onglet/résumé absents, collections
+  vides dans les réponses, compteurs masqués, recherche limitée à l'identité,
+  filtre « sans coordonnées » et provenance des coordonnées refusés.
+- `persons:update_contact` exige ces deux lectures et autorise ajout,
+  modification et retrait des contacts. Une création API avec contacts initiaux
+  l'exige aussi ; le formulaire actuel reste identité/statut.
+- La provenance appartient au Répertoire, dépend de sa lecture et ne renvoie
+  que le dernier auteur autorisé, l'action, la date et l'id de trace, sans valeurs.
+- L'auteur racine est présenté comme « Superadministrateur », sans identifiant,
+  aux autres lecteurs de liste, fiche, provenance et retours de mutation.
+  Les snapshots d'audit originaux sont conservés.
+- Les mutations revalident l'autorité attendue et les droits courants dans
+  leur transaction, y compris avant de retourner une fiche projetée.
+
+Migration appliquée après sauvegarde signée : accès effectifs antérieurs aux
+contacts conservés, nouveaux choix explicites respectés, compte protégé et
+tombstones exclus, aucun audit réécrit. AUT-S07 reste une suggestion non
+adoptée : suppression avec confirmation/version, sans nouveau mot de passe.
+
+**82 tests PostgreSQL réussis** (création, fiche, liste, migration), inclus dans
+les 1 335 tests web réussis. Cinq parcours Chromium/Next de production/PostgreSQL
+à 1440 px, données fictives et sessions préparées ; pas de nouveau parcours
+connexion/MFA, de qualification de charge ni de tous les formats.
+Le [complément du rapport](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md#corrections-après-accord--15-octobre-2026)
+porte les résultats et limites ; les constats initiaux ci-dessous restent datés.
+
+## Autorisations et provenance — constat du 15 octobre 2026
+
+L'[audit des droits du site actuel](../../audits/AUDIT_AUTORISATIONS_SITE_2026-10-15.md)
+ouvre AUT-S01 : la provenance d'une personne peut restituer le nom et l'identifiant
+du compte racine, alors que sa fiche Utilisateur les masque aux autres lecteurs.
+Deux sondes sur les fonctions réelles d'écriture/projection avec stockage simulé
+le reproduisent. Liste, fiche, provenance et retours de mutation sont à traiter ;
+les données d'audit stockées doivent être conservées. Responsable à attribuer,
+**correction non effectuée** ; aucune fuite réelle en session n'est affirmée.
+
+AUT-S04 relève aussi de cette page : l'infobulle utilise auteur/date/action,
+mais sa réponse contient anciennes et nouvelles valeurs de deux changements.
+Réduire cette réponse au besoin actuel est recommandé. AUT-S03, suivi dans
+Utilisateurs, concerne le prérequis `persons:view` absent du catalogue de la
+provenance, bien qu'il soit contrôlé par l'API.
+
+Les quatre droits Personnes existants restent utiles. La séparation éventuelle
+de la lecture/modification des coordonnées (AUT-S06) et une preuve de mot de
+passe à la suppression (AUT-S07) sont des propositions, pas des règles adoptées.
+Le rapport conserve les limites des 400 tests existants et trois sondes de la
+passe transverse ; les preuves réelles antérieures restent datées.
+
 ## État courant — clôture du socle du 13 octobre 2026
 
 La [revue finale du socle](../../audits/AUDIT_CLOTURE_SOCLE_2026-10-12.md) est

@@ -154,8 +154,8 @@ export function usePersonsListState({
   );
   const isDataCurrent = Boolean(
     dataRequest &&
-      haveSamePersonsListRequest(dataRequest, request) &&
-      dataPageIndex === pageIndex,
+    haveSamePersonsListRequest(dataRequest, request) &&
+    dataPageIndex === pageIndex,
   );
   const isUrlInSync =
     haveSamePersonsListRequest(location.request, request) &&

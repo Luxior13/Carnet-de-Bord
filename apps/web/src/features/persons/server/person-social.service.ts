@@ -74,7 +74,7 @@ export const addPersonSocialProfile = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const current = await requirePersonDetailRecord(transaction, personId);
@@ -160,7 +160,7 @@ export const addPersonSocialProfile = async (
 
     return {
       duplicateWarning,
-      person: await mapPersonDetail(transaction, updated),
+      person: await mapPersonDetail(transaction, updated, actor),
     };
   });
 
@@ -177,7 +177,7 @@ export const updatePersonSocialProfile = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const person = await requirePersonDetailRecord(transaction, personId);
@@ -218,7 +218,7 @@ export const updatePersonSocialProfile = async (
     ) {
       return {
         duplicateWarning: { duplicateFound: false },
-        person: await mapPersonDetail(transaction, person),
+        person: await mapPersonDetail(transaction, person, actor),
       };
     }
 
@@ -317,7 +317,7 @@ export const updatePersonSocialProfile = async (
 
     return {
       duplicateWarning,
-      person: await mapPersonDetail(transaction, updated),
+      person: await mapPersonDetail(transaction, updated, actor),
     };
   });
 
@@ -331,7 +331,7 @@ export const deletePersonSocialProfile = async (
     await authorizePersonMutation(
       transaction,
       actor,
-      PERMISSIONS.PERSONS.UPDATE,
+      PERMISSIONS.PERSONS.UPDATE_CONTACT,
       personId,
     );
     const person = await requirePersonDetailRecord(transaction, personId);
@@ -422,5 +422,5 @@ export const deletePersonSocialProfile = async (
     });
     const updated = await requirePersonDetailRecord(transaction, personId);
 
-    return mapPersonDetail(transaction, updated);
+    return mapPersonDetail(transaction, updated, actor);
   });
