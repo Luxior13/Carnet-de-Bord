@@ -1,0 +1,212 @@
+[
+  {
+    "width": 320,
+    "overflow": false,
+    "editorHeight": 1891.71875,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 130.65625,
+        "width": 262
+      },
+      {
+        "key": "persons:create",
+        "height": 126,
+        "width": 262
+      },
+      {
+        "key": "persons:update",
+        "height": 127,
+        "width": 262
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 126,
+        "width": 262
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 127,
+        "width": 262
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 131.125,
+        "width": 262
+      },
+      {
+        "key": "persons:delete",
+        "height": 175.125,
+        "width": 262
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "overflow": false,
+    "editorHeight": 1861.46875,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 130.65625,
+        "width": 332
+      },
+      {
+        "key": "persons:create",
+        "height": 126,
+        "width": 332
+      },
+      {
+        "key": "persons:update",
+        "height": 127,
+        "width": 332
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 126,
+        "width": 332
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 127,
+        "width": 332
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 126,
+        "width": 332
+      },
+      {
+        "key": "persons:delete",
+        "height": 170,
+        "width": 332
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "overflow": false,
+    "editorHeight": 1178.8125,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 76.65625,
+        "width": 702
+      },
+      {
+        "key": "persons:create",
+        "height": 72,
+        "width": 702
+      },
+      {
+        "key": "persons:update",
+        "height": 73,
+        "width": 702
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 72,
+        "width": 702
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 73,
+        "width": 702
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 72,
+        "width": 702
+      },
+      {
+        "key": "persons:delete",
+        "height": 96,
+        "width": 702
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "overflow": false,
+    "editorHeight": 1150.8125,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 76.65625,
+        "width": 1086
+      },
+      {
+        "key": "persons:create",
+        "height": 72,
+        "width": 1086
+      },
+      {
+        "key": "persons:update",
+        "height": 73,
+        "width": 1086
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 72,
+        "width": 1086
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 73,
+        "width": 1086
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 72,
+        "width": 1086
+      },
+      {
+        "key": "persons:delete",
+        "height": 96,
+        "width": 1086
+      }
+    ]
+  },
+  {
+    "width": 1920,
+    "overflow": false,
+    "editorHeight": 1150.8125,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 76.65625,
+        "width": 1086
+      },
+      {
+        "key": "persons:create",
+        "height": 72,
+        "width": 1086
+      },
+      {
+        "key": "persons:update",
+        "height": 73,
+        "width": 1086
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 72,
+        "width": 1086
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 73,
+        "width": 1086
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 72,
+        "width": 1086
+      },
+      {
+        "key": "persons:delete",
+        "height": 96,
+        "width": 1086
+      }
+    ]
+  }
+]

@@ -63,7 +63,7 @@ des champs de formulaire. Le focus système en couleurs forcées reste présent.
 Sources principales : [sélecteurs](../../apps/web/src/components/ui/select.tsx),
 [menus d'actions](../../apps/web/src/components/ui/dropdown-menu.tsx),
 [composition de liste](../../apps/web/src/components/ui/directory.module.css),
-[champs discrets](../../apps/web/src/components/layout/SectionForm.module.css),
+champs discrets (`SectionForm.module.css`, retiré le 17 octobre 2026),
 [permissions](../../apps/web/src/components/users/PermissionsEditor.tsx).
 Les décisions durables sont portées par le [design system](../references/DESIGN_SYSTEM.md).
 

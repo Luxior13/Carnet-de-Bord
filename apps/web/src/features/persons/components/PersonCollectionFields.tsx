@@ -287,12 +287,12 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
               countryError ? `${idPrefix}-country-error` : undefined
             }
             aria-invalid={Boolean(countryError)}
+            className="w-full min-w-0"
             id={`${idPrefix}-country`}
-            variant="compact"
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent variant="compact">
+          <SelectContent>
             {PHONE_COUNTRY_OPTIONS.map(([code, label]) => (
               <SelectItem key={code} value={code}>
                 {label}
@@ -408,12 +408,12 @@ export const SocialFields: FC<SocialFieldsProps> = ({
               networkError ? `${idPrefix}-network-error` : undefined
             }
             aria-invalid={Boolean(networkError)}
+            className="w-full min-w-0"
             id={`${idPrefix}-network`}
-            variant="compact"
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent variant="compact">
+          <SelectContent>
             {PERSON_SOCIAL_NETWORKS.filter(
               (network) =>
                 network.status === 'active' || network.key === value.networkKey,

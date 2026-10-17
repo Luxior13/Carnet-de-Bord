@@ -1,0 +1,410 @@
+{
+  "mode": "after",
+  "scope": "Vraie fiche UserDetailPage avec données, session, navigation, API et shell simulés. Aucun accès à un compte réel.",
+  "cases": [
+    {
+      "section": "profile",
+      "width": 320,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-first-name",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-last-name",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-login-name",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-contact-email",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-first-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-last-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-login-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-contact-email",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "section": "profile",
+      "width": 390,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-first-name",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-last-name",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-login-name",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-contact-email",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-first-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-last-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-login-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-contact-email",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "section": "profile",
+      "width": 768,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-first-name",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-last-name",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-login-name",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-contact-email",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-first-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-last-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-login-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-contact-email",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "section": "profile",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-first-name",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-last-name",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-login-name",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        },
+        {
+          "id": "user-contact-email",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-first-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-last-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-login-name",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        },
+        {
+          "for": "user-contact-email",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "section": "access",
+      "width": 320,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-role",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-role",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "section": "access",
+      "width": 390,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-role",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 44,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-role",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "section": "access",
+      "width": 768,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-role",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-role",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "section": "access",
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "user-role",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "height": 40,
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "disabled": false
+        }
+      ],
+      "labels": [
+        {
+          "for": "user-role",
+          "font": "14px",
+          "color": "rgb(243, 246, 251)",
+          "weight": "600"
+        }
+      ]
+    },
+    {
+      "case": "role-menu-keyboard-and-focus",
+      "menu": {
+        "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px"
+      }
+    },
+    {
+      "case": "validation-and-cancel",
+      "mutations": 0
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,112 @@
+[
+  {
+    "name": "Description and inheritance by keyboard, no draft change",
+    "width": 320,
+    "passed": true
+  },
+  {
+    "name": "Grant, cancel, save and reset keep their behavior",
+    "width": 320,
+    "passed": true
+  },
+  {
+    "name": "Description and inheritance by keyboard, no draft change",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "Grant, cancel, save and reset keep their behavior",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "Description and inheritance by keyboard, no draft change",
+    "width": 768,
+    "passed": true
+  },
+  {
+    "name": "Grant, cancel, save and reset keep their behavior",
+    "width": 768,
+    "passed": true
+  },
+  {
+    "name": "Description and inheritance by keyboard, no draft change",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "name": "Grant, cancel, save and reset keep their behavior",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "name": "Description and inheritance by keyboard, no draft change",
+    "width": 1920,
+    "passed": true
+  },
+  {
+    "name": "Grant, cancel, save and reset keep their behavior",
+    "width": 1920,
+    "passed": true
+  },
+  {
+    "name": "Read only retains effective states and explanations",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "Role-bound settings ADMIN",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "Role-bound settings USER",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "Blocked choice stays visibly blocked, granting restores dependencies",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "Denied control exposes its reason on focus and stays inactive",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "Read only retains effective states and explanations",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "name": "Role-bound settings ADMIN",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "name": "Role-bound settings USER",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "name": "Blocked choice stays visibly blocked, granting restores dependencies",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "name": "Denied control exposes its reason on focus and stays inactive",
+    "width": 1440,
+    "passed": true
+  },
+  {
+    "name": "Touch opens and closes explanations with comfortable targets",
+    "width": 390,
+    "passed": true
+  },
+  {
+    "name": "CSS zoom at 200 percent keeps explanations and controls in bounds",
+    "width": 1280,
+    "passed": true
+  }
+]

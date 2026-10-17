@@ -315,11 +315,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
           )}
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label
-                htmlFor="edit-firstName"
-                className="text-muted-foreground text-xs"
-                required
-              >
+              <Label htmlFor="edit-firstName" required>
                 Prénom
               </Label>
               <Input
@@ -350,10 +346,7 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
               )}
             </div>
             <div className="space-y-1.5">
-              <Label
-                htmlFor="edit-lastName"
-                className="text-muted-foreground text-xs"
-              >
+              <Label htmlFor="edit-lastName">
                 Nom <span className="font-normal">(facultatif)</span>
               </Label>
               <Input

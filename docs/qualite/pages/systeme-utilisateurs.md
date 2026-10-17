@@ -1,5 +1,68 @@
 # Suivi — Utilisateurs : liste, création et fiche
 
+## Autorisations : présentation allégée — 17 octobre 2026
+
+L'utilisateur conserve l'organisation, demande un rendu moins carré et des
+lignes moins hautes, puis valide la proposition par « ok go ». Il précise que
+la liste `/systeme/utilisateurs` est sa référence satisfaisante de couleurs,
+clarté et ressenti, sans demander de reproduire son tableau dans cet onglet.
+
+**Implémenté et vérifié sur les composants.** Pôles, pages et rubriques conservés.
+Fonds alternés et couleurs issus des mêmes jetons que la liste Utilisateurs ;
+séparations fines, contours imbriqués retirés et arrondis de 8 px. Les commandes
+s'alignent à droite lorsque la place le permet et passent sous le libellé sur
+petit écran. Les nouveaux styles restent locaux à l'éditeur.
+
+Le bouton d'information près du titre déplie description complète, origine,
+héritage, réglage choisi, accès effectif et dépendances. Il utilise la primitive
+Collapsible et le Button partagés, avec nom accessible et état d'ouverture.
+« Hérité du rôle »/« Personnalisé » reste visible discrètement. Le badge ordinaire
+Autorisé/Refusé est omis quand la commande exprime déjà le même état ; il reste
+présent en lecture seule. Pour un droit lié au rôle, le statut verrouillé
+(« Fourni par le rôle… », « Réservé aux administrateurs ») suffit : le badge est
+retiré depuis la revue de code du 17 octobre. L'accès de page conserve
+son indicateur. Les descriptions critiques et les raisons de blocage restent
+visibles sans ouvrir de détail ; la gravité sensible devient une métadonnée
+neutre, tandis que critique et blocage conservent leurs couleurs d'alerte.
+
+L'accès de page réutilise maintenant PermissionRow. Le statut fourni par le
+rôle garde son explication et son cadenas, sans carte supplémentaire. Les
+choix, dépendances automatiques, règles de cible, réinitialisations et sauvegarde
+gardent leur logique. Aucune modification d'API, de données ou de droits réels.
+
+Vérifications nouvelles sur UserAccessTab et les composants réels, avec acteur,
+cible et callbacks de sauvegarde fictifs, cadre à marge latérale simulée :
+
+- Cinq largeurs mesurées : 320, 390, 768, 1440 et 1920 px, sans débordement.
+  Ligne ordinaire à 1440 px : environ **129 → 72 px** ; à 390 px : **203 → 126 px**.
+  L'éditeur Répertoire complet passe d'environ 1495 à 1151 px à 1440 px et de
+  2378 à 1861 px à 390 px. Hauteurs variables, pas de troncature imposée.
+- **22 parcours Chromium réussis** : détails par Entrée/Espace sans changer
+  le brouillon, annulation/sauvegarde simulée/retour au rôle aux cinq largeurs,
+  lecture seule, Paramètres fixes USER/ADMIN, prérequis bloquants, raison d'une
+  commande refusée au focus, tactile émulé et zoom CSS à 200 %.
+- **34 tests existants réussis** : politique, projection, droits fixes et
+  contrats des sous-composants ; TypeScript et lint des fichiers modifiés réussis.
+  Les captures ordinateur, mobile et détail tactile ont été inspectées.
+- Compilation de production et contrôle d'architecture réussis ; contrôle
+  documentaire exécuté après mise à jour du suivi et de l'index.
+
+Limites : pas de requête de sauvegarde HTTP, session réelle, test SQL, lecteur
+d'écran ni appareil tactile physique dans cette passe de présentation. Le
+zoom CSS ne constitue pas un essai du zoom natif du navigateur. Les preuves
+des audits de sécurité précédents restent datées.
+
+[Mesures avant](../../audits/autorisations-visuel-2026-10-17/before.json) ·
+[Mesures après](../../audits/autorisations-visuel-2026-10-17/after.json) ·
+[22 parcours](../../audits/autorisations-visuel-2026-10-17/interactions.json) ·
+[Ordinateur](../../audits/autorisations-visuel-2026-10-17/after-1440.png) ·
+[Mobile](../../audits/autorisations-visuel-2026-10-17/after-390.png) ·
+[Détail ouvert](../../audits/autorisations-visuel-2026-10-17/touch-details-390.png).
+
+Sélection : Q01–Q06, Q09, Q19, Q27 et Q30 pour besoin, composition, clavier,
+listes, commandes, états d'accès et composants. Autres sujets hors impact
+serveur/persistance ou non applicables à cette retouche locale.
+
 ## Corrections des autorisations actuelles — 15 octobre 2026
 
 Après accord utilisateur « ok go », AUT-S02/S03 sont corrigés et vérifiés,
@@ -360,6 +423,45 @@ Les API simulées du banc ne rejouent pas l'intégration PostgreSQL des audits p
   Essais sur Next/PostgreSQL isolés, dont défi mot de passe/TOTP réel ;
   1 036 tests web réussis et 25 ignorés.
   [Rapport, preuves et limites](../../audits/AUDIT_FICHE_UTILISATEUR_2026-10-10.md).
+
+## Fiche : harmonisation des champs — 17 octobre 2026
+
+Complément du même jour : les contours héritent désormais du rendu adouci
+d’Informations de Noctambule (1 px, #435978 au repos, #5b7699 au survol,
+accent #698cdd au focus). Le changement est commun aux formulaires, sans
+surcharge propre à cette fiche. Ses dix cas client ont été rejoués après
+correction : [mesures et limites](composants-partages.md#contours-précisés-le-17-octobre-2026).
+Les captures ci-dessous précèdent ce complément ; les captures du lien précédent
+montrent les contours courants.
+
+Le propriétaire a signalé que les champs de la fiche semblaient inchangés après
+l’harmonisation commune. La reproduction avec UserDetailPage confirme une reprise
+partielle : les Input avaient déjà les nouvelles dimensions et arrondis, mais
+quatre libellés imposaient encore un texte atténué à 11 px, l’identifiant de
+connexion une police monospace et le sélecteur de rôle la variante compacte.
+
+Les sections Profil et Autorisations réutilisent maintenant les présentations
+communes de Label, Input et Select : libellés à 14 px semi-gras, identifiant avec
+la police des autres saisies, rôle à 40/44 px de haut avec un rayon de 8 px.
+Les sous-titres Identité et Connexion et contact étaient d'abord passés à 14 px
+semi-gras ; la revue de code du même jour a relevé qu'ils devenaient identiques
+aux labels. Ils reprennent donc le repère en petites capitales atténuées, comme
+dans la création d'utilisateur. Les filtres pôle et page/fonction restent compacts.
+La règle durable est dans le [design system](../../references/DESIGN_SYSTEM.md).
+
+Vérification Chromium sur les vrais composants de la fiche, avec données,
+session, navigation, API et shell simulés : **10 cas réussis**. Profil et
+Autorisations contrôlés à 320, 390, 768 et 1440 px, sans débordement horizontal ;
+menu du rôle au clavier, Échap et retour du focus ; erreur de prénom, focus sur
+le champ puis annulation avec restauration de la valeur. Aucune mutation émise
+dans ces scénarios et aucune erreur JavaScript observée. Ce contrôle ne constitue
+pas une recette HTTP authentifiée ni une vérification de sauvegarde réelle.
+
+[Mesures avant](../../audits/champs-2026-10-17/fiche-utilisateur-avant.json) ·
+[Mesures après](../../audits/champs-2026-10-17/fiche-utilisateur-apres.json) ·
+[Profil ordinateur](../../audits/champs-2026-10-17/fiche-utilisateur-profil-1440.png) ·
+[Profil mobile](../../audits/champs-2026-10-17/fiche-utilisateur-profil-390.png) ·
+[Autorisations mobile](../../audits/champs-2026-10-17/fiche-utilisateur-acces-390.png).
 
 ## Décisions courantes
 
@@ -1054,7 +1156,14 @@ réactive pas Activité et n'étend pas les capacités de gestion du compte.
   vérifier le compte puis demander une nouvelle émission explicite. Aucun
   rejeu automatique ni récupération d'un ancien secret depuis son hash.
 
-### Champs moins arrondis — 10 octobre 2026
+### Champs moins arrondis — historique du 10 octobre 2026
+
+Le rendu des formulaires évolue le 17 octobre : police système, rayon de 8 px,
+champs plus lisibles et hauteur adaptée au mobile. La règle courante appartient
+au [design system](../../references/DESIGN_SYSTEM.md#4-espacements-et-arrondis),
+avec [preuves et limites communes](composants-partages.md#champs--harmonisation-du-17-octobre-2026).
+Les filtres et sélecteurs compacts des tableaux conservent leur variante.
+Les mesures ci-dessous décrivent le rendu antérieur, pas le nouveau.
 
 À la demande d'angles plus carrés mais légèrement arrondis, le rayon par défaut
 de `Input`, `Textarea` et `SelectTrigger` passe à 6 px (8 px auparavant dans

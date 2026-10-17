@@ -1,5 +1,19 @@
 # Suivi — Répertoire des membres (`/membres/repertoire`)
 
+## Champs — décision courante du 17 octobre 2026
+
+Les champs des fiches et créations, y compris date de naissance et coordonnées,
+reprennent le rendu adouci validé sur le site Noctambule : police système,
+arrondis de 8 px, valeurs à 16 px sous 1024 px puis 13 px, hauteur de 40/44 px.
+Les champs en édition directe gardent leur fond opaque et un contour visible.
+Le statut et les sélecteurs de coordonnées utilisent la variante par défaut ;
+la variante compacte reste celle des filtres de liste. La recherche et les
+tableaux conservent leur densité et Geist. Cette décision remplace les anciennes
+prescriptions de champs discrets et de sélecteurs compacts dans les formulaires.
+Règle commune : [design system](../../references/DESIGN_SYSTEM.md#4-espacements-et-arrondis).
+Contrôles et limites : [composants partagés](composants-partages.md#champs--harmonisation-du-17-octobre-2026).
+
+
 ## Corrections et séparation des coordonnées — 15 octobre 2026
 
 Après accord utilisateur, AUT-S01/S03/S04 sont corrigés et vérifiés ; AUT-S06

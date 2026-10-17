@@ -237,11 +237,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </FormSectionTitle>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="user-first-name"
-                  className="text-muted-foreground text-xs"
-                  required
-                >
+                <Label htmlFor="user-first-name" required>
                   Prénom
                 </Label>
                 <Input
@@ -266,10 +262,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="user-last-name"
-                  className="text-muted-foreground text-xs"
-                >
+                <Label htmlFor="user-last-name">
                   Nom <span className="font-normal">(facultatif)</span>
                 </Label>
                 <Input
@@ -307,11 +300,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
             </FormSectionTitle>
             <div className="space-y-3">
               <div className="space-y-1.5">
-                <Label
-                  htmlFor="user-login-name"
-                  className="text-muted-foreground text-xs"
-                  required
-                >
+                <Label htmlFor="user-login-name" required>
                   Identifiant de connexion
                 </Label>
                 <Input
@@ -337,7 +326,6 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                       loginName: event.target.value.toLowerCase(),
                     })
                   }
-                  className="font-mono"
                 />
                 {errors.loginName ? (
                   <FieldError id="user-login-name-error">
@@ -355,10 +343,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </div>
               {canViewContact ? (
                 <div className="space-y-1.5">
-                  <Label
-                    htmlFor="user-contact-email"
-                    className="text-muted-foreground text-xs"
-                  >
+                  <Label htmlFor="user-contact-email">
                     Email de contact{' '}
                     <span className="font-normal">(facultatif)</span>
                   </Label>

@@ -189,9 +189,8 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(permissionsSource).toContain(
       "selectedCategory.assignment === 'role-bound'",
     );
-    expect(permissionsSource).toContain(
-      'selectedCategoryAccessPermission.grantable',
-    );
+    expect(permissionsSource).toContain('isPageAccess');
+    expect(rowSource).toContain('permission.grantable');
     expect(roleBoundPermissionStatusSource).toContain(
       'Fourni par le rôle Administrateur',
     );

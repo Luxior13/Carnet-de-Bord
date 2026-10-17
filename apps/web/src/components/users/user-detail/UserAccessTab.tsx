@@ -216,7 +216,6 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 >
                   <SelectTrigger
                     id="user-role"
-                    variant="compact"
                     className="w-full"
                     aria-describedby={
                       user.criticalAccessReady !== true
@@ -226,7 +225,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                   >
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent variant="compact">
+                  <SelectContent>
                     <SelectItem value="USER">Utilisateur</SelectItem>
                     <SelectItem
                       disabled={user.criticalAccessReady !== true}

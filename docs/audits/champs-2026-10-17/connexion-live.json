@@ -1,0 +1,58 @@
+{
+  "scope": "Serveur de développement existant, page /login anonyme uniquement. Aucun identifiant saisi ni formulaire soumis. Requêtes hors GET/HEAD et origines externes bloquées.",
+  "cases": [
+    {
+      "width": 1440,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "loginName",
+          "type": "text",
+          "height": 40,
+          "radius": "8px",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "background": "rgb(14, 22, 34)",
+          "border": "rgb(111, 134, 165)"
+        },
+        {
+          "id": "password",
+          "type": "password",
+          "height": 40,
+          "radius": "8px",
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "background": "rgb(14, 22, 34)",
+          "border": "rgb(111, 134, 165)"
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "fields": [
+        {
+          "id": "loginName",
+          "type": "text",
+          "height": 44,
+          "radius": "8px",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "background": "rgb(29, 43, 62)",
+          "border": "rgb(144, 170, 205)"
+        },
+        {
+          "id": "password",
+          "type": "password",
+          "height": 44,
+          "radius": "8px",
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "background": "rgb(14, 22, 34)",
+          "border": "rgb(111, 134, 165)"
+        }
+      ]
+    }
+  ],
+  "passed": true
+}

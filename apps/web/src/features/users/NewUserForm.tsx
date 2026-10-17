@@ -182,11 +182,7 @@ export const NewUserForm: FC<{
                       </FormSectionTitle>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5">
-                          <Label
-                            htmlFor="newFirstName"
-                            className="text-muted-foreground text-xs"
-                            required
-                          >
+                          <Label htmlFor="newFirstName" required>
                             Prénom
                           </Label>
                           <Input
@@ -217,10 +213,7 @@ export const NewUserForm: FC<{
                           )}
                         </div>
                         <div className="space-y-1.5">
-                          <Label
-                            htmlFor="newLastName"
-                            className="text-muted-foreground text-xs"
-                          >
+                          <Label htmlFor="newLastName">
                             Nom{' '}
                             <span className="font-normal">(facultatif)</span>
                           </Label>
@@ -260,11 +253,7 @@ export const NewUserForm: FC<{
                         Connexion
                       </FormSectionTitle>
                       <div className="space-y-1.5">
-                        <Label
-                          htmlFor="newLoginName"
-                          className="text-muted-foreground text-xs"
-                          required
-                        >
+                        <Label htmlFor="newLoginName" required>
                           Identifiant de connexion
                         </Label>
                         <div className="relative">
@@ -313,10 +302,7 @@ export const NewUserForm: FC<{
                         )}
                       </div>
                       <div className="space-y-1.5">
-                        <Label
-                          htmlFor="newContactAddress"
-                          className="text-muted-foreground text-xs"
-                        >
+                        <Label htmlFor="newContactAddress">
                           Adresse de contact{' '}
                           <span className="font-normal">(facultatif)</span>
                         </Label>

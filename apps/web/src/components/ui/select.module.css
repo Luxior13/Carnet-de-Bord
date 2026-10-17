@@ -1,4 +1,4 @@
-/* Présentation commune aux filtres de référence et aux champs du Répertoire. */
+/* Densité des filtres et tableaux ; les formulaires utilisent la variante par défaut. */
 .compactTrigger {
   height: 38px;
   gap: 7px;
@@ -31,14 +31,6 @@
 
 .compactContent {
   padding: 4px;
-}
-
-.compactContent [data-radix-select-viewport] {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  height: auto;
-  padding: 0;
 }
 
 .compactContent [data-slot='select-item'] {

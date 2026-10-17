@@ -1,0 +1,212 @@
+[
+  {
+    "width": 320,
+    "overflow": false,
+    "editorHeight": 2542.6875,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 193.875,
+        "width": 262
+      },
+      {
+        "key": "persons:create",
+        "height": 249.875,
+        "width": 260
+      },
+      {
+        "key": "persons:update",
+        "height": 210.875,
+        "width": 260
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 225.96875,
+        "width": 260
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 226.96875,
+        "width": 260
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 248.4375,
+        "width": 260
+      },
+      {
+        "key": "persons:delete",
+        "height": 229.875,
+        "width": 260
+      }
+    ]
+  },
+  {
+    "width": 390,
+    "overflow": false,
+    "editorHeight": 2377.875,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 167.3125,
+        "width": 332
+      },
+      {
+        "key": "persons:create",
+        "height": 203.3125,
+        "width": 330
+      },
+      {
+        "key": "persons:update",
+        "height": 206.96875,
+        "width": 330
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 203.3125,
+        "width": 330
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 204.3125,
+        "width": 330
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 229.875,
+        "width": 330
+      },
+      {
+        "key": "persons:delete",
+        "height": 225.96875,
+        "width": 330
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "overflow": false,
+    "editorHeight": 1543.34375,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 93.3125,
+        "width": 702
+      },
+      {
+        "key": "persons:create",
+        "height": 149.3125,
+        "width": 700
+      },
+      {
+        "key": "persons:update",
+        "height": 130.3125,
+        "width": 700
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 129.3125,
+        "width": 700
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 130.3125,
+        "width": 700
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 129.3125,
+        "width": 700
+      },
+      {
+        "key": "persons:delete",
+        "height": 129.3125,
+        "width": 700
+      }
+    ]
+  },
+  {
+    "width": 1440,
+    "overflow": false,
+    "editorHeight": 1495.34375,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 93.3125,
+        "width": 1086
+      },
+      {
+        "key": "persons:create",
+        "height": 129.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:update",
+        "height": 130.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 129.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 130.3125,
+        "width": 1084
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 129.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:delete",
+        "height": 129.3125,
+        "width": 1084
+      }
+    ]
+  },
+  {
+    "width": 1920,
+    "overflow": false,
+    "editorHeight": 1495.34375,
+    "rows": [
+      {
+        "key": "persons:view",
+        "height": 93.3125,
+        "width": 1086
+      },
+      {
+        "key": "persons:create",
+        "height": 129.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:update",
+        "height": 130.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:view_contact",
+        "height": 129.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:update_contact",
+        "height": 130.3125,
+        "width": 1084
+      },
+      {
+        "key": "audit:view_field_history",
+        "height": 129.3125,
+        "width": 1084
+      },
+      {
+        "key": "persons:delete",
+        "height": 129.3125,
+        "width": 1084
+      }
+    ]
+  }
+]

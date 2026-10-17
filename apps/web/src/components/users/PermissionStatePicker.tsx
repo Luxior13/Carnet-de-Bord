@@ -11,6 +11,8 @@ import { Button } from '$ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
+import styles from './PermissionsEditor.module.css';
+
 type PermissionStatePickerProps = {
   allowDecision: PermissionMutationDecision;
   defaultState: PermissionChoiceState;
@@ -60,7 +62,7 @@ export const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
     return (
       <div className="flex min-w-0 items-center gap-1.5">
         <div
-          className="border-border-control bg-surface-inset grid min-w-0 flex-1 grid-cols-2 gap-1 rounded-[6px] border p-1 sm:min-w-[12.5rem] sm:flex-none"
+          className={styles.choices}
           role="group"
           aria-label={`Choix de l’autorisation ${permissionLabel}`}
         >
@@ -101,7 +103,7 @@ export const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
                       aria-hidden={!decision.allowed || undefined}
                       onClick={() => onChange(option.value)}
                       className={cn(
-                        'h-8 w-full rounded-[4px] border px-2 text-xs font-medium',
+                        styles.choiceButton,
                         getStateButtonClassName(option.value, state),
                       )}
                       aria-pressed={state === option.value}

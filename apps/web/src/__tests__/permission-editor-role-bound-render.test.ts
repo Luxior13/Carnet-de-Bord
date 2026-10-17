@@ -25,6 +25,8 @@ describe('role-bound permission page rendering', () => {
     expect(markup).toContain('Modifier les paramètres système');
     expect(markup).toContain('2/2 utilisables');
     expect(markup).toContain('Fourni par le rôle Administrateur');
+    // The lock status already states the value; no duplicate badge.
+    expect(markup).not.toContain('>Autorisé<');
     expect(markup).not.toContain(
       'Choix de l’autorisation Consulter les paramètres système',
     );
@@ -39,6 +41,7 @@ describe('role-bound permission page rendering', () => {
     expect(markup).toContain('Paramètres système');
     expect(markup).toContain('0/2 utilisables');
     expect(markup).toContain('Réservé aux administrateurs');
+    expect(markup).not.toContain('>Refusé<');
     expect(markup).not.toContain(
       'Choix de l’autorisation Consulter les paramètres système',
     );

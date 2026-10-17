@@ -6,6 +6,7 @@ import React, { type FC, useId, useRef } from 'react';
 import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
 import { Input } from '$ui/input';
+import { cn } from '$utils/css.utils';
 
 type ListSearchFieldProps = {
   ariaLabel: string;
@@ -42,7 +43,8 @@ export const ListSearchField: FC<ListSearchFieldProps> = ({
         aria-label={ariaLabel}
         autoCapitalize="none"
         autoComplete="off"
-        className={directoryStyles.searchInput}
+        // Directory search keeps Geist rather than the form-control font.
+        className={cn('font-sans', directoryStyles.searchInput)}
         disabled={disabled}
         enterKeyHint="search"
         id={inputId}

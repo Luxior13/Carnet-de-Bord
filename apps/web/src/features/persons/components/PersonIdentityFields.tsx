@@ -1,6 +1,5 @@
 import React, { type FC } from 'react';
 
-import styles from '$components/layout/SectionForm.module.css';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import {
@@ -108,7 +107,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
             nickname.describedBy ?? (!quiet ? `${nickname.id}-hint` : undefined)
           }
           aria-invalid={Boolean(nickname.error)}
-          className={cn(quiet && styles.quietField)}
           disabled={disabled}
           id={nickname.id}
           maxLength={80}
@@ -135,7 +133,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={firstName.describedBy}
           aria-invalid={Boolean(firstName.error)}
-          className={cn(quiet && styles.quietField)}
           disabled={disabled}
           id={firstName.id}
           maxLength={100}
@@ -154,7 +151,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
         <Input
           aria-describedby={lastName.describedBy}
           aria-invalid={Boolean(lastName.error)}
-          className={cn(quiet && styles.quietField)}
           disabled={disabled}
           id={lastName.id}
           maxLength={100}
@@ -177,7 +173,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
               (!quiet ? `${birthDate.id}-hint` : undefined)
             }
             aria-invalid={Boolean(birthDate.error)}
-            className={cn(quiet && styles.quietField)}
             disabled={disabled}
             id={birthDate.id}
             onChange={(event) => onChange('birthDate', event.target.value)}
@@ -218,11 +213,10 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
             aria-invalid={Boolean(structureStatus.error)}
             className="w-full min-w-0"
             id={structureStatus.id}
-            variant="compact"
           >
             <SelectValue />
           </SelectTrigger>
-          <SelectContent variant="compact">
+          <SelectContent>
             {PERSON_STRUCTURE_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
                 {status === 'IN_STRUCTURE'

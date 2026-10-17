@@ -36,8 +36,6 @@ import {
 import { PermissionDecisionButton } from './PermissionDecisionButton';
 import { PermissionRow } from './PermissionRow';
 import styles from './PermissionsEditor.module.css';
-import { PermissionStatePicker } from './PermissionStatePicker';
-import { RoleBoundPermissionStatus } from './RoleBoundPermissionStatus';
 
 type PermissionsEditorProps = {
   canChangePermission?: PermissionMutationPolicy;
@@ -101,9 +99,6 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
         state.effective,
       )
     : null;
-  const selectedPageIsAllowed = selectedCategoryAccessPermission
-    ? state.effective.get(selectedCategoryAccessPermission.key) === true
-    : false;
   const categoryOverrides =
     selectedCategory?.permissions.filter((item) =>
       permissionsMap.has(item.key),
@@ -306,91 +301,20 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
               )}
             </div>
             {selectedCategoryAccessPermission && (
-              <div
-                className={styles.pageAccess}
-                data-permission={selectedCategoryAccessPermission.key}
-              >
-                <div className="min-w-0 space-y-1.5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="text-foreground text-sm font-medium">
-                      {selectedCategoryAccessPermission.label}
-                    </h4>
-                    <Badge
-                      variant="outline"
-                      className={
-                        selectedPageIsAllowed
-                          ? 'text-success border-success/35'
-                          : 'text-muted-foreground'
-                      }
-                    >
-                      {selectedPageIsAllowed
-                        ? 'Page accessible'
-                        : 'Page inaccessible'}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground text-xs leading-5">
-                    {selectedPageIsAllowed
-                      ? 'Les actions ci-dessous restent soumises à leurs propres autorisations.'
-                      : 'Autorisez cet accès pour rendre les actions de cette page utilisables.'}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {permissionsMap.has(selectedCategoryAccessPermission.key)
-                      ? 'Exception personnalisée'
-                      : 'Valeur héritée du rôle'}
-                  </p>
-                </div>
-                {selectedCategoryAccessPermission.grantable ? (
-                  disabled ? (
-                    <span className="text-muted-foreground text-xs">
-                      Lecture seule
-                    </span>
-                  ) : (
-                    <PermissionStatePicker
-                      allowDecision={getDecision(
-                        selectedCategoryAccessPermission.key,
-                        'allow',
-                      )}
-                      defaultState={
-                        state.roleDefaults.get(
-                          selectedCategoryAccessPermission.key,
-                        )
-                          ? 'allow'
-                          : 'deny'
-                      }
-                      denyDecision={getDecision(
-                        selectedCategoryAccessPermission.key,
-                        'deny',
-                      )}
-                      permissionLabel={selectedCategoryAccessPermission.label}
-                      resetDecision={getDecision(
-                        selectedCategoryAccessPermission.key,
-                        'reset',
-                      )}
-                      state={
-                        state.configured.get(
-                          selectedCategoryAccessPermission.key,
-                        )
-                          ? 'allow'
-                          : 'deny'
-                      }
-                      onChange={(choice) =>
-                        changePermission(
-                          selectedCategoryAccessPermission.key,
-                          choice,
-                        )
-                      }
-                      onReset={() =>
-                        reset([selectedCategoryAccessPermission.key])
-                      }
-                    />
-                  )
-                ) : (
-                  <RoleBoundPermissionStatus
-                    isEnabled={selectedPageIsAllowed}
-                    role={role}
-                  />
+              <PermissionRow
+                key={selectedCategoryAccessPermission.key}
+                isPageAccess
+                disabled={disabled}
+                getDecision={getDecision}
+                hasCustomChoice={permissionsMap.has(
+                  selectedCategoryAccessPermission.key,
                 )}
-              </div>
+                onChange={changePermission}
+                onReset={(key) => reset([key])}
+                permission={selectedCategoryAccessPermission}
+                role={role}
+                state={state}
+              />
             )}
             {!disabled &&
               selectedCategory.scope === 'page' &&

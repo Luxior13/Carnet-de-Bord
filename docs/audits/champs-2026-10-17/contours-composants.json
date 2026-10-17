@@ -1,0 +1,907 @@
+{
+  "scope": "Composants client réels avec sources préparées, identité fictive, provenance masquée, réseau intercepté. Aucune API ni donnée réelle.",
+  "cases": [
+    {
+      "scenario": "layout",
+      "width": 320,
+      "tone": "default",
+      "fields": {
+        "person-nickname": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 254,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 254,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "layout",
+      "width": 320,
+      "tone": "indigo",
+      "fields": {
+        "person-nickname": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 44,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 254,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 254,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 254,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "layout",
+      "width": 390,
+      "tone": "default",
+      "fields": {
+        "person-nickname": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 324,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 324,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "layout",
+      "width": 390,
+      "tone": "indigo",
+      "fields": {
+        "person-nickname": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 44,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 324,
+          "font": "16px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 324,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 324,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "layout",
+      "width": 768,
+      "tone": "default",
+      "fields": {
+        "person-nickname": {
+          "height": 40,
+          "width": 678,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 40,
+          "width": 331,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 40,
+          "width": 331,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 40,
+          "width": 678,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 678,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 320,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 686,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "layout",
+      "width": 768,
+      "tone": "indigo",
+      "fields": {
+        "person-nickname": {
+          "height": 40,
+          "width": 678,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 40,
+          "width": 331,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 40,
+          "width": 331,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 40,
+          "width": 678,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 678,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 320,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 686,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "layout",
+      "width": 1440,
+      "tone": "default",
+      "fields": {
+        "person-nickname": {
+          "height": 40,
+          "width": 806,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 40,
+          "width": 395,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 40,
+          "width": 395,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 40,
+          "width": 806,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 806,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(14, 22, 34)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 320,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 814,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(111, 134, 165)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "layout",
+      "width": 1440,
+      "tone": "indigo",
+      "fields": {
+        "person-nickname": {
+          "height": 40,
+          "width": 806,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-birthDate": {
+          "height": 40,
+          "width": 395,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "person-structureStatus": {
+          "height": 40,
+          "width": 395,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "email": {
+          "height": 40,
+          "width": 806,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        },
+        "notes": {
+          "height": 80,
+          "width": 806,
+          "font": "13px",
+          "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+          "radius": "8px",
+          "border": "rgb(67, 89, 120)",
+          "background": "rgb(16, 24, 42)",
+          "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+          "opacity": "1",
+          "color": "rgb(243, 246, 251)"
+        }
+      },
+      "search": {
+        "height": 38,
+        "width": 320,
+        "font": "12px",
+        "family": "Geist, sans-serif",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "none",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "filter": {
+        "height": 38,
+        "width": 814,
+        "font": "11px",
+        "family": "Geist",
+        "radius": "6px",
+        "border": "rgb(120, 145, 181)",
+        "background": "rgb(16, 24, 42)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(196, 206, 220)"
+      }
+    },
+    {
+      "scenario": "hover-focus",
+      "id": "person-nickname",
+      "hover": {
+        "height": 40,
+        "width": 806,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(91, 118, 153)",
+        "background": "rgb(24, 36, 51)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "focus": {
+        "height": 40,
+        "width": 806,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(105, 140, 221)",
+        "background": "rgb(30, 44, 64)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, color(srgb 0.411765 0.54902 0.866667 / 0.13) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      }
+    },
+    {
+      "scenario": "hover-focus",
+      "id": "person-birthDate",
+      "hover": {
+        "height": 40,
+        "width": 395,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(91, 118, 153)",
+        "background": "rgb(24, 36, 51)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "focus": {
+        "height": 40,
+        "width": 395,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(105, 140, 221)",
+        "background": "rgb(30, 44, 64)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, color(srgb 0.411765 0.54902 0.866667 / 0.13) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      }
+    },
+    {
+      "scenario": "hover-focus",
+      "id": "person-structureStatus",
+      "hover": {
+        "height": 40,
+        "width": 395,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(91, 118, 153)",
+        "background": "rgb(24, 36, 51)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "focus": {
+        "height": 40,
+        "width": 395,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(105, 140, 221)",
+        "background": "rgb(30, 44, 64)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, color(srgb 0.411765 0.54902 0.866667 / 0.13) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      }
+    },
+    {
+      "scenario": "hover-focus",
+      "id": "email",
+      "hover": {
+        "height": 40,
+        "width": 806,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(91, 118, 153)",
+        "background": "rgb(24, 36, 51)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "focus": {
+        "height": 40,
+        "width": 806,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(105, 140, 221)",
+        "background": "rgb(30, 44, 64)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, color(srgb 0.411765 0.54902 0.866667 / 0.13) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      }
+    },
+    {
+      "scenario": "hover-focus",
+      "id": "notes",
+      "hover": {
+        "height": 80,
+        "width": 806,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(91, 118, 153)",
+        "background": "rgb(24, 36, 51)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      },
+      "focus": {
+        "height": 80,
+        "width": 806,
+        "font": "13px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(105, 140, 221)",
+        "background": "rgb(30, 44, 64)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, color(srgb 0.411765 0.54902 0.866667 / 0.13) 0px 0px 0px 2px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      }
+    },
+    {
+      "scenario": "editing-and-keyboard-select",
+      "status": "passed"
+    },
+    {
+      "scenario": "invalid-disabled",
+      "status": "passed"
+    },
+    {
+      "scenario": "dialog-and-portal-mobile",
+      "status": "passed"
+    },
+    {
+      "scenario": "increased-contrast",
+      "field": {
+        "height": 44,
+        "width": 324,
+        "font": "16px",
+        "family": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+        "radius": "8px",
+        "border": "rgb(209, 214, 224)",
+        "background": "rgb(14, 22, 34)",
+        "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px",
+        "opacity": "1",
+        "color": "rgb(243, 246, 251)"
+      }
+    },
+    {
+      "scenario": "forced-colors-focus",
+      "status": "passed",
+      "outline": "solid"
+    }
+  ],
+  "browser": "155.0.8059.80",
+  "passed": true
+}

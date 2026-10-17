@@ -22,6 +22,13 @@ La [liste Utilisateurs](../qualite/pages/systeme-utilisateurs.md), route
 Leurs décisions courantes précisent les variantes et les limites vérifiées ;
 les anciennes captures et les audits restent des preuves datées.
 
+Le 17 octobre 2026, l'utilisateur confirme que `/systeme/utilisateurs` lui
+convient visuellement : couleurs aux bons endroits, informations claires et
+densité satisfaisante. Reprendre ce ressenti dans les autres compositions,
+sans reproduire systématiquement son tableau. L'onglet Autorisations l'adapte
+en lignes de réglage compactes, avec descriptions dépliables et conséquences
+critiques visibles ; voir le [suivi Utilisateurs](../qualite/pages/systeme-utilisateurs.md#autorisations--présentation-allégée--17-octobre-2026).
+
 Le socle commun comprend les surfaces gris bleuté, la typographie dense, les
 bordures fines, les contrôles et leurs états. Les listes reprennent aussi le
 bandeau de colonnes, l'alternance des lignes et les badges. Cette hiérarchie se
@@ -154,8 +161,9 @@ sélections utilisent `surface-navigation-active`.
 
 Le focus clavier utilise un bleu acier `#92acd0` via `--ring`.
 Les boutons partagent cet indicateur quelle que soit leur variante ;
-la couleur de leur fond conserve le sens de l’action. La sidebar et les champs
-utilisent le même jeton de focus.
+la couleur de leur fond conserve le sens de l’action. La sidebar et les
+contrôles compacts utilisent le même jeton de focus. Les champs de formulaire
+ont leur propre focus (`--primary` et `--ring-form`, voir §4).
 
 | Rôle                  | Jetons                                                                                                  | Usage                                  |
 | --------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------- |
@@ -214,15 +222,28 @@ reste complet dans le DOM et dispose, si utile, d'un attribut `title`.
 
 Les interlignages sont portés par les composants : titre de `PageIdentityHero`
 à 1,3, description à 1,5 ; `CardTitle` utilise `leading-5`. Graisses : 400 pour
-le texte, 500 pour les labels et badges, 600 pour les titres et actions ; le
+le texte, 500 pour les badges, 600 pour les labels, titres et actions ; le
 bandeau d'identité utilise 650. Les compositions partagées possèdent quelques
 dimensions explicites en pixels : les réutiliser plutôt que les recopier.
 
-La primitive `Input` utilise `text-base` puis `lg:text-sm` ; la recherche de
-liste a la taille spécifique ci-dessus. Vérifier lisibilité, zoom et confort
-de saisie sur les appareils visés ; ces valeurs décrivent le socle actuel et
-ne prouvent pas à elles seules l'accessibilité. Les notifications conservent
-Geist. Le grand « 404 » est un repère décoratif ; « Page introuvable » est le `h1`.
+Les champs de formulaire (`Input`, `Textarea`, `SelectTrigger` par défaut)
+utilisent la police système `--font-form-controls`, via `font-form` : valeurs
+à 16 px sous 1024 px, puis 13 px au-delà. Sous 16 px, Safari iOS zoome sur le
+champ au focus ; ce seuil couvre aussi tablettes et téléphones en paysage.
+Les labels utilisent cette même police à 14 px, semi-gras. Les panneaux des
+sélecteurs reprennent explicitement cette police dans leur portail, en
+utilitaires Tailwind : le `className` d'un appelant garde donc la priorité.
+Les formulaires de fiche réutilisent ces primitives sans remettre des labels
+réduits et atténués ou une police monospace sur une saisie ordinaire, comme un
+identifiant de connexion. Les sous-titres de groupe de champs (Identité,
+Connexion et contact) restent des repères en petites capitales atténuées,
+distincts des labels. La recherche de liste conserve Geist (`font-sans` dans
+`ListSearchField`) et sa taille spécifique ci-dessus, comme les notifications.
+Vérifier lisibilité, zoom et confort sur les appareils visés ; ces valeurs
+ne prouvent pas à elles seules l'accessibilité. Les contrôles spécialisés
+peuvent garder une adaptation utile, comme la police monospace des codes MFA
+ou un champ numérique joint à ses boutons. Le grand « 404 » est un repère
+décoratif ; « Page introuvable » est le `h1`.
 
 Voir [AUDIT_TYPOGRAPHIE.md](../audits/AUDIT_TYPOGRAPHIE.md) pour les constats
 historiques ; cette ancienne échelle ne remplace pas les règles courantes.
@@ -235,26 +256,45 @@ historiques ; cette ancienne échelle ne remplace pas les règles courantes.
 - Arrondis : `--radius` vaut 0,625rem par défaut et 0,5rem dans la portée
   `data-surface-tone="indigo"` ; `sm`, `md`, `lg`, `xl`, `2xl` en dérivent
   par `calc()` (6, 8, 10, 14 et 18 px hors indigo avec une racine de 16 px).
-- Les champs `Input`, `Textarea` et `SelectTrigger` ont un rayon de **6 px**
-  par défaut, identique dans les différentes portées : angles plus nets avec
-  un léger arrondi, conformément au choix du 10 octobre 2026 sur la fiche
-  Utilisateurs. Les compositions peuvent adapter explicitement ce rayon.
+- Décision du 17 octobre 2026 : reprendre pour les champs le rendu adouci
+  validé sur les fiches Tournois du site Noctambule. `Input`, `Textarea` et
+  `SelectTrigger` par défaut ont un rayon de **8 px** dans les différentes
+  portées. Les champs sur une ligne mesurent **40 px**, puis **44 px sous
+  640 px** ; les zones de texte conservent leur hauteur multiligne. Cette
+  décision remplace le rayon de 6 px retenu le 10 octobre pour les formulaires.
+  Le fond reste opaque (`--input`). Le contour de formulaire utilise
+  `--border-form`, alias de `--border-list` (**1 px, #435978** au repos),
+  puis `--border-strong` (**#5b7699**) au survol. Au focus ou à l’ouverture
+  d’une liste, la bordure prend `--primary` (**#698cdd**) avec un anneau
+  de **2 px**, `--ring-form` (accent à **13 %**). Cette précision demandée
+  le 17 octobre reprend le contour adouci validé sur Informations de
+  Noctambule, au lieu du précédent contour plus clair #6f86a5.
+  Les erreurs conservent leur contour dédié, y compris au survol et au focus.
+  Les dates natives suivent les mêmes règles ; leur calendrier reste natif.
+  `prefers-contrast: more` renforce le contour et l’anneau ; les couleurs
+  forcées gardent le focus système. Ces vérifications ne certifient pas
+  l’accessibilité globale. `--border-control` reste distinct pour les autres
+  contrôles, notamment les filtres compacts et les cases à cocher.
 - `Button` et `Card` utilisent `rounded-lg` par défaut. Les variantes de
   menus et de fenêtres restent définies dans leurs primitives respectives.
-- Les panneaux `SelectContent`, `DropdownMenuContent` et sous-menus ont un rayon
-  commun de **7 px**, leurs options de **4 px**. Les variantes de listes et de
+- Le panneau `SelectContent` par défaut reprend le rayon de **8 px** des
+  champs, avec des options de 34 px minimum espacées de 2 px. Les panneaux
+  `SelectContent` compacts, `DropdownMenuContent` et sous-menus gardent leur
+  rayon de **7 px**, leurs options de **4 px**. Les variantes de listes et de
   navigation reprennent ces primitives ; elles adaptent seulement leur densité,
   largeur et, pour les menus de sidebar, leur surface de navigation.
-- Les filtres des listes Répertoire/Utilisateurs et les sélecteurs des fiches,
-  créations et dialogues de coordonnées du Répertoire utilisent la **même
-  variante `compact`** sur `SelectTrigger` et `SelectContent`. Son style vit dans
-  [select.module.css](../../apps/web/src/components/ui/select.module.css) :
-  déclencheur de 38 px, texte de 11 px, flèche de 15 px ; options de 38 px minimum
-  et texte de 12 px, espacées de 4 px. Ne pas leur appliquer `quietField` ni
-  recopier ces règles dans un formulaire. La largeur reste adaptée à la composition
-  (220 px dans les filtres desktop, largeur du champ dans la fiche).
-- L'onglet Autorisations des Utilisateurs réutilise aussi cette variante pour
-  rôle, pôle et page/fonction. Ses rubriques présentent des lignes alternées,
+- Les filtres des listes Répertoire/Utilisateurs conservent la variante
+  **`compact`** sur `SelectTrigger` et `SelectContent` : déclencheur de 38 px,
+  rayon de 6 px, texte de 11 px, flèche de 15 px ; options de 34 px minimum
+  et texte de 12 px, espacées de 2 px. Le style reste dans
+  [select.module.css](../../apps/web/src/components/ui/select.module.css).
+  Les fiches, créations et dialogues de coordonnées du Répertoire utilisent
+  désormais la variante par défaut, alignée sur les autres champs. Adapter
+  seulement la largeur à la composition (220 px dans les filtres desktop,
+  largeur du champ dans la fiche), sans recopier la présentation des primitives.
+- Dans l'onglet Autorisations des Utilisateurs, le rôle utilise la variante
+  de formulaire par défaut. Les filtres pôle et page/fonction conservent la
+  variante compacte. Ses rubriques présentent des lignes alternées,
   avec actions alignées lorsque la largeur du composant le permet, puis empilées.
   Les libellés Autoriser/Refuser restent visibles sur mobile. Une autorisation
   refusée n'impose pas un fond rouge à toute sa ligne ; la couleur signale le
@@ -289,15 +329,17 @@ Les ombres montent avec l'élévation et restent très douces :
   `ring-[length:var(--ring-width)]`. Préciser `length:` pour que Tailwind
   interprète la variable comme une épaisseur et non comme une couleur ;
   la couleur reste fournie par `ring-ring` ou le token sémantique adapté.
+  Exception : `Input`, `Textarea` et `SelectTrigger` par défaut utilisent un
+  anneau de 2 px `ring-ring-form` avec une bordure `--primary` (§4).
 - Un élément interactif a toujours : `hover`, `focus-visible`, `disabled` et,
   si pertinent, `aria-invalid`.
 - Le focus est visible au clavier et masqué à la souris quand le navigateur le
   permet, sans jamais être supprimé.
 - Un contour global de secours couvre les liens natifs. Les primitives peuvent
   le remplacer par leur anneau ; `forced-colors` rétablit un contour système.
-- Les variantes de champs discrets peuvent adapter le repos et le survol, mais
-  laissent le focus et l'état invalide aux primitives partagées. En particulier,
-  `SectionForm.quietField` ne remplace pas leur bordure ou leur anneau au focus.
+- Les champs en édition directe utilisent les primitives sans surcharge :
+  l'ancienne classe `SectionForm.quietField` a été retirée le 17 octobre 2026,
+  car elle ne faisait plus que recopier leurs états.
 - `SelectTrigger` conserve l'anneau partagé pendant l'ouverture du menu, même
   quand le focus passe aux options. L'état invalide garde sa teinte d'erreur.
   Les variantes discrètes et les filtres de listes ne doivent pas masquer cet
