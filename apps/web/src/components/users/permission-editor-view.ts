@@ -5,7 +5,7 @@ import {
   getEffectivePermissions,
   getPermissionItem,
   getRoleBasePermissions,
-  normalizePermissionOverrides,
+  normalizeRolePermissionOverrides,
   PERMISSION_CATEGORIES,
   type PermissionCategory,
   type PermissionItem,
@@ -39,7 +39,7 @@ export const buildPermissionEditorState = (
   role: UserRole,
   permissions: PermissionsData | null,
 ): PermissionEditorState => {
-  const overrides = normalizePermissionOverrides(permissions);
+  const overrides = normalizeRolePermissionOverrides(role, permissions);
   const roleDefaults = new Map(Object.entries(getRoleBasePermissions(role)));
   const configured = new Map(roleDefaults);
   for (const [key, value] of Object.entries(overrides ?? {})) {

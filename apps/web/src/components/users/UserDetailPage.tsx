@@ -1349,9 +1349,18 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
           <UserAccessTab
             user={user}
             role={editForm.role}
-            setRole={(role) =>
-              setEditForm((currentForm) => ({ ...currentForm, role }))
-            }
+            setRole={(role) => {
+              setEditForm((currentForm) => ({ ...currentForm, role }));
+              // Mirrors the server: a role change restarts administrative
+              // access from the new role, and returning restores the saved one.
+              setPermissions((currentPermissions) =>
+                resetPermissionOverridesForKeys(
+                  currentPermissions,
+                  role === user.role ? user.permissions : null,
+                  ACCESS_PERMISSION_KEYS,
+                ),
+              );
+            }}
             permissions={permissions}
             setPermissions={setPermissions}
             canChangePermission={decideAccessPermissionMutation}

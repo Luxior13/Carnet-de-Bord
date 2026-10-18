@@ -62,7 +62,8 @@ describe('/systeme route availability', () => {
         },
         role: 'ADMIN',
       },
-      '/systeme/parametres',
+      // An ADMIN holds every access permission: stale denies are ignored.
+      '/systeme/utilisateurs',
     ],
   ])('redirects the system root to an accessible page', async (user, href) => {
     mocks.getPageAuthSession.mockResolvedValue({ user });

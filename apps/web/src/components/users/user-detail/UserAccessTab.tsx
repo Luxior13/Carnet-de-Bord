@@ -206,7 +206,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         disabled={!canManagePermissions || isSaving}
         headerControls={
           <div className="w-full space-y-1.5 sm:w-52">
-            <Label htmlFor="user-role">Rôle de base</Label>
+            <Label htmlFor="user-role">Rôle</Label>
             {canEditRole ? (
               <>
                 <Select

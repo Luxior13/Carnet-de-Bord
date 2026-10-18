@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, RotateCcw, X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import React, { type FC, memo, useId } from 'react';
 
 import {
@@ -15,12 +15,9 @@ import styles from './PermissionsEditor.module.css';
 
 type PermissionStatePickerProps = {
   allowDecision: PermissionMutationDecision;
-  defaultState: PermissionChoiceState;
   denyDecision: PermissionMutationDecision;
   onChange: (state: PermissionChoiceState) => void;
-  onReset: () => void;
   permissionLabel: string;
-  resetDecision: PermissionMutationDecision;
   state: PermissionChoiceState;
 };
 
@@ -43,124 +40,72 @@ const getStateButtonClassName = (
 };
 
 export const PermissionStatePicker: FC<PermissionStatePickerProps> = memo(
-  ({
-    allowDecision,
-    defaultState,
-    denyDecision,
-    onChange,
-    onReset,
-    permissionLabel,
-    resetDecision,
-    state,
-  }) => {
+  ({ allowDecision, denyDecision, onChange, permissionLabel, state }) => {
     const controlDescriptionId = useId();
-    const resetDescriptionId = useId();
-    const resetDescription = resetDecision.allowed
-      ? `Défaut du rôle : ${defaultState === 'allow' ? 'autorisé' : 'refusé'}`
-      : (resetDecision.reason ?? 'Réinitialisation non autorisée');
 
     return (
-      <div className="flex min-w-0 items-center gap-1.5">
-        <div
-          className={styles.choices}
-          role="group"
-          aria-label={`Choix de l’autorisation ${permissionLabel}`}
-        >
-          {OPTIONS.map((option) => {
-            const OptionIcon = option.icon;
-            const decision =
-              option.value === 'allow' ? allowDecision : denyDecision;
-            const description = decision.allowed
-              ? option.label
-              : (decision.reason ?? 'Action non autorisée');
-            const descriptionId = `${controlDescriptionId}-${option.value}`;
+      <div
+        className={styles.choices}
+        role="group"
+        aria-label={`Choix de l’autorisation ${permissionLabel}`}
+      >
+        {OPTIONS.map((option) => {
+          const OptionIcon = option.icon;
+          const decision =
+            option.value === 'allow' ? allowDecision : denyDecision;
+          const description = decision.allowed
+            ? option.label
+            : (decision.reason ?? 'Action non autorisée');
+          const descriptionId = `${controlDescriptionId}-${option.value}`;
 
-            return (
-              <Tooltip key={option.value}>
-                <TooltipTrigger asChild>
-                  <span
-                    aria-describedby={
-                      decision.allowed ? undefined : descriptionId
-                    }
-                    aria-disabled={!decision.allowed}
-                    aria-pressed={
-                      decision.allowed ? undefined : state === option.value
-                    }
-                    aria-label={
-                      decision.allowed
-                        ? undefined
-                        : `${option.label} ${permissionLabel}`
-                    }
-                    className="min-w-0"
-                    role={decision.allowed ? undefined : 'button'}
-                    tabIndex={decision.allowed ? undefined : 0}
+          return (
+            <Tooltip key={option.value}>
+              <TooltipTrigger asChild>
+                <span
+                  aria-describedby={
+                    decision.allowed ? undefined : descriptionId
+                  }
+                  aria-disabled={!decision.allowed}
+                  aria-pressed={
+                    decision.allowed ? undefined : state === option.value
+                  }
+                  aria-label={
+                    decision.allowed
+                      ? undefined
+                      : `${option.label} ${permissionLabel}`
+                  }
+                  className="min-w-0"
+                  role={decision.allowed ? undefined : 'button'}
+                  tabIndex={decision.allowed ? undefined : 0}
+                >
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={!decision.allowed}
+                    aria-hidden={!decision.allowed || undefined}
+                    onClick={() => onChange(option.value)}
+                    className={cn(
+                      styles.choiceButton,
+                      getStateButtonClassName(option.value, state),
+                    )}
+                    aria-pressed={state === option.value}
+                    aria-label={`${option.label} ${permissionLabel}`}
                   >
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={!decision.allowed}
-                      aria-hidden={!decision.allowed || undefined}
-                      onClick={() => onChange(option.value)}
-                      className={cn(
-                        styles.choiceButton,
-                        getStateButtonClassName(option.value, state),
-                      )}
-                      aria-pressed={state === option.value}
-                      aria-label={`${option.label} ${permissionLabel}`}
-                    >
-                      <OptionIcon className="size-3.5" />
-                      <span className="ml-1">{option.label}</span>
-                    </Button>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent sideOffset={6}>{description}</TooltipContent>
-                {!decision.allowed && (
-                  <span className="sr-only" id={descriptionId}>
-                    {description}
-                  </span>
-                )}
-              </Tooltip>
-            );
-          })}
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span
-              aria-describedby={
-                resetDecision.allowed ? undefined : resetDescriptionId
-              }
-              aria-disabled={!resetDecision.allowed}
-              aria-label={
-                resetDecision.allowed
-                  ? undefined
-                  : `Revenir au rôle pour ${permissionLabel}`
-              }
-              className="shrink-0"
-              role={resetDecision.allowed ? undefined : 'button'}
-              tabIndex={resetDecision.allowed ? undefined : 0}
-            >
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                disabled={!resetDecision.allowed}
-                aria-hidden={!resetDecision.allowed || undefined}
-                onClick={onReset}
-                className="text-muted-foreground hover:text-foreground size-9"
-                aria-label={`Revenir au rôle pour ${permissionLabel}`}
-              >
-                <RotateCcw className="size-3.5" />
-              </Button>
-            </span>
-          </TooltipTrigger>
-          <TooltipContent sideOffset={6}>{resetDescription}</TooltipContent>
-          {!resetDecision.allowed && (
-            <span className="sr-only" id={resetDescriptionId}>
-              {resetDescription}
-            </span>
-          )}
-        </Tooltip>
+                    <OptionIcon className="size-3.5" />
+                    <span className="ml-1">{option.label}</span>
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent sideOffset={6}>{description}</TooltipContent>
+              {!decision.allowed && (
+                <span className="sr-only" id={descriptionId}>
+                  {description}
+                </span>
+              )}
+            </Tooltip>
+          );
+        })}
       </div>
     );
   },

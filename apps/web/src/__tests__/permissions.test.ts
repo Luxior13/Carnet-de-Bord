@@ -21,6 +21,7 @@ import {
   isPermissionGrantable,
   LEGACY_PERMISSION_ALIASES,
   normalizePermissionOverrides,
+  omitAccessPermissionOverrides,
   PERMISSION_CATEGORIES,
   PERMISSION_POLES,
   PERMISSIONS,
@@ -94,7 +95,7 @@ describe('hasPermission', () => {
     };
 
     expect(
-      hasPermission('ADMIN', PERMISSIONS.USERS.CREATE, customPermissions),
+      hasPermission('USER', PERMISSIONS.USERS.CREATE, customPermissions),
     ).toBe(false);
     expect(
       hasPermission('USER', PERMISSIONS.USERS.VIEW, customPermissions),
@@ -106,11 +107,30 @@ describe('hasPermission', () => {
         customPermissions,
       ),
     ).toBe(true);
+  });
+
+  it('keeps every administrative access for an ADMIN despite access overrides', () => {
+    const deniedAccess = {
+      [PERMISSIONS.USERS.REVOKE_SESSIONS]: false,
+      [PERMISSIONS.USERS.VIEW]: false,
+    };
+
     expect(
-      hasPermission('ADMIN', PERMISSIONS.USERS.REVOKE_SESSIONS, {
-        [PERMISSIONS.USERS.REVOKE_SESSIONS]: false,
+      hasPermission('ADMIN', PERMISSIONS.USERS.REVOKE_SESSIONS, deniedAccess),
+    ).toBe(true);
+    expect(hasPermission('ADMIN', PERMISSIONS.USERS.VIEW, deniedAccess)).toBe(
+      true,
+    );
+    expect(hasPermission('USER', PERMISSIONS.USERS.VIEW, deniedAccess)).toBe(
+      false,
+    );
+    expect(enforcePermissionDependencies('ADMIN', deniedAccess)).toBeNull();
+    expect(
+      omitAccessPermissionOverrides({
+        ...deniedAccess,
+        [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
       }),
-    ).toBe(false);
+    ).toEqual({ [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false });
   });
 
   it('keeps dashboard enabled as baseline access', () => {

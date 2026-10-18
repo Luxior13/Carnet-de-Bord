@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import {
+  arePermissionOverridesEqual,
   enforcePermissionDependencies,
   getPermissionItem,
+  hasCompleteAccessByRole,
   hasPermission,
   normalizePermissionOverrides,
+  omitAccessPermissionOverrides,
   PERMISSIONS,
 } from '$constants/permissions.constants';
 import {
@@ -349,25 +352,56 @@ export async function PATCH(
       );
     }
 
+    const resultingRole = role ?? existingUser.role;
+
+    // An ADMIN holds every administrative access permission; an explicit
+    // access override for it would be silently meaningless, so refuse it.
+    if (
+      isPermissionsUpdate &&
+      permissionScope !== 'account' &&
+      hasCompleteAccessByRole(resultingRole) &&
+      !arePermissionOverridesEqual(
+        normalizedRequestedPermissions,
+        omitAccessPermissionOverrides(normalizedRequestedPermissions),
+      )
+    ) {
+      return NextResponse.json(
+        {
+          error: {
+            code: ErrorCode.VALIDATION_ERROR,
+            message:
+              'Un administrateur possède toutes les autorisations administratives',
+          },
+          success: false,
+        },
+        { status: 400 },
+      );
+    }
+
     const existingPermissionOverrides = normalizePermissionOverrides(
       existingUser.permissions as Record<string, boolean> | null,
     );
+    // A role change starts the administrative access from the new role: a
+    // demoted ADMIN keeps no grant, a promoted USER no longer needs any.
+    const basePermissionOverrides =
+      isRoleUpdate && resultingRole !== existingUser.role
+        ? omitAccessPermissionOverrides(existingPermissionOverrides)
+        : existingPermissionOverrides;
     const mergedPermissions = isPermissionsUpdate
       ? permissionScope
         ? mergePermissionOverridesForScope(
-            existingPermissionOverrides,
+            basePermissionOverrides,
             normalizedRequestedPermissions ?? null,
             permissionScope,
           )
         : (normalizedRequestedPermissions ?? null)
       : undefined;
-    const resultingRole = role ?? existingUser.role;
     const permissions =
       isPermissionsUpdate || isRoleUpdate
         ? enforcePermissionDependencies(
             resultingRole,
             mergedPermissions === undefined
-              ? existingPermissionOverrides
+              ? basePermissionOverrides
               : mergedPermissions,
             permissionScope
               ? [...getPermissionScopeKeySet(permissionScope)]

@@ -1,11 +1,16 @@
 'use client';
 
 import { type UserRole } from '@repo/shared';
-import { RotateCcw, ShieldCheck } from 'lucide-react';
+import { ShieldCheck, X } from 'lucide-react';
 import React, { type FC, useMemo } from 'react';
 
 import {
+  getNavigationIcon,
+  type NavigationIconName,
+} from '$constants/navigation-icon.constants';
+import {
   getAccessPermissionKeys,
+  hasCompleteAccessByRole,
   PERMISSION_POLES,
   type PermissionsData,
 } from '$constants/permissions.constants';
@@ -50,6 +55,21 @@ type PermissionsEditorProps = {
 
 const ACCESS_KEYS = new Set(getAccessPermissionKeys());
 
+/** Same icons as the sidebar, shown in the options and the closed trigger. */
+const SelectOptionLabel: FC<{ icon: NavigationIconName; label: string }> = ({
+  icon,
+  label,
+}) => {
+  const Icon = getNavigationIcon(icon);
+
+  return (
+    <>
+      <Icon aria-hidden="true" />
+      {label}
+    </>
+  );
+};
+
 export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   canChangePermission,
   disabled = false,
@@ -68,7 +88,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     () => new Map(Object.entries(permissions ?? {})),
     [permissions],
   );
-  const customPermissionCount = [...permissionsMap.keys()].filter((key) =>
+  const completeAccess = hasCompleteAccessByRole(role);
+  const editable = !disabled && !completeAccess;
+  const grantedPermissionCount = [...permissionsMap.keys()].filter((key) =>
     ACCESS_KEYS.has(key),
   ).length;
   const { ready: readyCount, total: totalCount } = countUsablePermissions(
@@ -141,15 +163,10 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     buildResetPermissionOverrides(permissionsMap, keys);
   const getDecision = (
     key: string,
-    choice: PermissionChoiceState | 'reset',
+    choice: PermissionChoiceState,
   ): PermissionMutationDecision => {
-    if (choice === 'reset' && !permissionsMap.has(key))
-      return { allowed: false, reason: 'Aucune exception à réinitialiser.' };
-    const batch = getBatchDecision(
-      choice === 'reset' ? buildReset([key]) : buildChange(key, choice),
-    );
-    if (!batch.allowed || choice === 'reset' || !canChangePermission)
-      return batch;
+    const batch = getBatchDecision(buildChange(key, choice));
+    if (!batch.allowed || !canChangePermission) return batch;
 
     return canChangePermission(key, choice === 'allow');
   };
@@ -172,11 +189,14 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
             <h3 className="text-foreground text-sm font-semibold">
               Autorisations administratives
             </h3>
-            {disabled && <Badge variant="outline">Lecture seule</Badge>}
+            {disabled && !completeAccess && (
+              <Badge variant="outline">Lecture seule</Badge>
+            )}
           </div>
           <p className="text-muted-foreground max-w-2xl text-xs leading-5">
-            Le rôle fournit les valeurs par défaut. Les exceptions adaptent les
-            accès de ce compte.
+            {completeAccess
+              ? 'Un administrateur possède toutes les autorisations administratives.'
+              : 'Un utilisateur dispose uniquement des autorisations accordées ici.'}
           </p>
           <p
             className="text-muted-foreground text-xs leading-5"
@@ -189,8 +209,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
               ).length
             }{' '}
             pages accessibles · {readyCount}/{totalCount} autorisations
-            utilisables · {customPermissionCount} exception
-            {customPermissionCount > 1 ? 's' : ''}
+            utilisables
           </p>
         </div>
         {headerControls}
@@ -223,7 +242,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                     ),
                   ).map((pole) => (
                     <SelectItem key={pole.key} value={pole.key}>
-                      {pole.label}
+                      <SelectOptionLabel icon={pole.icon} label={pole.label} />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -247,7 +266,10 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                     (category) => category.poleKey === selectedPole?.key,
                   ).map((category) => (
                     <SelectItem key={category.key} value={category.key}>
-                      {category.label}
+                      <SelectOptionLabel
+                        icon={category.icon}
+                        label={category.label}
+                      />
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -281,9 +303,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                   {selectedCategory.description}
                 </p>
               </div>
-              {categoryOverrides.length > 0 && !disabled && (
+              {categoryOverrides.length > 0 && editable && (
                 <PermissionDecisionButton
-                  accessibleLabel="Réinitialiser cette page"
+                  accessibleLabel="Retirer les autorisations de cette page"
                   decision={getBatchDecision(
                     buildReset(
                       selectedCategory.permissions.map((item) => item.key),
@@ -295,8 +317,8 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                   variant="ghost"
                   size="sm"
                 >
-                  <RotateCcw className="size-3.5" />
-                  Réinitialiser cette page
+                  <X className="size-3.5" />
+                  Retirer cette page
                 </PermissionDecisionButton>
               )}
             </div>
@@ -306,17 +328,13 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                 isPageAccess
                 disabled={disabled}
                 getDecision={getDecision}
-                hasCustomChoice={permissionsMap.has(
-                  selectedCategoryAccessPermission.key,
-                )}
                 onChange={changePermission}
-                onReset={(key) => reset([key])}
                 permission={selectedCategoryAccessPermission}
                 role={role}
                 state={state}
               />
             )}
-            {!disabled &&
+            {editable &&
               selectedCategory.scope === 'page' &&
               selectedCategory.assignment !== 'role-bound' && (
                 <p className="text-muted-foreground text-xs leading-5">
@@ -326,10 +344,12 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                 </p>
               )}
             {[...groups].map(([module, items]) => (
-              <section key={module} className="space-y-2" aria-label={module}>
-                <h4 className="text-muted-foreground text-xs font-medium">
-                  {module}
-                </h4>
+              <section
+                key={module}
+                className={styles.group}
+                aria-label={module}
+              >
+                <h4 className={styles.groupHeading}>{module}</h4>
                 <div className={styles.rows}>
                   {items.map((permission) => (
                     <PermissionRow
@@ -341,9 +361,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                       }
                       disabled={disabled}
                       getDecision={getDecision}
-                      hasCustomChoice={permissionsMap.has(permission.key)}
                       onChange={changePermission}
-                      onReset={(key) => reset([key])}
                       permission={permission}
                       role={role}
                       state={state}
@@ -358,16 +376,16 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                 Cette page se pilote uniquement avec son autorisation d’accès.
               </p>
             )}
-            {customPermissionCount > 0 && !disabled && (
+            {grantedPermissionCount > 0 && editable && (
               <PermissionDecisionButton
-                accessibleLabel="Tout réinitialiser"
+                accessibleLabel="Retirer toutes les autorisations"
                 decision={getBatchDecision(buildReset(ACCESS_KEYS))}
                 onClick={() => reset(ACCESS_KEYS)}
                 variant="ghost"
                 size="sm"
               >
-                <RotateCcw className="size-3.5" />
-                Tout réinitialiser au rôle
+                <X className="size-3.5" />
+                Tout retirer
               </PermissionDecisionButton>
             )}
           </section>

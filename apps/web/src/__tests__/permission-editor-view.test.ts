@@ -36,13 +36,18 @@ describe('permission editor configured and effective access', () => {
     ).toEqual(expect.arrayContaining(['users:view', 'users:view_contact']));
   });
   it('counts configured but unusable grants separately from ready permissions', () => {
-    const state = buildPermissionEditorState(UserRole.ADMIN, {
-      'users:view': false,
-    });
     const category = PERMISSION_CATEGORIES.find(
       (item) => item.accessPermissionKey === 'users:view',
     );
     if (!category) throw new Error('Missing users category fixture');
+    const state = buildPermissionEditorState(
+      UserRole.USER,
+      Object.fromEntries(
+        category.permissions
+          .filter((item) => item.key !== 'users:view')
+          .map((item) => [item.key, true]),
+      ),
+    );
     const result = countCategoryPermissionResults(
       category,
       state.configured,

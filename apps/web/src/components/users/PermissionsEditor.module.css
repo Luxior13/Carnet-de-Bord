@@ -22,43 +22,53 @@
   border-bottom: 1px solid var(--border-divider);
 }
 
+.group {
+  display: grid;
+  gap: 8px;
+}
+
+.groupHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.groupHeading::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-divider);
+}
+
 .rows {
-  border-radius: 8px;
+  display: grid;
+  gap: 8px;
 }
 
 .row,
 .pageAccess {
   display: grid;
   gap: 10px 16px;
-  padding: 10px 12px;
-  background: var(--surface-content);
+  padding: 12px 14px;
+  border: 1px solid var(--border-content);
+  border-radius: 8px;
+  background: var(--surface-row-alternate);
   scroll-margin-block: 100px 180px;
 }
 
-.row:first-child {
-  border-start-start-radius: 8px;
-  border-start-end-radius: 8px;
-}
-
-.row:last-child {
-  border-end-start-radius: 8px;
-  border-end-end-radius: 8px;
-}
-
-.row:nth-child(even) {
-  background: var(--surface-row-alternate);
-}
-
-.row + .row {
-  border-top: 1px solid var(--border-divider);
-}
-
 .row[data-incomplete='true'] {
+  border-color: color-mix(in srgb, var(--warning) 25%, var(--border-content));
   box-shadow: inset 3px 0 var(--warning);
 }
 
 .pageAccess {
-  border-radius: 8px;
+  border-color: var(--border-list);
   background: var(--surface-content-header);
 }
 
@@ -105,32 +115,15 @@
   min-width: 0;
 }
 
-.rowDetails {
-  grid-column: 1 / -1;
-  padding-top: 10px;
+.popoverFootnote {
+  padding-top: 12px;
   border-top: 1px solid var(--border-divider);
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 20px;
-}
-
-.rowDetails > * + * {
-  margin-top: 8px;
-}
-
-.detailValues {
-  display: grid;
-  gap: 4px 20px;
-}
-
-.detailValues dd {
   color: var(--text-primary);
 }
 
 .choices {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  flex: 1;
   min-width: 0;
   gap: 2px;
   padding: 2px;
@@ -165,15 +158,10 @@
   }
 
   .choices {
-    flex: none;
     width: 200px;
   }
 
   .choiceButton {
     height: 32px;
-  }
-
-  .detailValues {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

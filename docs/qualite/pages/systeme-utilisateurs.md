@@ -1,5 +1,109 @@
 # Suivi — Utilisateurs : liste, création et fiche
 
+## Autorisations : une carte par ligne, détails en popover — 18 octobre 2026
+
+L'utilisateur juge que la hiérarchie ne fait pas assez ressortir chaque ligne
+d'autorisation et demande que l'icône d'aide ouvre un popover plutôt qu'un
+dépliage. Constat : les lignes (`surface-content`, #172333) se distinguaient à
+peine du panneau (`surface-panel`, #15202f), l'alternance se confondait avec la
+séparation, et les rubriques étaient du texte atténué de 12 px, au même niveau
+visuel que les aides.
+
+**Implémenté.** Chaque autorisation est une carte autonome : fond
+`surface-row-alternate`, bordure `border-content`, rayon 8 px, 8 px d'écart,
+sans alternance. L'accès de page garde une carte plus marquée
+(`surface-content-header`, `border-list`). Les rubriques deviennent des repères
+en petites capitales atténuées suivis d'un filet, comme les sous-titres de
+groupes de champs. Titre de ligne en semi-gras. Une ligne à compléter garde son
+liseré jaune, avec une bordure teintée à 25 % seulement.
+
+Le bouton d'information ouvre un `Popover` partagé (Radix) : libellé,
+description, puis origine, valeur du rôle, réglage choisi, accès effectif et
+prérequis en deux colonnes. « Autorisations requises » devient « Prérequis »,
+le terme de la ligne et de l'aide ; « les actions ci-dessous » devient « les
+actions de cette page », plus juste hors du flux. Les descriptions critiques et
+les blocages restent visibles sans ouvrir le popover. Aucune logique de choix,
+de dépendance, de droit ou de sauvegarde modifiée.
+
+Vérifications : 34 tests existants (contrats des sous-composants, politique,
+projection, droits fixes), TypeScript et lint réussis. Banc temporaire sur le
+vrai `PermissionsEditor` (page Utilisateurs, rôle Utilisateur, deux exceptions
+bloquées par prérequis), Chromium à 1440 et 390 px tactile : aucun débordement,
+`aria-expanded` à l'ouverture, fermeture par Échap avec retour du focus sur le
+bouton, aucune erreur JavaScript. Banc retiré ensuite. Limites : pas de session
+réelle, de lecteur d'écran ni d'appareil physique ; 320, 768 et 1920 px non
+recapturés.
+
+[Ordinateur](../../audits/autorisations-cartes-2026-10-18/after-1440.png) ·
+[Mobile](../../audits/autorisations-cartes-2026-10-18/after-390.png) ·
+[Popover ordinateur](../../audits/autorisations-cartes-2026-10-18/popover-1440.png) ·
+[Popover mobile](../../audits/autorisations-cartes-2026-10-18/popover-390.png).
+
+**Retour au rôle par ligne retiré** (« ok go » utilisateur, même jour). Le
+bouton ↺ faisait doublon : choisir la valeur du rôle supprime déjà l'exception
+(`setOverride`), en gérant prérequis et dépendants, alors que ↺ retirait une
+seule clé et pouvait laisser un prérequis manquant. `PermissionStatePicker` ne
+garde que Autoriser/Refuser, pleine largeur sur mobile ; `getDecision` n'accepte
+plus de choix `reset`. « Réinitialiser cette page » et « Tout réinitialiser au
+rôle » restent. Un rappel « rôle : Refusé » près de « Personnalisé » a été
+écarté : les rôles sont tout-ou-rien (`ROLE_PERMISSIONS`), la valeur serait
+toujours la même. Banc rejoué à 1440 et 390 px : plus aucun bouton ↺, refuser
+une exception ramène la ligne à « Hérité du rôle », sans débordement ni erreur.
+
+**Administrateur complet, utilisateur sur attribution** (décision utilisateur
+« oui pour moi », même jour). Règle : un Administrateur possède toujours les
+25 autorisations administratives délégables, aucune exception ne peut les
+restreindre ; un Utilisateur n'a que celles qu'on lui accorde. Le compte racine
+reste à part. Règle canonique : [Permissions](../../references/PERMISSIONS.md).
+
+- **Résolution** : `hasCompleteAccessByRole` et
+  `normalizeRolePermissionOverrides` font ignorer à `hasPermission` et
+  `enforcePermissionDependencies` toute surcharge administrative d'un ADMIN.
+  Tous les contrôles serveur passent par `hasPermission`.
+- **API PATCH** : 400 pour une surcharge administrative visant un ADMIN ; un
+  changement de rôle efface les surcharges administratives (un ADMIN rétrogradé
+  ne garde aucun accès caché, un USER promu n'en a plus besoin). Les options du
+  compte personnel restent conservées. Le brouillon client applique la même
+  remise à zéro au changement de rôle et restaure l'état enregistré au retour.
+- **Éditeur** : pour un ADMIN, chaque ligne affiche « Fourni par le rôle
+  Administrateur », sans commande ni aide d'édition. « Hérité du rôle » /
+  « Personnalisé », le compteur d'exceptions et les lignes origine/valeur du
+  rôle/réglage/accès effectif du popover disparaissent (il garde description et
+  prérequis). Boutons groupés renommés « Retirer cette page » et « Tout
+  retirer » ; « Rôle de base » devient « Rôle ».
+- **Données locales** : 2 ADMIN, aucune exception de refus ; l'un garde trois
+  entrées `true` redondantes, ignorées et effacées au prochain enregistrement
+  de son rôle ou de ses droits. Pas de migration nécessaire.
+
+Vérifications : suite web complète **1 257 tests réussis** (224 PostgreSQL
+ignorés faute de base de test), dont trois nouveaux tests de route (refus 400,
+rétrogradation, promotion) et un test de résolution ; trois tests qui
+supposaient un ADMIN restreignable sont réécrits. TypeScript, lint, contrôle
+d'architecture réussis. Banc temporaire USER et ADMIN à 1440 et 390 px : aucun
+débordement ni erreur, 0 commande pour l'ADMIN, aucun « Hérité du rôle ».
+Limites : pas de requête HTTP réelle avec session, ni de suite PostgreSQL.
+
+[USER](../../audits/autorisations-cartes-2026-10-18/role-user-1440.png) ·
+[USER mobile](../../audits/autorisations-cartes-2026-10-18/role-user-390.png) ·
+[ADMIN](../../audits/autorisations-cartes-2026-10-18/role-admin-1440.png) ·
+[ADMIN mobile](../../audits/autorisations-cartes-2026-10-18/role-admin-390.png) ·
+[Popover USER](../../audits/autorisations-cartes-2026-10-18/role-user-popover.png) ·
+[Popover ADMIN](../../audits/autorisations-cartes-2026-10-18/role-admin-popover.png).
+
+**Icônes dans les filtres Pôle et Page ou fonction** (demande utilisateur, même
+jour). Chaque option et la valeur affichée portent l'icône de la navigation
+latérale (`icon` des pôles et catégories, `getNavigationIcon`), décorative
+(`aria-hidden`), via le `Select` partagé qui gère déjà taille et alignement.
+Banc à 1440 et 390 px : quatre options avec icône, aucun débordement ni erreur.
+[Page](../../audits/autorisations-cartes-2026-10-18/select-page-1440.png) ·
+[Pôle mobile](../../audits/autorisations-cartes-2026-10-18/select-pole-390.png).
+
+Sélection : Q01–Q04, Q06, Q09, Q10, Q12–Q16, Q19, Q27 et Q30. Q12/Q13 : schéma
+inchangé, données existantes compatibles sans migration ; Q15 : l'audit
+`PERMISSION_UPDATE` existant trace les effacements. Autres sujets hors impact.
+La section du 17 octobre ci-dessous reste datée ; son dépliage des détails est
+remplacé par ce popover.
+
 ## Autorisations : présentation allégée — 17 octobre 2026
 
 L'utilisateur conserve l'organisation, demande un rendu moins carré et des

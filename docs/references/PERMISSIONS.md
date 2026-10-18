@@ -34,6 +34,10 @@ La migration conserve les accès effectifs aux coordonnées des comptes existant
 - Les surcharges sont différentielles : elles ajoutent ou retirent uniquement
   les permissions marquées `grantable`, c'est-à-dire configurables
   individuellement, par rapport au preset du rôle.
+- Un ADMIN possède toutes les autorisations administratives délégables ; aucune
+  surcharge ne peut les restreindre (`hasCompleteAccessByRole`). Un USER ne
+  possède que celles qui lui sont accordées. Un changement de rôle repart du
+  preset du nouveau rôle : les surcharges administratives sont effacées.
 - Les droits du compte racine protégé sont implicites et ne sont pas éditables.
 - Une page future ne justifie pas un droit actif. Les capacités futures restent
   dans `ROADMAP_PERMISSIONS` jusqu'à la mise en ligne complète du module.
@@ -87,8 +91,8 @@ pouvoir retirer à un compte la modification de son prénom et de son nom.
 
 ## Presets USER, ADMIN et compte racine
 
-Dans l'éditeur, le réglage choisi (hérité ou personnalisé) est distinct du droit
-effectivement utilisable après résolution des prérequis. Un réglage autorisé
+Dans l'éditeur, le réglage choisi est distinct du droit effectivement
+utilisable après résolution des prérequis. Un réglage autorisé
 mais bloqué reste affiché comme autorisé dans le choix ; l'état explique le
 prérequis manquant et le compteur l'exclut des droits utilisables. Les aperçus
 reflètent le brouillon jusqu'à l'enregistrement. Autoriser ajoute les prérequis,
@@ -96,8 +100,10 @@ refuser retire les dépendants, sous réserve de l'autorisation atomique de tout
 le lot. Le détail des changements peut être relu avant la sauvegarde.
 
 Les colonnes USER et ADMIN ci-dessous décrivent le preset sans surcharge
-individuelle. Une permission configurable peut être ajoutée à un USER ou
-retirée à un ADMIN. Le compte racine protégé contourne les presets et possède
+individuelle. Une permission administrative configurable peut être accordée à
+un USER ; un ADMIN les possède toutes et l'éditeur les présente en lecture seule
+(« Fourni par le rôle Administrateur »). Seules les options du compte personnel
+acceptent encore une surcharge sur un ADMIN. Le compte racine protégé contourne les presets et possède
 toutes les capacités actives ; les restrictions structurelles du compte racine
 continuent néanmoins de s'appliquer.
 
@@ -126,8 +132,8 @@ passe. Les capacités personnelles ne donnent aucun droit sur un autre compte.
 
 ### Page Utilisateurs
 
-Toutes les clés de ce tableau acceptent une surcharge individuelle. Leur preset
-est `false` pour USER et `true` pour ADMIN. Le compte racine les possède
+Toutes les clés de ce tableau peuvent être accordées individuellement à un USER.
+Leur preset est `false` pour USER et `true` pour ADMIN, sans retrait possible. Le compte racine les possède
 implicitement. Cela ne signifie pas que chaque gestionnaire peut toutes les
 attribuer : les limites d'attribution sont détaillées sous le tableau.
 
@@ -153,8 +159,8 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:delete_account`        | supprimer irréversiblement un compte désactivé  | `users:view_security`                       | critique  | Mot de passe récent |
 
 Pour la modification des autorisations administratives, la preuve est classée
-sur le résultat du lot : mot de passe récent pour un changement de rôle, une
-modification de droits administratifs d'un ADMIN, un changement des pouvoirs
+sur le résultat du lot : mot de passe récent pour un changement de rôle, un
+changement des pouvoirs
 d'accorder/retirer/déléguer, ou le gain/retrait effectif d'un droit critique.
 Un changement ordinaire sur USER et la seule modification de l'option personnelle
 prénom/nom n'exigent pas de preuve additionnelle. Cela ne supprime ni les gardes
@@ -205,8 +211,9 @@ aucun écran ni endpoint courant ne les expose comme journal détaillé.
 
 ### Page Répertoire
 
-Les sept permissions (dont la provenance) acceptent une surcharge individuelle.
-Leur preset est `false` pour USER et `true` pour ADMIN. Le compte racine les
+Les sept permissions (dont la provenance) peuvent être accordées individuellement
+à un USER. Leur preset est `false` pour USER et `true` pour ADMIN, sans retrait
+possible. Le compte racine les
 possède implicitement.
 
 | Clé canonique | Action couverte | Dépend de | Risque | Step-up à l'usage |
@@ -321,7 +328,8 @@ Pour un compte non protégé, le calcul suit cet ordre :
 
 1. partir du preset USER ou ADMIN ;
 2. convertir temporairement les alias legacy vers leurs cibles canoniques ;
-3. ne conserver et appliquer que les surcharges individuelles configurables ;
+3. ne conserver et appliquer que les surcharges individuelles configurables,
+   en ignorant pour un ADMIN celles des autorisations administratives ;
 4. forcer les clés `alwaysEnabled` à `true` ;
 5. résoudre récursivement toutes les dépendances et refuser toute clé inconnue
    ou seulement planifiée.
@@ -331,6 +339,8 @@ ajout par rapport au rôle et `false` un retrait. L'absence de clé signifie
 « suivre le rôle ». `normalizePermissionOverrides` retire les clés inconnues,
 les droits de socle et les API non configurables individuellement. Une valeur
 affichée comme accordée mais privée de sa dépendance n'est pas effective.
+L'API refuse (400) une surcharge administrative visant un ADMIN et n'en conserve
+aucune lors d'un changement de rôle ou d'un enregistrement de son compte.
 
 Lors d'une attribution, un administrateur non protégé ne peut pas accorder une
 permission qu'il ne possède pas lui-même, ne peut pas modifier ses propres

@@ -2249,6 +2249,109 @@ describe('users access hardening', () => {
     );
   });
 
+  describe('complete administrative access of the ADMIN role', () => {
+    const rootActor = (): Record<string, unknown> =>
+      buildUser({
+        deletedAt: undefined,
+        id: 'root-1',
+        isProtected: true,
+        passwordHash: undefined,
+        role: 'ADMIN',
+      });
+    const patchTarget = async (
+      body: Record<string, unknown>,
+    ): Promise<Response> => {
+      const route = await import('$app/api/users/[id]/route');
+
+      return route.PATCH(
+        new Request('http://localhost/api/users/target-1', {
+          body: stringifyRequestBody(body),
+          method: 'PATCH',
+        }) as never,
+        { params: Promise.resolve({ id: 'target-1' }) },
+      );
+    };
+    const persistedPermissionKeys = (): string[] => {
+      const permissions = mockPrisma.user.update.mock.calls.at(-1)?.[0]?.data
+        ?.permissions as Record<string, boolean> | undefined;
+
+      return Object.keys(permissions ?? {});
+    };
+
+    it('refuses an access override on an administrator', async () => {
+      mockRequireAuth.mockResolvedValueOnce({
+        session: buildRecentSensitiveSession(),
+        success: true,
+        user: rootActor(),
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce(
+        buildUser({ id: 'target-1', role: 'ADMIN' }),
+      );
+
+      const response = await patchTarget({
+        permissions: { [PERMISSIONS.USERS.VIEW]: false },
+        permissionScope: 'access',
+      });
+
+      expect(response.status).toBe(400);
+      expect(mockPrisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('drops every access grant when the root demotes an administrator', async () => {
+      const existingUser = buildUser({
+        id: 'target-1',
+        permissions: {
+          [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
+          [PERMISSIONS.USERS.VIEW]: true,
+          [PERMISSIONS.USERS.VIEW_CONTACT]: true,
+        },
+        role: 'ADMIN',
+      });
+      mockRequireAuth.mockResolvedValueOnce({
+        session: buildRecentSensitiveSession({ criticalMfaVerifiedAt: null }),
+        success: true,
+        user: rootActor(),
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+      mockPrisma.user.update.mockResolvedValueOnce({
+        ...existingUser,
+        role: 'USER',
+      });
+
+      const response = await patchTarget({ role: 'USER' });
+
+      expect(response.status).toBe(200);
+      expect(persistedPermissionKeys()).toEqual([
+        PERMISSIONS.ACCOUNT.UPDATE_PROFILE,
+      ]);
+    });
+
+    it('drops access grants that become redundant when the root promotes a user', async () => {
+      const existingUser = buildUser({
+        id: 'target-1',
+        mfaEnabledAt: new Date(),
+        permissions: { [PERMISSIONS.USERS.VIEW]: true },
+        role: 'USER',
+        totpCredential: { userId: 'target-1' },
+      });
+      mockRequireAuth.mockResolvedValueOnce({
+        session: buildRecentSensitiveSession(),
+        success: true,
+        user: rootActor(),
+      });
+      mockPrisma.user.findUnique.mockResolvedValueOnce(existingUser);
+      mockPrisma.user.update.mockResolvedValueOnce({
+        ...existingUser,
+        role: 'ADMIN',
+      });
+
+      const response = await patchTarget({ role: 'ADMIN' });
+
+      expect(response.status).toBe(200);
+      expect(persistedPermissionKeys()).not.toContain(PERMISSIONS.USERS.VIEW);
+    });
+  });
+
   it('requires complete MFA before granting a critical delegated permission', async () => {
     mockRequireAuth.mockResolvedValueOnce({
       session: buildRecentSensitiveSession(),

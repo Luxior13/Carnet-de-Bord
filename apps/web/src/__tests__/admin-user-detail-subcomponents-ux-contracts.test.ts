@@ -182,10 +182,12 @@ describe('administrative user detail subcomponent UX contracts', () => {
   it('uses progressive disclosure for permission details without hiding dependencies', () => {
     expect(permissionsSource).toContain('Autorisations administratives');
     const rowSource = readSourceFile('../components/users/PermissionRow.tsx');
-    expect(rowSource).toContain('Détails et héritage');
+    expect(rowSource).toContain('Détails : ');
+    expect(rowSource).toContain('PopoverContent');
     expect(rowSource).toContain('getMissingPermissionDependencies');
     expect(rowSource).toContain('permission.dependencies');
-    expect(rowSource).toContain('Exception personnalisée');
+    expect(rowSource).toContain('hasCompleteAccessByRole(role)');
+    expect(rowSource).not.toContain('Hérité du rôle');
     expect(permissionsSource).toContain(
       "selectedCategory.assignment === 'role-bound'",
     );

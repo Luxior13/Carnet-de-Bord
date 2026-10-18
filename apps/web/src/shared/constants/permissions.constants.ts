@@ -997,6 +997,39 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
 const ROLE_PERMISSIONS_MAP = new Map<UserRole, string[]>(
   Object.entries(ROLE_PERMISSIONS) as [UserRole, string[]][],
 );
+const ACCESS_PERMISSION_KEYS_SET = new Set<string>(ACCESS_PERMISSION_KEYS);
+
+/**
+ * An ADMIN always holds every administrative access permission: access
+ * overrides cannot restrict it. A USER only holds the ones granted to it.
+ */
+export const hasCompleteAccessByRole = (role: UserRole): boolean =>
+  role === UserRole.ADMIN;
+
+export const omitAccessPermissionOverrides = (
+  permissions?: PermissionsData | null,
+): PermissionsData | null => {
+  const remainingPermissions = Object.fromEntries(
+    Object.entries(permissions ?? {}).filter(
+      ([permissionKey]) => !ACCESS_PERMISSION_KEYS_SET.has(permissionKey),
+    ),
+  ) as PermissionsData;
+
+  return Object.keys(remainingPermissions).length > 0
+    ? remainingPermissions
+    : null;
+};
+
+export const normalizeRolePermissionOverrides = (
+  role: UserRole,
+  permissions?: PermissionsData | null,
+): PermissionsData | null => {
+  const normalizedPermissions = normalizePermissionOverrides(permissions);
+
+  return hasCompleteAccessByRole(role)
+    ? omitAccessPermissionOverrides(normalizedPermissions)
+    : normalizedPermissions;
+};
 
 export const hasPermission = (
   role: UserRole,
@@ -1006,7 +1039,9 @@ export const hasPermission = (
   if (!isKnownPermissionKey(permissionKey)) return false;
 
   const customPermissionsMap = new Map(
-    Object.entries(normalizePermissionOverrides(customPermissions) ?? {}),
+    Object.entries(
+      normalizeRolePermissionOverrides(role, customPermissions) ?? {},
+    ),
   );
   const resolvedPermissions = new Map<string, boolean>();
   const resolvingPermissions = new Set<string>();
@@ -1155,14 +1190,18 @@ export const buildPermissionOverrides = (
 /**
  * Canonicalizes an override set and removes dormant grants. Disabling a
  * parent therefore stores explicit denies for role-granted dependants, while
- * an orphan grant on a denied dependency is discarded.
+ * an orphan grant on a denied dependency is discarded. An ADMIN keeps no
+ * access override, whatever the scope.
  */
 export const enforcePermissionDependencies = (
   role: UserRole,
   permissions?: PermissionsData | null,
   permissionScopeKeys?: readonly string[],
 ): PermissionsData | null => {
-  const normalizedPermissions = normalizePermissionOverrides(permissions);
+  const normalizedPermissions = normalizeRolePermissionOverrides(
+    role,
+    permissions,
+  );
   const effectivePermissions = getEffectivePermissions(
     role,
     normalizedPermissions,

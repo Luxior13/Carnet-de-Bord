@@ -6,15 +6,12 @@ import React, { type FC } from 'react';
 
 import {
   getPermissionDisplayLabel,
+  hasCompleteAccessByRole,
   type PermissionItem,
 } from '$constants/permissions.constants';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '$ui/collapsible';
+import { Popover, PopoverContent, PopoverTrigger } from '$ui/popover';
 import { cn } from '$utils/css.utils';
 
 import {
@@ -34,12 +31,10 @@ type PermissionRowProps = {
   disabled: boolean;
   getDecision: (
     key: string,
-    state: PermissionChoiceState | 'reset',
+    state: PermissionChoiceState,
   ) => PermissionMutationDecision;
-  hasCustomChoice: boolean;
   isPageAccess?: boolean;
   onChange: (key: string, state: PermissionChoiceState) => void;
-  onReset: (key: string) => void;
   permission: PermissionItem;
   role: UserRole;
   state: ReturnType<typeof buildPermissionEditorState>;
@@ -49,17 +44,15 @@ export const PermissionRow: FC<PermissionRowProps> = ({
   accessKey,
   disabled,
   getDecision,
-  hasCustomChoice,
   isPageAccess = false,
   onChange,
-  onReset,
   permission,
   role,
   state,
 }) => {
   const configured = state.configured.get(permission.key) ?? false;
   const usable = state.effective.get(permission.key) ?? false;
-  const inherited = state.roleDefaults.get(permission.key) ?? false;
+  const providedByRole = !permission.grantable || hasCompleteAccessByRole(role);
   const missing = getMissingPermissionDependencies(
     permission,
     state.configured,
@@ -77,60 +70,90 @@ export const PermissionRow: FC<PermissionRowProps> = ({
       : isPageAccess
         ? 'Page inaccessible'
         : 'Refusé';
-  const showStatus = isPageAccess || disabled || missing.length > 0;
+  const showStatus =
+    isPageAccess || (disabled && !providedByRole) || missing.length > 0;
+  const showMeta = showStatus || permission.risk !== 'default';
+  const dependencies = permission.dependencies ?? [];
   const Heading = isPageAccess ? 'h4' : 'h5';
 
   return (
-    <Collapsible
+    <div
       className={isPageAccess ? styles.pageAccess : styles.row}
       data-incomplete={missing.length > 0}
       data-permission={permission.key}
     >
       <div className={styles.rowSummary}>
         <div className={styles.rowHeading}>
-          <Heading className="text-foreground min-w-0 text-sm font-medium">
+          <Heading className="text-foreground min-w-0 text-sm font-semibold">
             {permission.label}
           </Heading>
-          <CollapsibleTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={styles.infoTrigger}
-              aria-label={`Détails et héritage : ${permission.label}`}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={styles.infoTrigger}
+                aria-label={`Détails : ${permission.label}`}
+              >
+                <Info className="size-4" aria-hidden="true" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              align="start"
+              aria-label={`Détails : ${permission.label}`}
+              className="w-80 space-y-3 p-3 text-xs leading-5"
+              collisionPadding={12}
             >
-              <Info className="size-4" aria-hidden="true" />
-            </Button>
-          </CollapsibleTrigger>
-        </div>
-        <div className={styles.rowMeta}>
-          <span>{hasCustomChoice ? 'Personnalisé' : 'Hérité du rôle'}</span>
-          {showStatus && (
-            <Badge
-              variant="outline"
-              className={cn(
-                'text-xs',
-                usable
-                  ? 'border-success/35 text-success'
-                  : missing.length
-                    ? 'border-warning/40 text-warning'
-                    : 'text-muted-foreground',
+              <p className="text-foreground text-sm font-semibold">
+                {permission.label}
+              </p>
+              <p className="text-muted-foreground">{permission.description}</p>
+              {isPageAccess && usable && (
+                <p className="text-muted-foreground">
+                  Les actions de cette page restent soumises à leurs propres
+                  autorisations.
+                </p>
               )}
-            >
-              {status}
-            </Badge>
-          )}
-          {permission.risk !== 'default' && (
-            <span
-              className={
-                permission.risk === 'critical' ? 'text-destructive' : undefined
-              }
-            >
-              <span aria-hidden="true">· </span>
-              {permission.risk === 'critical' ? 'Critique' : 'Sensible'}
-            </span>
-          )}
+              {dependencies.length > 0 && (
+                <p className={styles.popoverFootnote}>
+                  <span className="text-muted-foreground">Prérequis : </span>
+                  {dependencies.map(getPermissionDisplayLabel).join(', ')}
+                </p>
+              )}
+            </PopoverContent>
+          </Popover>
         </div>
+        {showMeta && (
+          <div className={styles.rowMeta}>
+            {showStatus && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  'text-xs',
+                  usable
+                    ? 'border-success/35 text-success'
+                    : missing.length
+                      ? 'border-warning/40 text-warning'
+                      : 'text-muted-foreground',
+                )}
+              >
+                {status}
+              </Badge>
+            )}
+            {permission.risk !== 'default' && (
+              <span
+                className={
+                  permission.risk === 'critical'
+                    ? 'text-destructive'
+                    : undefined
+                }
+              >
+                {permission.risk === 'critical' ? 'Critique' : 'Sensible'}
+              </span>
+            )}
+          </div>
+        )}
         {permission.risk === 'critical' && (
           <p className="text-muted-foreground text-xs leading-5">
             {permission.description}
@@ -149,75 +172,20 @@ export const PermissionRow: FC<PermissionRowProps> = ({
         )}
       </div>
       <div className={styles.rowControls}>
-        {permission.grantable ? (
-          disabled ? (
-            <span className="text-muted-foreground text-xs">Lecture seule</span>
-          ) : (
-            <PermissionStatePicker
-              allowDecision={getDecision(permission.key, 'allow')}
-              defaultState={inherited ? 'allow' : 'deny'}
-              denyDecision={getDecision(permission.key, 'deny')}
-              permissionLabel={permission.label}
-              resetDecision={
-                hasCustomChoice
-                  ? getDecision(permission.key, 'reset')
-                  : {
-                      allowed: false,
-                      reason: 'Aucune exception à réinitialiser.',
-                    }
-              }
-              state={configured ? 'allow' : 'deny'}
-              onChange={(choice) => onChange(permission.key, choice)}
-              onReset={() => onReset(permission.key)}
-            />
-          )
-        ) : (
+        {providedByRole ? (
           <RoleBoundPermissionStatus isEnabled={usable} role={role} />
+        ) : disabled ? (
+          <span className="text-muted-foreground text-xs">Lecture seule</span>
+        ) : (
+          <PermissionStatePicker
+            allowDecision={getDecision(permission.key, 'allow')}
+            denyDecision={getDecision(permission.key, 'deny')}
+            permissionLabel={permission.label}
+            state={configured ? 'allow' : 'deny'}
+            onChange={(choice) => onChange(permission.key, choice)}
+          />
         )}
       </div>
-      <CollapsibleContent className={styles.rowDetails}>
-        {permission.risk !== 'critical' && <p>{permission.description}</p>}
-        {isPageAccess && usable && (
-          <p>
-            Les actions ci-dessous restent soumises à leurs propres
-            autorisations.
-          </p>
-        )}
-        <dl className={styles.detailValues}>
-          <div>
-            <dt className="inline">Origine du réglage : </dt>
-            <dd className="inline">
-              {hasCustomChoice
-                ? 'Exception personnalisée'
-                : 'Valeur héritée du rôle'}
-            </dd>
-          </div>
-          <div>
-            <dt className="inline">Valeur du rôle : </dt>
-            <dd className="inline">{inherited ? 'autorisée' : 'refusée'}</dd>
-          </div>
-          <div>
-            <dt className="inline">Réglage choisi : </dt>
-            <dd className="inline">{configured ? 'autorisé' : 'refusé'}</dd>
-          </div>
-          <div>
-            <dt className="inline">Accès effectif : </dt>
-            <dd className="inline">
-              {usable ? 'utilisable' : 'non utilisable'}
-            </dd>
-          </div>
-          {(permission.dependencies?.length ?? 0) > 0 && (
-            <div>
-              <dt className="inline">Autorisations requises : </dt>
-              <dd className="inline">
-                {permission.dependencies
-                  ?.map(getPermissionDisplayLabel)
-                  .join(', ')}
-              </dd>
-            </div>
-          )}
-        </dl>
-      </CollapsibleContent>
-    </Collapsible>
+    </div>
   );
 };
