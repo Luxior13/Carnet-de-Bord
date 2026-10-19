@@ -98,6 +98,41 @@ Banc à 1440 et 390 px : quatre options avec icône, aucun débordement ni erreu
 [Page](../../audits/autorisations-cartes-2026-10-18/select-page-1440.png) ·
 [Pôle mobile](../../audits/autorisations-cartes-2026-10-18/select-pole-390.png).
 
+**Haut de l'onglet allégé** (« ok go » utilisateur, même jour). Constat : avant
+les filtres, l'onglet empilait les droits de l'acteur, un avertissement de
+double authentification, un titre identique au bouton de sous-section, une
+phrase, des compteurs déjà présents dans la synthèse et le rôle seul à droite.
+
+- Retirés : bandeau « Vos droits de gestion sur ce compte » (les commandes
+  refusées expliquent déjà leur raison), titre « Autorisations
+  administratives », compteurs globaux (synthèse, badge de page et récapitulatif
+  avant enregistrement les couvrent). `UserAccessTab` ne reçoit plus
+  `canDelegatePermissions`/`canRevokePermissions`, et le hook de capacités ne
+  renvoie plus ces deux valeurs devenues inutilisées.
+- Rôle, Pôle et Page ou fonction partagent la barre de filtres (`roleControl`),
+  trois colonnes dès 48 rem de conteneur, rôle seul en tête de 36 à 48 rem,
+  empilés sur mobile. Le sélecteur de rôle passe en variante compacte pour
+  s'aligner sur les filtres ; ceci remplace le rôle à 40/44 px noté plus bas.
+- Une ligne d'aide sous la barre : explication du rôle, puis selon le cas
+  « Seul le super-administrateur peut changer le rôle. » ou, en jaune et reliée
+  au sélecteur, « Double authentification non activée : rôle Administrateur et
+  autorisations critiques indisponibles. » (fusion des deux anciens messages).
+  Le badge « Lecture seule » rejoint cette ligne.
+
+Banc sur le vrai `UserAccessTab` (acteur et cible fictifs), première autorisation
+mesurée depuis le haut de la carte : **207 px** à 1440 px, 283 px à 768 px,
+**395 px** à 390 et 320 px (439 px sans double authentification). Les captures du
+17 octobre donnaient environ 361 px et 628 px : gain d'environ 150 px sur
+ordinateur et 230 px sur mobile, comparaison approchée entre deux bancs. Aucun
+débordement ni erreur ; suite web complète réussie (1 257 tests), TypeScript et
+lint des fichiers modifiés réussis.
+[Standard](../../audits/autorisations-cartes-2026-10-18/haut-standard-1440.png) ·
+[Mobile](../../audits/autorisations-cartes-2026-10-18/haut-standard-390.png) ·
+[Sans double authentification](../../audits/autorisations-cartes-2026-10-18/haut-sans-mfa-1440.png) ·
+[Rôle verrouillé](../../audits/autorisations-cartes-2026-10-18/haut-verrouille-1440.png).
+Sujet séparé à proposer : la carte de synthèse reste au-dessus du contenu sous
+118 rem et pèse davantage sur la hauteur que cet en-tête.
+
 Sélection : Q01–Q04, Q06, Q09, Q10, Q12–Q16, Q19, Q27 et Q30. Q12/Q13 : schéma
 inchangé, données existantes compatibles sans migration ; Q15 : l'audit
 `PERMISSION_UPDATE` existant trace les effacements. Autres sujets hors impact.

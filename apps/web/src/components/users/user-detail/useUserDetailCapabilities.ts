@@ -312,7 +312,6 @@ export function useUserDetailCapabilities(
   return {
     accessCaps,
     canDeleteAccounts,
-    canDelegateTargetAccessPermissions,
     canEditTargetContact,
     canEditTargetLogin,
     canEditTargetProfile,
@@ -327,7 +326,6 @@ export function useUserDetailCapabilities(
     canRequestDeleteTargetUser,
     canResetTargetMfa,
     canResetTargetPassword,
-    canRevokeTargetAccessPermissions,
     canRevokeTargetSessions,
     canUpdateUserContact,
     canUpdateUserLogin,

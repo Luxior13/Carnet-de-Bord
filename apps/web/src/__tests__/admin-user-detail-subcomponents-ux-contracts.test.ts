@@ -180,7 +180,8 @@ describe('administrative user detail subcomponent UX contracts', () => {
   });
 
   it('uses progressive disclosure for permission details without hiding dependencies', () => {
-    expect(permissionsSource).toContain('Autorisations administratives');
+    expect(permissionsSource).toContain('roleControl');
+    expect(permissionsSource).not.toContain('pages accessibles');
     const rowSource = readSourceFile('../components/users/PermissionRow.tsx');
     expect(rowSource).toContain('Détails : ');
     expect(rowSource).toContain('PopoverContent');
@@ -222,7 +223,8 @@ describe('administrative user detail subcomponent UX contracts', () => {
     );
     expect(userAccessSource).toContain('user.criticalAccessReady !== true');
     expect(userAccessSource).not.toContain('user.mfaEnabledAt === null');
-    expect(userAccessSource).toContain('Déléguer attribution/retrait');
+    expect(userAccessSource).not.toContain('Vos droits de gestion');
+    expect(userAccessSource).toContain('user-role-mfa-requirement');
     expect(userAccessSource).toContain('mutationSummaryLabel');
   });
 

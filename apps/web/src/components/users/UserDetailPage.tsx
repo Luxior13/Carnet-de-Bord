@@ -227,7 +227,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
   } = adminStepUp;
 
   const {
-    canDelegateTargetAccessPermissions,
     canEditTargetContact,
     canEditTargetLogin,
     canEditTargetProfile,
@@ -241,7 +240,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     canRequestDeleteTargetUser,
     canResetTargetMfa,
     canResetTargetPassword,
-    canRevokeTargetAccessPermissions,
     canRevokeTargetSessions,
     canViewTargetAccess,
     canViewTargetActivity,
@@ -1364,11 +1362,9 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
             permissions={permissions}
             setPermissions={setPermissions}
             canChangePermission={decideAccessPermissionMutation}
-            canDelegatePermissions={canDelegateTargetAccessPermissions}
             canEditRole={canEditTargetRole}
             canGrantPermissions={canGrantTargetAccessPermissions}
             canManagePermissions={canManageTargetAccessPermissions}
-            canRevokePermissions={canRevokeTargetAccessPermissions}
             mutationSummary={accessMutationAnalysis?.summary ?? null}
             saveDisabledReason={accessMutationAnalysis?.decision.reason}
             isSaving={isSavingPermissions || mutation.isRefreshing}

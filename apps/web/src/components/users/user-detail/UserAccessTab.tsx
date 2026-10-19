@@ -32,11 +32,9 @@ import {
 
 type UserAccessTabProps = {
   canChangePermission: PermissionMutationPolicy;
-  canDelegatePermissions: boolean;
   canEditRole: boolean;
   canGrantPermissions: boolean;
   canManagePermissions: boolean;
-  canRevokePermissions: boolean;
   canSave: boolean;
   hasChanges: boolean;
   isRefreshing?: boolean;
@@ -59,11 +57,9 @@ const roleLabel = (role: UserRole): string =>
 
 export const UserAccessTab: FC<UserAccessTabProps> = ({
   canChangePermission,
-  canDelegatePermissions,
   canEditRole,
   canGrantPermissions,
   canManagePermissions,
-  canRevokePermissions,
   canSave,
   hasChanges,
   isRefreshing = false,
@@ -81,6 +77,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   user,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const showMfaNotice =
+    (canGrantPermissions || canEditRole) && user.criticalAccessReady !== true;
   const handleCancel = (): void => {
     onCancel();
     requestAnimationFrame(() => {
@@ -157,45 +155,6 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
       id="user-access-panel"
       ref={cardRef}
     >
-      <div className="border-border-divider space-y-2 border-b px-4 py-3">
-        <p className="text-muted-foreground text-xs font-medium">
-          Vos droits de gestion sur ce compte
-        </p>
-        <dl className="flex flex-wrap gap-x-5 gap-y-2 text-xs">
-          <div>
-            <dt className="text-muted-foreground inline">Attribution : </dt>
-            <dd className="inline">
-              {canGrantPermissions ? 'autorisée' : 'interdite'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground inline">Retrait : </dt>
-            <dd className="inline">
-              {canRevokePermissions ? 'autorisé' : 'interdit'}
-            </dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground inline">
-              Déléguer attribution/retrait :{' '}
-            </dt>
-            <dd className="inline">{canDelegatePermissions ? 'oui' : 'non'}</dd>
-          </div>
-        </dl>
-        {(canGrantPermissions || canEditRole) &&
-          user.criticalAccessReady !== true && (
-            <p
-              className="text-warning flex items-start gap-2 text-xs leading-5"
-              role="note"
-            >
-              <ShieldAlert className="mt-0.5 size-4 shrink-0" />
-              <span>
-                La double authentification doit être activée par ce membre avant
-                de lui accorder un rôle administrateur ou une autorisation
-                critique.
-              </span>
-            </p>
-          )}
-      </div>
       <PermissionsEditor
         canChangePermission={canChangePermission}
         role={role}
@@ -204,57 +163,64 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         selectedPageKey={permissionPageKey}
         onSelectedPageChange={onPermissionPageChange}
         disabled={!canManagePermissions || isSaving}
-        headerControls={
-          <div className="w-full space-y-1.5 sm:w-52">
+        roleControl={
+          <>
             <Label htmlFor="user-role">Rôle</Label>
             {canEditRole ? (
-              <>
-                <Select
-                  value={role}
-                  onValueChange={(value) => setRole(value as UserRole)}
-                  disabled={isSaving}
+              <Select
+                value={role}
+                onValueChange={(value) => setRole(value as UserRole)}
+                disabled={isSaving}
+              >
+                <SelectTrigger
+                  id="user-role"
+                  className="w-full min-w-0"
+                  variant="compact"
+                  aria-describedby={
+                    showMfaNotice ? 'user-role-mfa-requirement' : undefined
+                  }
                 >
-                  <SelectTrigger
-                    id="user-role"
-                    className="w-full"
-                    aria-describedby={
-                      user.criticalAccessReady !== true
-                        ? 'user-role-mfa-requirement'
-                        : undefined
-                    }
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent variant="compact">
+                  <SelectItem value="USER">Utilisateur</SelectItem>
+                  <SelectItem
+                    disabled={user.criticalAccessReady !== true}
+                    value="ADMIN"
                   >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USER">Utilisateur</SelectItem>
-                    <SelectItem
-                      disabled={user.criticalAccessReady !== true}
-                      value="ADMIN"
-                    >
-                      Administrateur
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                {user.criticalAccessReady !== true && (
-                  <p
-                    id="user-role-mfa-requirement"
-                    className="text-muted-foreground text-xs leading-5"
-                  >
-                    Double authentification requise avant promotion.
-                  </p>
-                )}
-              </>
+                    Administrateur
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             ) : (
-              <div className="space-y-1">
+              <div className="flex min-h-9 items-center">
                 <Badge id="user-role" variant="outline">
                   {roleLabel(role)}
                 </Badge>
-                <p className="text-muted-foreground text-xs leading-5">
-                  Seul le super-administrateur peut changer le rôle.
-                </p>
               </div>
             )}
-          </div>
+          </>
+        }
+        roleNotice={
+          <>
+            {!canEditRole && (
+              <span>Seul le super-administrateur peut changer le rôle.</span>
+            )}
+            {showMfaNotice && (
+              <span
+                className="text-warning inline-flex items-start gap-1.5"
+                id="user-role-mfa-requirement"
+                role="note"
+              >
+                <ShieldAlert
+                  aria-hidden="true"
+                  className="mt-0.5 size-3.5 shrink-0"
+                />
+                Double authentification non activée : rôle Administrateur et
+                autorisations critiques indisponibles.
+              </span>
+            )}
+          </>
         }
       />
       {hasChanges && (

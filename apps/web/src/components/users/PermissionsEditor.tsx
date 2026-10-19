@@ -35,7 +35,6 @@ import {
 import {
   buildPermissionEditorState,
   countCategoryPermissionResults,
-  countUsablePermissions,
   PERMISSION_EDITOR_CATEGORIES,
 } from './permission-editor-view';
 import { PermissionDecisionButton } from './PermissionDecisionButton';
@@ -45,11 +44,14 @@ import styles from './PermissionsEditor.module.css';
 type PermissionsEditorProps = {
   canChangePermission?: PermissionMutationPolicy;
   disabled?: boolean;
-  headerControls?: React.ReactNode;
   onChange: (permissions: PermissionsData | null) => void;
   onSelectedPageChange: (pageKey: string) => void;
   permissions: PermissionsData | null;
   role: UserRole;
+  /** Role field, first column of the filter bar. */
+  roleControl?: React.ReactNode;
+  /** Extra note after the role explanation (MFA, locked role). */
+  roleNotice?: React.ReactNode;
   selectedPageKey: string;
 };
 
@@ -73,11 +75,12 @@ const SelectOptionLabel: FC<{ icon: NavigationIconName; label: string }> = ({
 export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   canChangePermission,
   disabled = false,
-  headerControls,
   onChange,
   onSelectedPageChange,
   permissions,
   role,
+  roleControl,
+  roleNotice,
   selectedPageKey,
 }) => {
   const state = useMemo(
@@ -92,14 +95,6 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   const editable = !disabled && !completeAccess;
   const grantedPermissionCount = [...permissionsMap.keys()].filter((key) =>
     ACCESS_KEYS.has(key),
-  ).length;
-  const { ready: readyCount, total: totalCount } = countUsablePermissions(
-    state.effective,
-  );
-  const accessiblePages = PERMISSION_EDITOR_CATEGORIES.filter(
-    (category) =>
-      category.scope === 'page' &&
-      state.effective.get(category.accessPermissionKey),
   ).length;
   const selectedCategory =
     PERMISSION_EDITOR_CATEGORIES.find(
@@ -183,40 +178,12 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
 
   return (
     <div className={styles.editor}>
-      <header className={styles.header}>
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-foreground text-sm font-semibold">
-              Autorisations administratives
-            </h3>
-            {disabled && !completeAccess && (
-              <Badge variant="outline">Lecture seule</Badge>
-            )}
-          </div>
-          <p className="text-muted-foreground max-w-2xl text-xs leading-5">
-            {completeAccess
-              ? 'Un administrateur possède toutes les autorisations administratives.'
-              : 'Un utilisateur dispose uniquement des autorisations accordées ici.'}
-          </p>
-          <p
-            className="text-muted-foreground text-xs leading-5"
-            aria-live="polite"
-          >
-            {accessiblePages}/
-            {
-              PERMISSION_EDITOR_CATEGORIES.filter(
-                (category) => category.scope === 'page',
-              ).length
-            }{' '}
-            pages accessibles · {readyCount}/{totalCount} autorisations
-            utilisables
-          </p>
-        </div>
-        {headerControls}
-      </header>
-      {selectedCategory && (
-        <>
-          <div className={styles.filters}>
+      <div className={styles.filters} data-with-role={!!roleControl}>
+        {roleControl && (
+          <div className="min-w-0 space-y-1.5">{roleControl}</div>
+        )}
+        {selectedCategory && (
+          <>
             <div className="min-w-0 space-y-1.5">
               <Label htmlFor="permission-pole">Pôle</Label>
               <Select
@@ -275,7 +242,22 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </>
+        )}
+        <div className={styles.filtersNote}>
+          {disabled && !completeAccess && (
+            <Badge variant="outline">Lecture seule</Badge>
+          )}
+          <span>
+            {completeAccess
+              ? 'Un administrateur possède toutes les autorisations administratives.'
+              : 'Un utilisateur n’a que les autorisations accordées ci-dessous.'}
+          </span>
+          {roleNotice}
+        </div>
+      </div>
+      {selectedCategory && (
+        <>
           <section
             className="space-y-4 p-3 sm:p-4"
             aria-label={`Autorisations de la page ${selectedCategory.label}`}
