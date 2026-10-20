@@ -25,8 +25,11 @@ un retour de fiche qui conservent le contexte.
 
 - Bandeau `PageIdentityHero` (dégradé, icône, titre, description, action de création).
 - `DataTableSection` et `directory.module.css` : recherche `ListSearchField`
-  et tri à droite ; en dessous, filtres rapides (Tous, Dans la structure, Hors
-  structure, Sans coordonnées) à gauche et nombre de fiches trouvées à droite ;
+  à gauche ; à droite, réinitialisation (place réservée quand elle est masquée,
+  sauf sous 640 px) puis tri, qui affleure le bord droit ; en dessous, filtres
+  rapides en deux groupes libellés, « Statut » (Tous, Dans la structure, Hors
+  structure) et « Coordonnées » (Sans coordonnées), à gauche, et nombre de
+  fiches trouvées à droite ;
   tableau puis cartes sous 740 px, `ListPagination` par curseur de 25 lignes.
 - Plus de carte de synthèse ni de rail : ses compteurs sont portés par les
   filtres rapides (décision du 20 octobre 2026).
@@ -44,13 +47,16 @@ un retour de fiche qui conservent le contexte.
   normalisés ; liste sans coordonnées complètes, seulement leurs compteurs.
 - Retour de fiche : page, historique de curseurs, position et lien d’origine
   conservés en stockage de session (30 minutes, 64 curseurs au plus).
-- Filtres rapides (20 octobre 2026) : boutons à bascule `aria-pressed` dans un
-  groupe « Filtres rapides ». Un statut se combine à la recherche et au filtre
+- Filtres rapides (20 octobre 2026) : boutons à bascule `aria-pressed` en
+  deux groupes, « Filtrer par statut » et « Filtrer par coordonnées », chacun
+  précédé de son libellé visible ; bouton enfoncé en bordure et texte d’accent. Un statut se combine à la recherche et au filtre
   Sans coordonnées ; Sans coordonnées est un interrupteur réservé à
   `persons:view_contact`. Le focus reste sur le bouton actionné.
-- Compteurs : ils comptent tout le répertoire et ne s’affichent que s’ils
-  égalent le résultat annoncé (statuts sans recherche ni filtre Sans
-  coordonnées ; Sans coordonnées sans recherche et avec Tous). Le nom
+- Compteurs à facettes (20 octobre 2026, après « dès que je sélectionne, les
+  compteurs s’enlèvent et tout décale ») : calculés dans la même requête que la
+  liste et sur le même instantané, avec la recherche ; les statuts gardent le
+  filtre Sans coordonnées, Sans coordonnées garde le statut. Toujours affichés,
+  ils égalent le résultat de leur filtre ; la ligne ne se décale plus. Le nom
   accessible du bouton porte le nombre (« Tous, 12 fiches »).
 - Le bouton enfoncé tient lieu de filtre actif : pas d’étiquette retirable en
   plus (REP-23).
@@ -136,6 +142,27 @@ réorganisation documentaire. Commit de départ `f224f80`, arbre propre.
   41 scénarios sur 41, captures avant/après.
 - **Non vérifié** : session, hydratation Next et PostgreSQL réels (aucun
   changement serveur), lecteur d’écran réel.
+- **Rendu réel** : capture du propriétaire sur le serveur de dev ; le menu de
+  tri s’arrêtait 46 px avant le bord droit, à cause de la place réservée au
+  bouton de réinitialisation placé après lui. Bouton déplacé avant le menu ;
+  scénarios d’affichage et de filtres du banc rejoués, captures remplacées.
+- **Validation** : rendu réel validé par le propriétaire le même jour
+  (« moi je suis content »).
+- **Suite, même jour** : bouton de filtre rapide extrait en composant partagé
+  `$ui/quick-filter` lors de la reprise de la liste Utilisateurs. Sous
+  640 px, la place réservée à la réinitialisation masquée décalait le tri vers
+  la droite depuis son déplacement ; elle n’est plus réservée sur téléphone.
+  Banc rejoué en entier, 41 sur 41, captures remplacées.
+- **Libellés de groupes** : après la revue de la liste Utilisateurs (« ok go »
+  du propriétaire), « Sans coordonnées » forme son propre groupe
+  « Coordonnées », séparé de « Statut », et l’état enfoncé est renforcé. Banc
+  rejoué, 41 sur 41.
+- **Compteurs à facettes** : les compteurs disparaissaient à la sélection et
+  la ligne se décalait. `listPersons` calcule désormais `overview` dans sa
+  requête (CTE `scope` après recherche, `facets`), à la place des trois
+  `prisma.person.count` globaux. Tests unitaires et banc (41 sur 41) à jour ;
+  attentes de `persons-list-postgres.test.ts` mises à jour par le calcul,
+  **non exécutées** faute de PostgreSQL local (corrigé à vérifier).
 
 ### Rôle de référence (décision du 2026-10-09)
 

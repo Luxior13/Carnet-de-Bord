@@ -200,7 +200,16 @@
 .directory .quickFilters {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
+}
+
+/* Libellé visible du groupe (« État », « Rôle ») : dit à quoi « Tous » s’applique. */
+.directory .quickFilterLabel {
+  margin-right: 2px;
+  color: var(--m-muted);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .directory .quickFilter {
@@ -221,15 +230,29 @@
   color: var(--m-foreground);
 }
 
+/* Enfoncé : bordure et texte d’accent, repérables d’un coup d’œil. */
 .directory .quickFilter[aria-pressed='true'] {
-  border-color: var(--m-accent-soft-border);
-  background: var(--m-accent-soft);
-  color: var(--m-foreground);
+  border-color: var(--m-accent);
+  background: color-mix(in srgb, var(--primary) 24%, transparent);
+  color: var(--m-accent-text);
 }
 
 .directory .quickFilterCount {
   color: var(--m-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.directory .quickFilter[aria-pressed='true'] .quickFilterCount {
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* Plusieurs groupes de filtres rapides, chacun précédé de son libellé. */
+.directory .quickFilterSets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
 }
 
 /* ------------------------------------------------------------------ Cartes */
@@ -398,10 +421,6 @@
   font-weight: 600;
 }
 
-.directory .overviewMetric {
-  border-color: var(--m-divider);
-}
-
 @media (max-width: 639px) {
   .directory .pageButton {
     min-width: 44px;
@@ -418,6 +437,11 @@
 
   .directory .quickFilter {
     height: 44px;
+  }
+
+  /* Hidden reset keeps no room on a phone: the sort menu takes the full row. */
+  .directory .iconButton[aria-hidden='true'] {
+    display: none;
   }
 
   .directory .filterSelects {

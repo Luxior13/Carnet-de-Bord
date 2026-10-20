@@ -157,8 +157,9 @@ async function main() {
   }
   const search = (page) =>
     page.getByRole("searchbox", { name: /^Rechercher par pseudo/ });
+  // Conteneur des groupes « Filtrer par statut » et « Filtrer par coordonnées ».
   const quickFilters = (page) =>
-    page.getByRole("group", { name: "Filtres rapides" });
+    page.getByRole("group", { name: "Filtrer par statut" }).locator("..");
   const quickFilter = (page, label) =>
     quickFilters(page).getByRole("button", {
       name: new RegExp("^" + label + "(, .+ fiches?)?$"),
@@ -346,8 +347,14 @@ async function main() {
           "aria-pressed",
           "true",
         );
-        // Statut combiné au filtre : son compte de tout le répertoire disparaît.
-        await expect(quickFilter(page, "Tous")).toHaveText("Tous");
+        // Compteurs à facettes : ils restent affichés et suivent le filtre.
+        await expect(quickFilter(page, "Tous")).toHaveText("Tous1");
+        await expect(quickFilter(page, "Dans la structure")).toHaveText(
+          "Dans la structure1",
+        );
+        await expect(quickFilter(page, "Hors structure")).toHaveText(
+          "Hors structure0",
+        );
         await expect(quickFilter(page, "Sans coordonnées")).toHaveText(
           "Sans coordonnées1",
         );
@@ -372,7 +379,10 @@ async function main() {
         await expect(
           page.getByRole("button", { name: "Réinitialiser", exact: true }),
         ).toBeVisible();
-        await expect(quickFilters(page)).not.toContainText(/[0-9]/);
+        await expect(quickFilter(page, "Tous")).toHaveText("Tous0");
+        await expect(quickFilter(page, "Sans coordonnées")).toHaveText(
+          "Sans coordonnées0",
+        );
         await page
           .getByRole("button", { name: "Réinitialiser", exact: true })
           .click();

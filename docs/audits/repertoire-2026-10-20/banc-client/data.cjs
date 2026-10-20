@@ -60,24 +60,6 @@ exports.response = (
       }),
     );
   if (mode === "empty") people = [];
-  let overview = {
-    total: people.length,
-    inStructure: people.filter((p) => p.structureStatus === "IN_STRUCTURE")
-      .length,
-    outsideStructure: people.filter(
-      (p) => p.structureStatus === "OUTSIDE_STRUCTURE",
-    ).length,
-    noContacts: people.filter((p) =>
-      Object.values(p.contactCounts).every((value) => value === 0),
-    ).length,
-  };
-  if (mode === "long")
-    overview = {
-      total: 123456789,
-      inStructure: 123456780,
-      outsideStructure: 9,
-      noContacts: 123456700,
-    };
   const query = (params.get("q") || "").toLocaleLowerCase();
   if (query === "contact")
     people = people
@@ -90,14 +72,36 @@ exports.response = (
         .toLocaleLowerCase()
         .includes(query),
     );
-  if (params.get("structureStatus"))
-    people = people.filter(
-      (person) => person.structureStatus === params.get("structureStatus"),
-    );
-  if (params.get("contacts") === "missing")
-    people = people.filter((person) =>
-      Object.values(person.contactCounts).every((value) => value === 0),
-    );
+  // Facettes comme le serveur : après la recherche, chaque statut garde le
+  // filtre Sans coordonnées, et Sans coordonnées garde le statut.
+  const status = params.get("structureStatus");
+  const missing = params.get("contacts") === "missing";
+  const noContacts = (person) =>
+    Object.values(person.contactCounts).every((value) => value === 0);
+  const inStatus = (value) =>
+    people.filter(
+      (person) =>
+        person.structureStatus === value && (!missing || noContacts(person)),
+    ).length;
+  let overview = {
+    inStructure: inStatus("IN_STRUCTURE"),
+    outsideStructure: inStatus("OUTSIDE_STRUCTURE"),
+    noContacts: people.filter(
+      (person) =>
+        noContacts(person) && (!status || person.structureStatus === status),
+    ).length,
+  };
+  overview.total = overview.inStructure + overview.outsideStructure;
+  if (mode === "long")
+    overview = {
+      total: 123456789,
+      inStructure: 123456780,
+      outsideStructure: 9,
+      noContacts: 123456700,
+    };
+  if (status)
+    people = people.filter((person) => person.structureStatus === status);
+  if (missing) people = people.filter(noContacts);
   const total = people.length;
   const offset = params.get("cursor") === "page-2" ? 25 : 0;
   return {

@@ -20,7 +20,7 @@ non commitées. Elle ne décrit pas ce commit seul.
 ## Changements par rapport au banc du 11 octobre
 
 - La carte « Vue d’ensemble » n’existe plus : le banc vérifie son absence et
-  interroge le groupe « Filtres rapides » (boutons `aria-pressed`, compteurs,
+  interroge les groupes « Filtrer par statut » et « Filtrer par coordonnées » (boutons `aria-pressed`, compteurs,
   noms accessibles « Tous, 3 fiches »).
 - `filters-and-reset-focus` choisit « Hors structure » par son filtre rapide ;
   le focus reste sur le bouton actionné.
@@ -48,12 +48,12 @@ Captures après la reprise : [390 px](directory-390.png),
 [valeurs longues à 320 px](directory-long-320.png),
 [chargement à 320 px](directory-loading-320.png) et
 [couleurs forcées à 320 px](directory-forced-colors-320.png).
+Observations et captures viennent d’une dernière passe complète (41 sur 41),
+après le déplacement de la réinitialisation avant le tri, l’extraction du
+composant `$ui/quick-filter`, la correction mobile de la place réservée, puis
+les libellés de groupes et l’état enfoncé renforcé.
 Avant la reprise, sur le même banc : [390 px](avant-directory-390.png) et
 [1 440 px](avant-directory-1440.png).
-
-La capture de chargement vient d’une seconde passe limitée au scénario
-`initial-loading` (réussi), après l’alignement mobile du squelette sur la barre
-réelle (menu de tri pleine largeur, filtres rapides à 44 px).
 
 ## Limites
 

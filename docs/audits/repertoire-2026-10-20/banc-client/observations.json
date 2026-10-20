@@ -11,7 +11,7 @@
         "limit=25"
       ],
       "details": {
-        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "quickFiltersAccessibility": "- group \"Filtrer par statut\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n- group \"Filtrer par coordonnées\":\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
         "firstRowAccessibility": "- link \"Ouvrir la fiche de CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire\n  - heading \"CamilleJeu · Camille Exemple\" [level=3]\n  - text: Dans la structure 1 email 0 téléphone 2 profils sociaux\n  - paragraph: Modifiée le 11 oct. 2026, 12:30 Par Alex Exemple (alex.exemple)",
         "computedFont": {
           "link": "Arial, sans-serif",
@@ -60,7 +60,7 @@
         "limit=25"
       ],
       "details": {
-        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "quickFiltersAccessibility": "- group \"Filtrer par statut\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n- group \"Filtrer par coordonnées\":\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
         "firstRowAccessibility": "- link \"Ouvrir la fiche de CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire\n  - heading \"CamilleJeu · Camille Exemple\" [level=3]\n  - text: Dans la structure 1 email 0 téléphone 2 profils sociaux\n  - paragraph: Modifiée le 11 oct. 2026, 12:30 Par Alex Exemple (alex.exemple)",
         "computedFont": {
           "link": "Arial, sans-serif",
@@ -109,7 +109,7 @@
         "limit=25"
       ],
       "details": {
-        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "quickFiltersAccessibility": "- group \"Filtrer par statut\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n- group \"Filtrer par coordonnées\":\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
         "firstRowAccessibility": "- link \"Ouvrir la fiche de CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire\n  - heading \"CamilleJeu · Camille Exemple\" [level=3]\n  - text: Dans la structure 1 email 0 téléphone 2 profils sociaux\n  - paragraph: Modifiée le 11 oct. 2026, 12:30 Par Alex Exemple (alex.exemple)",
         "computedFont": {
           "link": "Arial, sans-serif",
@@ -158,7 +158,7 @@
         "limit=25"
       ],
       "details": {
-        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "quickFiltersAccessibility": "- group \"Filtrer par statut\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n- group \"Filtrer par coordonnées\":\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
         "firstRowAccessibility": "- link \"CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire",
         "computedFont": {
           "link": "Arial, sans-serif",
@@ -207,7 +207,7 @@
         "limit=25"
       ],
       "details": {
-        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "quickFiltersAccessibility": "- group \"Filtrer par statut\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n- group \"Filtrer par coordonnées\":\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
         "firstRowAccessibility": "- link \"CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire",
         "computedFont": {
           "link": "Arial, sans-serif",

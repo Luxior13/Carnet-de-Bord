@@ -58,7 +58,7 @@ affichent un panneau avec des lignes sélectionnables.
 | Besoin | Source | Responsabilité de la page |
 | --- | --- | --- |
 | Liste de gestion avec outils, tableau et cartes mobiles | [DataTableSection](../../apps/web/src/components/ui/data-table-section.tsx) et [directory.module.css](../../apps/web/src/components/ui/directory.module.css) | Colonnes, légende, cartes mobiles, états, filtres et actions autorisées. Reprendre le socle commun sans imposer les colonnes du Répertoire. |
-| Filtres rapides avec compteurs | Composant local `QuickFilter` de [PersonsListToolbar](../../apps/web/src/features/persons/components/PersonsListToolbar.tsx), classes `filterBar`, `quickFilters`, `quickFilter` de `directory.module.css` | Boutons `aria-pressed` dans un `role="group"` nommé ; compteur seulement s’il égale le résultat, porté aussi par le nom accessible. À extraire en composant partagé avec son deuxième consommateur, la liste Utilisateurs ([HARMO-06](harmonisation.md#constats)). |
+| Filtres rapides avec compteurs | [QuickFilterGroup et QuickFilter](../../apps/web/src/components/ui/quick-filter.tsx), classes `filterBar`, `quickFilterSets`, `quickFilters`, `quickFilter` de `directory.module.css` | Un groupe par dimension (`role="group"`, `label` pour les technologies d’assistance) avec son libellé visible `caption` ; boutons `aria-pressed`. La page fournit le compteur seulement s’il égale le résultat, et le nom du dénombré (« fiche », « compte ») pour le nom accessible. Plusieurs groupes vont dans `quickFilterSets`, séparés par leur libellé et un écart de 20 px. Consommateurs : Répertoire, Utilisateurs. |
 | Structure HTML du tableau | [Table et sous-composants](../../apps/web/src/components/ui/table.tsx) | Donner une légende et des en-têtes utiles ; préserver les relations entre libellés et valeurs lors du passage en cartes. |
 | Recherche dans une liste | [ListSearchField](../../apps/web/src/components/ui/list-search-field.tsx) | Fournir libellé accessible, limite de saisie, valeur et callbacks. Un `id` explicite permet d'associer un label visible ; sinon l'identifiant est généré. Le groupe parent doit porter la portée CSS `directoryStyles.directory`, requise par le module partagé. Le délai avant requête, l’URL et la remise à zéro des critères restent au module. Effacer rend le focus au champ. |
 | Précédent et suivant, avec curseur ou numéro de page | [ListPagination](../../apps/web/src/components/ui/pagination.tsx) | Fournir `canPrevious`, `canNext`, page et total de pages seulement s’il est connu. Gérer chargement, curseurs et retour vers une page accessible ; la primitive ne les invente pas. |
@@ -303,8 +303,8 @@ structure restent adaptées au contenu de chaque écran.
   est une requête.
 - **Rail de synthèse** : `PageAsideLayout` apparaît à partir de 118rem de viewport, avec
   une largeur de 16rem. En dessous, il se place entre le bandeau et la liste.
-  Consommateurs : fiche utilisateur, Mon compte et liste Utilisateurs (à
-  aligner, HARMO-06). Reprendre le seuil du layout
+  Consommateurs : fiche utilisateur et Mon compte ; plus aucune liste depuis
+  le 20 octobre 2026. Reprendre le seuil du layout
   consommé, adapter le contenu à sa position et vérifier aussi une largeur
   intermédiaire.
 

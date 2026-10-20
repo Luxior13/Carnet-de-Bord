@@ -601,7 +601,7 @@ Fichiers principaux de la page :
 
 - [`page.tsx`](../../apps/web/src/app/systeme/utilisateurs/page.tsx) : en-tête compact, palette locale et largeur.
 - [`UsersListPage.tsx`](../../apps/web/src/features/users/UsersListPage.tsx) : recherche, filtres, tableau, cartes et pagination.
-- [`UsersOverview.tsx`](../../apps/web/src/features/users/UsersOverview.tsx) : statistiques et résumé mobile.
+- `UsersOverview.tsx` (fichier retiré le 20 octobre 2026) : statistiques et résumé mobile.
 - `UsersListLayout.module.css` — chemin historique : `apps/web/src/features/users/UsersListLayout.module.css` : grille locale, largeur de confort de 64 rem dans les limites de la zone utile, plafond de 80 rem, centrage écran et placement indépendant du rail. Calcul CSS à partir du viewport privé, de la zone utile et de l'écran, tenant compte des marges et gouttières de scrollbar ; aucun déplacement de la sidebar ni mesure JavaScript.
 - [`page-shell.tsx`](../../apps/web/src/components/ui/page-shell.tsx) et [`globals.css`](../../apps/web/src/app/globals.css) : géométrie et jetons.
 - [`button.tsx`](../../apps/web/src/components/ui/button.tsx), [`input.tsx`](../../apps/web/src/components/ui/input.tsx), [`select.tsx`](../../apps/web/src/components/ui/select.tsx) : correction du focus commun.

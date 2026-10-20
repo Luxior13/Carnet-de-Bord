@@ -131,7 +131,7 @@ export const UsersListResults: FC<Props> = ({
           ) : (
             displayedUsers.map((user) => (
               <TableRow
-                className="group/row focus-within:ring-ring relative cursor-pointer focus-within:ring-2 focus-within:ring-inset"
+                className="has-[a:focus-visible]:ring-ring relative cursor-pointer has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-inset"
                 key={user.id}
               >
                 <TableCell>
@@ -154,14 +154,14 @@ export const UsersListResults: FC<Props> = ({
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-col justify-center gap-0.5">
                         <span className="flex min-w-0 items-center gap-1.5">
-                          <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-[13px] leading-4 font-semibold group-hover/link:underline group-hover/link:underline-offset-[3px]">
+                          <span className="text-foreground group-hover/link:text-primary-emphasis truncate text-sm leading-4 font-semibold group-hover/link:underline group-hover/link:underline-offset-[3px]">
                             {getUserDisplayName(user)}
                           </span>
                           {isUserIdentityMasked(user) && (
                             <ProtectedIdentityIcon />
                           )}
                         </span>
-                        <span className="text-muted-foreground truncate text-[11px] leading-4">
+                        <span className="text-muted-foreground truncate text-xs leading-4">
                           {isUserIdentityMasked(user)
                             ? 'Identité protégée'
                             : getUserLoginDisplay(user)}
@@ -197,13 +197,13 @@ export const UsersListResults: FC<Props> = ({
                 {securityDetailsVisible && (
                   <TableCell className="pointer-events-none">
                     {user.securityDetailsVisible === false ? (
-                      <span className="text-muted-foreground text-[11px]">
+                      <span className="text-muted-foreground text-xs">
                         Masqué
                       </span>
                     ) : user.mustChangePassword ? (
                       <StatusBadge tone="warning">À changer</StatusBadge>
                     ) : (
-                      <span className="text-muted-foreground text-[11px]">
+                      <span className="text-muted-foreground text-xs">
                         <span aria-hidden="true">—</span>
                         <span className="sr-only">
                           Aucun changement demandé
@@ -212,7 +212,7 @@ export const UsersListResults: FC<Props> = ({
                     )}
                   </TableCell>
                 )}
-                <TableCell className="text-muted-foreground pointer-events-none text-[11px]">
+                <TableCell className="text-muted-foreground pointer-events-none text-xs">
                   {formatUserLastLogin(user)}
                 </TableCell>
               </TableRow>
@@ -271,12 +271,12 @@ export const UsersListResults: FC<Props> = ({
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="min-w-0">
                   <div className="flex min-w-0 items-center gap-1.5">
-                    <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-[13px] leading-4 font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
+                    <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-sm leading-4 font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
                       {getUserDisplayName(user)}
                     </h3>
                     {isUserIdentityMasked(user) && <ProtectedIdentityIcon />}
                   </div>
-                  <p className="text-muted-foreground text-[11px] leading-4 [overflow-wrap:anywhere]">
+                  <p className="text-muted-foreground text-xs leading-4 [overflow-wrap:anywhere]">
                     {isUserIdentityMasked(user) ? (
                       'Identité protégée'
                     ) : (
@@ -300,7 +300,7 @@ export const UsersListResults: FC<Props> = ({
                     </StatusBadge>
                   </div>
                 )}
-                <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">
+                <p className="text-muted-foreground text-xs leading-5 tabular-nums">
                   Dernière connexion : {formatUserLastLogin(user).toLowerCase()}
                 </p>
               </div>

@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  personCount: vi.fn(),
   queryRaw: vi.fn(),
 }));
 
@@ -19,9 +18,6 @@ vi.mock('$env', () => ({
 vi.mock('$server/prisma', () => ({
   prisma: {
     $queryRaw: mocks.queryRaw,
-    person: {
-      count: mocks.personCount,
-    },
   },
 }));
 
@@ -192,8 +188,6 @@ describe('person indexed search', () => {
   beforeEach(() => {
     mocks.queryRaw.mockReset();
     mocks.queryRaw.mockResolvedValue([]);
-    mocks.personCount.mockReset();
-    mocks.personCount.mockResolvedValue(0);
   });
 
   it('uses exact, prefix, and trigram-compatible LIKE branches on normalized identity columns', async () => {

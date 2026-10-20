@@ -56,9 +56,21 @@ Références : [liste du Répertoire](../pages/membres/repertoire/liste.md) et
   recherche ; un filtre rapide garde le focus sur son bouton.
 - Filtres rapides (décision du 20 octobre 2026) : boutons à bascule
   (`aria-pressed`) sous la recherche, à la place d’une carte de synthèse et du
-  menu équivalent. Un filtre se combine aux autres critères. Son compteur porte
-  sur le périmètre global autorisé et ne s’affiche que s’il égale le résultat
-  que le filtre montrerait ; le nom accessible du bouton porte ce nombre.
+  menu équivalent. Un filtre se combine aux autres critères. Ses compteurs
+  sont **à facettes** (décision du 20 octobre 2026) : calculés par le serveur
+  dans le périmètre autorisé, avec la recherche et les filtres des autres
+  groupes, mais sans celui de leur propre groupe. Ils restent donc toujours
+  affichés, égalent le résultat que le filtre montrerait, et la ligne de
+  filtres ne se décale pas quand on sélectionne. Avant la première réponse,
+  aucun nombre ; le nom accessible du bouton porte ce nombre.
+- Plusieurs dimensions : un groupe par dimension, précédé d’un libellé visible
+  court (« Statut », « Coordonnées », « État », « Rôle ») pour qu’un « Tous »
+  enfoncé ne semble pas contredire un filtre d’un autre groupe. La première
+  dimension garde « Tous » et un seul choix ; une dimension secondaire est faite
+  d’interrupteurs (un second appui retire le filtre), comme « Sans coordonnées »
+  ou les rôles.
+- Un filtre rapide enfoncé porte une bordure et un texte d’accent sur un fond
+  teinté : les critères actifs se repèrent d’un coup d’œil.
 - Pagination à 25 lignes (`PAGINATION.DEFAULT_LIMIT`, partagé client et
   serveur) ; une exception de densité se justifie dans la fiche. Le nombre de
   lignes n’est pas un paramètre système.
@@ -191,7 +203,8 @@ déjà visible dans la page ne reçoit pas de toast supplémentaire.
 - La sidebar devient un volet mobile sous 1024 px ; le rail de synthèse d’une
   fiche passe au-dessus du contenu sous 118 rem, en version compacte.
 - Les filtres rapides d’une liste passent à la ligne et prennent 44 px de haut
-  sous 640 px.
+  sous 640 px ; la réinitialisation masquée n’y réserve plus de place, le tri
+  occupe toute la ligne.
 - La barre d’enregistrement reste dans le flux en faible largeur ou hauteur.
 
 ## Autocomplétion

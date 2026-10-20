@@ -24,8 +24,8 @@ Cadre privé (sidebar 264 px, header 56 px)
 └─ PageShell (76 rem) · PageCanvas
    ├─ PageIdentityHero : icône · titre · description · action principale
    └─ DataTableSection (directory.module.css, rayon 10 px)
-      ├─ Barre de filtres : recherche · menus compacts 38 px · tri · réinitialisation
-      ├─ Filtres rapides à bascule avec compteurs · nombre de résultats
+      ├─ Barre de filtres : recherche · réinitialisation · menus compacts 38 px · tri (au bord droit)
+      ├─ Filtres rapides à bascule avec compteurs, un groupe libellé par dimension · nombre de résultats
       ├─ En-tête de colonnes (surface-table-head)
       ├─ Lignes alternées (cartes sous 740 px de conteneur)
       └─ ListPagination (25 lignes, curseur ou numéro selon le contrat)
@@ -34,6 +34,9 @@ Cadre privé (sidebar 264 px, header 56 px)
 - Ni bandeau ni carte de synthèse ne portent de statistiques : les compteurs
   sont dans les filtres rapides, affichés seulement s’ils égalent le résultat
   (décision du 20 octobre 2026). Pas de rail sur une liste.
+- Le dernier contrôle de la barre affleure le bord droit de la liste, aligné
+  sur le nombre de résultats et l’action du bandeau : la réinitialisation,
+  dont la place reste réservée quand elle est masquée, vient avant les menus.
 - Une ligne : identité à gauche (avatar, nom, contexte en dessous), puis
   colonnes de données autorisées, statut en badge à pastille, date.
 - Les colonnes dépendent des droits ; leurs seuils de passage en cartes sont

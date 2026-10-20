@@ -216,7 +216,6 @@ export const PersonsList: FC<PersonsListProps> = ({
 
   const toolbar = (
     <PersonsListToolbar
-      appliedQuery={appliedQuery}
       applyFilters={applyFilters}
       canViewContact={canViewContact}
       draftQuery={draftQuery}

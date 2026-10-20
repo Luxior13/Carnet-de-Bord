@@ -5,19 +5,17 @@ import Link from 'next/link';
 import React, { type FC, useEffect, useRef } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
-import { PageAsideLayout } from '$components/layout/PageAsideLayout';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
-import { UsersOverview } from '$features/users/UsersOverview';
 import { Button } from '$ui/button';
 import { DataTableSection } from '$ui/data-table-section';
 import directoryStyles from '$ui/directory.module.css';
 import { ListPagination } from '$ui/pagination';
-import { Skeleton } from '$ui/skeleton';
 
 import { getUsersListVisibilityKey } from './users-list.utils';
 import { buildUsersPageUrlParams } from './users-list-state';
+import { UsersListRowsSkeleton } from './UsersDirectorySkeleton';
 import { UsersListResults } from './UsersListResults';
 import { UsersListToolbar } from './UsersListToolbar';
 import { useUsersList } from './useUsersList';
@@ -27,7 +25,6 @@ export const UsersListPage: FC = () => {
   const list = useUsersList();
   const {
     canCreateUsers,
-    canRequestSecurityDetails,
     canViewContact,
     changePage,
     clearFilters,
@@ -47,7 +44,6 @@ export const UsersListPage: FC = () => {
     loadError,
     securityDetailsVisible,
     sortBy,
-    stats,
     totalPages,
   } = list;
   const returnHref = `${PAGE_PATHS.users}${currentQueryString ? `?${currentQueryString}` : ''}`;
@@ -103,131 +99,117 @@ export const UsersListPage: FC = () => {
 
   return (
     <div
+      className="space-y-[18px]"
       ref={navigation.containerRef}
       onClickCapture={navigation.onClickCapture}
     >
-      <PageAsideLayout
-        aside={
-          <UsersOverview
-            isLoading={isLoading && !stats}
-            query={currentQueryString}
-            securityDetailsVisible={
-              isLoading ? canRequestSecurityDetails : securityDetailsVisible
-            }
-            stats={stats}
-          />
+      <PageIdentityHero
+        actions={
+          canCreateUsers ? (
+            <Button asChild className={directoryStyles.addButton}>
+              <Link href={createUserHref}>
+                <Plus aria-hidden="true" />
+                Nouvel utilisateur
+              </Link>
+            </Button>
+          ) : undefined
         }
-        header={
-          <PageIdentityHero
-            actions={
-              canCreateUsers ? (
-                <Button asChild className={directoryStyles.addButton}>
-                  <Link href={createUserHref}>
-                    <Plus aria-hidden="true" />
-                    Nouvel utilisateur
-                  </Link>
-                </Button>
-              ) : undefined
+        description="Gérez les comptes et leurs accès."
+        icon={<Users aria-hidden="true" />}
+        title={FEATURES.users.label}
+      />
+      <div className="space-y-4">
+        {loadError && (
+          <ContentState
+            action={
+              <Button
+                disabled={isLoading || isRefreshing}
+                onClick={() => {
+                  navigation.preparePageChange();
+                  retryRequestedRef.current = true;
+                  void fetchUsers(
+                    currentPage,
+                    debouncedSearch,
+                    filterStatus,
+                    filterRole,
+                    sortBy,
+                  );
+                }}
+                ref={retryActionRef}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                Réessayer
+              </Button>
             }
-            description="Gérez les comptes et leurs accès."
-            icon={<Users aria-hidden="true" />}
-            title={FEATURES.users.label}
+            description={
+              lastSuccessfulLoadAt
+                ? `Les dernières données fiables, actualisées à ${lastSuccessfulLoadAt.toLocaleTimeString(
+                    'fr-FR',
+                    {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    },
+                  )}, restent affichées.`
+                : undefined
+            }
+            kind="error"
+            title={loadError}
           />
-        }
-      >
-        <div className="space-y-4">
-          {loadError && (
-            <ContentState
-              action={
-                <Button
-                  disabled={isLoading || isRefreshing}
-                  onClick={() => {
-                    navigation.preparePageChange();
-                    retryRequestedRef.current = true;
-                    void fetchUsers(
-                      currentPage,
-                      debouncedSearch,
-                      filterStatus,
-                      filterRole,
-                      sortBy,
-                    );
-                  }}
-                  ref={retryActionRef}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  Réessayer
-                </Button>
-              }
-              description={
-                lastSuccessfulLoadAt
-                  ? `Les dernières données fiables, actualisées à ${lastSuccessfulLoadAt.toLocaleTimeString(
-                      'fr-FR',
-                      {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      },
-                    )}, restent affichées.`
-                  : undefined
-              }
-              kind="error"
-              title={loadError}
-            />
-          )}
-          <DataTableSection
-            className="border-border-content bg-surface-content rounded-[10px]"
-            headerClassName="bg-surface-content-header"
-            contentClassName={
-              isRefreshing ? 'opacity-60 transition-opacity' : undefined
-            }
-            toolbar={<UsersListToolbar list={list} />}
+        )}
+        <DataTableSection
+          className="border-border-content bg-surface-content rounded-[10px]"
+          headerClassName="bg-surface-content-header"
+          contentClassName={
+            isRefreshing ? 'opacity-60 transition-opacity' : undefined
+          }
+          toolbar={<UsersListToolbar list={list} />}
+        >
+          <div
+            ref={navigation.resultsRef}
+            tabIndex={-1}
+            aria-label="Résultats des utilisateurs"
+            aria-busy={isLoading || isRefreshing}
           >
-            <div
-              ref={navigation.resultsRef}
-              tabIndex={-1}
-              aria-label="Résultats des utilisateurs"
-              aria-busy={isLoading || isRefreshing}
-            >
-              {isLoading ? (
-                <div role="status" aria-label="Chargement" className="p-4">
-                  <Skeleton className="h-72 rounded-lg" />
-                </div>
-              ) : (
-                <>
-                  <UsersListResults
-                    displayedUsers={displayedUsers}
-                    currentUser={currentUser}
-                    canViewContact={canViewContact}
-                    securityDetailsVisible={securityDetailsVisible}
-                    loadError={loadError}
-                    hasActiveFilters={hasActiveFilters}
-                    clearFilters={clearFiltersAndFocus}
-                    getUserDetailHref={getUserDetailHref}
-                  />
-                </>
-              )}
-              <ListPagination
-                ariaLabel="Pagination des utilisateurs"
-                canNext={currentPage < totalPages}
-                canPrevious={currentPage > 1}
-                disabled={Boolean(loadError)}
-                isLoading={isLoading || isRefreshing}
-                onNext={() => {
-                  navigation.preparePageChange();
-                  changePage(Math.min(totalPages, currentPage + 1));
-                }}
-                onPrevious={() => {
-                  navigation.preparePageChange();
-                  changePage(Math.max(1, currentPage - 1));
-                }}
-                page={displayedPage}
-                totalPages={totalPages}
-              />
-            </div>
-          </DataTableSection>
-        </div>
-      </PageAsideLayout>
+            {isLoading ? (
+              <div role="status" aria-label="Chargement">
+                <UsersListRowsSkeleton />
+              </div>
+            ) : (
+              <>
+                <UsersListResults
+                  displayedUsers={displayedUsers}
+                  currentUser={currentUser}
+                  canViewContact={canViewContact}
+                  securityDetailsVisible={securityDetailsVisible}
+                  loadError={loadError}
+                  hasActiveFilters={hasActiveFilters}
+                  clearFilters={clearFiltersAndFocus}
+                  getUserDetailHref={getUserDetailHref}
+                />
+              </>
+            )}
+            <ListPagination
+              ariaLabel="Pagination des utilisateurs"
+              canNext={currentPage < totalPages}
+              canPrevious={currentPage > 1}
+              disabled={Boolean(loadError)}
+              isLoading={isLoading || isRefreshing}
+              onNext={() => {
+                navigation.preparePageChange();
+                changePage(Math.min(totalPages, currentPage + 1));
+              }}
+              onPrevious={() => {
+                navigation.preparePageChange();
+                changePage(Math.max(1, currentPage - 1));
+              }}
+              page={displayedPage}
+              totalPages={totalPages}
+            />
+          </div>
+        </DataTableSection>
+      </div>
     </div>
   );
 };

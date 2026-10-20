@@ -9,7 +9,7 @@ Relevé du 20 octobre 2026.
 
 | Famille | Volume | Emplacement | Commande |
 | --- | --- | --- | --- |
-| Tests web (Vitest, rendu serveur `renderToStaticMarkup`) | 113 fichiers `*.test.ts` | `apps/web/src/__tests__/` et quelques modules | `bun run test` ; un fichier : `bunx vitest run src/__tests__/<nom>.test.ts` depuis `apps/web` |
+| Tests web (Vitest, rendu serveur `renderToStaticMarkup`) | 114 fichiers `*.test.ts` | `apps/web/src/__tests__/` et quelques modules | `bun run test` ; un fichier : `bunx vitest run src/__tests__/<nom>.test.ts` depuis `apps/web` |
 | Tests SQL sur PostgreSQL jetable | 11 fichiers `*-postgres.test.ts` (inclus ci-dessus) | `apps/web/src/__tests__/` | Ignorés (`describe.skipIf`) tant que leur variable `<MODULE>_TEST_DATABASE_URL` n’est pas définie ; variables déclarées dans [turbo.json](../../turbo.json) |
 | Tests de la base | 5 fichiers (`node --test`) | `packages/database/test/` : format, signature et chiffrement des sauvegardes, stockage de l’actualité interne, plan de performance | `bun --cwd packages/database run test` |
 | Parcours navigateur Playwright | `admin-smoke.spec.ts` et ses contrôles (création et fiche utilisateur, paramètres) | `apps/web/e2e/` | `bun run test:e2e` (build de production, base dont le nom contient `e2e` ou `test`) |

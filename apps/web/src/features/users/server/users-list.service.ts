@@ -71,32 +71,61 @@ const userOrder = (sort: UserListSort, protectedFirst: boolean): Prisma.Sql => {
   return Prisma.sql`${first}${order}`;
 };
 
+const roleCondition = (role: NonNullable<UserListInput['role']>): Prisma.Sql =>
+  role === 'SUPERADMIN'
+    ? Prisma.sql`"isProtected" = true`
+    : Prisma.sql`"role"::text = ${role} AND "isProtected" = false`;
+
+const statusCondition = (
+  status: UserListStatus,
+  visibility: UserListVisibility,
+): Prisma.Sql => {
+  if (status === 'active') return Prisma.sql`"isActive" = true`;
+  if (status === 'inactive') return Prisma.sql`"isActive" = false`;
+
+  // A delegated viewer never counts nor lists the protected root as pending.
+  return visibility.isProtected
+    ? Prisma.sql`"mustChangePassword" = true`
+    : Prisma.sql`"mustChangePassword" = true AND "isProtected" = false`;
+};
+
+/**
+ * Criteria shared by the page and its counters. Role and status stay apart so
+ * each facet can be counted under the other one, the search and the scope.
+ */
+const buildUserFilters = (
+  input: UserListInput,
+  visibility: UserListVisibility,
+): {
+  base: Prisma.Sql[];
+  role: Prisma.Sql | null;
+  status: Prisma.Sql | null;
+} => {
+  const base = [Prisma.sql`"deletedAt" IS NULL`];
+  if (input.loginName !== undefined) {
+    base.push(Prisma.sql`"loginName" = ${input.loginName}`);
+    if (!visibility.isProtected) base.push(Prisma.sql`"isProtected" = false`);
+  }
+  if (input.search)
+    base.push(buildUserSearchPredicate(input.search, visibility));
+
+  return {
+    base,
+    role: input.role ? roleCondition(input.role) : null,
+    status: input.status ? statusCondition(input.status, visibility) : null,
+  };
+};
+
 export const buildUsersPageQuery = (
   input: UserListInput,
   visibility: UserListVisibility,
 ): Prisma.Sql => {
-  const filters = [Prisma.sql`"deletedAt" IS NULL`];
-  if (input.loginName !== undefined) {
-    filters.push(Prisma.sql`"loginName" = ${input.loginName}`);
-    if (!visibility.isProtected)
-      filters.push(Prisma.sql`"isProtected" = false`);
-  }
-  if (input.search)
-    filters.push(buildUserSearchPredicate(input.search, visibility));
-  if (input.role === 'SUPERADMIN')
-    filters.push(Prisma.sql`"isProtected" = true`);
-  else if (input.role)
-    filters.push(
-      Prisma.sql`"role"::text = ${input.role} AND "isProtected" = false`,
-    );
-  if (input.status === 'active') filters.push(Prisma.sql`"isActive" = true`);
-  else if (input.status === 'inactive')
-    filters.push(Prisma.sql`"isActive" = false`);
-  else if (input.status === 'pending') {
-    filters.push(Prisma.sql`"mustChangePassword" = true`);
-    if (!visibility.isProtected)
-      filters.push(Prisma.sql`"isProtected" = false`);
-  }
+  const { base, role, status } = buildUserFilters(input, visibility);
+  const filters = [
+    ...base,
+    ...(role ? [role] : []),
+    ...(status ? [status] : []),
+  ];
   const order = userOrder(input.sort, !visibility.isProtected);
 
   // Total and page share one statement snapshot. Matching identities stay in
@@ -120,23 +149,34 @@ export const buildUsersPageQuery = (
   `;
 };
 
+/**
+ * Faceted counters of the quick filters: each status count applies the search
+ * and the selected role, each role count the search and the selected status,
+ * so every number equals the result its filter would show.
+ */
 export const buildUsersStatsQuery = (
+  input: UserListInput,
   visibility: UserListVisibility,
-): Prisma.Sql =>
-  Prisma.sql`
-    SELECT COUNT(*)::integer AS total,
-      COUNT(*) FILTER (WHERE "isActive")::integer AS active,
-      COUNT(*) FILTER (WHERE NOT "isActive")::integer AS inactive,
-      COUNT(*) FILTER (WHERE "isProtected")::integer AS protected,
-      COUNT(*) FILTER (WHERE "role" = 'ADMIN' AND NOT "isProtected")::integer AS admins,
-      COUNT(*) FILTER (WHERE "role" = 'USER' AND NOT "isProtected")::integer AS users,
+): Prisma.Sql => {
+  const { base, role, status } = buildUserFilters(input, visibility);
+  const count = (condition: Prisma.Sql, facet: Prisma.Sql | null): Prisma.Sql =>
+    Prisma.sql`COUNT(*) FILTER (WHERE ${condition}${facet ? Prisma.sql` AND ${facet}` : Prisma.empty})::integer`;
+
+  return Prisma.sql`
+    SELECT ${count(Prisma.sql`true`, role)} AS total,
+      ${count(statusCondition('active', visibility), role)} AS active,
+      ${count(statusCondition('inactive', visibility), role)} AS inactive,
+      ${count(roleCondition('SUPERADMIN'), status)} AS protected,
+      ${count(roleCondition('ADMIN'), status)} AS admins,
+      ${count(roleCondition('USER'), status)} AS users,
       ${
         visibility.canViewSecurity
-          ? Prisma.sql`COUNT(*) FILTER (WHERE "mustChangePassword"${visibility.isProtected ? Prisma.empty : Prisma.sql` AND NOT "isProtected"`})::integer`
+          ? count(statusCondition('pending', visibility), role)
           : Prisma.sql`NULL::integer`
       } AS "pendingPasswordChange"
-    FROM "User" WHERE "deletedAt" IS NULL
+    FROM "User" WHERE ${Prisma.join(base, ' AND ')}
   `;
+};
 
 export const listUsers = async (
   input: UserListInput,
@@ -148,7 +188,7 @@ export const listUsers = async (
 }> => {
   const [rows, statRows] = await Promise.all([
     prisma.$queryRaw<UserListRow[]>(buildUsersPageQuery(input, visibility)),
-    prisma.$queryRaw<UserStatsRow[]>(buildUsersStatsQuery(visibility)),
+    prisma.$queryRaw<UserStatsRow[]>(buildUsersStatsQuery(input, visibility)),
   ]);
   const stats = statRows[0];
   if (!stats) throw new Error('Missing users aggregate row');

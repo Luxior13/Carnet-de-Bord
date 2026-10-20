@@ -9,7 +9,7 @@
 | Route | `/systeme/utilisateurs` |
 | Espace | Système |
 | Gabarit visé | [A. Liste de gestion](../../../design/gabarits.md#a-liste-de-gestion) |
-| État d’harmonisation | Page de référence, complément du Répertoire (validée le 17 octobre 2026) — voir [Harmonisation](../../../design/harmonisation.md#état-par-page) |
+| État d’harmonisation | Page de référence, complément du Répertoire (validée le 17 octobre 2026), alignée le 20 octobre 2026 sur les filtres rapides — voir [Harmonisation](../../../design/harmonisation.md#état-par-page) |
 | Point d’entrée | [page.tsx](../../../../apps/web/src/app/systeme/utilisateurs/page.tsx) → [UsersListPage](../../../../apps/web/src/features/users/UsersListPage.tsx) |
 | Contrôle d’accès | `users:view` (page et `GET /api/users`) ; colonnes contact `users:view_contact`, sécurité `users:view_security` ; création `users:create` |
 | Chargement / erreur dédiés | oui, `UsersDirectorySkeleton` / commune à l’application |
@@ -24,13 +24,18 @@ non autorisée, et le retour de fiche retrouve le contexte de la liste.
 ## Composition actuelle
 
 - Bandeau `PageIdentityHero` avec description et action « Nouvel utilisateur ».
-- Synthèse globale (compteurs Superadmin, Administrateurs, Utilisateurs, états)
-  en rail à partir de 118 rem, en grille compacte au-dessus de la liste sinon ;
-  chaque compteur ouvre son sous-ensemble exact.
-- `DataTableSection` et `directory.module.css` : `ListSearchField`, filtres
-  état et rôle en variante compacte, filtres actifs retirables, tableau puis
-  cartes selon la largeur et les colonnes autorisées, `ListPagination` (25 lignes).
-- États : squelette, vide, erreur avec reprise, accès refusé.
+- `DataTableSection` et `directory.module.css` : `ListSearchField` à
+  gauche ; à droite, réinitialisation (place réservée quand elle est masquée,
+  sauf sous 640 px) puis tri, qui affleure le bord droit.
+- En dessous, deux groupes de filtres rapides (`$ui/quick-filter`), chacun
+  précédé de son libellé : « État » (Tous, Actifs, Désactivés, Mot de passe à
+  changer) et « Rôle » (Superadmin, Administrateurs, Utilisateurs), nommés
+  « Filtrer par état » et « Filtrer par rôle » pour les lecteurs d’écran ;
+  nombre de comptes trouvés à droite.
+- Plus de carte de synthèse ni de rail (20 octobre 2026) ; tableau puis cartes
+  selon la largeur et les colonnes autorisées, `ListPagination` (25 lignes).
+- États : squelette, lignes en attente pendant un chargement, vide, erreur avec
+  reprise, accès refusé.
 
 ## Décisions retenues
 
@@ -45,6 +50,18 @@ Décisions détaillées dans [Décisions courantes](#décisions-courantes) ; en 
   les colonnes autorisées (48, 52, 56 ou 64 rem).
 - Retour de fiche : critères, page, position et lien focalisé restaurés par un
   instantané d’onglet limité à 30 minutes et lié au compte et aux droits.
+- Filtres rapides (20 octobre 2026, standard des listes validé sur le
+  Répertoire) : l’état garde « Tous » et un seul choix ; chaque rôle est un
+  interrupteur, un second appui le retire. Les deux se combinent avec la
+  recherche, qui reste appliquée. Compteurs à facettes, toujours affichés :
+  chaque état compte avec la recherche et le rôle choisi, chaque rôle avec la
+  recherche et l’état choisi (`buildUsersStatsQuery`). « Mot de passe à
+  changer » reste réservé à `users:view_security`.
+- Le champ dit ce qu’il cherche : « Nom, identifiant ou email… » ou « Nom ou
+  identifiant… » selon `users:view_contact`, avec le même nom accessible.
+- Plus d’étiquettes de filtres actifs ni de mention « 25 par page » : le bouton
+  enfoncé, le champ et la pagination portent déjà ces informations.
+- Focus : un seul anneau, celui de la ligne quand son lien a le focus clavier.
 
 ## Points ouverts
 
@@ -52,6 +69,12 @@ Registre complet : [Registre des points et déclencheurs](#registre-des-points-e
 
 | ID | Nature / priorité | État | Point et prochaine vérification |
 | --- | --- | --- | --- |
+| USR-26 | Composition, P2 | Clos | Carte « Vue d’ensemble » (environ 180 px) et menus État et Rôle remplacés par deux groupes de filtres rapides ([HARMO-06](../../../design/harmonisation.md#constats)) |
+| USR-27 | Harmonisation, P2 | Clos | Étiquettes de filtres actifs (recherche, état, rôle) retirées : redondantes avec le champ et les boutons enfoncés |
+| USR-28 | Composition, P3 | Clos | Tri décalé du bord droit par la place réservée à la réinitialisation ; mention « 25 par page » retirée (`pageSize` supprimé du contrôleur) |
+| USR-29 | Libellés, P3 | Clos | Champ « Rechercher… » dont le périmètre n’était donné que par une infobulle `title` ; texte d’exemple et nom accessible explicites |
+| USR-30 | Accessibilité, P2 | Clos | Anneau de ligne aussi au clic souris (`focus-within`) ; désormais au seul focus clavier du lien ; tailles `text-[11px]` / `text-[13px]` normalisées |
+| USR-31 | États, P3 | Clos | Chargement des résultats en bloc unique ; lignes `UsersListRowsSkeleton` partagées avec le squelette de page |
 | USR-04 | Capacité | Ouvert, conditionnel | Revoir curseur ou taille de page si 1 000 pages deviennent nécessaires |
 | USR-05 | Accessibilité | À vérifier | Lecteur d’écran, appareils réels et zoom natif |
 | USR-06 | Compatibilité | À vérifier | Graisses dans WebKit, à comparer dans Safari réel |
@@ -63,18 +86,66 @@ Registre complet : [Registre des points et déclencheurs](#registre-des-points-e
 - [Page Utilisateurs](../../../domaines/permissions.md#page-utilisateurs) et fiche [Permissions](../../../references/permissions.md)
 - [Listes, recherche, filtres et pagination](../../../references/listes-recherche.md)
 - Audits : [26 septembre 2026](../../../audits/2026-09-26-ui-utilisateurs.md), [10 octobre 2026](../../../audits/2026-10-10-utilisateurs.md), [11 octobre 2026](../../../audits/2026-10-11-utilisateurs.md)
+- Banc client de la reprise : [20 octobre 2026](../../../audits/utilisateurs-2026-10-20/banc-client/README.md)
 
 ## Historique
 
 - 26 septembre 2026 : suivi amorcé avec la passe de clôture de la liste.
 - 10 et 11 octobre 2026 : alignement sur le Répertoire, puis revue approfondie.
 - 19 octobre 2026 : fiche propre à la liste, créée par découpage du suivi du module.
+- 20 octobre 2026 : reprise en profondeur, alignement sur les filtres rapides
+  du Répertoire (HARMO-06), USR-26 à USR-31 clos.
 
 ## Revues datées
 
 Sections déplacées le 19 octobre 2026 depuis l’ancien suivi du module, sans
 modification de leur contenu. Elles conservent leur date, leur portée et leurs
 preuves ; la synthèse ci-dessus porte l’état courant.
+
+### Reprise en profondeur — 20 octobre 2026
+
+Deuxième page de la reprise générale, après la liste du Répertoire, à la
+demande du propriétaire (« on passe à la prochaine page », « passe à cette
+page »). Le standard des listes validé le même jour sur le Répertoire s’applique
+par défaut aux pages du même gabarit : la correction attendue était déjà
+consignée (HARMO-06).
+
+- **Avant** : banc du 11 octobre rejoué sur le code de départ, 42 scénarios sur
+  42 ; captures [390 px](../../../audits/utilisateurs-2026-10-20/banc-client/avant-users-390.png)
+  et [1 440 px](../../../audits/utilisateurs-2026-10-20/banc-client/avant-users-1440.png).
+- **Constats** : USR-26 à USR-31 ci-dessus.
+- **Rôle en filtres rapides** : choisi pour garder ses compteurs, visibles
+  jusqu’ici dans la synthèse ; confirmé par le propriétaire
+  ([PREF-Q2](../../../design/preferences.md#questions-tranchées)).
+- **Revue du rendu réel** : sur demande d’avis du propriétaire, deux défauts
+  relevés dans la ligne de filtres : « Tous » enfoncé semblait contredire un
+  rôle enfoncé, et l’état enfoncé se voyait mal. « Ok go » : libellé visible
+  devant chaque groupe à la place du filet, état enfoncé en bordure et texte
+  d’accent, sur les deux listes. Bancs rejoués en entier, 42 et 41 scénarios.
+- **Compteurs à facettes** : retour du propriétaire, « dès que je sélectionne,
+  les compteurs s’enlèvent et tout décale ». `GET /api/users` renvoie
+  désormais des `stats` à facettes au lieu de compteurs globaux ; la barre
+  les affiche toujours. Le banc vérifie qu’un bouton ne bouge pas quand on
+  retire un rôle (42 sur 42). Attentes de `users-list-postgres.test.ts`
+  étendues aux facettes, **non exécutées** faute de PostgreSQL local (corrigé à
+  vérifier).
+- **Livré** : `UsersListToolbar` (deux groupes, tri au bord droit, champ
+  explicite), `UsersListPage` sans `PageAsideLayout`, `UsersOverview` et ses
+  styles supprimés, `UsersListResults` (anneau, tailles), squelettes alignés,
+  `pageSize` retiré de `useUsersList`. Le bouton de filtre rapide devient le
+  composant partagé `$ui/quick-filter`, adopté aussi par le Répertoire.
+  Règle `overviewMetric` morte retirée de `directory.module.css`.
+- **Régression corrigée au passage** : depuis le déplacement de la
+  réinitialisation avant le tri (même jour), la place réservée décalait le menu
+  de tri vers la droite sous 640 px, sur les deux listes. Elle n’est plus
+  réservée sur téléphone.
+- **Vérifié** : types, lint, format, budget d’architecture, Vitest complet avec
+  le nouveau `users-list-toolbar.test.ts` (compteurs, interrupteurs, droits) et
+  le contrat d’accessibilité mis à jour ;
+  [banc client](../../../audits/utilisateurs-2026-10-20/banc-client/README.md)
+  42 scénarios sur 42, et banc du Répertoire rejoué, 41 sur 41.
+- **Non vérifié** : session, hydratation Next et PostgreSQL réels (aucun
+  changement serveur), lecteur d’écran réel, rendu sur le serveur de dev.
 
 ### Revue approfondie — 11 octobre 2026
 
@@ -133,12 +204,14 @@ de charge et de mutations hors périmètre restent explicites dans le rapport.
   les primitives partagées de tableau/cartes et leurs alternances restent utilisées.
 - Synthèse globale compacte en grille lorsqu'elle est empilée, rail vertical
   à partir de 118 rem. Ses liens ouvrent un sous-ensemble exact en effaçant
-  les autres filtres et la page, tout en conservant le tri.
+  les autres filtres et la page, tout en conservant le tri. **Remplacé le
+  20 octobre 2026** par les filtres rapides, qui se combinent.
 - Trois ensembles d'accès exclusifs : Superadmin (`isProtected`),
   Administrateur (ADMIN non protégé), Utilisateur (USER non protégé).
   Le filtre `role=SUPERADMIN` est une catégorie de liste, pas un nouveau rôle
   persistant ni une nouvelle permission.
-- Filtres actifs de recherche, état et rôle effaçables individuellement.
+- Filtres actifs de recherche, état et rôle effaçables individuellement
+  (**remplacé le 20 octobre 2026** : boutons enfoncés et champ de recherche).
   Après pagination, défilement et focus reviennent au début des résultats.
   Le retour d'une fiche ou de Mon compte retrouve critères, page, position et
   lien focalisé. Un seul instantané de navigation par onglet, valide 30 minutes,

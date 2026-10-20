@@ -21,7 +21,7 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 
 | Sujet | Règle retenue | Portée | Fichier propriétaire |
 | --- | --- | --- | --- |
-| Compteurs d’une liste | Pas de carte de synthèse : les compteurs sont des filtres rapides à bascule sous la recherche, qui remplacent le menu de statut ; un compteur ne s’affiche que s’il égale le résultat annoncé ; le bouton enfoncé tient lieu de filtre actif | Listes de gestion (gabarit A) | [Comportements](comportements.md#listes-recherche-et-pagination), [Gabarit A](gabarits.md#a-liste-de-gestion) |
+| Compteurs d’une liste | Pas de carte de synthèse : les compteurs sont des filtres rapides à bascule sous la recherche, qui remplacent les menus de filtre, rôle compris ; un groupe par dimension, précédé d’un libellé visible (« État », « Rôle ») ; bouton enfoncé en bordure et texte d’accent ; compteurs à facettes toujours affichés, sans décalage de la ligne quand on sélectionne ; le bouton enfoncé tient lieu de filtre actif | Listes de gestion (gabarit A) | [Comportements](comportements.md#listes-recherche-et-pagination), [Gabarit A](gabarits.md#a-liste-de-gestion) |
 | Pastilles de statut | Composant commun `StatusBadge` ; une catégorie neutre (« Hors structure ») prend le ton `muted`, jamais une couleur d’alerte | Tout le site | [Fondations](fondations.md#variantes-autorisées) |
 | Cellules d’une liste | Pas de total qui répète un détail voisin ; indications de recherche en gris discret ; un seul anneau de focus par ligne | Listes de gestion | [Comportements](comportements.md#focus-et-états), [Liste du Répertoire](../pages/membres/repertoire/liste.md) |
 | Réglages répétés dans une fiche | Une carte par réglage (`surface-row-alternate`, `border-content`, rayon 8 px, 8 px d’écart), sans alternance ; rubriques en petites capitales suivies d’un filet ; aide dans un popover, jamais un dépliage ; conséquences critiques et blocages toujours visibles | Fiches à sections | [Gabarit B](gabarits.md#b-fiche-à-sections), [Utilisateur — Autorisations](../pages/systeme/utilisateurs/fiche-autorisations.md) |
@@ -52,6 +52,9 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 
 | Date | Contexte | Retour du propriétaire | Décision appliquée |
 | --- | --- | --- | --- |
+| 20 octobre 2026 | Filtres rapides des deux listes, rendu réel | « Dès que je sélectionne, les compteurs s’enlèvent et tout décale » | Compteurs à facettes calculés par le serveur (recherche et autres groupes appliqués) : toujours affichés, toujours justes, plus de décalage |
+| 20 octobre 2026 | Ligne de filtres rapides de la liste Utilisateurs, rendu réel | Demande un avis ; deux défauts relevés : « Tous » paraît contredire un rôle enfoncé, l’état enfoncé se voit mal. « Ok go » sur la recommandation | Libellé visible devant chaque groupe à la place du filet, état enfoncé en bordure et texte d’accent, sur les deux listes ; le rôle reste en filtres rapides (PREF-Q2 tranchée) |
+| 20 octobre 2026 | Liste du Répertoire, rendu réel sur le serveur de dev après correction de l’alignement du tri | « Moi je suis content » | Rendu validé : filtres rapides, pastilles, cellules allégées et tri au bord droit deviennent le standard des listes de gestion ([détail](../pages/membres/repertoire/liste.md#reprise-en-profondeur--20-octobre-2026)) |
 | 20 octobre 2026 | Liste du Répertoire, reprise en profondeur | « Ok go » sur toutes les recommandations (REP-21 à REP-28) | Synthèse remplacée par des filtres rapides avec compteurs ; « Hors structure » neutre ; coordonnées réduites au détail par type ; indication de recherche en gris ; un seul anneau de focus ; pastille commune `StatusBadge` ([détail](../pages/membres/repertoire/liste.md#reprise-en-profondeur--20-octobre-2026)) |
 | 18 octobre 2026 | Section Autorisations de la fiche utilisateur | Juge que la hiérarchie ne fait pas assez ressortir chaque ligne ; veut que l’icône d’aide ouvre un popover plutôt qu’un dépliage | Une carte par autorisation, rubriques en petites capitales avec filet, popover partagé ([détail](../pages/systeme/utilisateurs/fiche-autorisations.md#autorisations--une-carte-par-ligne-détails-en-popover--18-octobre-2026)) |
 | 18 octobre 2026 | Retour au rôle par ligne | « Ok go » sur le retrait | Bouton ↺ retiré ; choisir la valeur du rôle supprime déjà l’exception |
@@ -91,5 +94,8 @@ attendant, appliquer la colonne « Par défaut ».
 
 ## Questions tranchées
 
-Aucune pour l’instant. Une question tranchée garde son identifiant, la décision
-et sa date.
+Une question tranchée garde son identifiant, la décision et sa date.
+
+| ID | Question | Décision | Date |
+| --- | --- | --- | --- |
+| PREF-Q2 | Liste Utilisateurs : le rôle en filtres rapides ou en menu ? | Filtres rapides, avec un libellé « Rôle » devant le groupe pour lever l’ambiguïté de « Tous » ; le menu aurait perdu les compteurs par rôle | 20 octobre 2026 (« ok go ») |

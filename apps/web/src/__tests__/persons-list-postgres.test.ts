@@ -11,7 +11,7 @@ import {
   vi,
 } from 'vitest';
 
-const mocks = vi.hoisted(() => ({ count: vi.fn(), query: vi.fn() }));
+const mocks = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock('server-only', () => ({}));
 vi.mock('$env', () => ({
   env: {
@@ -19,7 +19,7 @@ vi.mock('$env', () => ({
   },
 }));
 vi.mock('$server/prisma', () => ({
-  prisma: { $queryRaw: mocks.query, person: { count: mocks.count } },
+  prisma: { $queryRaw: mocks.query },
 }));
 vi.mock('$features/persons/server/person-audit', () => ({
   createPersonAudit: vi.fn(),
@@ -74,9 +74,6 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
     await db.$executeRaw`CREATE TABLE "AuditLog" ("id" text, "userId" text, "entityType" text, "entityId" text,
       "createdAt" timestamp(3), "actorDisplayNameSnapshot" text, "actorLoginNameSnapshot" text)`;
     mocks.query.mockImplementation((query: Prisma.Sql) => db.$queryRaw(query));
-    mocks.count.mockImplementation((args: Prisma.PersonCountArgs) =>
-      db.person.count(args),
-    );
   });
 
   afterAll(async () => {
@@ -217,11 +214,13 @@ describe.skipIf(!target)('directory pagination on PostgreSQL', () => {
     expect(first.pagination.total).toBe(57);
     expect(next.pagination.total).toBe(57);
     expect(first.items[0]?.id).toBe('person-004');
+    // Faceted: statuses keep the missing-contact filter (person-001 and -002
+    // are in the structure, -003 outside); the missing count keeps « Tous ».
     expect(first.overview).toEqual({
-      inStructure: 40,
+      inStructure: 38,
       noContacts: 57,
-      outsideStructure: 20,
-      total: 60,
+      outsideStructure: 19,
+      total: 57,
     });
     const outside = await listPersons(
       {

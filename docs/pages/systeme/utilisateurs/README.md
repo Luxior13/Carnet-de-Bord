@@ -25,6 +25,8 @@ L’alias `/administration` redirige vers la liste ; les anciennes adresses
   `users:create` pour la création. Chaque section de la fiche est filtrée par
   [useUserDetailCapabilities](../../../../apps/web/src/components/users/user-detail/useUserDetailCapabilities.ts) ;
   le serveur contrôle chaque route. Référence : [page Utilisateurs](../../../domaines/permissions.md#page-utilisateurs).
+- **Liste** : filtres rapides d’état et de rôle, sans carte de synthèse depuis
+  le 20 octobre 2026 ([fiche de la liste](liste.md)).
 - **Cadre de la fiche** : [UserDetailPage](../../../../apps/web/src/components/users/UserDetailPage.tsx) compose
   `PageIdentityHero` compact, la synthèse `UserOverviewCard` dans `PageAsideLayout`
   (rail à partir de 118 rem), `PageSectionNavigation` et des sections chargées à la

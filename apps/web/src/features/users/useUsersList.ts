@@ -387,7 +387,6 @@ export const useUsersList = (): UsersListController => {
   const hasTruncatedPagination =
     (visiblePagination?.totalPages ?? 0) > PAGINATION.MAX_PAGE;
   const totalFiltered = visiblePagination?.total ?? displayedUsers.length;
-  const pageSize = visiblePagination?.limit ?? PAGINATION.DEFAULT_LIMIT;
   const changePage = (page: number): void => {
     if (isLoading || isRefreshing || loadError || !hasMatchingResponse) return;
     const nextPage = Math.min(totalPages, normalizePage(String(page)));
@@ -420,7 +419,6 @@ export const useUsersList = (): UsersListController => {
       (hasMatchingFilters && !hasMatchingResponse && !loadError),
     lastSuccessfulLoadAt: hasMatchingFilters ? lastSuccessfulLoadAt : null,
     loadError,
-    pageSize,
     pagination: visiblePagination,
     searchQuery,
     securityDetailsVisible,
@@ -461,7 +459,6 @@ export type UsersListController = {
   isRefreshing: boolean;
   lastSuccessfulLoadAt: Date | null;
   loadError: string | null;
-  pageSize: number;
   pagination: PaginationInfo | null;
   searchQuery: string;
   securityDetailsVisible: boolean;

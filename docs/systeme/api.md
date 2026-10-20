@@ -36,7 +36,7 @@ ce relevé n’est pas une revue de sécurité.
 
 | Route | Méthodes | Protections relevées |
 | --- | --- | --- |
-| `/api/personnes` | GET, POST | `persons:view` ; POST `persons:create` |
+| `/api/personnes` | GET, POST | `persons:view` ; POST `persons:create`. GET renvoie `overview`, compteurs à facettes des filtres rapides (20 octobre 2026) |
 | `/api/personnes/[id]` | GET, PATCH, DELETE | `persons:view`, `persons:update`, `persons:delete` |
 | `/api/personnes/[id]/historique-champ` | GET | `persons:view` et `audit:view_field_history` |
 | `/api/personnes/[id]/emails` | POST | `persons:update_contact` |
@@ -52,7 +52,7 @@ Toutes ces routes répondent avec `withPrivateNoStore`.
 
 | Route | Méthodes | Protections relevées |
 | --- | --- | --- |
-| `/api/users` | GET, POST | `users:view`, colonnes `users:view_contact` / `users:view_security` ; POST `users:create`, `users:update_contact`, preuve récente |
+| `/api/users` | GET, POST | `users:view`, colonnes `users:view_contact` / `users:view_security` ; POST `users:create`, `users:update_contact`, preuve récente. GET renvoie `stats`, compteurs à facettes des filtres rapides (20 octobre 2026) |
 | `/api/users/[id]` | GET, PATCH, DELETE | `users:view`, `users:update_profile`, `users:update_login`, `users:update_contact`, `users:update_status`, `users:delete_account`, preuves récentes |
 | `/api/users/[id]/sessions` | GET, DELETE | `users:view_sessions`, `users:revoke_sessions`, preuve récente |
 | `/api/users/[id]/reset-password` | POST | `users:reset_password`, preuve récente |

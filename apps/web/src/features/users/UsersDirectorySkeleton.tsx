@@ -4,6 +4,24 @@ import React, { type FC } from 'react';
 
 import { Skeleton } from '$ui/skeleton';
 
+/** Lignes de comptes en attente, partagées par la page et ses résultats. */
+export const UsersListRowsSkeleton: FC = () => (
+  <div aria-hidden="true" className="divide-border-divider divide-y">
+    {[...Array(6)].map((_, index) => (
+      <div className="flex items-center gap-2.5 px-4 py-3" key={index}>
+        <Skeleton className="bg-surface-table-head size-9 shrink-0 rounded-[7px]" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="bg-surface-table-head h-[13px] w-40 max-w-full rounded-sm" />
+          <Skeleton className="bg-surface-table-head h-[10px] w-24 max-w-full rounded-sm" />
+        </div>
+        <Skeleton className="bg-surface-table-head hidden h-5 w-24 rounded-full sm:block" />
+        <Skeleton className="bg-surface-table-head hidden h-5 w-20 rounded-full md:block" />
+        <Skeleton className="bg-surface-table-head hidden h-4 w-24 rounded-sm lg:block" />
+      </div>
+    ))}
+  </div>
+);
+
 /**
  * Squelette de la liste des comptes, aligné sur la page de référence
  * `/membres/repertoire` : bandeau dégradé et carte de liste avec des lignes
@@ -32,26 +50,21 @@ export const UsersDirectorySkeleton: FC = () => (
       role="status"
     >
       <div className="bg-surface-content-header p-4">
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Skeleton className="bg-surface-table-head h-[38px] min-w-[180px] flex-1 rounded-md" />
-          <Skeleton className="bg-surface-table-head hidden h-[38px] w-[170px] rounded-md sm:block" />
-          <Skeleton className="bg-surface-table-head hidden h-[38px] w-[170px] rounded-md sm:block" />
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <Skeleton className="bg-surface-table-head h-[38px] w-[320px] max-w-full rounded-md" />
+          <Skeleton className="bg-surface-table-head h-[38px] w-full rounded-md sm:w-[220px]" />
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {[56, 74, 100, 104, 128, 104].map((width, index) => (
+            <Skeleton
+              className="bg-surface-table-head h-11 rounded-md sm:h-[30px]"
+              key={index}
+              style={{ width }}
+            />
+          ))}
         </div>
       </div>
-      <div aria-hidden="true" className="divide-border-divider divide-y">
-        {[...Array(6)].map((_, index) => (
-          <div className="flex items-center gap-2.5 px-4 py-3" key={index}>
-            <Skeleton className="bg-surface-table-head size-9 shrink-0 rounded-[7px]" />
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton className="bg-surface-table-head h-[13px] w-40 max-w-full rounded-sm" />
-              <Skeleton className="bg-surface-table-head h-[10px] w-24 max-w-full rounded-sm" />
-            </div>
-            <Skeleton className="bg-surface-table-head hidden h-5 w-24 rounded-full sm:block" />
-            <Skeleton className="bg-surface-table-head hidden h-5 w-20 rounded-full md:block" />
-            <Skeleton className="bg-surface-table-head hidden h-4 w-24 rounded-sm lg:block" />
-          </div>
-        ))}
-      </div>
+      <UsersListRowsSkeleton />
     </div>
   </>
 );

@@ -143,16 +143,56 @@ describe.skipIf(!target)('users identity search on PostgreSQL', () => {
       },
     );
 
-  it('returns the global visible statistics with exclusive access categories', async () => {
-    const result = await page({ search: 'no-result' });
-    expect(result.users).toEqual([]);
-    expect(result.total).toBe(0);
+  it('returns the visible statistics with exclusive access categories', async () => {
+    const result = await page();
     expect(result.stats).toEqual({
       active: 3,
       byRole: { ADMIN: 1, SUPERADMIN: 1, USER: 2 },
       inactive: 1,
       pendingPasswordChange: null,
       total: 4,
+    });
+  });
+
+  it('counts each facet under the search and the other dimension', async () => {
+    const empty = await page({ search: 'no-result' });
+    expect(empty.users).toEqual([]);
+    expect(empty.total).toBe(0);
+    expect(empty.stats).toEqual({
+      active: 0,
+      byRole: { ADMIN: 0, SUPERADMIN: 0, USER: 0 },
+      inactive: 0,
+      pendingPasswordChange: null,
+      total: 0,
+    });
+    // Status counts follow the selected role; role counts ignore it.
+    const admins = await page({ role: 'ADMIN' });
+    expect(admins.total).toBe(1);
+    expect(admins.stats).toEqual({
+      active: 0,
+      byRole: { ADMIN: 1, SUPERADMIN: 1, USER: 2 },
+      inactive: 1,
+      pendingPasswordChange: null,
+      total: 1,
+    });
+    // Role counts follow the selected status; status counts ignore it.
+    const active = await page({ status: 'active' });
+    expect(active.total).toBe(3);
+    expect(active.stats).toEqual({
+      active: 3,
+      byRole: { ADMIN: 0, SUPERADMIN: 1, USER: 2 },
+      inactive: 1,
+      pendingPasswordChange: null,
+      total: 4,
+    });
+    const martin = await page({ search: 'Martin' });
+    expect(martin.users.map((user) => user.id)).toEqual(['elodie']);
+    expect(martin.stats).toEqual({
+      active: 1,
+      byRole: { ADMIN: 0, SUPERADMIN: 0, USER: 1 },
+      inactive: 0,
+      pendingPasswordChange: null,
+      total: 1,
     });
   });
 

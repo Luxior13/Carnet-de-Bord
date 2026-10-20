@@ -15,7 +15,7 @@ aucune correction du code produit dans cette passe.**
   passe. Les corrections documentaires précédentes sont déjà dans ce commit.
 - Sources : [page](../../apps/web/src/app/systeme/utilisateurs/page.tsx),
   [liste](../../apps/web/src/features/users/UsersListPage.tsx),
-  [synthèse](../../apps/web/src/features/users/UsersOverview.tsx),
+  synthèse `UsersOverview.tsx` (fichier retiré le 20 octobre 2026),
   [GET](../../apps/web/src/app/api/users/route.ts),
   [projection de visibilité](../../apps/web/src/shared/server/user-visibility.ts),
   composants partagés, modèle User et tests du périmètre.

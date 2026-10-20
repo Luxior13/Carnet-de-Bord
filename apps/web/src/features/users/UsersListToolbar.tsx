@@ -1,6 +1,6 @@
 'use client';
 
-import { RotateCcw, X } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import React, { type FC, useRef } from 'react';
 
 import { PAGINATION } from '$constants/pagination.constants';
@@ -8,6 +8,7 @@ import { canSearchUserContact } from '$features/users/users-list.utils';
 import { Button } from '$ui/button';
 import directoryStyles from '$ui/directory.module.css';
 import { ListSearchField } from '$ui/list-search-field';
+import { QuickFilter, QuickFilterGroup } from '$ui/quick-filter';
 import {
   Select,
   SelectContent,
@@ -18,11 +19,16 @@ import {
 import { cn } from '$utils/css.utils';
 
 import {
+  type FilterRole,
+  type FilterStatus,
   getSortLabel,
   normalizeSearchQuery,
+  SORT_OPTIONS,
   USER_SEARCH_MAX_LENGTH,
 } from './users-list-state';
 import type { UsersListController } from './useUsersList';
+
+const ACCOUNT_NOUN = ['compte', 'comptes'] as const;
 
 export const UsersListToolbar: FC<{ list: UsersListController }> = ({
   list,
@@ -45,14 +51,62 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
     isLoading,
     isRefreshing,
     loadError,
-    pageSize,
     searchQuery,
     setCurrentPage,
     setDebouncedSearch,
     setSearchQuery,
     sortBy,
+    stats,
     totalFiltered,
   } = list;
+  const canSearchContact = Boolean(
+    currentUser && canSearchUserContact(currentUser),
+  );
+  // Faceted counts: the server applies the search and the other dimension to
+  // each one, so they stay visible and always equal the result they announce.
+  const statusFilters: ReadonlyArray<{
+    count: number | null;
+    label: string;
+    value: FilterStatus;
+  }> = [
+    { count: stats?.total ?? null, label: 'Tous', value: 'all' },
+    { count: stats?.active ?? null, label: 'Actifs', value: 'active' },
+    {
+      count: stats?.inactive ?? null,
+      label: 'Désactivés',
+      value: 'inactive',
+    },
+    ...(canRequestSecurityDetails
+      ? [
+          {
+            count: stats?.pendingPasswordChange ?? null,
+            label: 'Mot de passe à changer',
+            value: 'pending' as const,
+          },
+        ]
+      : []),
+  ];
+  const roleFilters: ReadonlyArray<{
+    count: number | null;
+    label: string;
+    value: Exclude<FilterRole, 'all'>;
+  }> = [
+    {
+      count: stats?.byRole.SUPERADMIN ?? null,
+      label: 'Superadmin',
+      value: 'SUPERADMIN',
+    },
+    {
+      count: stats?.byRole.ADMIN ?? null,
+      label: 'Administrateurs',
+      value: 'ADMIN',
+    },
+    {
+      count: stats?.byRole.USER ?? null,
+      label: 'Utilisateurs',
+      value: 'USER',
+    },
+  ];
 
   return (
     <div className="w-full" ref={toolbarRef}>
@@ -68,7 +122,11 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
         role="search"
       >
         <ListSearchField
-          ariaLabel="Rechercher un compte utilisateur"
+          ariaLabel={
+            canSearchContact
+              ? 'Rechercher par nom, identifiant ou email'
+              : 'Rechercher par nom ou identifiant'
+          }
           maxLength={USER_SEARCH_MAX_LENGTH}
           onClear={() => {
             setSearchQuery('');
@@ -76,56 +134,36 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
             setCurrentPage(1);
           }}
           onValueChange={setSearchQuery}
-          placeholder="Rechercher…"
-          title={
-            currentUser && canSearchUserContact(currentUser)
-              ? 'Nom, identifiant ou email'
-              : 'Nom ou identifiant'
+          placeholder={
+            canSearchContact
+              ? 'Nom, identifiant ou email…'
+              : 'Nom ou identifiant…'
           }
           value={searchQuery}
         />
         <div className={directoryStyles.filterSelects}>
-          <Select
-            value={filterStatus}
-            onValueChange={(value) => handleFilterChange('status', value)}
+          {/* Reset sits before the sort menu so the menu stays flush right. */}
+          <Button
+            aria-hidden={!hasActiveFilters || undefined}
+            aria-label="Réinitialiser les filtres"
+            className={cn(
+              directoryStyles.iconButton,
+              !hasActiveFilters && 'pointer-events-none invisible',
+            )}
+            onClick={() => {
+              clearFilters();
+              focusSearch();
+            }}
+            size="icon"
+            tabIndex={hasActiveFilters ? undefined : -1}
+            type="button"
+            variant="ghost"
           >
-            <SelectTrigger
-              aria-label="Filtrer par état du compte"
-              className={directoryStyles.selectTrigger}
-              variant="compact"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent variant="compact">
-              <SelectItem value="all">Tous les états</SelectItem>
-              <SelectItem value="active">Actifs</SelectItem>
-              <SelectItem value="inactive">Désactivés</SelectItem>
-              {canRequestSecurityDetails && (
-                <SelectItem value="pending">Mot de passe à changer</SelectItem>
-              )}
-            </SelectContent>
-          </Select>
+            <RotateCcw aria-hidden="true" />
+          </Button>
           <Select
-            value={filterRole}
-            onValueChange={(value) => handleFilterChange('role', value)}
-          >
-            <SelectTrigger
-              aria-label="Filtrer par rôle"
-              className={directoryStyles.selectTrigger}
-              variant="compact"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent variant="compact">
-              <SelectItem value="all">Tous les rôles</SelectItem>
-              <SelectItem value="SUPERADMIN">Superadmin</SelectItem>
-              <SelectItem value="ADMIN">Administrateurs</SelectItem>
-              <SelectItem value="USER">Utilisateurs</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={sortBy}
             onValueChange={(value) => handleFilterChange('sort', value)}
+            value={sortBy}
           >
             <SelectTrigger
               aria-label="Trier les comptes utilisateurs"
@@ -135,111 +173,71 @@ export const UsersListToolbar: FC<{ list: UsersListController }> = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent variant="compact">
-              <SelectItem value="name">{getSortLabel('name')}</SelectItem>
-              <SelectItem value="recent">{getSortLabel('recent')}</SelectItem>
-              <SelectItem value="created">{getSortLabel('created')}</SelectItem>
+              {SORT_OPTIONS.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {getSortLabel(item)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          {hasActiveFilters ? (
-            <Button
-              aria-label="Réinitialiser les filtres"
-              className={directoryStyles.iconButton}
-              onClick={() => {
-                clearFilters();
-                focusSearch();
-              }}
-              size="icon"
-              type="button"
-              variant="ghost"
-            >
-              <RotateCcw aria-hidden="true" />
-            </Button>
-          ) : (
-            <span
-              aria-hidden="true"
-              className={cn(directoryStyles.iconButton, 'invisible')}
-            />
-          )}
         </div>
       </form>
-      {hasActiveFilters && (
-        <div aria-label="Filtres actifs" className="mt-3 flex flex-wrap gap-2">
-          {searchQuery && (
-            <Button
-              className="h-auto min-h-8 max-w-full gap-2 whitespace-normal"
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                setSearchQuery('');
-                setDebouncedSearch('');
-                setCurrentPage(1);
-                focusSearch();
-              }}
-              aria-label="Retirer le filtre de recherche"
-            >
-              <span className="truncate">Recherche : {searchQuery}</span>
-              <X aria-hidden="true" className="size-3 shrink-0" />
-            </Button>
-          )}
-          {filterStatus !== 'all' && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                handleFilterChange('status', 'all');
-                focusSearch();
-              }}
-              aria-label="Retirer le filtre d’état"
-            >
-              {filterStatus === 'active'
-                ? 'Actifs'
-                : filterStatus === 'inactive'
-                  ? 'Désactivés'
-                  : 'Mot de passe à changer'}
-              <X aria-hidden="true" className="size-3" />
-            </Button>
-          )}
-          {filterRole !== 'all' && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                handleFilterChange('role', 'all');
-                focusSearch();
-              }}
-              aria-label="Retirer le filtre de rôle"
-            >
-              {filterRole === 'SUPERADMIN'
-                ? 'Superadmin'
-                : filterRole === 'ADMIN'
-                  ? 'Administrateurs'
-                  : 'Utilisateurs'}
-              <X aria-hidden="true" className="size-3" />
-            </Button>
-          )}
+      <div className={directoryStyles.filterBar}>
+        <div className={directoryStyles.quickFilterSets}>
+          <QuickFilterGroup caption="État" label="Filtrer par état">
+            {statusFilters.map((filter) => (
+              <QuickFilter
+                count={filter.count}
+                key={filter.value}
+                label={filter.label}
+                noun={ACCOUNT_NOUN}
+                onClick={() => {
+                  if (filter.value !== filterStatus)
+                    handleFilterChange('status', filter.value);
+                }}
+                pressed={filter.value === filterStatus}
+              />
+            ))}
+          </QuickFilterGroup>
+          <QuickFilterGroup caption="Rôle" label="Filtrer par rôle">
+            {roleFilters.map((filter) => (
+              <QuickFilter
+                count={filter.count}
+                key={filter.value}
+                label={filter.label}
+                noun={ACCOUNT_NOUN}
+                onClick={() =>
+                  handleFilterChange(
+                    'role',
+                    filter.value === filterRole ? 'all' : filter.value,
+                  )
+                }
+                pressed={filter.value === filterRole}
+              />
+            ))}
+          </QuickFilterGroup>
         </div>
-      )}
-      <div className={cn(directoryStyles.listCaption, 'mt-3')}>
-        <p role="status" aria-live="polite">
-          {isLoading
-            ? 'Chargement…'
-            : isRefreshing
-              ? 'Actualisation…'
-              : loadError
-                ? 'Résultats non actualisés'
-                : `${totalFiltered.toLocaleString('fr-FR')} compte${totalFiltered !== 1 ? 's' : ''} trouvé${totalFiltered !== 1 ? 's' : ''}`}
-          {!isLoading &&
-            !isRefreshing &&
-            !loadError &&
-            hasTruncatedPagination && (
-              <>
-                . Affinez la recherche : seules les{' '}
-                {PAGINATION.MAX_PAGE.toLocaleString('fr-FR')} premières pages
-                sont accessibles.
-              </>
-            )}
-        </p>
-        <span>{pageSize} par page</span>
+        <div className={directoryStyles.listCaption}>
+          <p role="status" aria-live="polite">
+            {isLoading
+              ? 'Chargement…'
+              : isRefreshing
+                ? 'Actualisation…'
+                : loadError
+                  ? 'Résultats non actualisés'
+                  : `${totalFiltered.toLocaleString('fr-FR')} compte${totalFiltered !== 1 ? 's' : ''} trouvé${totalFiltered !== 1 ? 's' : ''}`}
+            {!isLoading &&
+              !isRefreshing &&
+              !loadError &&
+              hasTruncatedPagination && (
+                <>
+                  . Affinez la recherche : seules les{' '}
+                  {PAGINATION.MAX_PAGE.toLocaleString('fr-FR')} premières pages
+                  sont accessibles.
+                </>
+              )}
+          </p>
+        </div>
       </div>
     </div>
   );

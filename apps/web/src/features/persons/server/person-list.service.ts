@@ -28,6 +28,7 @@ type PersonListRow = {
   emailCount: number;
   firstName: string | null;
   id: string;
+  inStructureCount: number;
   lastModifiedByDisplayName: string | null;
   lastModifiedById: string | null;
   lastModifiedByLoginName: string | null;
@@ -35,6 +36,8 @@ type PersonListRow = {
   lastName: string | null;
   matchedByContact: boolean;
   nickname: string | null;
+  noContactsCount: number | null;
+  outsideStructureCount: number;
   phoneCount: number;
   socialProfileCount: number;
   sortName: string;
@@ -122,12 +125,25 @@ export const listPersons = async (
   const statusClause = input.structureStatus
     ? Prisma.sql`AND p."structureStatus" = ${input.structureStatus}::"PersonStructureStatus"`
     : Prisma.empty;
+  const noContactsCondition = Prisma.sql`NOT EXISTS (SELECT 1 FROM "PersonEmail" e WHERE e."personId" = p."id")
+        AND NOT EXISTS (SELECT 1 FROM "PersonPhone" ph WHERE ph."personId" = p."id")
+        AND NOT EXISTS (SELECT 1 FROM "PersonSocialProfile" sp WHERE sp."personId" = p."id")`;
   const contactsClause =
     input.contacts === 'missing'
-      ? Prisma.sql`AND NOT EXISTS (SELECT 1 FROM "PersonEmail" e WHERE e."personId" = p."id")
-        AND NOT EXISTS (SELECT 1 FROM "PersonPhone" ph WHERE ph."personId" = p."id")
-        AND NOT EXISTS (SELECT 1 FROM "PersonSocialProfile" sp WHERE sp."personId" = p."id")`
+      ? Prisma.sql`AND ${noContactsCondition}`
       : Prisma.empty;
+  // Faceted counters of the quick filters: a status count keeps the search and
+  // the missing-contact filter, the missing-contact count keeps the search and
+  // the status, so each number equals the result its filter would show.
+  const statusCount = (
+    status: 'IN_STRUCTURE' | 'OUTSIDE_STRUCTURE',
+  ): Prisma.Sql =>
+    Prisma.sql`COUNT(*) FILTER (
+      WHERE p."structureStatus" = ${status}::"PersonStructureStatus" ${contactsClause}
+    )::integer`;
+  const noContactsCount = canViewContact
+    ? Prisma.sql`COUNT(*) FILTER (WHERE ${noContactsCondition} ${statusClause})::integer`
+    : Prisma.sql`NULL::integer`;
   // Person stores UTC timestamps without a zone; Prisma binds Date parameters
   // as timestamptz. Convert the parameters, not the indexed columns.
   const snapshotClause =
@@ -164,17 +180,28 @@ export const listPersons = async (
   const queryRows = await prisma.$queryRaw<
     { [Key in keyof PersonListRow]: PersonListRow[Key] | null }[]
   >(Prisma.sql`
-    WITH filtered AS NOT MATERIALIZED (
+    WITH scope AS NOT MATERIALIZED (
       SELECT p.* FROM "Person" p
       WHERE ${snapshotClause}
+        ${searchClause}
+    ), filtered AS NOT MATERIALIZED (
+      SELECT p.* FROM scope p
+      WHERE TRUE
         ${statusClause}
         ${contactsClause}
-        ${searchClause}
     ), totals AS (
       SELECT COUNT(*) AS "totalCount" FROM filtered
+    ), facets AS (
+      SELECT
+        ${statusCount('IN_STRUCTURE')} AS "inStructureCount",
+        ${statusCount('OUTSIDE_STRUCTURE')} AS "outsideStructureCount",
+        ${noContactsCount} AS "noContactsCount"
+      FROM scope p
     )
-    SELECT p.*, totals."totalCount"
+    SELECT p.*, totals."totalCount", facets."inStructureCount",
+      facets."outsideStructureCount", facets."noContactsCount"
     FROM totals
+    CROSS JOIN facets
     LEFT JOIN LATERAL (
     SELECT
       p."id",
@@ -239,30 +266,17 @@ export const listPersons = async (
     }),
   );
 
-  const [inStructureCount, outsideStructureCount, noContactsCount] =
-    await Promise.all([
-      prisma.person.count({ where: { structureStatus: 'IN_STRUCTURE' } }),
-      prisma.person.count({ where: { structureStatus: 'OUTSIDE_STRUCTURE' } }),
-      canViewContact
-        ? prisma.person.count({
-            where: {
-              AND: [
-                { emails: { none: {} } },
-                { phones: { none: {} } },
-                { socialProfiles: { none: {} } },
-              ],
-            },
-          })
-        : Promise.resolve(null),
-    ]);
+  const facets = queryRows[0];
+  const inStructure = facets?.inStructureCount ?? 0;
+  const outsideStructure = facets?.outsideStructureCount ?? 0;
 
   return {
     items: paginated.items.map((person) => toPersonSummary(person, reader)),
     overview: {
-      inStructure: inStructureCount,
-      noContacts: noContactsCount,
-      outsideStructure: outsideStructureCount,
-      total: inStructureCount + outsideStructureCount,
+      inStructure,
+      noContacts: canViewContact ? (facets?.noContactsCount ?? 0) : null,
+      outsideStructure,
+      total: inStructure + outsideStructure,
     },
     pagination: { ...paginated.pagination, total },
   };

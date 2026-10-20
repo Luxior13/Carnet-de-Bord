@@ -19,7 +19,7 @@ const usersListSource = [
 describe('administrative users list accessibility contracts', () => {
   it('keeps desktop table rows semantic with one native overlay link', () => {
     expect(usersListSource).toContain(
-      'group/row focus-within:ring-ring relative cursor-pointer',
+      'has-[a:focus-visible]:ring-ring relative cursor-pointer',
     );
     expect(usersListSource).toContain(
       "after:absolute after:inset-0 after:z-10 after:content-['']",
@@ -50,10 +50,17 @@ describe('administrative users list accessibility contracts', () => {
   it('keeps the directory compact and uses one coherent filter bar', () => {
     expect(usersListSource).toContain('aria-label="Comptes utilisateurs"');
     expect(usersListSource).not.toContain('title="Comptes utilisateurs"');
-    expect(usersListSource).toContain("'Nom, identifiant ou email'");
-    expect(usersListSource).toContain("'Nom ou identifiant'");
-    expect(usersListSource).toContain('Tous les états');
+    expect(usersListSource).toContain("'Nom, identifiant ou email…'");
+    expect(usersListSource).toContain("'Nom ou identifiant…'");
+    expect(usersListSource).toContain(
+      '<QuickFilterGroup caption="État" label="Filtrer par état">',
+    );
+    expect(usersListSource).toContain(
+      '<QuickFilterGroup caption="Rôle" label="Filtrer par rôle">',
+    );
     expect(usersListSource).toContain('Mot de passe à changer');
+    expect(usersListSource).not.toContain('Filtrer par état du compte');
+    expect(usersListSource).not.toContain('PageAsideLayout');
     expect(usersListSource).not.toContain('UsersStatCard');
     expect(usersListSource).not.toContain('Annuaire utilisateurs');
     expect(usersListSource).not.toContain('<Tabs');
