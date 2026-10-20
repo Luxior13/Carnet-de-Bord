@@ -3,7 +3,7 @@
 ## Évolution du banc — 14 octobre 2026
 
 Le script suit désormais la saisie directe et la barre conditionnelle de la
-[refonte des paramètres](../../../qualite/pages/systeme-parametres.md).
+[refonte des paramètres](../../../pages/systeme/parametres.md).
 Il contient 33 scénarios : les 30 parcours adaptés, conservation d'un focus
 déplacé pendant l'attente, rétablissement du défaut depuis une valeur
 personnalisée et annulation d'un brouillon après résultat d'écriture incertain.

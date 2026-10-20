@@ -15,12 +15,12 @@ Le format signé v9 reste inchangé ; les validations détaillées figurent en f
 
 ## Méthode et couverture
 
-La [revue générale](../../qualite/REVUE_GENERALE.md), la
-[méthode d'audit](../../qualite/AUDITS.md) et les fiches
-[schéma](../../qualite/fiches/schema-prisma.md),
-[migrations](../../qualite/fiches/migrations.md),
-[sécurité](../../qualite/fiches/securite.md) et
-[restauration](../../qualite/fiches/sauvegarde-restauration.md) ont été lues.
+La [revue générale](../../REFERENCE_GENERALE.md), la
+[méthode d'audit](../../methode/audit.md) et les fiches
+[schéma](../../references/schema-prisma.md),
+[migrations](../../references/migrations.md),
+[sécurité](../../references/securite.md) et
+[restauration](../../references/sauvegarde-restauration.md) ont été lues.
 Q01, Q06, Q09–Q17, Q19, Q22, Q25 et Q27–Q30 concernent ici les responsabilités,
 types, droits, secrets, concurrence, dates, traces, stockage et reprises. La
 présentation, les pièces jointes, les notifications et les domaines futurs sont

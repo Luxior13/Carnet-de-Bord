@@ -32,7 +32,7 @@ coordonnée, erreur puis reprise et faible hauteur disponible.
 Le navigateur utilise un cadre simplifié et une police de substitution. Le CSS
 des primitives est celui du dépôt ; les interactions métier s’arrêtent aux
 réponses simulées. Les [résultats historiques](../observations.json) ne sont
-valables que pour [la passe décrite](../../AUDIT_MODALES_2026-10-11.md).
+valables que pour [la passe décrite](../../2026-10-11-modales.md).
 
 Depuis la correction d'autocomplétion du 11 octobre, l'inspection vérifie aussi
 les attributs d'exclusion sur les champs et formulaires des modales. Le filtre

@@ -21,13 +21,13 @@ contraintes non représentées par Prisma, consommateurs actifs/dormants,
 confidentialité, rétention, sauvegarde et coût des index. Le catalogue de
 sources en fin de pièce permet de retrouver les preuves de lecture.
 
-Les fiches appliquées sont [schéma](../../qualite/fiches/schema-prisma.md),
-[migrations](../../qualite/fiches/migrations.md),
-[audit](../../qualite/fiches/audit-historique.md),
-[suppression](../../qualite/fiches/suppression-archivage.md) et
-[sauvegarde](../../qualite/fiches/sauvegarde-restauration.md), selon la
-[revue générale](../../qualite/REVUE_GENERALE.md) et la
-[méthode d’audit](../../qualite/AUDITS.md).
+Les fiches appliquées sont [schéma](../../references/schema-prisma.md),
+[migrations](../../references/migrations.md),
+[audit](../../references/audit-historique.md),
+[suppression](../../references/suppression-archivage.md) et
+[sauvegarde](../../references/sauvegarde-restauration.md), selon la
+[revue générale](../../REFERENCE_GENERALE.md) et la
+[méthode d’audit](../../methode/audit.md).
 Sécurité/confidentialité/concurrence/performance/exploitation sont examinées
 par leurs effets sur ces données. Interface, responsive, notifications à créer,
 documents métier, finances, juridique, équipes et planification de nouvelles
@@ -534,22 +534,21 @@ Les références des tableaux pointent vers les propriétaires concrets.
 [S12]: ../../../apps/web/src/shared/server/user-deletion.ts
 [S13]: ../../../apps/web/src/app/api/systeme/parametres/[key]/route.ts
 [S14]: ../../../packages/database/prisma/migrations/20260726160000_internal_news/migration.sql
-[S15]: ../../../apps/web/src/features/internal-news/server/internal-news.service.ts
+[S15] : `apps/web/src/features/internal-news/server/internal-news.service.ts` (fichier retiré le 20 octobre 2026)
 [S16]: ../../../apps/web/src/shared/constants/feature-registry.constants.ts
 [S17]: ../../../packages/database/scripts/database-backup-format.ts
 [S18]: ../../../packages/database/scripts/restore-database.ts
 [S19]: ../../../apps/web/scripts/run-maintenance.ts
 [S20]: ../../../apps/web/src/shared/constants/system-settings.constants.ts
-[S21]: ../../references/OPERATIONS.md
+[S21]: ../../exploitation/operations.md
 [S22]: ../../../packages/database/prisma/README.md
 [S23]: ../../../apps/web/src/shared/server/audit-visibility.ts
 [S24]: ../../../packages/database/prisma/migrations/20261013120000_system_setting_positive_version/migration.sql
 [S25]: ../../../packages/database/prisma/migrations/20260722144500_normalize_person_index_names/migration.sql
 [S26]: ../../../packages/database/prisma/migrations/20260921180000_drop_redundant_unique_column_indexes/migration.sql
 [S28]: ../../../apps/web/src/features/persons/server/person-core.service.ts
-[S29]: ../../../apps/web/src/features/internal-news/internal-news.schemas.ts
+[S29] : `apps/web/src/features/internal-news/internal-news.schemas.ts` (fichier retiré le 20 octobre 2026)
 [S30]: ../../../packages/database/prisma/migrations/20261009120000_remove_notifications_module/migration.sql
 [S31]: ../../../packages/database/scripts/database-backup.ts
 [P01]: https://www.prisma.io/docs/orm/v6/prisma-migrate/workflows/unsupported-database-features
 [P02]: https://www.prisma.io/docs/orm/v6/reference/prisma-schema-reference
-

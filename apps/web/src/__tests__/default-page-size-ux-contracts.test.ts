@@ -15,9 +15,6 @@ const userDetailSource = readSourceFile(
 const accountSource = readSourceFile(
   '../features/account/AccountPageContent.tsx',
 );
-const historySource = readSourceFile(
-  '../components/users/user-detail/UserHistoryTab.tsx',
-);
 
 describe('reviewed default page-size UX contracts', () => {
   it('lets list APIs apply the shared page size instead of client constants', () => {
@@ -33,12 +30,9 @@ describe('reviewed default page-size UX contracts', () => {
     );
   });
 
-  it('lets activity APIs size displayed pages without background summary reads', () => {
+  it('keeps removed activity page-size constants out of account pages', () => {
     expect(userDetailSource).not.toContain('USER_AUDIT_PAGE_SIZE');
     expect(userDetailSource).not.toContain('USER_AUDIT_SUMMARY_PAGE_SIZE');
     expect(accountSource).not.toContain('ACCOUNT_AUDIT_PAGE_SIZE');
-    expect(historySource).toContain(
-      "const usesServerPagination = typeof onLoadMore === 'function'",
-    );
   });
 });

@@ -27,4 +27,4 @@ Le mouvement réduit est activé dans les contextes de test.
 
 La navigation de référence reste le code courant. Les pièces conservées à côté
 de ce dossier décrivent uniquement la passe du 11 octobre : voir le
-[rapport](../../AUDIT_NAVIGATION_SECTIONS_2026-10-11.md).
+[rapport](../../2026-10-11-navigation-sections.md).

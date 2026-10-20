@@ -6,7 +6,7 @@ import {
 } from '$context/feature-readiness';
 
 describe('feature availability under transient health failures', () => {
-  const ready = { internalNews: true, persons: true };
+  const ready = { persons: true };
 
   it.each([429, 401, 502, 500])(
     'keeps the last confirmed state for HTTP %s',
@@ -26,7 +26,7 @@ describe('feature availability under transient health failures', () => {
     {},
     '<html>error</html>',
     { checks: null },
-    { checks: { internalNews: 'unknown', persons: 'unknown' } },
+    { checks: { persons: 'unknown' } },
   ])(
     'does not interpret missing or unknown results as unavailable',
     (payload) => {
@@ -37,24 +37,19 @@ describe('feature availability under transient health failures', () => {
     },
   );
 
-  it('applies explicit unavailable results independently and recovers on a later success', () => {
+  it('applies an explicit unavailable result and recovers on a later success', () => {
     const unavailable = readFeatureReadiness(
       ready,
-      {
-        checks: { internalNews: 'schema_not_ready', persons: 'not_configured' },
-      },
+      { checks: { persons: 'not_configured' } },
       503,
     );
-    expect(unavailable).toEqual({ internalNews: false, persons: false });
+    expect(unavailable).toEqual({ persons: false });
     expect(
-      readFeatureReadiness(unavailable, { checks: { persons: 'ready' } }, 503),
-    ).toEqual({ internalNews: false, persons: true });
-    expect(
-      readFeatureReadiness(
-        unavailable,
-        { checks: { internalNews: 'ready', persons: 'ready' } },
-        200,
-      ),
+      readFeatureReadiness(unavailable, { checks: { persons: 'ready' } }, 200),
     ).toEqual(ready);
+  });
+
+  it('only tracks the live features that have a readiness check', () => {
+    expect(Object.keys(UNKNOWN_FEATURE_READINESS)).toEqual(['persons']);
   });
 });

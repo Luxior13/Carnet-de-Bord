@@ -1,7 +1,7 @@
 # Création utilisateur — reprise et focus
 
 Complément ciblé exécuté le **12 octobre 2026 à 23 h 15, Europe/Paris**, sur
-Chromium. Le [suivi Utilisateurs](../../../qualite/pages/systeme-utilisateurs.md)
+Chromium. Le [suivi Utilisateurs](../../../pages/systeme/utilisateurs/README.md)
 porte les décisions et la clôture des défauts. Ce banc ne remplace pas la passe
 complète du 11 octobre.
 

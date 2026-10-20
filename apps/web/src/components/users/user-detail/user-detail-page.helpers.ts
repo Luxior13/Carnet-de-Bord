@@ -1,8 +1,4 @@
 import { PERMISSION_EDITOR_CATEGORIES } from '$components/users/permission-editor-view';
-import {
-  DEFAULT_USER_HISTORY_FILTERS,
-  type UserHistoryFilters,
-} from '$components/users/user-detail/UserHistoryTab';
 import { FEATURES } from '$constants/feature-registry.constants';
 import {
   getAccessPermissionKeys,
@@ -122,55 +118,6 @@ export const normalizePermissionPageKey = (pageKey: string | null): string => {
     ? canonicalPageKey
     : DEFAULT_PERMISSION_PAGE_KEY;
 };
-
-export const appendUserAuditFilters = (
-  params: URLSearchParams,
-  filters: UserHistoryFilters,
-): void => {
-  params.set('scope', filters.activityScope);
-  params.set('period', filters.dateFilter);
-  if (filters.poleFilter !== 'all') {
-    params.set('poleKey', filters.poleFilter);
-  }
-  if (filters.pageFilter !== 'all') {
-    params.set('pageKey', filters.pageFilter);
-  }
-};
-
-export const getUserAuditFiltersFromParams = (params: {
-  get: (name: string) => string | null;
-}): UserHistoryFilters => {
-  const requestedScope = params.get('scope');
-  const requestedPeriod = params.get('period');
-
-  return {
-    activityScope:
-      requestedScope === 'all' ||
-      requestedScope === 'by' ||
-      requestedScope === 'on'
-        ? requestedScope
-        : DEFAULT_USER_HISTORY_FILTERS.activityScope,
-    dateFilter:
-      requestedPeriod === 'all' ||
-      requestedPeriod === '7' ||
-      requestedPeriod === '30' ||
-      requestedPeriod === '90'
-        ? requestedPeriod
-        : DEFAULT_USER_HISTORY_FILTERS.dateFilter,
-    pageFilter:
-      params.get('pageKey') || DEFAULT_USER_HISTORY_FILTERS.pageFilter,
-    poleFilter:
-      params.get('poleKey') || DEFAULT_USER_HISTORY_FILTERS.poleFilter,
-  };
-};
-
-export const getUserAuditFiltersKey = (filters: UserHistoryFilters): string =>
-  [
-    filters.activityScope,
-    filters.dateFilter,
-    filters.poleFilter,
-    filters.pageFilter,
-  ].join('|');
 
 export const isPlainLeftClick = (event: MouseEvent): boolean =>
   event.button === 0 &&

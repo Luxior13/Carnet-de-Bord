@@ -29,7 +29,7 @@ depuis un défi de connexion sans session conserve son contrat distinct.
 Le changement initial obligatoire du mot de passe conserve son exception
 explicite. Aucune permission, durée, table, migration ou politique de quota
 n'est ajoutée. Les permissions personnelles toujours actives restent conformes
-au [contrat des permissions](../../../references/PERMISSIONS.md).
+au [contrat des permissions](../../../domaines/permissions.md).
 
 ## Couverture et commandes
 

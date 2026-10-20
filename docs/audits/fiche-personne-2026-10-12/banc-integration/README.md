@@ -1,6 +1,6 @@
 # Fiche personne — parcours HTTP du 12 octobre 2026
 
-[Rapport](../../AUDIT_FICHE_PERSONNE_2026-10-12.md) ·
+[Rapport](../../2026-10-12-fiche-personne.md) ·
 [Script](run.cjs) · [Résultats](resultats.json).
 
 ## Périmètre et méthode

@@ -84,5 +84,5 @@ corps HTTP après les en-têtes appartient aux tests du helper, pas à ce banc.
 Les erreurs 401, les changements d’acteur, le double clic, les autres largeurs,
 les appareils physiques et les lecteurs d’écran ne sont pas rejoués ici.
 
-Le [suivi Utilisateurs](../../../qualite/pages/systeme-utilisateurs.md) porte
+Le [suivi Utilisateurs](../../../pages/systeme/utilisateurs/README.md) porte
 les décisions et la clôture de cette passe ciblée.

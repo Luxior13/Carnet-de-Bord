@@ -1,65 +1,103 @@
-# Instructions du dépôt
+# Consignes du projet pour les agents
 
-## Point d’entrée
+## Contexte et données
 
-Pour toute création, modification, correction, refonte ou suppression, commencer par
-[la revue générale](docs/qualite/REVUE_GENERALE.md). Parcourir ses questions de
-sélection, puis lire uniquement les fiches pertinentes. La méthode vaut aussi pour
-une API, une tâche, un schéma ou un composant partagé, même sans page.
+- Outil de gestion de Noctambule : structure esport actuellement associative,
+  préparée à évoluer vers une société. Séparer personnes, comptes, relations
+  datées, équipes, entités juridiques, saisons et exercices. Ne pas réécrire les
+  anciens engagements lors d’une évolution de structure
+  ([domaines](docs/domaines/README.md)).
+- Le projet est **en développement** (rappel du propriétaire du 11 octobre 2026).
+  Privilégier les simplifications et refactorisations utiles au besoin actuel ;
+  ne pas conserver une compatibilité hypothétique avec une production inexistante.
+- Ce contexte ne rend pas les données locales jetables par défaut. Les garanties
+  d’intégrité, les contrôles d’accès et les migrations reproductibles restent
+  exigés ; les essais qui écrivent visent une base isolée, et une opération
+  destructive demande un périmètre explicite et une sauvegarde
+  ([procédures d’exploitation](docs/exploitation/operations.md)).
+- Le code et les tests décrivent l’état implémenté, pas nécessairement l’état
+  souhaité. Une divergence avec une décision explicite se corrige ou se signale ;
+  elle ne se résout pas en supposant que le document le plus long a raison.
 
-- Respecter le périmètre demandé et les décisions déjà données dans la conversation.
-- Qualifier le besoin avant de développer. Une capacité inutile peut être omise.
-- Consigner au fil de l'eau : tout point de décision, règle ou connaissance
-  durable évoqué en conversation est ajouté au fichier pertinent (suivi de page,
-  fiche, référence ou `SUJETS_FUTURS.md`) sans attendre d'autorisation.
-- Ne pas lire toute la documentation : suivre la « Règle de lecture » de la revue
-  générale et ignorer les fiches dont le sujet est absent du besoin et de ses
-  effets indirects.
+## Point d’entrée pour créer et faire évoluer
+
+- Pour toute création, modification, correction, optimisation, refonte ou
+  suppression (page, section, API, tâche, schéma, composant partagé, même sans
+  page), commencer par [docs/REFERENCE_GENERALE.md](docs/REFERENCE_GENERALE.md).
+- Suivre ce guide du début à la fin : cadrer le résultat attendu et le niveau de
+  risque, parcourir ses 36 points, ouvrir uniquement les fichiers détaillés des
+  points concernés, puis conclure en mettant à jour la documentation. Consulter
+  d’abord la [fiche de la page ou du module](docs/pages/README.md).
+- Respecter le périmètre demandé et les décisions déjà données dans la
+  conversation. Qualifier le besoin avant de développer ; une capacité inutile
+  peut être omise.
+- Ne pas lire toute la documentation : ignorer les fiches dont le sujet est
+  absent du besoin et de ses effets indirects. Un sujet sans effet sur ce
+  changement est « hors impact », un sujet absent de la fonctionnalité « non
+  applicable » ; justifier brièvement.
 - Adapter la profondeur de contrôle au risque ; une retouche de texte ne demande
   pas le même travail qu’une migration ou un changement de permissions.
 - Ne pas transformer une fiche en exigence de créer une notification, une table,
-  un cache, un service ou une permission.
-- Un sujet sans effet sur ce changement peut être « hors impact » ; un sujet
-  absent de la fonctionnalité peut être « non applicable ». Justifier brièvement.
-- Ne pas confondre contrôle non effectué et validation réussie.
-- Pour un audit ciblé, complet ou transverse, utiliser la
-  [méthode d’audit](docs/qualite/AUDITS.md) : périmètre, preuves, limites et suivi
-  des défauts. Une petite correction conserve une trace proportionnée.
-- Consulter les décisions courantes de la page et les références canoniques.
-  Ne pas recopier un audit daté comme règle générale.
-- Pour un travail d'interface, suivre le [design system](docs/references/DESIGN_SYSTEM.md)
-  et les décisions courantes du [Répertoire](docs/qualite/pages/membres-repertoire.md),
-  référence visuelle complétée par Utilisateurs. Réutiliser les composants partagés
-  utiles au besoin et consigner les adaptations de composition dans le suivi.
-- Chaque page travaillée a un suivi dans `docs/qualite/pages/` : créer un
-  document pour chaque nouvelle page, ou mettre à jour celui de la page sur
-  laquelle on travaille si nécessaire. Ne pas créer de suivi vide ; une simple
-  retouche met à jour le suivi existant, sans nouveau dossier.
-- Ces documents n’ajoutent aucune demande de permission pour le travail déjà
-  autorisé. Les autorisations explicites de la session restent applicables.
-- Après une modification documentaire, exécuter `bun run docs:check` et mettre
-  à jour les index concernés. Les anciennes preuves restent datées ; un correctif
-  non revérifié reste « corrigé à vérifier ».
+  un cache, un service ou une permission. Réutiliser les mécanismes communs.
+- Revoir la sélection si le périmètre change. Pour un composant partagé, suivre
+  ses consommateurs ; pour une suppression, vérifier ses dépendances encore actives.
+- Ne pas confondre contrôle non effectué et validation réussie. Un correctif non
+  revérifié reste « corrigé à vérifier ». Pour un audit ciblé, complet ou
+  transverse, utiliser la [méthode d’audit](docs/methode/audit.md).
 
-## Contexte et références
+## Continuité des décisions et organisation
 
-Le projet est en développement (rappel utilisateur du 11 octobre 2026).
-Privilégier les simplifications et refactorisations utiles au besoin actuel ;
-ne pas conserver une compatibilité hypothétique avec une production inexistante.
-Ce contexte ne rend pas les données locales jetables par défaut. Les garanties
-d’intégrité, les contrôles d’accès et les migrations reproductibles restent utiles.
+- Suivre la [répartition documentaire](docs/methode/organisation-documentaire.md) :
+  une règle commune a un document propriétaire, une page a une fiche courante,
+  un audit conserve ses preuves datées. **Consigner au fil de l’eau** tout point
+  de décision, règle ou connaissance durable évoqué en conversation dans le
+  document concerné, sans attendre d’autorisation ; distinguer fait observé,
+  décision retenue et proposition à discuter.
+- Chaque page existante a une fiche dans `docs/pages/`, et chaque section
+  importante d’une page à sections a la sienne ; un module a un dossier avec un
+  `README.md` commun. Une nouvelle page reçoit sa fiche en même temps que sa
+  création ; une page retirée garde sa fiche marquée « retirée ». Une retouche
+  mineure actualise la fiche seulement si elle change une information durable.
+  Les fiches marquées « Suivi à compléter » se complètent à la première reprise.
+- Pour l’interface, partir du [système de design](docs/design/README.md) :
+  pages de référence (liste `/membres/repertoire`, complétée par
+  `/systeme/utilisateurs` ; fiche `/systeme/utilisateurs/[id]` pour la barre
+  d’enregistrement), gabarits, composants, fondations et comportements, puis la
+  fiche de la page. Examiner aussi le choix de chaque contrôle, la justesse des
+  données, les libellés, les états et les interactions ; consigner les
+  adaptations de composition dans la fiche.
+- **Préférences du propriétaire :** chaque retour visuel ou d’ergonomie
+  (« je préfère ça », « j’aime », « je n’aime pas », « ok go » sur un rendu) est
+  consigné le jour même dans le [journal des préférences](docs/design/preferences.md),
+  puis reporté dans le fichier de design propriétaire de la règle et, pour les
+  pages pas encore alignées, dans l’[harmonisation](docs/design/harmonisation.md).
+  Une préférence exprimée sur une page s’applique par défaut aux pages du même gabarit.
+- Pour créer, refondre ou revoir une page en profondeur, utiliser la
+  [grille de questions de revue](docs/methode/questions-revue-page.md). Pour une
+  retouche ciblée, limiter la passe aux éléments touchés et à leurs effets
+  indirects ; la grille ne crée ni fonctionnalités obligatoires ni demandes de
+  confirmation supplémentaires.
+- Les décisions déjà données restent applicables ; cette documentation n’ajoute
+  aucune demande de permission au travail autorisé. Une proposition documentée
+  n’est toutefois pas une décision adoptée.
+- Tenir à jour la [cartographie du système](docs/systeme/README.md) lorsqu’une
+  route, une API, un modèle, un script ou une famille de tests est ajouté ou retiré.
+- Après une modification documentaire, exécuter `bun run docs:check` et
+  actualiser les index concernés ; `bun run docs:check:test` si le contrôleur
+  évolue. Les anciennes preuves restent datées ; un contrôle documentaire ne
+  valide ni un parcours ni une livraison.
 
-Outil de gestion de Noctambule : structure esport actuellement associative,
-préparée à évoluer vers une société. Séparer personnes, comptes, relations datées,
-équipes, entités juridiques, saisons et exercices. Ne pas réécrire les anciens
-engagements lors d’une évolution de structure.
+## Repères du dépôt
 
-[Organisation documentaire](docs/qualite/README.md) ·
-[Références du projet](docs/qualite/REFERENCES.md).
-
-Le code et les tests décrivent l’état implémenté, pas nécessairement l’état souhaité.
-Une divergence avec une décision explicite se corrige ou se signale ; elle ne se
-résout pas en supposant que le document le plus long a raison.
+- Monorepo Bun et Turborepo. L’application vit dans `apps/web`, les données
+  dans `packages/database` et les contrats partagés dans `packages/shared`.
+  Commandes et architecture résumées dans [CLAUDE.md](CLAUDE.md) et le
+  [guide de contribution](docs/methode/guide-contribution.md).
+- Les versions et scripts actuels viennent des [manifests](package.json),
+  notamment [web](apps/web/package.json) et [database](packages/database/package.json).
+  Ne pas reprendre les versions ou commandes d’un ancien audit.
+- L’[index de la documentation](docs/README.md) permet de retrouver les
+  documents spécialisés ; ne lire que ceux qui s’appliquent au besoin.
 
 ## Context7
 

@@ -20,9 +20,6 @@ const contactEmailDialogSource = readSourceFile(
 const securitySource = readSourceFile(
   '../features/account/components/SecuritySection.tsx',
 );
-const activitySource = readSourceFile(
-  '../components/users/user-detail/UserHistoryTab.tsx',
-);
 const sectionRailSource = readSourceFile(
   '../components/layout/PageSectionNavigation.tsx',
 );
@@ -86,17 +83,6 @@ describe('/mon-compte UX contracts', () => {
     expect(securitySource).toContain('account-password-heading');
     expect(securitySource).toContain('account-mfa-heading');
     expect(securitySource).toContain('account-sessions-heading');
-  });
-
-  it('keeps personal activity compact with advanced filters on demand', () => {
-    expect(activitySource).toContain('personal-activity-scope-label');
-    expect(activitySource).toContain('personal-activity-period');
-    expect(activitySource).toMatch(/<Collapsible[\s\S]{0,600}Filtres avancés/);
-    expect(activitySource).not.toContain('CardFooter');
-    expect(activitySource).toContain(
-      'const displayedLogs = filteredLogs.slice(0, showCount)',
-    );
-    expect(activitySource).toContain('!hasMore && hasMoreAuditLogs');
   });
 
   it('keeps section links touch-friendly with complete labels at every size', () => {

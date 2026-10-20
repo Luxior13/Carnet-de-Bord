@@ -1,6 +1,6 @@
 # Navigation générale — parcours HTTP du 12 octobre 2026
 
-[Rapport](../../AUDIT_NAVIGATION_GENERALE_2026-10-12.md) ·
+[Rapport](../../2026-10-12-navigation-generale.md) ·
 [Parcours de navigation](run.cjs) · [Parcours de déconnexion](run-logout.cjs) ·
 [Authentification partagée du banc](auth.cjs).
 

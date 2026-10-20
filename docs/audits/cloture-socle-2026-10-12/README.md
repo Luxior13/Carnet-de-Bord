@@ -1,6 +1,6 @@
 # Pièces de la clôture du socle — 12–13 octobre 2026
 
-Verdict et périmètre : [rapport de clôture](../AUDIT_CLOTURE_SOCLE_2026-10-12.md).
+Verdict et périmètre : [rapport de clôture](../2026-10-12-cloture-socle.md).
 
 | Preuve | Portée |
 | --- | --- |

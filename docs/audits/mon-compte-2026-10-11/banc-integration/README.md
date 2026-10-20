@@ -62,7 +62,7 @@ Les contrôles de quota ne constituent pas une mesure de résistance à une atta
 
 **12 scénarios réussis** dans Chromium 149.0.7827.55. Les
 [résultats de cette exécution](resultats.json) sont repris dans le
-[rapport principal](../../AUDIT_MON_COMPTE_2026-10-11.md).
+[rapport principal](../../2026-10-11-mon-compte.md).
 Une première passe s'était arrêtée sur le défaut réel de version décrit plus
 haut ; une autre sur la comparaison du presse-papiers Windows (CRLF contre LF).
 La dernière passe complète réussit après correction produit puis normalisation

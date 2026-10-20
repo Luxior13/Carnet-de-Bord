@@ -16,8 +16,8 @@ des cinq tables sont présents et cohérents, ainsi que les deux valeurs de l'en
 
 ## Méthode et couverture
 
-La [revue générale](../../qualite/REVUE_GENERALE.md) et la
-[méthode d'audit](../../qualite/AUDITS.md) ont guidé la sélection :
+La [revue générale](../../REFERENCE_GENERALE.md) et la
+[méthode d'audit](../../methode/audit.md) ont guidé la sélection :
 
 - Q01, Q12 et Q25 : sens métier, propriétaire, cardinalités et distinction
   Personne/Compte ; Q13 : lecture des migrations déjà appliquées, sans les modifier.
@@ -260,7 +260,7 @@ sont réinsérés explicitement : pas de nouveaux CUID, dates du jour ou renomma
 Les clés nécessaires à l'historique chiffré font partie de la vérification de
 restauration. La signature et le checksum de sauvegarde ne rendent pas les
 identités/coordonnées courantes anonymes ou chiffrées : le fichier reste à protéger
-selon [Exploitation](../../references/OPERATIONS.md).
+selon [Exploitation](../../exploitation/operations.md).
 
 Un fichier antérieur à une suppression ne possède pas son futur tombstone et
 peut réintroduire la personne. Ce cas reste une limite d'exploitation à réconcilier

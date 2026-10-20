@@ -18,9 +18,6 @@ export const UserAccessTab = dynamic(() =>
 export const UserAccountTab = dynamic(() =>
   import('./UserAccountTab').then((module) => module.UserAccountTab),
 );
-export const UserHistoryTab = dynamic(() =>
-  import('./UserHistoryTab').then((module) => module.UserHistoryTab),
-);
 export const UserProfileTab = dynamic(() =>
   import('./UserProfileTab').then((module) => module.UserProfileTab),
 );

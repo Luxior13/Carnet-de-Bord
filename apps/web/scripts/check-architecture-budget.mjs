@@ -6,15 +6,10 @@ const DEFAULT_SOURCE_LIMIT = 800;
 const SERVER_ONLY_DATABASE_IMPORT_PATTERN =
   /(?:from\s+|import\s*)['"](?:@repo\/database|@prisma\/client)(?:\/[^'"]*)?['"]/u;
 const LEGACY_LIMITS = new Map([
-  ['app/api/users/[id]/audit/route.ts', 950],
-  ['components/Sidebar.tsx', 850],
   ['components/ui/sidebar.tsx', 900],
-  ['components/users/PermissionsEditor.tsx', 1_200],
   ['components/users/UserDetailPage.tsx', 2_650],
-  ['components/users/user-detail/UserHistoryTab.tsx', 2_700],
   ['components/users/user-detail/UserSecurityTab.tsx', 850],
   ['features/account/components/SecuritySection.tsx', 900],
-  ['shared/constants/app.constants.ts', 1_000],
   ['shared/constants/permissions.constants.ts', 1_400],
   ['shared/server/auth.ts', 1_450],
 ]);

@@ -1,0 +1,202 @@
+# Navigation — état actuel et cible
+
+Référence actualisée pendant la revue du 12 octobre 2026. Le catalogue des projets est séparé de la navigation active. Voir la [feuille de route](../propositions/feuille-de-route.md) pour les étapes et la [matrice](../propositions/intentions/pages/MATRICE_PREPARATION.md) pour les correspondances historiques.
+
+## Navigation actuelle
+
+Cinq entrées sont déclarées dans trois pôles. Leur visibilité dépend des accès de l’utilisateur. Les noms et routes actifs proviennent du registre des fonctionnalités.
+
+| Pôle actuel | Entrées actives | Placement |
+| --- | --- | --- |
+| Aujourd’hui | Mon travail `/` | Travail personnel |
+| Membres | Répertoire `/membres/repertoire` | Membres et contacts de la structure |
+| Système | Utilisateurs `/systeme/utilisateurs`, paramètres `/systeme/parametres`, feuille de route `/systeme/feuille-de-route` | Comptes, technique et plan produit |
+
+`/mon-compte` est accessible par les outils globaux. La navigation rapide de l’en-tête parcourt les pages autorisées sans page dédiée ; l’ancienne adresse `/recherche` redirige vers l’accueil. `/login` appartient au parcours de connexion. Les formulaires de création et fiches de personnes ou utilisateurs restent sous leur liste principale.
+
+Le pôle « Membres » regroupe le Répertoire actuel et les futurs espaces Adhésions et rôles, Recrutement, Arrivées et départs. La page actuelle conserve le titre « Répertoire » et l’action « Ajouter une fiche » ; une fiche porte le nom ou le pseudo de la personne. Le fil d’Ariane présente « Membres → Répertoire → fiche » ; le nom du pôle ne crée pas un lien vers une page d’accueil fictive.
+
+`/administration` et `/tableau-de-bord` sont des accès de compatibilité. `/mes-notifications`, `/tableau-de-bord/mes-notifications` et `/systeme/journal-activite` redirigent vers la feuille de route, où ces modules sont replanifiés. `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
+
+Les 46 anciennes destinations planifiées ont été retirées du catalogue de navigation. Elles restent référencées dans le catalogue de projets et dans une liste de destinations réservées pour conserver le refus d’ouverture par les helpers de navigation. Cette liste ne remplace aucune politique serveur.
+
+## Huit pôles cibles
+
+| Pôle | Responsabilité | Espaces ou vues prévus |
+| --- | --- | --- |
+| Aujourd’hui | Ce qui concerne le compte connecté | Mon travail, notifications, éléments à valider |
+| Membres | Identité, engagements et parcours des membres | Répertoire, adhésions et rôles, recrutement, arrivées et départs |
+| Esport | Vie des équipes et saisons | Effectifs, planning sportif, compétitions, préparation, performance |
+| Activité | Travail collectif quotidien | Actualité, tâches, calendrier partagé, réunions, débriefs, logistique, communication |
+| Relations | Relations avec les organisations externes | Organisations, partenariats et livrables |
+| Structure | Responsabilité juridique et dossiers sensibles | Entités, gouvernance, documents, contrats, confidentialité, incidents |
+| Finances | Prévisions, montants dus et mouvements d’argent | Comptes, règlements, factures, frais, budget, dotations, contrôles |
+| Système | Administration technique | Comptes et accès, paramètres, journal, données, automatisations, intégrations, feuille de route |
+
+Ce tableau décrit les lieux logiques, pas un engagement à créer autant d’entrées. Les vues rares deviennent des onglets ou actions contextuelles. Les pôles Esport, Relations, Structure et Finances s’ouvrent seulement avec leurs premiers modules utilisables.
+
+## Règles de placement
+
+- Une donnée a un module propriétaire. Les vues personnelles, synthèses et recherches ne créent pas de copies concurrentes.
+- Structure contient les contrats et décisions de gouvernance ; Relations suit les engagements des partenaires. Une fiche partenaire peut afficher ses contrats autorisés.
+- Une fiche Personne garde l’identité ; les mandats, adhésions, contrats et affectations sont datés. Personne et Utilisateur ne fusionnent pas.
+- Une convocation sportive appartient au planning sportif. Le calendrier général et Mon travail la projettent avec les droits de sa source.
+- Les incidents sont confidentiels dans Structure. Les notes de recrutement et les dossiers RH ont aussi leur propre périmètre.
+- Les demandes de frais et factures gardent leur parcours distinct des paiements ; les filtres recettes/dépenses ne les remplacent pas.
+- Le profil juridique appartient à Structure ; les réglages techniques restent dans Système.
+- Le compte et la recherche restent atteignables depuis les outils globaux, même lorsqu’une vue personnelle a aussi une entrée de navigation.
+- Une archive reste dans son module ; une restauration technique et un export comptable n’ont pas les mêmes règles.
+
+## Admission et expérience utilisateur
+
+Depuis le 27 septembre 2026, le nom affiché est **Noctambule**, défini dans
+`SITE_CONFIG`. La connexion présente « Espace de gestion » sous le nom.
+Les titres spécifiques existants suivent « Utilisateurs · Noctambule » et
+« Mon compte · Noctambule » ; la connexion dispose de « Connexion · Noctambule ».
+Les autres pages héritent du nom global, avec le repère Dev en développement.
+
+L’identité Noctambule occupe une zone fixe de 56 px, alignée sur le header
+et séparée des rubriques par la même bordure fine. Logo de 36 px centré dans
+un emplacement fixe de 28 px pour conserver la position du texte ; nom en Geist
+semi-gras de 15 px (`0.9375rem`), espacement de 12 px après cet emplacement. Le lien vers l’accueil
+offre une cible de 44 px de haut et un focus intérieur. Sur mobile, le bouton de fermeture de 44 px
+est centré dans cette hauteur, à l’écart du nom.
+
+Les pôles accessibles sont regroupés sous le logo, en haut de la sidebar,
+dans le menu déroulant « Rubriques ». Le menu affiche libellé, icône et état
+courant ; les pages apparaissent en dessous sur toute la largeur avec leurs
+intitulés de groupe. L'ordre reste stable, sans pagination ni rubrique future
+affichée avant sa livraison. L'utilisateur a confirmé le 12 octobre 2026
+qu'il souhaite conserver le menu « Rubriques » actuel. Cette décision remplace
+la grille encore décrite ici avant la revue ; les anciennes décisions et leurs
+preuves restent datées dans l'historique du suivi.
+La sidebar reste ouverte à 264 px sur ordinateur (à partir de 1024 px). Le mode réduit
+et son bouton sont retirés du site depuis le 27 septembre 2026. Les libellés
+restent à 14 px. Sur les écrans bas ou avec davantage de pôles, le menu adapte
+sa hauteur à l'espace disponible et défile ; les pages ont leur propre
+défilement pour préserver l'accès aux liens.
+
+Chaque icône de pôle conserve sa couleur sémantique, sans pastille colorée.
+Le pôle courant reçoit un fond discret et une coche, en plus de
+`aria-current`. Les libellés sont visibles dans le menu ; leurs icônes mesurent
+16 px. Les icônes des pages restent
+neutres et mesurent 16 px. La page sélectionnée reçoit le fond bleu et une graisse
+renforcée, également lorsqu’on visite une de ses fiches. Une branche contenant
+la page active reste discrète. Les lignes ont des arrondis de 8 px ; le focus des
+liens est tracé à l’intérieur de leur cible.
+
+La position de défilement des pages par pôle reste mémorisée. Le shell impose
+l’état ouvert sur ordinateur ; les anciennes préférences de réduction desktop
+et de repli de la liste des pôles sont ignorées, sans purge de stockage.
+
+Sur mobile, le volet conserve le menu Rubriques et les pages en dessous dans ses 288 px,
+limités à la largeur d’écran disponible. Changer de pôle garde le volet ouvert
+pour choisir une page ; choisir une page ferme le volet. Le bouton du header,
+Échap et le bouton de fermeture restent disponibles sur mobile.
+
+Le bouton utilisateur reste en bas, séparé des pages : 56 px de hauteur pour
+l’avatar, le nom et le rôle. Au repos, son
+fond transparent l’intègre à la sidebar sans carte supplémentaire. Son fond bleu
+signale un menu ouvert ou la page Mon compte active. La flèche pointe vers le
+menu situé au-dessus. Le menu
+affiche le nom complet, l’identifiant et le rôle sur des lignes distinctes,
+puis Mon compte et Déconnexion. Il défile entièrement lorsque la hauteur
+disponible est réduite. La marge inférieure respecte la zone sûre du téléphone.
+
+Le popover utilisateur utilise une surface ardoise uniforme, des séparateurs
+en retrait et des icônes sans pastille. Le survol ou la sélection colore
+uniquement l’action concernée. Sa largeur de 16rem reste limitée au viewport,
+avec une marge extérieure de 1rem de chaque côté.
+
+Une navigation protégée par un brouillon garde son menu ou sa palette ouverts
+tant que le départ n'est pas accepté. « Rester » conserve la saisie et ramène
+le focus dans ce contexte ; confirmer ferme le panneau puis exécute une seule
+navigation. Lors d'un changement de présentation mobile/bureau, le focus d'un
+contrôle devenu invisible rejoint un équivalent visible ou le déclencheur.
+Un focus déjà placé dans le contenu ne doit pas être déplacé.
+
+La déconnexion masque immédiatement les informations privées. Son POST est
+borné à quinze secondes ; un refus, une réponse invalide ou un transport perdu
+affiche « Déconnexion non confirmée » avec reprise explicite. Une réponse de
+succès conforme ou le 401 indiquant une session absente permet de rejoindre la
+connexion. Pendant cette intention, le contexte monté ignore les lectures qui
+réafficheraient le compte ; une nouvelle authentification explicite peut la
+remplacer. Ce verrou local n'est ni une révocation serveur ni une garantie
+persistante après rechargement.
+
+Les décisions et vérifications de cette apparence sont consignées dans le
+[suivi de la navigation générale](../pages/transverse/navigation-generale.md).
+
+Une nouvelle entrée répond à un usage récurrent, porte un nom clair et possède un état vide utile. Un filtre, une action isolée et un accueil qui répète le menu ne justifient pas automatiquement une page.
+
+La hiérarchie privilégiée est pôle → lieu → fiche ou vue. Le fil d’Ariane situe l’utilisateur ; le retour conserve les filtres. Sur mobile, les mêmes destinations restent accessibles dans le volet de navigation.
+
+Le placement dépend du gabarit et du contenu : la sidebar reste ancrée à gauche,
+la colonne principale garde une largeur de travail adaptée et aucun rail ne la
+recouvre. Le centrage écran peut être retenu tant qu'il préserve cette largeur ;
+sur les tailles intermédiaires, la zone utile peut devenir prioritaire. Consigner
+ce choix dans le [suivi de la page](../pages/README.md), sans imposer le même
+centrage à une liste et à une page de lecture.
+
+Le header conserve le fil d’Ariane et les outils globaux. Les fiches Personne, Utilisateur et Mon compte placent leur navigation horizontale sous le titre, à toutes les largeurs : liens soulignés, libellés complets, défilement horizontal sur petit écran et barre collante dans le contenu. Le retour vers la liste reste avant le titre. La navigation locale n’occupe plus de rail dans la marge. Les filtres de listes utilisent des contrôles distincts de cette navigation.
+
+Le header garde une hauteur de 56 px et un fond bleu ardoise `surface-panel` : fil d’Ariane à gauche,
+recherche à droite. La zone centrale reste souple pour les
+chemins longs ; les outils futurs s’ajoutent seulement avec un usage global
+identifié, en prévoyant leur regroupement sur les petites largeurs. Les rubriques
+restent en haut de la sidebar, sans deuxième navigation permanente dans le header.
+Les contrôles principaux mesurent 40 px de haut sur ordinateur et 44 px sous
+1024 px. La recherche conserve 224/256 px sur ordinateur et devient une icône
+sur les tailles inférieures. Sous 640 px, le fil d’Ariane privilégie la page
+courante : le bouton « … » ouvre les ancêtres, accueil compris. Le menu se ferme
+au changement de présentation pour ne pas rester attaché à un bouton masqué.
+Le bouton du menu mobile reste visible sous 1024 px ; son séparateur apparaît
+entre 640 et 1023 px. La page courante est en semi-gras, les ancêtres plus discrets.
+Les contrôles disposent d’un focus intérieur et les boutons de recherche
+et menu mobile d’une infobulle après 300 ms.
+
+La navigation rapide s’ouvre depuis son bouton, à la souris ou par son activation
+clavier standard. Aucun raccourci global ni indication de raccourci dans la barre,
+sur décision de l’utilisateur du 27 septembre 2026. Les flèches et Entrée parcourent
+et ouvrent les résultats ; Échap ferme la fenêtre et rend le focus au bouton.
+Les combinaisons Vim de cette palette restent désactivées. Les gardes de formulaire
+restent appliquées aux destinations.
+
+La recherche rapide conserve une fenêtre centrale de 672 px maximum et le plein
+écran sous 640 px. Fond bleu ardoise, rayons de 8 px sur ordinateur, aucune ombre
+ni animation ; focus intérieur et sélection explicite, également en couleurs
+forcées. Les noms peuvent revenir à la ligne. Le contexte distingue « Page
+actuelle » et « Section actuelle » sans pastille de fond. Effacement et fermeture
+mesurent 44 px. La page de recherche complète et son lien ont été retirés.
+L’infobulle du déclencheur est masquée pendant l’ouverture.
+
+Le catalogue de navigation rapide indexe le nom, la description propre et
+la rubrique, sans hériter du résumé générique de celle-ci. Saisie limitée à
+160 caractères, huit suggestions et dix résultats dans la fenêtre. Le nombre de
+résultats est annoncé ; une recherche vide explique comment reprendre la saisie.
+Aucune action ne renvoie vers une page de recherche complète.
+Un changement effectif de chemin ferme le panneau. Entrée sur ses boutons
+exécute seulement leur action, et l’effacement rend le focus au champ.
+
+Le panneau de notifications et la boîte « Mes notifications » ont été retirés le
+9 octobre 2026 en même temps que le module. Le bouton de la cloche ne figure plus
+dans le header ; les anciennes adresses redirigent vers la feuille de route, où
+le module est replanifié avec ses futurs canaux.
+
+Les gabarits partagés limitent la largeur extérieure à 76rem par défaut, 52rem pour les créations et 56rem pour la lecture (actualité, recherche). Une variante de 92rem reste disponible pour les données denses. Les listes basculent entre tableau et présentation mobile selon la largeur de leur conteneur. Voir la [proposition UX/UI et son suivi](../propositions/interface-proposition-ux-ui.md).
+
+Chaque module traite les états de chargement, absence de données, erreur réessayable, accès refusé et conflit de modification lorsqu’il s’applique. L’interface explique une action indisponible sans révéler l’existence d’un dossier confidentiel.
+
+Une entrée masquée n’est jamais une protection suffisante : le serveur contrôle la ressource et l’action. La feuille de route est un catalogue informatif commun aux comptes connectés et ne confère aucun accès futur.
+
+## Routes et maintenance
+
+Les routes ont été harmonisées le 24 septembre 2026 : Répertoire sous `/membres/repertoire`, Actualité sous `/activite/actualites`, Utilisateurs sous `/systeme/utilisateurs` et Feuille de route sous `/systeme/feuille-de-route`. Les créations et fiches restent sous leur collection. Les anciennes adresses redirigent directement vers leur destination actuelle, avec leurs paramètres. `/systeme` conserve son entrée dépendante des permissions.
+
+Les chemins, constructeurs de fiches et alias sont centralisés dans `apps/web/src/shared/constants/routes.constants.ts`. Les retours de fiches et de créations conservent la liste filtrée ; les retours historiques vers le Répertoire sont également acceptés et traduits. Les liens d’onglets existants sont conservés ; `section=contacts` est accepté comme alias de Coordonnées dans le Répertoire.
+
+La feuille de route partage ses filtres avec `pole`, `phase` et `q` ; ses identifiants de pôles restent ceux du catalogue (par exemple `people` pour Membres). Les changements de filtre participent à l’historique ; la saisie de recherche remplace l’entrée courante pour éviter une étape d’historique à chaque caractère.
+
+Les anciennes URL planifiées sont des références de conception, pas des liens à exposer. Les préfixes futurs sont `/esport`, `/relations`, `/structure` et `/finances`. La route précise d’un nouveau module sera fixée à sa livraison, avec ses permissions et ses tests. Les noms de menu peuvent évoluer sans entraîner un nouveau changement de chemin.
+
+Mettre à jour ensemble le registre de fonctionnalités, la navigation active, les permissions, les politiques serveur, les fils d’Ariane et les tests de contrat lors de l’ouverture d’un module. Les libellés historiques internes ne se renomment pas implicitement à partir de la cible produit.

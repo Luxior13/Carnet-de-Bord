@@ -73,9 +73,9 @@ dans les bases isolées. Aucune migration ni table nouvelle justifiée :
   l'exploitation réelle ; le test de suppression n'est pas une preuve juridique
   ni un exercice de restauration.
 
-Ces décisions suivent [Structure](../../../references/STRUCTURE.md), le
+Ces décisions suivent [Structure](../../../domaines/structure-juridique.md), le
 [contrat SQL](../../../../packages/database/prisma/README.md) et le
-[suivi du Répertoire](../../../qualite/pages/membres-repertoire.md).
+[suivi du Répertoire](../../../pages/membres/repertoire/README.md).
 
 ## Exécution et limites
 

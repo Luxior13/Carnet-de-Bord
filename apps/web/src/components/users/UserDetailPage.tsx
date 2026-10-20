@@ -31,7 +31,6 @@ import {
   ACCESS_PERMISSION_KEYS,
   ACCOUNT_PERMISSION_KEYS,
   buildUserDetailSectionHref,
-  getUserAuditFiltersFromParams,
   havePermissionOverridesChangedForKeys,
   normalizePermissionPageKey,
   resetPermissionOverridesForKeys,
@@ -50,7 +49,6 @@ import {
   AdminStepUpDialog,
   UserAccessTab,
   UserAccountTab,
-  UserHistoryTab,
   UserProfileTab,
   UserSecurityTab,
 } from '$components/users/user-detail/UserDetailLazySections';
@@ -65,7 +63,6 @@ import {
 } from '$components/users/user-detail/UserMutationFeedback';
 import { UserPasswordResetFeedback } from '$components/users/user-detail/UserPasswordResetFeedback';
 import type { ProfileForm } from '$components/users/user-detail/UserProfileTab';
-import { useUserDetailAudit } from '$components/users/user-detail/useUserDetailAudit';
 import { useUserDetailCapabilities } from '$components/users/user-detail/useUserDetailCapabilities';
 import { useUserDetailDraft } from '$components/users/user-detail/useUserDetailDraft';
 import { useUserDetailSessions } from '$components/users/user-detail/useUserDetailSessions';
@@ -232,8 +229,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     canEditTargetProfile,
     canEditTargetRole,
     canEditTargetStatus,
-    canExportUsers,
-    canFetchUserAudit,
     canGrantTargetAccessPermissions,
     canManageTargetAccessPermissions,
     canManageTargetAccountPolicy,
@@ -242,7 +237,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     canResetTargetPassword,
     canRevokeTargetSessions,
     canViewTargetAccess,
-    canViewTargetActivity,
     canViewTargetContact,
     canViewTargetPersonalAccount,
     canViewTargetSecurity,
@@ -253,30 +247,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     isTargetIdentityMasked,
     loginReadOnlyHint,
     visibleUserDetailSections,
-  } = useUserDetailCapabilities(currentUser, user, userId);
-  const {
-    auditError,
-    auditFacets,
-    auditFilters,
-    auditLogs,
-    handleAuditExport,
-    handleAuditFiltersChange,
-    hasMoreAuditLogs,
-    isExportingAudit,
-    isLoadingMoreAudit,
-    onLoadMoreAudit,
-    onRetryAudit,
-    refreshAuditAfterMutation,
-    shouldShowAuditLoading,
-  } = useUserDetailAudit({
-    activeSection,
-    canFetchUserAudit,
-    currentQueryString,
-    initialFilters: getUserAuditFiltersFromParams(searchParams),
-    pathname,
-    requestStepUpForResponse,
-    userId,
-  });
+  } = useUserDetailCapabilities(currentUser, user);
   const {
     fetchSecuritySessions,
     hasLoadedSecuritySessions,
@@ -298,7 +269,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     onClose: () => setShowResetConfirm(false),
     onSuccess: () => {
       void fetchUser({ background: true });
-      refreshAuditAfterMutation();
       void fetchSecuritySessions();
     },
     requestStepUp: requestStepUpForResponse,
@@ -802,7 +772,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
             updatedAt: data.data.user.updatedAt ?? currentUser.updatedAt,
           });
         }
-        refreshAuditAfterMutation();
         toast.success('Utilisateur mis à jour');
       } else {
         if (
@@ -901,7 +870,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
 
       if (response.ok && data.success) {
         syncUserState(data.data.user, submitted);
-        refreshAuditAfterMutation();
         toast.success('Autorisations mises à jour');
         requestAnimationFrame(() => {
           if (!mountedRef.current || requestController.signal.aborted) return;
@@ -996,7 +964,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
 
       if (response.ok && data.success) {
         syncUserState(data.data.user, submitted);
-        refreshAuditAfterMutation();
         toast.success('Autonomie du compte mise à jour');
       } else {
         if (
@@ -1078,7 +1045,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
 
       if (response.ok && data.success) {
         syncUserState(data.data.user, submitted);
-        refreshAuditAfterMutation();
         void fetchSecuritySessions();
         toast.success(
           editForm.isActive ? 'Compte réactivé' : 'Compte désactivé',
@@ -1124,7 +1090,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
   const handleResetMfaComplete = (updatedUser: UserType): void => {
     syncUserState(updatedUser);
     setShowResetMfa(false);
-    refreshAuditAfterMutation();
     void fetchSecuritySessions();
     toast.success('Double authentification réinitialisée');
   };
@@ -1149,7 +1114,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       );
       if (!mountedRef.current || requestController.signal.aborted) return;
       toast.success(sessionId ? 'Session révoquée' : 'Sessions révoquées');
-      refreshAuditAfterMutation();
       void fetchSecuritySessions();
       if (!sessionId) void fetchUser({ background: true });
     } catch (failure) {
@@ -1488,39 +1452,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
               sessionsNotice={securitySessionsNotice}
             />
           </>
-        );
-      case 'history':
-        if (!canViewTargetActivity) {
-          return (
-            <AccessDeniedState description="Vous n'avez pas la permission de consulter l'activité de cet utilisateur." />
-          );
-        }
-
-        return (
-          <UserHistoryTab
-            auditLogs={auditLogs}
-            canExport={canExportUsers}
-            error={auditError}
-            facets={auditFacets}
-            filters={auditFilters}
-            hasMoreAuditLogs={hasMoreAuditLogs}
-            isExporting={isExportingAudit}
-            isLoading={shouldShowAuditLoading}
-            isLoadingMore={isLoadingMoreAudit}
-            onFiltersChange={handleAuditFiltersChange}
-            onExport={
-              canExportUsers
-                ? (): void => {
-                    void handleAuditExport();
-                  }
-                : undefined
-            }
-            onLoadMore={onLoadMoreAudit}
-            onRetry={onRetryAudit}
-            perspective={isSelf ? 'personal' : 'managed'}
-            totalAuditLogs={auditLogs.length}
-            userId={userId}
-          />
         );
       default:
         return null;

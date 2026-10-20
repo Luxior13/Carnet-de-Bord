@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from 'node:fs';
+
 import { NextRequest } from 'next/server';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -13,6 +15,10 @@ import {
   hasPermission,
   isPermissionGrantable,
 } from '$constants/permissions.constants';
+import { normalizeUserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
+
+// Test-owned paths only; no URL receives external input.
+const sourceUrl = (path: string): URL => new URL(path, import.meta.url);
 
 describe('retired activity surfaces', () => {
   it.each(['', '?format=csv', '?page=2', '?cursor=untrusted'])(
@@ -38,5 +44,22 @@ describe('retired activity surfaces', () => {
     expect(isPermissionGrantable(key)).toBe(false);
     expect(hasPermission('ADMIN', key, { [key]: true })).toBe(false);
     expect(hasPermission('USER', key, { [key]: true })).toBe(false);
+  });
+
+  it('keeps the retired activity section out of the user record', () => {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    const userDetailSource = readFileSync(
+      sourceUrl('../components/users/UserDetailPage.tsx'),
+      'utf8',
+    );
+    for (const retired of [
+      '../components/users/user-detail/UserHistoryTab.tsx',
+      '../components/users/user-detail/useUserDetailAudit.ts',
+    ]) {
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
+      expect(existsSync(sourceUrl(retired))).toBe(false);
+    }
+    expect(userDetailSource).not.toContain('/audit');
+    expect(normalizeUserDetailSection('history')).toBe('profile');
   });
 });

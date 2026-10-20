@@ -4,7 +4,6 @@ vi.mock('server-only', () => ({}));
 
 const mocks = vi.hoisted(() => ({
   auditEncryptionKeyVersion: { findMany: vi.fn() },
-  isInternalNewsSchemaReady: vi.fn(),
   isPersonEnvironmentConfigured: vi.fn(),
   isPersonSchemaCatalogReady: vi.fn(),
   queryRaw: vi.fn(),
@@ -24,16 +23,12 @@ vi.mock('$features/persons/server/person-readiness', () => ({
   isPersonEnvironmentConfigured: mocks.isPersonEnvironmentConfigured,
   isPersonReady: (status: string): boolean => status === 'ready',
 }));
-vi.mock('$features/internal-news/server/internal-news-readiness', () => ({
-  isInternalNewsSchemaReady: mocks.isInternalNewsSchemaReady,
-}));
 import { createReadinessResponse } from '$server/health';
 
 describe('readiness without a background worker', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.queryRaw.mockResolvedValue([{ ready: true }]);
-    mocks.isInternalNewsSchemaReady.mockResolvedValue(true);
     mocks.isPersonSchemaCatalogReady.mockResolvedValue(true);
     mocks.auditEncryptionKeyVersion.findMany.mockResolvedValue([
       { version: 1 },
@@ -49,7 +44,6 @@ describe('readiness without a background worker', () => {
     expect(body).toMatchObject({
       checks: {
         database: 'connected',
-        internalNews: 'ready',
         persons: 'ready',
         schema: 'ready',
       },
@@ -57,18 +51,7 @@ describe('readiness without a background worker', () => {
     });
     expect(JSON.stringify(body)).not.toContain('worker');
     expect(JSON.stringify(body)).not.toContain('queue');
-  });
-
-  it('keeps the site healthy while the internal news schema is not ready', async () => {
-    mocks.isInternalNewsSchemaReady.mockResolvedValue(false);
-
-    const response = await createReadinessResponse();
-
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({
-      checks: { internalNews: 'schema_not_ready', schema: 'ready' },
-      status: 'healthy',
-    });
+    expect(body.checks).not.toHaveProperty('internalNews');
   });
 
   it('keeps the site healthy while the Persons schema is not ready', async () => {
@@ -104,7 +87,6 @@ describe('readiness without a background worker', () => {
     expect(await response.json()).toMatchObject({
       checks: {
         database: 'disconnected',
-        internalNews: 'unknown',
         persons: 'unknown',
         schema: 'unknown',
       },

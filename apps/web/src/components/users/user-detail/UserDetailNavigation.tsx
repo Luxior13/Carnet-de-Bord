@@ -3,14 +3,7 @@ import React from 'react';
 
 import type { PageSection } from '$components/layout/PageSectionNavigation';
 
-export type UserDetailSectionId =
-  | 'profile'
-  | 'access'
-  | 'account'
-  | 'security'
-  // L'activité est retirée temporairement (2026-10-10) mais le type reste pour
-  // le code dormant conservé en vue d'une restauration ultérieure.
-  | 'history';
+export type UserDetailSectionId = 'profile' | 'access' | 'account' | 'security';
 
 export type UserDetailSection<SectionId extends string = UserDetailSectionId> =
   PageSection<SectionId>;
@@ -36,6 +29,7 @@ export const normalizeUserDetailSection = (
   if (value === 'access' || value === 'permissions') return 'access';
   if (value === 'account' || value === 'personal-account') return 'account';
   if (value === 'security') return 'security';
+  // Former activity links (retired 2026-10-10) open the profile.
   if (value === 'history') return 'profile';
 
   return 'profile';

@@ -87,4 +87,4 @@ serveur. Les erreurs réseau, mutations et états de chargement de données sont
 non applicables à ce catalogue local. Session, sidebar complète, serveur Next,
 lecteur d’écran, appareil physique et zoom natif ne sont pas validés par ce banc.
 Les tests d’intégration et contrôles globaux appartiennent à la passe du rapport
-[Feuille de route](../../AUDIT_FEUILLE_DE_ROUTE_2026-10-12.md).
+[Feuille de route](../../2026-10-12-feuille-de-route.md).

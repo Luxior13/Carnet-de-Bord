@@ -39,7 +39,7 @@ deux ajustements et l'ajout du scénario Entrée.
 
 Le lint des sept composants modifiés passe sans avertissement. Les contrôles
 globaux, les tests SQL et l'intégration authentifiée sont documentés dans le
-[rapport principal](../../AUDIT_MON_COMPTE_2026-10-11.md), séparément de ce banc.
+[rapport principal](../../2026-10-11-mon-compte.md), séparément de ce banc.
 
 ## Couverture observée
 

@@ -140,7 +140,7 @@ Le [résumé de la suite complète](preuves/tests.json) est une preuve distincte
 additionner une seconde fois les suites ciblées des sous-dossiers serveur.
 La compilation, les budgets, les mesures de listes et les limites de la revue
 sont consolidés dans le
-[rapport unique](../../AUDIT_CLOTURE_SOCLE_2026-10-12.md).
+[rapport unique](../../2026-10-12-cloture-socle.md).
 
 Les trois fichiers de sauvegarde bruts et les deux répertoires temporaires de
 performance ont été supprimés après contrôle de leurs chemins ; Next 3132 est

@@ -108,5 +108,5 @@ HTTP loopback sur Windows, sans proxy/TLS de déploiement, lecteur d'écran,
 appareil physique, test de charge ou diffusion instantanée entre appareils.
 Le [banc client](../banc-client/README.md) complète les variations de contexte
 et de texte avec ses simulations explicites. Le
-[rapport](../../AUDIT_ACCUEIL_2026-10-12.md) distingue ces preuves et les tests
+[rapport](../../2026-10-12-accueil.md) distingue ces preuves et les tests
 de régression des routes et du service de session.

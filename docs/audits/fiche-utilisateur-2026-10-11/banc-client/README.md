@@ -13,7 +13,7 @@ des boutons, états sans sous-cartes, compteur d'échecs regroupé et ouverture
 des sessions dans les détails. Quinze scénarios existants réussis avec les
 filtres `security`, `mfa-reset`, `session`, `secret-copy` et `status-actionbar`.
 Cette passe partielle et l'inspection ponctuelle des alertes/détails à 320 px
-sont consignées dans le [suivi courant](../../../qualite/pages/systeme-utilisateurs.md).
+sont consignées dans le [suivi courant](../../../pages/systeme/utilisateurs/README.md).
 Les captures historiques ci-dessous précèdent cet allègement.
 
 Le banc charge `UserDetailPage`, ses composants différés, les contrôleurs réels,

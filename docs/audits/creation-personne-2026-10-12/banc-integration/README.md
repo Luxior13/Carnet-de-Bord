@@ -127,4 +127,4 @@ navigation après succès et délai accéléré sont contrôlés dans le
 La recherche de nom aide à vérifier ; elle ne prouve pas l'unicité d'une personne.
 La revue ne certifie pas tous les dialogues et suppressions de la fiche créée.
 
-[Rapport de la page](../../AUDIT_CREATION_PERSONNE_2026-10-12.md).
+[Rapport de la page](../../2026-10-12-creation-personne.md).

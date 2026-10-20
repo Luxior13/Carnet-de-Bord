@@ -102,5 +102,5 @@ résistance distribuée, ni validation de Safari/iOS ou lecteur d'écran.
 Les cas de concurrence, limites d'essais et rollback d'audit sont détaillés dans
 le [banc serveur](../banc-serveur/README.md) ; les interactions de panne et
 modales complémentaires dans le [banc client](../banc-client/README.md).
-Le [rapport propriétaire](../../AUDIT_CONNEXION_2026-10-12.md) regroupe les
+Le [rapport propriétaire](../../2026-10-12-connexion.md) regroupe les
 résultats sans confondre ces couches.

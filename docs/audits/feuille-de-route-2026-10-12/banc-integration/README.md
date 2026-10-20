@@ -2,7 +2,7 @@
 
 **8/8 scénarios réussis**, dans l'application Next construite en production.
 [Résultats](resultats.json) · [Script](run.cjs) ·
-[Rapport de la page](../../AUDIT_FEUILLE_DE_ROUTE_2026-10-12.md).
+[Rapport de la page](../../2026-10-12-feuille-de-route.md).
 
 Départ propre au commit `f108f6c`, puis corrections locales de cette revue.
 Windows, Node 24.14.0, Bun 1.4.2, Next 15.5.23, Prisma 6.19.3,

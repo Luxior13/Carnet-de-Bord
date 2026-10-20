@@ -20,8 +20,6 @@ const authenticatedLayoutSource = readSourceFile(
 );
 const rootLayoutSource = readSourceFile('../app/layout.tsx');
 const globalStylesSource = readSourceFile('../app/globals.css');
-const pageHeroSource = readSourceFile('../components/layout/PageHero.tsx');
-const tabsSource = readSourceFile('../components/ui/tabs.tsx');
 const userDetailSectionRailSource = readSourceFile(
   '../components/layout/PageSectionNavigation.tsx',
 );
@@ -364,13 +362,6 @@ describe('design system contracts', () => {
     }
   });
 
-  it('gives the shared page heading a distinct surface independent from sidebar colors', () => {
-    expect(pageHeroSource).toContain('data-slot="page-heading"');
-    expect(pageHeroSource).toContain('border-border-default bg-surface-panel');
-    expect(pageHeroSource).not.toContain('shadow-');
-    expect(pageHeroSource).not.toContain('bg-gradient');
-    expect(pageHeroSource).not.toContain('-sidebar-');
-  });
   it('keeps generic actions touch-friendly below the desktop breakpoint', () => {
     expect(buttonVariants()).toContain('h-10');
     expect(buttonVariants({ size: 'icon' })).toContain('size-10');
@@ -387,7 +378,6 @@ describe('design system contracts', () => {
   });
 
   it('does not reserve vertical scrollbar gutters in horizontal navigation', () => {
-    expect(tabsSource).not.toContain('scrollbar-gutter');
     expect(userDetailSectionRailSource).not.toContain('scrollbar-gutter');
   });
 

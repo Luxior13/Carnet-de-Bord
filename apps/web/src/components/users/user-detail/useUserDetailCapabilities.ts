@@ -13,7 +13,6 @@ import { isUserIdentityMasked } from '$utils/user-display.utils';
 export function useUserDetailCapabilities(
   currentUser: UserType | null | undefined,
   user: UserType | null | undefined,
-  userId: string,
 ) {
   const isProtectedActor = currentUser?.isProtected === true;
   const canViewUsers = currentUser
@@ -115,22 +114,6 @@ export function useUserDetailCapabilities(
       hasPermission(
         currentUser.role,
         PERMISSIONS.USERS.REVOKE_SESSIONS,
-        currentUser.permissions,
-      )
-    : false;
-  const canViewUserActivity = currentUser
-    ? isProtectedActor ||
-      hasPermission(
-        currentUser.role,
-        PERMISSIONS.USERS.VIEW_ACTIVITY,
-        currentUser.permissions,
-      )
-    : false;
-  const canExportUsers = currentUser
-    ? isProtectedActor ||
-      hasPermission(
-        currentUser.role,
-        PERMISSIONS.USERS.EXPORT_ACTIVITY,
         currentUser.permissions,
       )
     : false;
@@ -241,8 +224,6 @@ export function useUserDetailCapabilities(
     canManageUserStatus &&
     !user.isProtected &&
     !isTargetAdminAccessRestricted;
-  const canViewTargetActivity =
-    !!user && !isTargetIdentityMasked && (isSelf || canViewUserActivity);
   const decideAccessPermissionMutation = useCallback(
     (permissionKey: string, enabled: boolean) =>
       decideUserAccessMutation(
@@ -277,9 +258,6 @@ export function useUserDetailCapabilities(
         : !canUpdateUserLogin
           ? 'La permission Modifier les identifiants de connexion est requise.'
           : 'Cet identifiant est en lecture seule depuis cette fiche.';
-  const canFetchUserAudit =
-    !isTargetIdentityMasked &&
-    (currentUser?.id === userId || canViewUserActivity);
   const canViewTargetSecurity =
     !!user &&
     !isTargetIdentityMasked &&
@@ -297,16 +275,10 @@ export function useUserDetailCapabilities(
           return canViewTargetAccess || canViewTargetPersonalAccount;
         }
         if (section.id === 'security') return canViewTargetSecurity;
-        if (section.id === 'history') return canViewTargetActivity;
 
         return true;
       }),
-    [
-      canViewTargetAccess,
-      canViewTargetActivity,
-      canViewTargetPersonalAccount,
-      canViewTargetSecurity,
-    ],
+    [canViewTargetAccess, canViewTargetPersonalAccount, canViewTargetSecurity],
   );
 
   return {
@@ -317,8 +289,6 @@ export function useUserDetailCapabilities(
     canEditTargetProfile,
     canEditTargetRole,
     canEditTargetStatus,
-    canExportUsers,
-    canFetchUserAudit,
     canGrantTargetAccessPermissions,
     canManageTargetAccessPermissions,
     canManageTargetAccountPolicy,
@@ -331,7 +301,6 @@ export function useUserDetailCapabilities(
     canUpdateUserLogin,
     canUpdateUsers,
     canViewTargetAccess,
-    canViewTargetActivity,
     canViewTargetContact,
     canViewTargetPersonalAccount,
     canViewTargetSecurity,

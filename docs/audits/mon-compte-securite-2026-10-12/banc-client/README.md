@@ -66,5 +66,5 @@ Le corps HTTP suspendu après réception des en-têtes appartient aux tests du
 helper, pas à ce banc. Les cas 401, perte de connexion réelle, double soumission,
 changement d’acteur et parcours complets mot de passe/MFA ne sont pas rejoués ici.
 
-Le [suivi Mon compte](../../../qualite/pages/mon-compte.md) rassemble les
+Le [suivi Mon compte](../../../pages/mon-compte/README.md) rassemble les
 décisions et la portée de cette correction.

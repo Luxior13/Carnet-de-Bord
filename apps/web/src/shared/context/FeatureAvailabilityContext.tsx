@@ -102,7 +102,6 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
     () =>
       new Set([
         ...ALWAYS_OPERATIONAL_FEATURE_IDS,
-        ...(readiness.internalNews ? [FEATURES.internalNews.id] : []),
         ...(readiness.persons ? [FEATURES.persons.id] : []),
       ]),
     [readiness],
@@ -111,7 +110,6 @@ export const FeatureAvailabilityProvider: FC<{ children: ReactNode }> = ({
     () =>
       new Set([
         ...ALWAYS_OPERATIONAL_FEATURE_IDS,
-        ...(readiness.internalNews !== false ? [FEATURES.internalNews.id] : []),
         ...(readiness.persons !== false ? [FEATURES.persons.id] : []),
       ]),
     [readiness],

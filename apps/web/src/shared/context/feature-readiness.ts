@@ -1,10 +1,8 @@
 export type FeatureReadiness = {
-  internalNews: boolean | null;
   persons: boolean | null;
 };
 
 export const UNKNOWN_FEATURE_READINESS: FeatureReadiness = {
-  internalNews: null,
   persons: null,
 };
 
@@ -31,10 +29,6 @@ export function readFeatureReadiness(
   };
 
   return {
-    internalNews: resolve(
-      'internalNews' in checks ? checks.internalNews : undefined,
-      previous.internalNews,
-    ),
     persons: resolve(
       'persons' in checks ? checks.persons : undefined,
       previous.persons,

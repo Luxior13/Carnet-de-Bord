@@ -1,6 +1,6 @@
 # États techniques — intégration du 12 octobre 2026
 
-[Rapport](../../AUDIT_ETATS_TECHNIQUES_2026-10-12.md) ·
+[Rapport](../../2026-10-12-etats-techniques.md) ·
 [Parcours réels](run.cjs) · [Préparation des sondes](prepare-probes.cjs) ·
 [Parcours des sondes](run-probes.cjs).
 

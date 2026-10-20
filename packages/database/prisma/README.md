@@ -94,7 +94,7 @@ La migration `20260921120000_remove_partner_module` supprime les dix tables du
 domaine `Partner*`, ses enums et ses fonctions de trigger. Le module « Sponsors
 & partenaires » a été retiré de l'application le 21 septembre 2026 et sera
 reconstruit plus tard. Sa spécification complète est conservée dans
-`features/pages/bureau-juridique/sponsors-partenaires.md`.
+`docs/propositions/intentions/pages/bureau-juridique/sponsors-partenaires.md`.
 
 Le journal d'audit n'est pas modifié : les valeurs `PARTNER_*` des enums
 `AuditAction` / `AuditCategory` et les lignes déjà écrites restent en place afin
@@ -109,7 +109,7 @@ décrit ci-dessus.
 
 ## Revue du schéma courant
 
-La [revue exhaustive du 13 octobre 2026](../../../docs/audits/AUDIT_SCHEMA_PRISMA_2026-10-13.md)
+La [revue exhaustive du 13 octobre 2026](../../../docs/audits/2026-10-13-schema-prisma.md)
 documente chaque déclaration du schéma et les objets SQL complémentaires.
 Elle distingue les garanties de stockage des règles portées par les services.
 
