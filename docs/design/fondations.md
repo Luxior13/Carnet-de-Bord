@@ -132,7 +132,6 @@ Valeurs de `:root` (portée par défaut).
 | 768 px de large et 600 px de haut | Barre d’enregistrement collante autorisée |
 | 1024 px | Sidebar en volet mobile ; champs à 13 px au-delà |
 | 48, 52, 56, 64 rem | Seuils du tableau Utilisateurs selon les colonnes autorisées |
-| 118 rem | Rail de synthèse (`PageAsideLayout`, 16 rem) |
 
 ## Hiérarchie de couleurs
 
@@ -217,7 +216,8 @@ pour retrouver leur densité, sans remplacer les tokens globaux d'une page à l'
 
 La hiérarchie HTML reste indépendante de la taille : un `h1` par
 page, puis `h2` et `h3`. `CardTitle` rend un `h2` par défaut et accepte `as`.
-`SectionPanel` accepte `titleAs="h3"` lorsqu'il est imbriqué dans une section.
+Le titre d’une section de fiche est un `h2` réservé aux lecteurs d’écran ; ses
+rubriques sont des `h3` en petites capitales.
 Les titres de page restent neutres ; une zone dangereuse peut porter un statut.
 Les titres et descriptions essentiels reviennent à la ligne. Un libellé tronqué
 reste complet dans le DOM et dispose, si utile, d'un attribut `title`.

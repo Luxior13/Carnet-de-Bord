@@ -20,13 +20,34 @@ Les anciens paramètres `activity` et `history` affichent Profil.
   (profil, contact, mot de passe, double authentification, sessions) décrites
   dans [Socle et autonomie personnelle](../../domaines/permissions.md#socle-et-autonomie-personnelle).
 - **Cadre** : [AccountPageContent](../../../apps/web/src/features/account/AccountPageContent.tsx) compose le
-  bandeau compact, la synthèse `UserOverviewCard` et `PageSectionNavigation` ;
+  bandeau compact porteur des états du compte (`UserIdentityStatus`) et
+  `PageSectionNavigation` ;
   les sections sont chargées à la première visite.
 
 ## Revues communes
 
 Les sections ci-dessous concernent tout l’espace. Celles qui ne concernent
 qu’une section ont rejoint sa fiche le 19 octobre 2026, sans modification de contenu.
+
+## Reprise — 20 octobre 2026
+
+Suite de la reprise de la fiche utilisateur, validée par le propriétaire
+(« ok go ») : ses règles s’appliquent à Mon compte, même gabarit.
+
+| ID | Nature / priorité | État | Point et traitement |
+| --- | --- | --- | --- |
+| COMPTE-13 | Composition, P2 | Clos | Carte « Vue d’ensemble » remplacée par les états dans le bandeau (avec la fiche utilisateur) |
+| COMPTE-14 | Composition, P2 | Clos | Titres qui répétaient l’onglet (« Profil · Votre identité… », « Sécurité · Protégez votre accès… ») réservés aux lecteurs d’écran ([HARMO-07](../../design/harmonisation.md#constats)) |
+| COMPTE-15 | Composition, P2 | Clos | Cadres imbriqués retirés : identifiant et email en liste de descriptions sous « Connexion et contact », valeurs de Mot de passe et Double authentification sans cadre, note de protection en aide ; seul le blocage reste encadré |
+| COMPTE-16 | Libellés, P3 | Clos | « Application d’authentification » devient « Double authentification » ; « À activer » devient « À configurer », comme sur la fiche utilisateur |
+
+- **Livré** : `ProfileSection` (carte sans en-tête, rubriques Identité et
+  Connexion et contact), `SecuritySection` ; `AccountPanel` et
+  `SectionPanel`, devenus sans consommateur, supprimés.
+- **Vérifié** : types, lint, Vitest complet ;
+  [banc client du 11 octobre](../../audits/mon-compte-2026-10-11/banc-client/README.md)
+  rejoué sans modification, 23 sur 23, captures relues à 320 et 1 440 px.
+- **Non vérifié** : session et serveur réels, rendu sur le serveur de dev.
 
 ## Catalogue personnel corrigé — 15 octobre 2026
 
@@ -96,13 +117,14 @@ La protection contre les véritables conflits de profil reste inchangée.
 ## Décisions courantes
 
 - Même gabarit que la fiche utilisateur : hero `PageIdentityHero` compact
-  (avatar DiceBear, identifiant, rôle à droite), rail « Vue d'ensemble »
-  (`PageAsideLayout` + `UserOverviewCard`) et navigation de sections.
+  (avatar DiceBear, identifiant et dates, états en pastilles, rôle à droite)
+  et navigation de sections. La carte « Vue d’ensemble » est retirée depuis
+  le 20 octobre 2026, avec celle de la fiche utilisateur.
 - Onglets conservés : « Profil » et « Sécurité », chargés à la première visite.
   Les anciens paramètres `activity` et `history` affichent Profil. Le branchement
   dormant de l’activité dans cette page a été retiré le 11 octobre ; les composants
   d’historique des autres consommateurs et les traces persistées sont conservés.
-- Composants partagés réutilisés : `UserOverviewCard`, `UserAccessBadge`,
+- Composants partagés réutilisés : `UserIdentityStatus`, `UserAccessBadge`,
   `UserStatusBadge`, `SectionActionBar`.
 - Avatar de compte : fond selon l'accès via `UserAvatar` partagé (rouge clair,
   ambre ou bleu clair), dessin conservé ; [décision et contrôle](../systeme/utilisateurs/liste.md#fond-des-avatars-par-accès--10-octobre-2026).

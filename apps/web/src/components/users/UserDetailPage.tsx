@@ -8,34 +8,30 @@ import React, {
   type FC,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react';
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageAsideLayout } from '$components/layout/PageAsideLayout';
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { AccessDeniedState, PageState } from '$components/layout/PageState';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
-import { analyzeUserAccessMutationBatch } from '$components/users/user-detail/user-access-editor-policy';
-import {
-  getProfileFieldErrors,
-  userProfileSchema,
-} from '$components/users/user-detail/user-detail-draft';
 import {
   ACCESS_PERMISSION_KEYS,
   ACCOUNT_PERMISSION_KEYS,
   buildUserDetailSectionHref,
-  havePermissionOverridesChangedForKeys,
   normalizePermissionPageKey,
   resetPermissionOverridesForKeys,
   selectPermissionOverridesForKeys,
 } from '$components/users/user-detail/user-detail-page.helpers';
+import {
+  runUserDetailPatch,
+  type UserDetailPatchContext,
+} from '$components/users/user-detail/user-detail-patch';
 import { requestUserDetailMutation } from '$components/users/user-detail/user-detail-request';
 import { focusUserSecurityElement } from '$components/users/user-detail/user-security-focus';
 import {
@@ -64,11 +60,15 @@ import {
 import { UserPasswordResetFeedback } from '$components/users/user-detail/UserPasswordResetFeedback';
 import type { ProfileForm } from '$components/users/user-detail/UserProfileTab';
 import { useUserDetailCapabilities } from '$components/users/user-detail/useUserDetailCapabilities';
+import { useUserDetailChanges } from '$components/users/user-detail/useUserDetailChanges';
 import { useUserDetailDraft } from '$components/users/user-detail/useUserDetailDraft';
 import { useUserDetailSessions } from '$components/users/user-detail/useUserDetailSessions';
 import { useUserPasswordReset } from '$components/users/user-detail/useUserPasswordReset';
 import { UserAvatar } from '$components/users/UserAvatar';
-import { UserOverviewCard } from '$components/users/UserOverviewCard';
+import {
+  formatUserIdentityLine,
+  UserIdentityStatus,
+} from '$components/users/UserIdentityStatus';
 import { FEATURES } from '$constants/feature-registry.constants';
 import { type PermissionsData } from '$constants/permissions.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
@@ -78,10 +78,8 @@ import { getUserDetailScope } from '$features/users/user-detail-scope';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
-import directoryStyles from '$ui/directory.module.css';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { ApiClientError } from '$utils/api.utils';
-import { cn } from '$utils/css.utils';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 import { securityRequest } from '$utils/security-request.utils';
 import {
@@ -276,143 +274,41 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
   });
   const { clearPassword } = passwordReset;
   const isResetting = passwordReset.isResetting;
-  const profileErrors = useMemo(() => {
-    const validation = userProfileSchema.safeParse({
-      contactEmail: editForm.contactEmail,
-      firstName: editForm.firstName,
-      lastName: editForm.lastName,
-      loginName: editForm.loginName,
-    });
-    const local = getProfileFieldErrors(
-      validation.success ? undefined : validation.error.flatten().fieldErrors,
-    );
-    const server = mutation.serverValidation;
-
-    return {
-      contactEmail: canEditTargetContact
-        ? (local.contactEmail ??
-          (server?.form.contactEmail === editForm.contactEmail
-            ? server.errors.contactEmail
-            : null))
-        : null,
-      firstName: canEditTargetProfile
-        ? (local.firstName ??
-          (server?.form.firstName === editForm.firstName
-            ? server.errors.firstName
-            : null))
-        : null,
-      lastName: canEditTargetProfile
-        ? (local.lastName ??
-          (server?.form.lastName === editForm.lastName
-            ? server.errors.lastName
-            : null))
-        : null,
-      loginName: canEditTargetLogin
-        ? (local.loginName ??
-          (server?.form.loginName === editForm.loginName
-            ? server.errors.loginName
-            : null))
-        : null,
-    };
-  }, [
-    canEditTargetContact,
-    canEditTargetLogin,
-    canEditTargetProfile,
-    editForm,
-    mutation.serverValidation,
-  ]);
-  const hasProfileErrors =
-    (canEditTargetContact && !!profileErrors.contactEmail) ||
-    (canEditTargetLogin && !!profileErrors.loginName) ||
-    (canEditTargetProfile &&
-      (!!profileErrors.firstName || !!profileErrors.lastName));
-  const hasProfileIdentityChanges =
-    !!user &&
-    canEditTargetProfile &&
-    (editForm.firstName.trim() !== user.firstName ||
-      editForm.lastName.trim() !== user.lastName);
-  const hasProfileLoginChanges =
-    !!user &&
-    canEditTargetLogin &&
-    editForm.loginName.trim().toLowerCase() !== user.loginName;
-  const hasProfileContactChanges =
-    !!user &&
-    canEditTargetContact &&
-    (editForm.contactEmail.trim().toLowerCase() || null) !== user.contactEmail;
-  const hasProfileChanges =
-    hasProfileIdentityChanges ||
-    hasProfileLoginChanges ||
-    hasProfileContactChanges;
-  const hasRoleChanges = !!user && editForm.role !== user.role;
-  const hasAccessPermissionChanges =
-    !!user &&
-    havePermissionOverridesChangedForKeys(
-      permissions,
-      user.permissions,
-      ACCESS_PERMISSION_KEYS,
-    );
-  const hasAccountPermissionChanges =
-    !!user &&
-    havePermissionOverridesChangedForKeys(
-      permissions,
-      user.permissions,
-      ACCOUNT_PERMISSION_KEYS,
-    );
-  const hasAccessChanges = hasRoleChanges || hasAccessPermissionChanges;
-  const accessMutationAnalysis = user
-    ? analyzeUserAccessMutationBatch({
-        currentPermissions: user.permissions,
-        currentRole: user.role,
-        disabled: !canManageTargetAccessPermissions,
-        nextPermissions: permissions,
-        nextRole: editForm.role,
-        policy: decideAccessPermissionMutation,
-        targetCriticalAccessReady: user.criticalAccessReady,
-      })
-    : null;
-  const hasAccountChanges = hasAccountPermissionChanges;
-  const hasSecurityChanges = !!user && editForm.isActive !== user.isActive;
-  const hasUnsavedChanges =
-    hasProfileChanges ||
-    hasAccessChanges ||
-    hasAccountChanges ||
-    hasSecurityChanges;
-  const canSaveAccess =
-    hasAccessChanges &&
-    !mutation.feedback?.conflict &&
-    (!hasRoleChanges || canEditTargetRole) &&
-    accessMutationAnalysis?.decision.allowed === true;
-  const canSaveAccount =
-    hasAccountPermissionChanges &&
-    canManageTargetAccountPolicy &&
-    !mutation.feedback?.conflict;
-  const canSaveSecurity = canEditTargetStatus && !isSelf && hasSecurityChanges;
-  const dirtySections = useMemo<UserDetailSectionId[]>(() => {
-    const sections: UserDetailSectionId[] = [];
-
-    if (hasProfileChanges) sections.push('profile');
-    if (hasAccessChanges) sections.push('access');
-    if (hasAccountChanges) sections.push('account');
-    if (hasSecurityChanges) sections.push('security');
-
-    return sections;
-  }, [
+  const {
+    accessMutationAnalysis,
+    canSaveAccess,
+    canSaveAccount,
+    canSaveSecurity,
     hasAccessChanges,
+    hasAccessPermissionChanges,
     hasAccountChanges,
     hasProfileChanges,
+    hasProfileContactChanges,
+    hasProfileErrors,
+    hasProfileLoginChanges,
     hasSecurityChanges,
-  ]);
+    hasUnsavedChanges,
+    profileErrors,
+    railDirtySections,
+  } = useUserDetailChanges({
+    capabilities: {
+      canEditTargetContact,
+      canEditTargetLogin,
+      canEditTargetProfile,
+      canEditTargetRole,
+      canEditTargetStatus,
+      canManageTargetAccessPermissions,
+      canManageTargetAccountPolicy,
+      decideAccessPermissionMutation,
+      isSelf,
+    },
+    editForm,
+    mutation,
+    permissions,
+    user,
+  });
   const activeRailSection: UserDetailSectionId =
     activeSection === 'account' ? 'access' : activeSection;
-  const railDirtySections = useMemo<UserDetailSectionId[]>(() => {
-    const sections = dirtySections.filter((section) => section !== 'account');
-
-    if (hasAccountChanges && !sections.includes('access')) {
-      sections.push('access');
-    }
-
-    return sections;
-  }, [dirtySections, hasAccountChanges]);
   const resolveRailSection = useCallback(
     (sectionId: UserDetailSectionId): UserDetailSectionId =>
       sectionId === 'access' &&
@@ -684,6 +580,14 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     }));
   };
 
+  const patchContext: UserDetailPatchContext = {
+    isMounted: () => mountedRef.current,
+    lifetime: mutationAbortControllerRef,
+    mutation,
+    syncUserState,
+    userId,
+  };
+
   const handleSaveProfile = async (
     isLoginChangeConfirmed = false,
   ): Promise<void> => {
@@ -725,85 +629,46 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       return;
     }
 
-    if (!mutation.start()) return;
-    const requestController = mutationAbortControllerRef.current;
-    const submitted = {
-      form: editForm,
-      permissions,
-      section: 'profile' as const,
-    };
-    setIsSaving(true);
-    try {
-      const { data, response } = await requestUserDetailMutation<{
-        user: UserType;
-      }>(`/api/users/${userId}`, requestController.signal, {
-        body: JSON.stringify({
-          expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
-          ...(hasProfileContactChanges
-            ? {
-                contactEmail:
-                  editForm.contactEmail.trim().toLowerCase() || null,
-              }
-            : {}),
-          ...(hasProfileLoginChanges
-            ? { loginName: editForm.loginName.trim().toLowerCase() }
-            : {}),
-          ...(canEditTargetProfile
-            ? {
-                firstName: editForm.firstName.trim(),
-                lastName: editForm.lastName.trim(),
-              }
-            : {}),
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'PATCH',
-        signal: requestController.signal,
-      });
-      if (!mountedRef.current || requestController.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        syncUserState(data.data.user, submitted);
-        if (currentUser && data.data.user.id === currentUser.id) {
+    await runUserDetailPatch(patchContext, {
+      body: {
+        expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
+        ...(hasProfileContactChanges
+          ? { contactEmail: editForm.contactEmail.trim().toLowerCase() || null }
+          : {}),
+        ...(hasProfileLoginChanges
+          ? { loginName: editForm.loginName.trim().toLowerCase() }
+          : {}),
+        ...(canEditTargetProfile
+          ? {
+              firstName: editForm.firstName.trim(),
+              lastName: editForm.lastName.trim(),
+            }
+          : {}),
+      },
+      confirm: {
+        action: {
+          description:
+            "La modification de l'identifiant de connexion ferme toutes les sessions de l’utilisateur.",
+          execute: () => handleSaveProfile(true),
+          title: "Confirmer la modification de l'identifiant",
+        },
+        request: requestStepUpForResponse,
+      },
+      onSuccess: (saved) => {
+        if (currentUser && saved.id === currentUser.id) {
           // Preserve hidden administrative overrides while syncing self-profile fields.
           applyUserUpdate({
             ...currentUser,
-            firstName: data.data.user.firstName,
-            lastName: data.data.user.lastName,
-            updatedAt: data.data.user.updatedAt ?? currentUser.updatedAt,
+            firstName: saved.firstName,
+            lastName: saved.lastName,
+            updatedAt: saved.updatedAt ?? currentUser.updatedAt,
           });
         }
         toast.success('Utilisateur mis à jour');
-      } else {
-        if (
-          requestStepUpForResponse(data, {
-            description:
-              "La modification de l'identifiant de connexion ferme toutes les sessions du membre.",
-            execute: () => handleSaveProfile(true),
-            title: "Confirmer la modification de l'identifiant",
-          })
-        ) {
-          return;
-        }
-        mutation.report(
-          'profile',
-          data.error?.message || 'Erreur lors de la mise à jour',
-          response.status,
-          data.error?.details,
-          editForm,
-        );
-      }
-    } catch {
-      if (!mountedRef.current || requestController.signal.aborted) return;
-      mutation.report(
-        'profile',
-        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
-      );
-    } finally {
-      if (requestController !== mutationAbortControllerRef.current) return;
-      mutation.finish();
-      if (!mountedRef.current) return;
-      setIsSaving(false);
-    }
+      },
+      setPending: setIsSaving,
+      submitted: { form: editForm, permissions, section: 'profile' },
+    });
   };
 
   const handleSaveAccess = async (): Promise<void> => {
@@ -849,30 +714,21 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       );
     }
 
-    if (!mutation.start()) return;
-    const requestController = mutationAbortControllerRef.current;
-    const submitted = {
-      form: editForm,
-      permissions,
-      section: 'access' as const,
-    };
-    setIsSavingPermissions(true);
-    try {
-      const { data, response } = await requestUserDetailMutation<{
-        user: UserType;
-      }>(`/api/users/${userId}`, requestController.signal, {
-        body: JSON.stringify(payload),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'PATCH',
-        signal: requestController.signal,
-      });
-      if (!mountedRef.current || requestController.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        syncUserState(data.data.user, submitted);
+    await runUserDetailPatch(patchContext, {
+      body: payload,
+      confirm: {
+        action: {
+          description:
+            'Ce changement peut modifier le rôle ou les autorisations sensibles de l’utilisateur et fermer ses sessions.',
+          execute: handleSaveAccess,
+          title: 'Confirmer la modification des autorisations',
+        },
+        request: requestPasswordReauthenticationForResponse,
+      },
+      onSuccess: (_saved, signal) => {
         toast.success('Autorisations mises à jour');
         requestAnimationFrame(() => {
-          if (!mountedRef.current || requestController.signal.aborted) return;
+          if (!mountedRef.current || signal.aborted) return;
           const panel = document.getElementById('user-access-panel');
           const control = panel?.querySelector<HTMLElement>(
             '#user-role:not(:disabled), button[aria-pressed]:not(:disabled):not([aria-hidden="true"])',
@@ -881,37 +737,10 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
           if (target && !control) target.tabIndex = -1;
           target?.focus();
         });
-      } else {
-        if (
-          requestPasswordReauthenticationForResponse(data, {
-            description:
-              'Ce changement peut modifier le rôle ou les autorisations sensibles de l’utilisateur et fermer ses sessions.',
-            execute: handleSaveAccess,
-            title: 'Confirmer la modification des autorisations',
-          })
-        ) {
-          return;
-        }
-        mutation.report(
-          'access',
-          data.error?.message || 'Erreur lors de la mise à jour',
-          response.status,
-          data.error?.details,
-          editForm,
-        );
-      }
-    } catch {
-      if (!mountedRef.current || requestController.signal.aborted) return;
-      mutation.report(
-        'access',
-        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
-      );
-    } finally {
-      if (requestController !== mutationAbortControllerRef.current) return;
-      mutation.finish();
-      if (!mountedRef.current) return;
-      setIsSavingPermissions(false);
-    }
+      },
+      setPending: setIsSavingPermissions,
+      submitted: { form: editForm, permissions, section: 'access' },
+    });
   };
 
   const handleSaveAccount = async (): Promise<void> => {
@@ -936,66 +765,28 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       return;
     }
 
-    if (!mutation.start()) return;
-    const requestController = mutationAbortControllerRef.current;
-    const submitted = {
-      form: editForm,
-      permissions,
-      section: 'account' as const,
-    };
-    setIsSavingPermissions(true);
-    try {
-      const { data, response } = await requestUserDetailMutation<{
-        user: UserType;
-      }>(`/api/users/${userId}`, requestController.signal, {
-        body: JSON.stringify({
-          expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
-          permissions: selectPermissionOverridesForKeys(
-            permissions,
-            ACCOUNT_PERMISSION_KEYS,
-          ),
-          permissionScope: 'account',
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'PATCH',
-        signal: requestController.signal,
-      });
-      if (!mountedRef.current || requestController.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        syncUserState(data.data.user, submitted);
-        toast.success('Autonomie du compte mise à jour');
-      } else {
-        if (
-          requestStepUpForResponse(data, {
-            description:
-              'Cette modification change les actions que le membre peut effectuer sur son propre compte.',
-            execute: handleSaveAccount,
-            title: 'Confirmer la politique du compte',
-          })
-        ) {
-          return;
-        }
-        mutation.report(
-          'account',
-          data.error?.message || 'Erreur lors de la mise à jour',
-          response.status,
-          data.error?.details,
-          editForm,
-        );
-      }
-    } catch {
-      if (!mountedRef.current || requestController.signal.aborted) return;
-      mutation.report(
-        'account',
-        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
-      );
-    } finally {
-      if (requestController !== mutationAbortControllerRef.current) return;
-      mutation.finish();
-      if (!mountedRef.current) return;
-      setIsSavingPermissions(false);
-    }
+    await runUserDetailPatch(patchContext, {
+      body: {
+        expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
+        permissions: selectPermissionOverridesForKeys(
+          permissions,
+          ACCOUNT_PERMISSION_KEYS,
+        ),
+        permissionScope: 'account',
+      },
+      confirm: {
+        action: {
+          description:
+            'Cette modification change les actions que l’utilisateur peut effectuer sur son propre compte.',
+          execute: handleSaveAccount,
+          title: 'Confirmer la politique du compte',
+        },
+        request: requestStepUpForResponse,
+      },
+      onSuccess: () => toast.success('Autonomie du compte mise à jour'),
+      setPending: setIsSavingPermissions,
+      submitted: { form: editForm, permissions, section: 'account' },
+    });
   };
 
   const handleSaveSecurity = async (): Promise<void> => {
@@ -1021,65 +812,29 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       return;
     }
 
-    if (!mutation.start()) return;
-    const requestController = mutationAbortControllerRef.current;
-    const submitted = {
-      form: editForm,
-      permissions,
-      section: 'security' as const,
-    };
-    setIsSaving(true);
-    try {
-      const { data, response } = await requestUserDetailMutation<{
-        user: UserType;
-      }>(`/api/users/${userId}`, requestController.signal, {
-        body: JSON.stringify({
-          expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
-          isActive: editForm.isActive,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-        method: 'PATCH',
-        signal: requestController.signal,
-      });
-      if (!mountedRef.current || requestController.signal.aborted) return;
-
-      if (response.ok && data.success) {
-        syncUserState(data.data.user, submitted);
+    await runUserDetailPatch(patchContext, {
+      body: {
+        expectedUpdatedAt: new Date(user.updatedAt).toISOString(),
+        isActive: editForm.isActive,
+      },
+      confirm: {
+        action: {
+          description:
+            "Ce changement peut désactiver le compte et fermer l'accès de l’utilisateur.",
+          execute: handleSaveSecurity,
+          title: "Confirmer le changement d'état",
+        },
+        request: requestStepUpForResponse,
+      },
+      onSuccess: () => {
         void fetchSecuritySessions();
         toast.success(
           editForm.isActive ? 'Compte réactivé' : 'Compte désactivé',
         );
-      } else {
-        if (
-          requestStepUpForResponse(data, {
-            description:
-              "Ce changement peut désactiver le compte et fermer l'accès du membre.",
-            execute: handleSaveSecurity,
-            title: "Confirmer le changement d'état",
-          })
-        ) {
-          return;
-        }
-        mutation.report(
-          'security',
-          data.error?.message || 'Erreur lors de la mise à jour',
-          response.status,
-          data.error?.details,
-          editForm,
-        );
-      }
-    } catch {
-      if (!mountedRef.current || requestController.signal.aborted) return;
-      mutation.report(
-        'security',
-        'La réponse du serveur n’a pas pu être confirmée. Actualisez la fiche avant de réessayer ; votre saisie sera conservée.',
-      );
-    } finally {
-      if (requestController !== mutationAbortControllerRef.current) return;
-      mutation.finish();
-      if (!mountedRef.current) return;
-      setIsSaving(false);
-    }
+      },
+      setPending: setIsSaving,
+      submitted: { form: editForm, permissions, section: 'security' },
+    });
   };
 
   const handleResetPassword = async (): Promise<void> => {
@@ -1124,8 +879,8 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
           { error: { code: failure.code } },
           {
             description: sessionId
-              ? 'Cette session du membre sera immédiatement fermée.'
-              : 'Toutes les sessions actives du membre seront immédiatement fermées.',
+              ? 'Cette session de l’utilisateur sera immédiatement fermée.'
+              : 'Toutes les sessions actives de l’utilisateur seront immédiatement fermées.',
             execute: () => handleRevokeSecuritySession(sessionId),
             title: sessionId
               ? 'Confirmer la révocation de la session'
@@ -1379,6 +1134,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
             canEditContact={canEditTargetContact}
             canEditLogin={canEditTargetLogin}
             loginReadOnlyHint={loginReadOnlyHint}
+            savedLoginName={user.loginName ?? ''}
             canViewContact={canViewTargetContact}
             isSelf={isSelf}
             isSaving={isMutationPending || mutation.isRefreshing}
@@ -1552,94 +1308,81 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
     >
       <PageShell className="py-0">
         <PageCanvas contentClassName="relative space-y-3">
-          <div className="min-w-0">
-            <PageAsideLayout
-              header={
-                <PageIdentityHero
-                  compact
-                  title={getUserDisplayName(user)}
-                  description={`Identifiant : ${getUserLoginDisplay(user)}`}
-                  icon={
-                    <UserAvatar
-                      user={user}
-                      className="size-full rounded-[7px]"
-                    />
-                  }
-                  actions={<UserAccessBadge user={user} />}
-                />
+          <div className="min-w-0 space-y-4">
+            <PageIdentityHero
+              compact
+              title={getUserDisplayName(user)}
+              description={formatUserIdentityLine(
+                user,
+                getUserLoginDisplay(user),
+              )}
+              icon={
+                <UserAvatar user={user} className="size-full rounded-[7px]" />
               }
-              aside={
-                <div className={cn(directoryStyles.directory, 'min-w-0')}>
-                  <UserOverviewCard
-                    canViewAccess={canViewTargetAccess}
-                    user={user}
-                  />
+              meta={<UserIdentityStatus user={user} />}
+              actions={<UserAccessBadge user={user} />}
+            />
+            <div className="space-y-4">
+              <PageSectionNavigation
+                activeSection={activeRailSection}
+                ariaLabel="Navigation de la fiche utilisateur"
+                dirtySections={railDirtySections}
+                getSectionHref={(sectionId) =>
+                  buildUserDetailSectionHref(
+                    pathname,
+                    currentQueryString,
+                    resolveRailSection(sectionId),
+                  )
+                }
+                onSectionChange={(_section, href) =>
+                  window.history.replaceState(null, '', href)
+                }
+                sections={visibleUserDetailSections}
+              />
+              {isTargetIdentityMasked && (
+                <div className="border-warning/30 bg-warning/10 text-foreground flex gap-3 rounded-lg border p-3 sm:p-4">
+                  <AlertTriangle className="text-warning mt-0.5 size-4 shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      Compte système protégé
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs leading-5">
+                      Ce compte reste visible pour la cohérence administrative,
+                      mais son identité technique, ses accès, sa sécurité et son
+                      activité sont réservés à son propriétaire.
+                    </p>
+                  </div>
                 </div>
-              }
-            >
-              <div className="space-y-4">
-                <PageSectionNavigation
-                  activeSection={activeRailSection}
-                  ariaLabel="Navigation de la fiche utilisateur"
-                  dirtySections={railDirtySections}
-                  getSectionHref={(sectionId) =>
-                    buildUserDetailSectionHref(
-                      pathname,
-                      currentQueryString,
-                      resolveRailSection(sectionId),
-                    )
-                  }
-                  onSectionChange={(_section, href) =>
-                    window.history.replaceState(null, '', href)
-                  }
-                  sections={visibleUserDetailSections}
-                />
-                {isTargetIdentityMasked && (
-                  <div className="border-warning/30 bg-warning/10 text-foreground flex gap-3 rounded-lg border p-3 sm:p-4">
-                    <AlertTriangle className="text-warning mt-0.5 size-4 shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium">
-                        Compte système protégé
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-xs leading-5">
-                        Ce compte reste visible pour la cohérence
-                        administrative, mais son identité technique, ses accès,
-                        sa sécurité et son activité sont réservés à son
-                        propriétaire.
-                      </p>
-                    </div>
+              )}
+              {isSelf && (
+                <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                  <div className="min-w-0">
+                    <p className="text-foreground text-sm font-medium">
+                      Votre fiche administrative est en lecture seule
+                    </p>
+                    <p className="text-muted-foreground mt-1 text-xs leading-5">
+                      Consultez ici les informations de gestion. Utilisez Mon
+                      compte pour modifier vos informations personnelles et
+                      votre sécurité.
+                    </p>
                   </div>
-                )}
-                {isSelf && (
-                  <div className="border-primary/25 bg-primary/[0.08] flex flex-col gap-3 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-                    <div className="min-w-0">
-                      <p className="text-foreground text-sm font-medium">
-                        Votre fiche administrative est en lecture seule
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-xs leading-5">
-                        Consultez ici les informations de gestion. Utilisez Mon
-                        compte pour modifier vos informations personnelles et
-                        votre sécurité.
-                      </p>
-                    </div>
-                    <Button asChild className="shrink-0" size="sm">
-                      <Link href="/mon-compte">Gérer mon compte</Link>
-                    </Button>
-                  </div>
-                )}
-                <p aria-live="polite" className="sr-only">
-                  Section {getUserDetailSectionLabel(activeSection)} affichée
-                </p>
-                <UserMutationFeedback
-                  controller={mutation}
-                  onRefresh={async () =>
-                    Boolean(await fetchUser({ background: true }))
-                  }
-                  section={activeSection}
-                />
-                <div className="min-w-0">{renderContent()}</div>
-              </div>
-            </PageAsideLayout>
+                  <Button asChild className="shrink-0" size="sm">
+                    <Link href="/mon-compte">Gérer mon compte</Link>
+                  </Button>
+                </div>
+              )}
+              <p aria-live="polite" className="sr-only">
+                Section {getUserDetailSectionLabel(activeSection)} affichée
+              </p>
+              <UserMutationFeedback
+                controller={mutation}
+                onRefresh={async () =>
+                  Boolean(await fetchUser({ background: true }))
+                }
+                section={activeSection}
+              />
+              <div className="min-w-0">{renderContent()}</div>
+            </div>
           </div>
         </PageCanvas>
       </PageShell>

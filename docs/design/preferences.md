@@ -32,7 +32,7 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 | Ressenti de référence | La liste `/systeme/utilisateurs` est la référence de couleurs, clarté et densité ; reprendre ce ressenti sans recopier son tableau | Tout le site | [Pages de référence](README.md#pages-de-référence) |
 | Lignes de réglage | Rendu moins carré, lignes moins hautes, séparations fines, pas de contours imbriqués | Éditeurs en lignes | [Fondations](fondations.md#espacements-et-arrondis) |
 | Champs de formulaire | Rendu adouci de l’onglet Informations du site Noctambule : police système, rayon 8 px, 40/44 px, contour `#435978`, survol `#5b7699`, focus `#698cdd` avec anneau à 13 % ; plus de libellés réduits ni de police monospace sur une saisie ordinaire | Tous les formulaires | [Fondations](fondations.md#espacements-et-arrondis) |
-| Synthèse d’un compte | Double authentification à côté du mot de passe (« Activée » vert, « À configurer » jaune, « Masquée ») ; compteur « Autorisations : X / Y » | Fiche utilisateur | [Utilisateurs](../pages/systeme/utilisateurs/README.md) |
+| Synthèse d’un compte | Plus de carte « Vue d’ensemble » (20 octobre 2026) : état, mot de passe et double authentification (« activée » vert, « à configurer » jaune, omise si masquée) en pastilles à côté du nom ; « X sur Y utilisables » dans l’onglet Autorisations | Fiches à sections | [Utilisateurs](../pages/systeme/utilisateurs/README.md) |
 | État du compte | Badge « Actif » vert ou « Désactivé » jaune juste à gauche de l’interrupteur, qui suit le brouillon | Fiche utilisateur, Sécurité | [Utilisateur — Sécurité](../pages/systeme/utilisateurs/fiche-securite.md) |
 | Sections de lecture | Listes de descriptions sans sous-cartes ni icônes encadrées ; aides près des actions ; une information affichée une seule fois | Fiches à sections | [Comportements](comportements.md#lecture-seule-et-droits) |
 | Réglages globaux | Bandeau compact, carte unique par groupe, saisie directe, barre commune seulement en cas de brouillon ou de reprise | Pages de réglages | [Gabarit D](gabarits.md#d-page-de-réglages) |
@@ -52,6 +52,8 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 
 | Date | Contexte | Retour du propriétaire | Décision appliquée |
 | --- | --- | --- | --- |
+| 20 octobre 2026 | Fiche utilisateur après la reprise | « Ok go » | Rendu validé ; ses règles s’appliquent à Mon compte, même gabarit ([Mon compte](../pages/mon-compte/README.md#reprise--20-octobre-2026)) |
+| 20 octobre 2026 | Fiche utilisateur, reprise en profondeur | « Ok go » sur les six recommandations (USR-D23 à USR-D28) | Carte « Vue d’ensemble » remplacée par les états dans le bandeau, aussi sur Mon compte ; bandeau « Profil utilisateur » retiré ; avertissement d’identifiant seulement à la modification ; « utilisateur » au lieu de « membre », « Activée » partout ; interrupteur au bord droit ([détail](../pages/systeme/utilisateurs/README.md#fiche--reprise-en-profondeur--20-octobre-2026)) |
 | 20 octobre 2026 | Filtres rapides des deux listes, rendu réel | « Dès que je sélectionne, les compteurs s’enlèvent et tout décale » | Compteurs à facettes calculés par le serveur (recherche et autres groupes appliqués) : toujours affichés, toujours justes, plus de décalage |
 | 20 octobre 2026 | Ligne de filtres rapides de la liste Utilisateurs, rendu réel | Demande un avis ; deux défauts relevés : « Tous » paraît contredire un rôle enfoncé, l’état enfoncé se voit mal. « Ok go » sur la recommandation | Libellé visible devant chaque groupe à la place du filet, état enfoncé en bordure et texte d’accent, sur les deux listes ; le rôle reste en filtres rapides (PREF-Q2 tranchée) |
 | 20 octobre 2026 | Liste du Répertoire, rendu réel sur le serveur de dev après correction de l’alignement du tri | « Moi je suis content » | Rendu validé : filtres rapides, pastilles, cellules allégées et tri au bord droit deviennent le standard des listes de gestion ([détail](../pages/membres/repertoire/liste.md#reprise-en-profondeur--20-octobre-2026)) |
@@ -90,7 +92,6 @@ attendant, appliquer la colonne « Par défaut ».
 
 | ID | Question | Par défaut | Effet |
 | --- | --- | --- | --- |
-| PREF-Q1 | Sous 118 rem, la carte de synthèse placée au-dessus du contenu pèse davantage sur la hauteur que l’en-tête de section allégé le 18 octobre 2026 : faut-il la réduire, la replier ou la déplacer ? | Tranchée pour les listes le 20 octobre 2026 : plus de synthèse, compteurs en filtres rapides. Pour les fiches à sections, synthèse compacte actuelle conservée | Proposition à formuler et à valider avant tout changement ([source](../pages/systeme/utilisateurs/fiche-autorisations.md#autorisations--une-carte-par-ligne-détails-en-popover--18-octobre-2026)) |
 
 ## Questions tranchées
 
@@ -98,4 +99,5 @@ Une question tranchée garde son identifiant, la décision et sa date.
 
 | ID | Question | Décision | Date |
 | --- | --- | --- | --- |
+| PREF-Q1 | La carte de synthèse placée au-dessus du contenu pèse sur la hauteur : faut-il la réduire, la replier ou la déplacer ? | Supprimée partout : compteurs en filtres rapides sur les listes, états en pastilles dans le bandeau des fiches | 20 octobre 2026 (« ok go ») |
 | PREF-Q2 | Liste Utilisateurs : le rôle en filtres rapides ou en menu ? | Filtres rapides, avec un libellé « Rôle » devant le groupe pour lever l’ambiguïté de « Tous » ; le menu aurait perdu les compteurs par rôle | 20 octobre 2026 (« ok go ») |

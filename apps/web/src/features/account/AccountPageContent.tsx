@@ -11,10 +11,8 @@ import React, {
 } from 'react';
 
 import { ContentState } from '$components/layout/ContentState';
-import { PageAsideLayout } from '$components/layout/PageAsideLayout';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
-import { UserOverviewCard } from '$components/users/UserOverviewCard';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
@@ -32,7 +30,6 @@ import {
 } from '$features/account/account-page.helpers';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import type { UserType } from '$types/auth.types';
-import directoryStyles from '$ui/directory.module.css';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 
 const ProfileSection = dynamic(() =>
@@ -124,26 +121,19 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
 
   return (
     <>
-      <PageAsideLayout
-        header={
-          <AccountHeader
-            userData={userData}
-            returnHref={
-              searchParams.has('returnTo') && allowed(PERMISSIONS.USERS.VIEW)
-                ? getSafeCollectionReturnHref(
-                    searchParams.get('returnTo'),
-                    PAGE_PATHS.users,
-                  )
-                : undefined
-            }
-          />
-        }
-        aside={
-          <div className={directoryStyles.directory}>
-            <UserOverviewCard user={userData} />
-          </div>
-        }
-      >
+      <div className="space-y-4">
+        <AccountHeader
+          userData={userData}
+          returnHref={
+            searchParams.has('returnTo') && allowed(PERMISSIONS.USERS.VIEW)
+              ? getSafeCollectionReturnHref(
+                  searchParams.get('returnTo'),
+                  PAGE_PATHS.users,
+                )
+              : undefined
+          }
+        />
+
         <div className="space-y-4">
           <PageSectionNavigation
             activeSection={activeSection}
@@ -190,7 +180,7 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
             </div>
           )}
         </div>
-      </PageAsideLayout>
+      </div>
       <UnsavedNavigationDialog
         description="Les saisies du profil et de l’adresse de contact seront perdues. Une opération déjà envoyée peut avoir été enregistrée. Vous pouvez rester sur la page pour vérifier son résultat."
         open={pendingNavigationHref !== null}

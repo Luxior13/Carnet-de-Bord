@@ -380,17 +380,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   return (
     <>
       <section aria-labelledby="account-security-heading" className="space-y-3">
-        <header className="space-y-1 px-1">
-          <h2
-            id="account-security-heading"
-            className="text-foreground text-base leading-6 font-semibold"
-          >
-            Sécurité
-          </h2>
-          <p className="text-muted-foreground text-sm">
-            Protégez votre accès et contrôlez les appareils connectés.
-          </p>
-        </header>
+        <h2 className="sr-only" id="account-security-heading">
+          Sécurité
+        </h2>
         {canViewPasswordSecurity && (
           <Card aria-labelledby="account-password-heading" className="min-w-0">
             <CardHeader className="p-4 sm:p-5">
@@ -402,7 +394,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               </SectionTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-4 sm:p-5">
-              <div className="border-border/60 bg-surface-inset space-y-3 rounded-md border p-3">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground text-sm">État</span>
                   {userData.mustChangePassword ? (
@@ -465,7 +457,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 icon={<QrCode className="size-3.5" />}
                 id="account-mfa-heading"
               >
-                Application d’authentification
+                Double authentification
               </SectionTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-4 sm:p-5">
@@ -496,15 +488,15 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 </div>
               ) : (
                 <>
-                  <div className="border-border/60 bg-surface-inset space-y-3 rounded-md border p-3">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-muted-foreground text-sm">
                         État
                       </span>
                       {isMfaEnabled ? (
-                        <StatusBadge tone="success">Active</StatusBadge>
+                        <StatusBadge tone="success">Activée</StatusBadge>
                       ) : (
-                        <StatusBadge tone="warning">À activer</StatusBadge>
+                        <StatusBadge tone="warning">À configurer</StatusBadge>
                       )}
                     </div>
                     {mfaEnabledAt && (
@@ -533,10 +525,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
 
                   <div
                     className={cn(
-                      'flex items-start gap-2 rounded-md border p-3 text-sm leading-6',
+                      'flex items-start gap-2 text-sm leading-6',
                       isMfaRequired && !isMfaEnabled
-                        ? 'border-warning/30 bg-warning/10 text-warning'
-                        : 'border-primary/25 bg-primary/[0.08] text-muted-foreground',
+                        ? 'border-warning/30 bg-warning/10 text-warning rounded-md border p-3'
+                        : 'text-muted-foreground',
                     )}
                   >
                     <ShieldCheck className="text-primary-emphasis mt-1 size-4 shrink-0" />
@@ -648,11 +640,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   </Button>
                 </div>
               ) : sessions.length === 0 ? (
-                <div className="border-border/60 bg-surface-inset rounded-md border p-3">
-                  <p className="text-muted-foreground text-sm">
-                    Aucune session active n&apos;a été trouvée.
-                  </p>
-                </div>
+                <p className="text-muted-foreground text-sm">
+                  Aucune session active n&apos;a été trouvée.
+                </p>
               ) : (
                 <>
                   {currentSession && (
@@ -681,11 +671,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div className="border-border/60 bg-surface-inset rounded-md border p-3">
-                      <p className="text-muted-foreground text-sm">
-                        Aucune autre session active.
-                      </p>
-                    </div>
+                    <p className="text-muted-foreground text-sm">
+                      Aucune autre session active.
+                    </p>
                   )}
                 </>
               )}

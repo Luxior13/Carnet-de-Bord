@@ -180,8 +180,7 @@ Référence : [partir des tâches](../design/principes.md#partir-des-tâches).
 - Les titres décrivent-ils leur contenu plutôt qu’une catégorie technique ?
 - Une séparation visuelle suffit-elle à la place d’une nouvelle carte ou d’un nouvel en-tête ?
 - Les niveaux d’emboîtement respectent-ils les [règles fondatrices](../design/principes.md#règles-fondatrices) ?
-- Une synthèse ou un rail apporte-t-il un contexte de décision utile et différent du contenu principal ?
-- Ce rail prend-il une largeur nécessaire aux données importantes ? Où passe-t-il sous 118 rem ?
+- Un état ou un compteur utile peut-il vivre dans le bandeau ou dans sa section plutôt que dans une carte de synthèse ?
 - Les colonnes rapprochent-elles des éléments à comparer ou produisent-elles un ordre de lecture confus ?
 - Les espacements expriment-ils les regroupements, avec davantage d’espace entre sujets qu’entre éléments liés ?
 - Les alignements, largeurs de champs et hauteurs de lignes restent-ils cohérents ?
@@ -340,10 +339,8 @@ Points d’entrée locaux à examiner selon le besoin :
 [liste](../../apps/web/src/components/ui/data-table-section.tsx),
 [recherche de liste](../../apps/web/src/components/ui/list-search-field.tsx),
 [pagination](../../apps/web/src/components/ui/pagination.tsx),
-[sections](../../apps/web/src/components/layout/SectionPanel.tsx),
 [barre de sections](../../apps/web/src/components/layout/PageSectionNavigation.tsx),
 [barre d’enregistrement](../../apps/web/src/components/layout/SectionActionBar.tsx),
-[synthèse](../../apps/web/src/components/layout/PageAsideLayout.tsx),
 [dialogues](../../apps/web/src/components/ui/dialog.tsx),
 [confirmations](../../apps/web/src/components/ui/alert-dialog.tsx),
 [menus](../../apps/web/src/components/ui/dropdown-menu.tsx),

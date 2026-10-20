@@ -145,21 +145,12 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   onChange,
   permission,
 }) => (
-  <div className="border-border-divider bg-surface-content rounded-[6px] border p-3">
+  // The text keeps a readable measure; the switch sits on the right edge.
+  <div className="border-border-divider bg-surface-content flex items-start justify-between gap-4 rounded-[6px] border p-3">
     <div className="max-w-3xl min-w-0 space-y-1">
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <h3 className="text-foreground text-sm font-semibold">
-          {permission.label}
-        </h3>
-        <Switch
-          checked={isAllowed}
-          onCheckedChange={onChange}
-          disabled={!canManagePermissions || isSaving}
-          aria-label={permission.label}
-          aria-describedby={`account-permission-${permission.key}-description account-permission-${permission.key}-state`}
-          className="shrink-0"
-        />
-      </div>
+      <h3 className="text-foreground text-sm font-semibold">
+        {permission.label}
+      </h3>
       <p
         id={`account-permission-${permission.key}-description`}
         className="text-muted-foreground max-w-3xl text-xs leading-5"
@@ -186,6 +177,14 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
         </p>
       )}
     </div>
+    <Switch
+      checked={isAllowed}
+      onCheckedChange={onChange}
+      disabled={!canManagePermissions || isSaving}
+      aria-label={permission.label}
+      aria-describedby={`account-permission-${permission.key}-description account-permission-${permission.key}-state`}
+      className="mt-0.5 shrink-0"
+    />
   </div>
 );
 
@@ -330,8 +329,8 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
                 Autonomie du compte
               </h2>
               <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
-                Définissez ce que ce membre peut modifier lui-même depuis Mon
-                compte.
+                Définissez ce que cet utilisateur peut modifier lui-même depuis
+                Mon compte.
               </p>
             </div>
           </div>

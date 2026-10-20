@@ -440,10 +440,10 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               )}
             >
               {!isActive
-                ? 'Le membre ne pourra plus se connecter et toutes ses sessions seront fermées.'
+                ? 'L’utilisateur ne pourra plus se connecter et toutes ses sessions seront fermées.'
                 : user.isActive
-                  ? 'Le membre peut se connecter normalement.'
-                  : 'Le membre pourra de nouveau se connecter. Les anciennes sessions resteront fermées.'}
+                  ? 'L’utilisateur peut se connecter normalement.'
+                  : 'L’utilisateur pourra de nouveau se connecter. Les anciennes sessions resteront fermées.'}
             </p>
           </div>
           {isSelf && (
@@ -552,10 +552,10 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             <CardContent className="p-3 sm:p-4">
               <dl>
                 <SecurityInfoBlock
-                  label="État MFA"
+                  label="État"
                   value={
                     isMfaEnabled ? (
-                      <StatusBadge tone="success">Active</StatusBadge>
+                      <StatusBadge tone="success">Activée</StatusBadge>
                     ) : (
                       <StatusBadge tone="warning">
                         Configuration obligatoire

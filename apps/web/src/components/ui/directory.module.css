@@ -405,22 +405,6 @@
   border-top-color: var(--m-border);
 }
 
-/* ------------------------------------------------------------- Vue d'ensemble */
-.directory .overviewCard {
-  border: 1px solid var(--m-border);
-  border-radius: 10px;
-  background: var(--m-row-bg);
-  overflow: hidden;
-}
-
-.directory .overviewHeader {
-  border-color: var(--m-border);
-  background: var(--m-toolbar);
-  color: var(--m-foreground);
-  font-size: 13px;
-  font-weight: 600;
-}
-
 @media (max-width: 639px) {
   .directory .pageButton {
     min-width: 44px;

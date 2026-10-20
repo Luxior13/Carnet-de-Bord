@@ -21,7 +21,7 @@ Les corrections antérieures de liste et de création restent distinctes.
 - Sources principales : [orchestrateur de fiche](../../apps/web/src/components/users/UserDetailPage.tsx),
   [profil](../../apps/web/src/components/users/user-detail/UserProfileTab.tsx),
   [sécurité](../../apps/web/src/components/users/user-detail/UserSecurityTab.tsx),
-  [synthèse](../../apps/web/src/components/users/UserOverviewCard.tsx),
+  synthèse `UserOverviewCard.tsx` (fichier retiré le 20 octobre 2026),
   [projection des données](../../apps/web/src/features/users/server/user-detail.service.ts),
   [API de fiche](../../apps/web/src/app/api/users/[id]/route.ts).
 - Références : [suivi courant](../pages/systeme/utilisateurs/README.md),

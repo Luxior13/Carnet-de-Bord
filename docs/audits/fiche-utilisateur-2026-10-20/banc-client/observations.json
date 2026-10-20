@@ -1,0 +1,497 @@
+[
+  {
+    "name": "status-actionbar-page-scroll-900",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "initial": {
+        "insideCard": false,
+        "position": "sticky",
+        "top": 818,
+        "bottom": 884,
+        "viewportTop": 0,
+        "viewportBottom": 900,
+        "scrollTop": 0,
+        "scrollMax": 588
+      },
+      "middle": {
+        "insideCard": false,
+        "position": "sticky",
+        "top": 818,
+        "bottom": 884,
+        "viewportTop": 0,
+        "viewportBottom": 900,
+        "scrollTop": 235,
+        "scrollMax": 588
+      },
+      "lower": {
+        "insideCard": false,
+        "position": "sticky",
+        "top": 818,
+        "bottom": 884,
+        "viewportTop": 0,
+        "viewportBottom": 900,
+        "scrollTop": 441,
+        "scrollMax": 588
+      },
+      "end": {
+        "insideCard": false,
+        "position": "sticky",
+        "top": 798.4375,
+        "bottom": 864.4375,
+        "viewportTop": 0,
+        "viewportBottom": 900,
+        "scrollTop": 588,
+        "scrollMax": 588
+      },
+      "expectedSticky": true
+    }
+  },
+  {
+    "name": "status-actionbar-page-scroll-844",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "initial": {
+        "insideCard": false,
+        "position": "static",
+        "top": 1887.359375,
+        "bottom": 1989.359375,
+        "viewportTop": 0,
+        "viewportBottom": 844,
+        "scrollTop": 0,
+        "scrollMax": 1173
+      },
+      "middle": {
+        "insideCard": false,
+        "position": "static",
+        "top": 1418.359375,
+        "bottom": 1520.359375,
+        "viewportTop": 0,
+        "viewportBottom": 844,
+        "scrollTop": 469,
+        "scrollMax": 1173
+      },
+      "lower": {
+        "insideCard": false,
+        "position": "static",
+        "top": 1007.359375,
+        "bottom": 1109.359375,
+        "viewportTop": 0,
+        "viewportBottom": 844,
+        "scrollTop": 880,
+        "scrollMax": 1173
+      },
+      "end": {
+        "insideCard": false,
+        "position": "static",
+        "top": 714.359375,
+        "bottom": 816.359375,
+        "viewportTop": 0,
+        "viewportBottom": 844,
+        "scrollTop": 1173,
+        "scrollMax": 1173
+      },
+      "expectedSticky": false
+    }
+  },
+  {
+    "name": "status-actionbar-page-scroll-550",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "initial": {
+        "insideCard": false,
+        "position": "static",
+        "top": 1386.4375,
+        "bottom": 1452.4375,
+        "viewportTop": 0,
+        "viewportBottom": 550,
+        "scrollTop": 0,
+        "scrollMax": 938
+      },
+      "middle": {
+        "insideCard": false,
+        "position": "static",
+        "top": 1011.4375,
+        "bottom": 1077.4375,
+        "viewportTop": 0,
+        "viewportBottom": 550,
+        "scrollTop": 375,
+        "scrollMax": 938
+      },
+      "lower": {
+        "insideCard": false,
+        "position": "static",
+        "top": 682.4375,
+        "bottom": 748.4375,
+        "viewportTop": 0,
+        "viewportBottom": 550,
+        "scrollTop": 704,
+        "scrollMax": 938
+      },
+      "end": {
+        "insideCard": false,
+        "position": "static",
+        "top": 448.4375,
+        "bottom": 514.4375,
+        "viewportTop": 0,
+        "viewportBottom": 550,
+        "scrollTop": 938,
+        "scrollMax": 938
+      },
+      "expectedSticky": false
+    }
+  },
+  {
+    "name": "status-actionbar-lifecycle",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "status-actionbar-lifecycle",
+    "width": 1440,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 320,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 390,
+    "pass": true,
+    "detail": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 768,
+    "pass": true,
+    "detail": {
+      "viewport": 768,
+      "document": 768,
+      "main": 768,
+      "mainWidth": 768
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 768,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 1440,
+    "pass": true,
+    "detail": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1200,
+      "mainWidth": 1200
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 1440,
+    "pass": true
+  },
+  {
+    "name": "responsive-profile",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-access",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-account",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "responsive-security",
+    "width": 1920,
+    "pass": true,
+    "detail": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    }
+  },
+  {
+    "name": "focus-status-cancel",
+    "width": 1920,
+    "pass": true
+  },
+  {
+    "name": "profile-save-validation-and-contact",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-profile",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-access",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-account",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-security",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "session-retry-and-revocation-focus",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "secret-copy-stale-result",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "mfa-reset-error-focus",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "mfa-reset-lost-response-check",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "readonly-profile-and-hidden-fields",
+    "width": 320,
+    "pass": true
+  },
+  {
+    "name": "permissions-configured-blocked-and-scopes",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "role-requires-target-mfa",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "conflict-refresh-failure-retry-focus",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "scope-ssr-actor-return-no-recycled-snapshot",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "scope-unchanged-retains-draft",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "scope-late-patch-after-actor-change",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "forbidden-background-purges-secret",
+    "width": 390,
+    "pass": true
+  },
+  {
+    "name": "self-profile-long-unbroken-name",
+    "width": 320,
+    "pass": true,
+    "detail": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    }
+  }
+]

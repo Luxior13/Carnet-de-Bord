@@ -22,9 +22,11 @@ de contact sans perdre sa saisie.
 
 ## Composition actuelle
 
-Formulaire de profil soumis par Entrée avec `SectionActionBar` ; adresse de
-contact modifiée dans une fenêtre (`ContactEmailDialog`) ; relecture champ par
-champ après conflit.
+Carte sans en-tête (titre « Profil » réservé aux lecteurs d’écran), rubrique
+Identité (prénom, nom) puis Connexion et contact (identifiant et email en liste
+de descriptions, bouton Gérer ou Ajouter) ; formulaire soumis par Entrée avec
+`SectionActionBar` ; adresse de contact modifiée dans une fenêtre
+(`ContactEmailDialog`) ; relecture champ par champ après conflit.
 
 ## Décisions retenues
 
@@ -43,6 +45,7 @@ Aucun point ouvert propre au profil.
 ## Historique
 
 - 19 octobre 2026 : fiche propre à la section, créée par découpage du suivi.
+- 20 octobre 2026 : en-tête et sous-cartes retirés ([reprise](README.md#reprise--20-octobre-2026)).
 
 ## Revues datées
 

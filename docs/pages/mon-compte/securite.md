@@ -22,8 +22,9 @@ secours, consulter et révoquer ses sessions de connexion.
 
 ## Composition actuelle
 
-Rubriques Mot de passe, Double authentification (configuration, codes de
-secours), Sessions (session courante, autres appareils, révocation individuelle
+Titre « Sécurité » réservé aux lecteurs d’écran ; rubriques Mot de passe,
+Double authentification (configuration, codes de secours ; valeurs sans cadre
+imbriqué, aide sur l’obligation, blocage encadré), Sessions (session courante, autres appareils, révocation individuelle
 ou globale) ; fenêtres de confirmation communes ; attentes bornées à 30 secondes.
 
 ## Décisions retenues
@@ -42,6 +43,8 @@ Aucun point ouvert : COMPTE-10 à COMPTE-12 sont clos au périmètre testé.
 ## Historique
 
 - 19 octobre 2026 : fiche propre à la section, créée par découpage du suivi.
+- 20 octobre 2026 : titre visible et cadres imbriqués retirés, « Double
+  authentification » ([reprise](README.md#reprise--20-octobre-2026)).
 
 ## Revues datées
 

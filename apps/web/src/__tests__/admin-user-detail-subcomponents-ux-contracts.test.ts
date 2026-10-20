@@ -41,9 +41,14 @@ const permissionStatePickerSource = readSourceFile(
 const userAccessSource = readSourceFile(
   '../components/users/user-detail/UserAccessTab.tsx',
 );
-const userDetailSource = readSourceFile(
+// The record page and the modules split out of it on 2026-10-20.
+const userDetailSource = [
   '../components/users/UserDetailPage.tsx',
-);
+  '../components/users/user-detail/useUserDetailChanges.ts',
+  '../components/users/user-detail/user-detail-patch.ts',
+]
+  .map(readSourceFile)
+  .join('\n');
 const dialogsSource = readSourceFile(
   '../components/users/user-detail/UserDetailDialogs.tsx',
 );
@@ -55,12 +60,16 @@ describe('administrative user detail subcomponent UX contracts', () => {
     );
     expect(userDetailSource).toContain('<PageIdentityHero');
     expect(userDetailSource).toContain('size-full rounded-[7px]');
-    expect(userDetailSource).toMatch(
-      /description=\{`Identifiant : \$\{getUserLoginDisplay\(user\)\}`\}/,
+    // The former overview card lives in the hero since 2026-10-20.
+    expect(userDetailSource).toContain('formatUserIdentityLine(');
+    expect(userDetailSource).toContain(
+      'meta={<UserIdentityStatus user={user} />}',
     );
-    expect(profileSource).toContain(
-      '<CardHeader className="flex-row items-center justify-between p-3.5 sm:p-4">',
-    );
+    expect(userDetailSource).not.toContain('UserOverviewCard');
+    expect(userDetailSource).not.toContain('PageAsideLayout');
+    // No visible title repeating the section link.
+    expect(profileSource).not.toContain('Profil utilisateur');
+    expect(profileSource).toContain('<h2 className="sr-only" tabIndex={-1}>');
   });
 
   it('opens directly on Profile without keeping a duplicate summary tab', () => {
@@ -73,7 +82,8 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(profileSource).toContain("'save' | 'stage' | null");
     expect(profileSource).toContain('Supprimer l&apos;adresse de contact');
     expect(profileSource).toContain('isSelf = false');
-    expect(profileSource).toContain('Profil administratif');
+    expect(profileSource).not.toContain('Profil administratif');
+    expect(profileSource).toContain('<dl className=');
     expect(profileSource).toContain('<SectionActionBar');
   });
 
@@ -129,10 +139,10 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(securitySource).toContain("? 'Réactiver le compte'");
     expect(securitySource).toContain(": 'Désactiver le compte'");
     expect(securitySource).toContain(
-      'Le membre ne pourra plus se connecter et toutes ses sessions seront fermées.',
+      'L’utilisateur ne pourra plus se connecter et toutes ses sessions seront fermées.',
     );
     expect(securitySource).toContain(
-      'Le membre pourra de nouveau se connecter. Les anciennes sessions resteront fermées.',
+      'L’utilisateur pourra de nouveau se connecter. Les anciennes sessions resteront fermées.',
     );
     expect(deletionCardSource).toContain(
       'Désactivez d’abord ce compte et enregistrez ce changement. La suppression sera ensuite disponible.',

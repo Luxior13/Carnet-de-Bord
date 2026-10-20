@@ -147,7 +147,7 @@ export const useUserPasswordReset = ({
           { error: { code: failure.code } },
           {
             description:
-              'Un nouveau secret temporaire sera créé et toutes les sessions du membre seront fermées.',
+              'Un nouveau secret temporaire sera créé et toutes les sessions de l’utilisateur seront fermées.',
             execute: reset,
             title: 'Confirmer la réinitialisation du mot de passe',
           },

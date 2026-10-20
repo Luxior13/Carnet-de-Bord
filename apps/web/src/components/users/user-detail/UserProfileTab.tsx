@@ -4,6 +4,7 @@ import { AlertTriangle, Mail } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { SectionActionBar } from '$components/layout/SectionActionBar';
+import { FormSectionTitle } from '$features/users/CreateUserParts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,12 +15,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '$ui/alert-dialog';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardHeader } from '$ui/card';
+import { Card, CardContent } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { Separator } from '$ui/separator';
+import { StatusBadge } from '$ui/status-badge';
 import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
 export type ProfileForm = {
@@ -51,6 +52,8 @@ type UserProfileTabProps = {
   loginReadOnlyHint: string;
   onCancel: () => void;
   onSave: () => void;
+  /** Saved login, to warn about the sessions only once it is changed. */
+  savedLoginName: string;
   setForm: (form: ProfileForm) => void;
 };
 
@@ -61,18 +64,6 @@ const FieldError: FC<{ children: React.ReactNode; id: string }> = ({
   <p id={id} className="text-destructive text-xs">
     {children}
   </p>
-);
-
-const FormSectionTitle: FC<{ children: React.ReactNode; id: string }> = ({
-  children,
-  id,
-}) => (
-  <h3
-    id={id}
-    className="text-muted-foreground text-[11px] font-medium tracking-[0.08em] uppercase"
-  >
-    {children}
-  </h3>
 );
 
 export const UserProfileTab: FC<UserProfileTabProps> = ({
@@ -90,6 +81,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   loginReadOnlyHint,
   onCancel,
   onSave,
+  savedLoginName,
   setForm,
 }) => {
   const formRef = useRef<HTMLFormElement>(null);
@@ -114,9 +106,13 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
     }
   }, [form.contactEmail]);
 
-  const loginHint = canEditLogin
-    ? "Modifier l'identifiant déconnectera l'utilisateur de ses sessions actives."
-    : loginReadOnlyHint;
+  // The consequence is a warning only once the login actually changes.
+  const loginChanged = canEditLogin && form.loginName.trim() !== savedLoginName;
+  const loginHint = !canEditLogin
+    ? loginReadOnlyHint
+    : loginChanged
+      ? "Enregistrer ce nouvel identifiant déconnectera l'utilisateur de ses sessions actives."
+      : "Le modifier déconnectera l'utilisateur de ses sessions actives.";
   const contactHint = canEditContact
     ? "Adresse facultative, distincte de l'identifiant de connexion."
     : "L'email de contact est en lecture seule depuis cette fiche.";
@@ -173,32 +169,35 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   if (isSelf) {
     return (
       <Card>
-        <CardHeader className="p-3.5 sm:p-4">
-          <h2 className="text-sm font-semibold">Profil administratif</h2>
-        </CardHeader>
-        <CardContent className="grid gap-3 p-4 sm:grid-cols-2">
-          <div className="border-border/60 bg-surface-inset min-w-0 rounded-md border p-3">
-            <p className="text-muted-foreground text-xs">Identité</p>
-            <p className="text-foreground mt-1 text-sm font-medium break-words">
-              {form.firstName} {form.lastName}
-            </p>
-          </div>
-          <div className="border-border/60 bg-surface-inset min-w-0 rounded-md border p-3">
-            <p className="text-muted-foreground text-xs">
-              Identifiant de connexion
-            </p>
-            <p className="text-foreground mt-1 font-mono text-sm break-all">
-              {form.loginName}
-            </p>
-          </div>
-          {canViewContact && (
-            <div className="border-border/60 bg-surface-inset min-w-0 rounded-md border p-3 sm:col-span-2">
-              <p className="text-muted-foreground text-xs">Email de contact</p>
-              <p className="text-foreground mt-1 text-sm break-all">
-                {form.contactEmail || 'Non renseigné'}
-              </p>
+        <CardContent className="p-4 sm:p-5">
+          {/* Reading view: a description list, no title repeating the link. */}
+          <h2 className="sr-only">Profil</h2>
+          <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+            <div className="min-w-0">
+              <dt className="text-muted-foreground text-xs">Identité</dt>
+              <dd className="text-foreground mt-1 text-sm font-medium break-words">
+                {form.firstName} {form.lastName}
+              </dd>
             </div>
-          )}
+            <div className="min-w-0">
+              <dt className="text-muted-foreground text-xs">
+                Identifiant de connexion
+              </dt>
+              <dd className="text-foreground mt-1 font-mono text-sm break-all">
+                {form.loginName}
+              </dd>
+            </div>
+            {canViewContact && (
+              <div className="min-w-0 sm:col-span-2">
+                <dt className="text-muted-foreground text-xs">
+                  Email de contact
+                </dt>
+                <dd className="text-foreground mt-1 text-sm break-all">
+                  {form.contactEmail || 'Non renseigné'}
+                </dd>
+              </div>
+            )}
+          </dl>
         </CardContent>
       </Card>
     );
@@ -214,27 +213,23 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
       onSubmit={handleSubmit}
     >
       <Card>
-        <CardHeader className="flex-row items-center justify-between p-3.5 sm:p-4">
-          <h2 className="text-sm font-semibold" tabIndex={-1}>
-            Profil utilisateur
-          </h2>
-          {!canEdit && !canEditContact && !canEditLogin && (
-            <Badge
-              variant="outline"
-              className="border-muted-foreground/35 bg-muted/30 text-muted-foreground"
-            >
-              Lecture seule
-            </Badge>
-          )}
-        </CardHeader>
         <CardContent className="space-y-5 p-4 sm:p-5">
+          {/* The section link already names the section: no visible title. */}
+          <h2 className="sr-only" tabIndex={-1}>
+            Profil
+          </h2>
           <section
             aria-labelledby="profile-identity-title"
             className="space-y-3"
           >
-            <FormSectionTitle id="profile-identity-title">
-              Identité
-            </FormSectionTitle>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <FormSectionTitle id="profile-identity-title">
+                Identité
+              </FormSectionTitle>
+              {!canEdit && !canEditContact && !canEditLogin && (
+                <StatusBadge tone="muted">Lecture seule</StatusBadge>
+              )}
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="user-first-name" required>
@@ -332,13 +327,19 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                     {errors.loginName}
                   </FieldError>
                 ) : (
-                  <div
+                  <p
                     id="user-login-name-hint"
-                    className="text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs"
+                    className={
+                      loginChanged
+                        ? 'text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs'
+                        : 'text-muted-foreground text-xs'
+                    }
                   >
-                    <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+                    {loginChanged && (
+                      <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+                    )}
                     <span>{loginHint}</span>
-                  </div>
+                  </p>
                 )}
               </div>
               {canViewContact ? (

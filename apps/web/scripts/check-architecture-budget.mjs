@@ -7,7 +7,7 @@ const SERVER_ONLY_DATABASE_IMPORT_PATTERN =
   /(?:from\s+|import\s*)['"](?:@repo\/database|@prisma\/client)(?:\/[^'"]*)?['"]/u;
 const LEGACY_LIMITS = new Map([
   ['components/ui/sidebar.tsx', 900],
-  ['components/users/UserDetailPage.tsx', 2_650],
+  ['components/users/UserDetailPage.tsx', 1_500],
   ['components/users/user-detail/UserSecurityTab.tsx', 850],
   ['features/account/components/SecuritySection.tsx', 900],
   ['shared/constants/permissions.constants.ts', 1_400],

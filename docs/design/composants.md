@@ -25,9 +25,9 @@ commune ; le formulaire conserve la validation, les autorisations et les requêt
 | --- | --- | --- |
 | Largeur, marges, conteneur de page | [PageShell et PageCanvas](../../apps/web/src/components/ui/page-shell.tsx) | Choisir la largeur selon la tâche ; garder le contenu réductible. Ne pas recréer un centrage propre à chaque page. |
 | Identité et titre de page | [PageIdentityHero](../../apps/web/src/components/layout/PageIdentityHero.tsx) | En-tête canonique, variante `compact` pour une fiche ou un formulaire. Texte intégral et actions longues peuvent revenir à la ligne. |
-| Contenu avec synthèse secondaire | [PageAsideLayout](../../apps/web/src/components/layout/PageAsideLayout.tsx) | Rail à partir de 118rem ; sinon synthèse entre le bandeau et le contenu. Vérifier l’utilité et la densité de cette synthèse avant de l’ajouter. Une liste de gestion n’en a pas : ses compteurs sont des filtres rapides (20 octobre 2026). |
+| Contenu avec synthèse secondaire | Aucun composant depuis le 20 octobre 2026 : `PageAsideLayout` est retiré | Rail à partir de 118rem ; sinon synthèse entre le bandeau et le contenu. Vérifier l’utilité et la densité de cette synthèse avant de l’ajouter. Une liste de gestion n’en a pas : ses compteurs sont des filtres rapides (20 octobre 2026). |
 | Fiche avec sections dans l’URL | [EntityDetailLayout](../../apps/web/src/components/layout/EntityDetailLayout.tsx) | Compose identité, navigation et contenu. Les sections, destinations et règles métier appartiennent à la fiche. |
-| Section titrée, description et actions locales | [SectionPanel](../../apps/web/src/components/layout/SectionPanel.tsx) | Compose Card ; fournir une hiérarchie de titre et un `titleId` cohérents. Les descriptions longues restent contenues. |
+| Section d’une fiche | `Card` et `CardContent`, titre `h2` réservé aux lecteurs d’écran, rubriques `FormSectionTitle` ([CreateUserParts](../../apps/web/src/features/users/CreateUserParts.tsx)) | `SectionPanel` et `AccountPanel` sont retirés depuis le 20 octobre 2026 : une section ne répète pas son lien par un titre visible. Une rubrique qui porte des actions (Sécurité) garde sa carte titrée. |
 | Surface ou carte sémantique | [Card et ses sous-composants](../../apps/web/src/components/ui/card.tsx) | `as` pour article/section, `asChild` pour une carte-lien. Les séparateurs appartiennent à CardHeader/CardFooter, sans doublon adjacent. |
 | Détails secondaires à la demande | [Disclosure](../../apps/web/src/components/layout/Disclosure.tsx) et [Collapsible](../../apps/web/src/components/ui/collapsible.tsx) | Disclosure apporte bouton et chevron ; Collapsible sert aux compositions différentes. Pour des commandes répétées dans des cartes, fournir un `aria-label` qui reprend le libellé visible et précise l'objet concerné. Ne pas y cacher une erreur ou une action indispensable. |
 | Séparation simple | [Separator](../../apps/web/src/components/ui/separator.tsx) | Séparer des groupes existants ; ne pas ajouter des cartes et bordures emboîtées pour un simple espacement. |
@@ -215,8 +215,8 @@ par leurs propriétaires.
 
 Toute page nouvelle ou modifiée choisit les composants de référence utiles à
 sa tâche : `PageIdentityHero`, `DataTableSection` + `directory.module.css` pour
-les listes, `PageAsideLayout` si une synthèse secondaire est utile,
-`TooltipContent` et les primitives `Input`, `Select`, `Button`, `Badge`, `Card`.
+les listes, `QuickFilter` pour leurs compteurs, `StatusBadge` pour les
+états (y compris dans le bandeau d’une fiche), `TooltipContent` et les primitives `Input`, `Select`, `Button`, `Badge`, `Card`.
 [globals.css](../../apps/web/src/app/globals.css) reste la source unique des
 tokens ; aucune palette copiée dans un composant.
 
@@ -231,7 +231,7 @@ les comportements partagés et les responsabilités qui restent aux pages.
 | Recherche de liste et effacement avec retour du focus | [ListSearchField](../../apps/web/src/components/ui/list-search-field.tsx) |
 | Précédent/suivant d’une liste, avec total lorsqu’il est connu | [ListPagination](../../apps/web/src/components/ui/pagination.tsx) |
 | Actions d’enregistrement et d’annulation | [SectionActionBar](../../apps/web/src/components/layout/SectionActionBar.tsx) et [son module](../../apps/web/src/components/layout/SectionActionBar.module.css) |
-| Synthèse latérale ou empilée | [PageAsideLayout](../../apps/web/src/components/layout/PageAsideLayout.tsx) et [ses seuils](../../apps/web/src/components/layout/PageAsideLayout.module.css) |
+| États d’une fiche dans le bandeau | `meta` de [PageIdentityHero](../../apps/web/src/components/layout/PageIdentityHero.tsx), par exemple [UserIdentityStatus](../../apps/web/src/components/users/UserIdentityStatus.tsx) |
 | Navigation entre les sections d'une fiche | [PageSectionNavigation](../../apps/web/src/components/layout/PageSectionNavigation.tsx) |
 | Infobulle, survol et focus | [TooltipContent](../../apps/web/src/components/ui/tooltip.tsx) |
 | Vide, erreur et accès refusé | [ContentState](../../apps/web/src/components/layout/ContentState.tsx) et [PageState](../../apps/web/src/components/layout/PageState.tsx) |
@@ -301,15 +301,10 @@ structure restent adaptées au contenu de chaque écran.
   conservent leurs composants adaptés à leur fonction.
 - Les onglets ne remplacent pas les filtres : un onglet est un lieu, un filtre
   est une requête.
-- **Rail de synthèse** : `PageAsideLayout` apparaît à partir de 118rem de viewport, avec
-  une largeur de 16rem. En dessous, il se place entre le bandeau et la liste.
-  Consommateurs : fiche utilisateur et Mon compte ; plus aucune liste depuis
-  le 20 octobre 2026. Reprendre le seuil du layout
-  consommé, adapter le contenu à sa position et vérifier aussi une largeur
-  intermédiaire.
-
-L'ancien seuil de 104rem et les classes `private-rail-*` ont été retirés du
-code. Les indications correspondantes des anciens audits restent historiques.
+- **Rail de synthèse** : retiré le 20 octobre 2026 avec `PageAsideLayout`,
+  son dernier consommateur étant devenu sans objet (listes : filtres rapides ;
+  fiches : états dans le bandeau). Les seuils de 104 et 118 rem des anciens
+  audits restent historiques.
 
 ## Inventaire des composants
 

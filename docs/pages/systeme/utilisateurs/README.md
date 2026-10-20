@@ -28,9 +28,9 @@ L’alias `/administration` redirige vers la liste ; les anciennes adresses
 - **Liste** : filtres rapides d’état et de rôle, sans carte de synthèse depuis
   le 20 octobre 2026 ([fiche de la liste](liste.md)).
 - **Cadre de la fiche** : [UserDetailPage](../../../../apps/web/src/components/users/UserDetailPage.tsx) compose
-  `PageIdentityHero` compact, la synthèse `UserOverviewCard` dans `PageAsideLayout`
-  (rail à partir de 118 rem), `PageSectionNavigation` et des sections chargées à la
-  demande. Sa `SectionActionBar` est la référence de tout le site.
+  `PageIdentityHero` compact porteur des états du compte
+  (`UserIdentityStatus`), `PageSectionNavigation` et des sections chargées à
+  la demande. Plus de carte de synthèse depuis le 20 octobre 2026. Sa `SectionActionBar` est la référence de tout le site.
 - **Section retirée** : l’activité du compte est retirée depuis le 10 octobre 2026 ;
   `?section=history` affiche Profil. Son code dormant (`UserHistoryTab`,
   `useUserDetailAudit`) a été retiré le 20 octobre 2026 ([SYS-03](../../../systeme/constats.md)).
@@ -42,6 +42,56 @@ L’alias `/administration` redirige vers la liste ; les anciennes adresses
 Les sections ci-dessous concernent toute la fiche ou tout le module. Celles qui
 ne concernent qu’une page ou une section ont rejoint sa fiche le 19 octobre 2026,
 sans modification de contenu.
+
+## Fiche : reprise en profondeur — 20 octobre 2026
+
+Troisième page de la reprise générale, après les deux listes. La fiche est la
+référence du gabarit B et de la barre d’enregistrement : les autres fiches
+s’alignent sur elle.
+
+- **Avant** : banc client du 11 octobre rejoué sur le code actuel, 46 scénarios
+  sur 48. Les deux échecs sont des attentes périmées depuis la refonte des
+  Autorisations du 18 octobre (texte « Autorisé » retiré des cartes, message
+  de double authentification reformulé), pas des défauts.
+- **Décision** : « ok go » du propriétaire sur les six points, le même jour.
+- **Constats**, tous clos :
+
+| ID | Nature / priorité | État | Point |
+| --- | --- | --- | --- |
+| USR-D23 | Composition, P2 | Clos | La carte « Vue d’ensemble » occupe environ 100 px au-dessus des sections sur grand écran et 210 px sur téléphone ; ses états (compte, mot de passe, double authentification) reviennent dans Sécurité ([PREF-Q1](../../../design/preferences.md#questions-ouvertes)) |
+| USR-D24 | Composition, P2 | Clos | Profil garde un bandeau « Profil utilisateur » qui répète le lien de section, contrairement à Autorisations et Sécurité (règle du 18 octobre) ; l’avertissement « Modifier l’identifiant déconnectera… » est affiché en permanence, même sans modification |
+| USR-D25 | Libellés, P2 | Clos | « Le membre peut se connecter » et « ce que ce membre peut modifier » : un compte n’est pas un membre du Répertoire. Double authentification « Activée » dans la synthèse, « Active » dans Sécurité ; « État MFA » en jargon |
+| USR-D26 | Alignement, P3 | Clos | Compte personnel : l’interrupteur est au milieu de la carte au lieu d’être au bord droit |
+| USR-D27 | Code, P3 | Partiel | \`UserDetailPage.tsx\` fait 1 752 lignes (exception plafonnée à 2 650, budget courant 800) |
+| USR-D28 | Preuve, P3 | Clos | Banc du 11 octobre périmé sur deux attentes ; à rafraîchir dans un banc daté |
+
+- **Livré** :
+  - USR-D23 : `UserIdentityStatus` (pastilles d’état, ligne « Identifiant ·
+    Créé le · Modifié le ») dans le `meta` du bandeau, sur la fiche et sur Mon
+    compte ; `UserOverviewCard`, `PageAsideLayout` et les styles
+    `overviewCard` / `overviewHeader` supprimés ; « X sur Y utilisables » dans
+    la ligne d’aide de l’onglet Autorisations, calculé sur le brouillon comme
+    les compteurs par page (le compteur de la synthèse suivait la fiche
+    enregistrée).
+  - USR-D24 : titre « Profil » réservé aux lecteurs d’écran, « Lecture seule »
+    à droite de la rubrique Identité ; aide grise « Le modifier déconnectera… »,
+    avertissement seulement quand l’identifiant change ; la vue de sa propre
+    fiche devient une liste de descriptions sans sous-cartes ni titre visible.
+  - USR-D25 : « utilisateur » dans la fiche, ses confirmations et la
+    réinitialisation de double authentification ; « Activée » aussi dans
+    Mon compte ; « État » au lieu d’« État MFA ».
+  - USR-D26 : interrupteur du compte personnel au bord droit de sa carte.
+  - USR-D27 (partiel) : `runUserDetailPatch` factorise les quatre
+    enregistrements, `useUserDetailChanges` l’état dérivé du brouillon ;
+    1 740 → 1 495 lignes, plafond resserré de 2 650 à 1 500. Reste au-dessus du
+    budget de 800 : extraire le rendu des sections, qui dépend d’une
+    quarantaine de valeurs, est un chantier à part entière.
+  - USR-D28 : [banc client du 20 octobre](../../../audits/fiche-utilisateur-2026-10-20/banc-client/README.md),
+    48 scénarios sur 48 ; banc de Mon compte rejoué, 23 sur 23.
+- **Vérifié** : types, lint, budget d’architecture, Vitest complet (tests de
+  contrat mis à jour), bancs ci-dessus.
+- **Non vérifié** : session, hydratation Next et PostgreSQL réels, lecteur
+  d’écran réel, rendu sur le serveur de dev.
 
 ## Compteur d'autorisations dans la synthèse — 15 octobre 2026
 

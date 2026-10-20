@@ -232,10 +232,10 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
             )}
 
             <div className="border-warning/30 bg-warning/10 text-warning rounded-md border p-3 text-sm leading-6">
-              Utilisez cette récupération uniquement si le membre a perdu son
-              téléphone et tous ses codes de secours. À sa prochaine connexion,
-              il devra configurer un nouvel authentificateur avant de pouvoir
-              accéder au site.
+              Utilisez cette récupération uniquement si l’utilisateur a perdu
+              son téléphone et tous ses codes de secours. À sa prochaine
+              connexion, il devra configurer un nouvel authentificateur avant de
+              pouvoir accéder au site.
             </div>
 
             <div className="space-y-2">

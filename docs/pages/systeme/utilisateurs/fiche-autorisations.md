@@ -33,6 +33,10 @@ commune avec récapitulatif avant enregistrement.
 
 ## Décisions retenues
 
+- 20 octobre 2026 : la ligne d’aide d’un Utilisateur donne le total « X sur Y
+  utilisables », calculé sur le brouillon ; il remplace le compteur de l’ancienne
+  carte de synthèse. Compte personnel : interrupteur au bord droit, « cet
+  utilisateur » au lieu de « ce membre ».
 - 18 octobre 2026 : une carte par ligne, détails en popover, retour au rôle par
   ligne retiré, haut de l’onglet allégé ; un Administrateur possède toujours les
   25 autorisations délégables, un Utilisateur seulement celles accordées.

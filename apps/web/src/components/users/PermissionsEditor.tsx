@@ -35,6 +35,7 @@ import {
 import {
   buildPermissionEditorState,
   countCategoryPermissionResults,
+  countUsablePermissions,
   PERMISSION_EDITOR_CATEGORIES,
 } from './permission-editor-view';
 import { PermissionDecisionButton } from './PermissionDecisionButton';
@@ -92,6 +93,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     [permissions],
   );
   const completeAccess = hasCompleteAccessByRole(role);
+  // Total of the draft, like the per-page counts: it moved here from the
+  // former overview card of the record (decision of 2026-10-20).
+  const usable = countUsablePermissions(state.effective);
   const editable = !disabled && !completeAccess;
   const grantedPermissionCount = [...permissionsMap.keys()].filter((key) =>
     ACCESS_KEYS.has(key),
@@ -251,7 +255,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
           <span>
             {completeAccess
               ? 'Un administrateur possède toutes les autorisations administratives.'
-              : 'Un utilisateur n’a que les autorisations accordées ci-dessous.'}
+              : `Un utilisateur n’a que les autorisations accordées ci-dessous : ${usable.ready} sur ${usable.total} utilisables.`}
           </span>
           {roleNotice}
         </div>

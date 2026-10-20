@@ -6,6 +6,10 @@ import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
 import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { UserAvatar } from '$components/users/UserAvatar';
+import {
+  formatUserIdentityLine,
+  UserIdentityStatus,
+} from '$components/users/UserIdentityStatus';
 import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
@@ -110,8 +114,9 @@ export const AccountHeader: FC<{ returnHref?: string; userData: UserType }> = ({
     compact
     eyebrow="Mon compte"
     title={getAccountDisplayName(userData)}
-    description={`Identifiant : ${userData.loginName}`}
+    description={formatUserIdentityLine(userData, userData.loginName)}
     icon={<UserAvatar user={userData} className="size-full rounded-[7px]" />}
+    meta={<UserIdentityStatus user={userData} />}
     actions={
       <div className="flex flex-wrap items-center gap-3">
         <UserAccessBadge user={userData} />

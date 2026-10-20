@@ -200,8 +200,7 @@ déjà visible dans la page ne reçoit pas de toast supplémentaire.
 - Cibles tactiles de 44 px sous 640 px ; champs de saisie à 16 px sous 1024 px.
 - Sous 740 px de conteneur, le tableau d’une liste devient une liste de cartes
   qui garde les relations libellé/valeur.
-- La sidebar devient un volet mobile sous 1024 px ; le rail de synthèse d’une
-  fiche passe au-dessus du contenu sous 118 rem, en version compacte.
+- La sidebar devient un volet mobile sous 1024 px.
 - Les filtres rapides d’une liste passent à la ligne et prennent 44 px de haut
   sous 640 px ; la réinitialisation masquée n’y réserve plus de place, le tri
   occupe toute la ligne.

@@ -2,10 +2,6 @@
 
 [Index des pages](../../../pages/README.md) · [Utilisateurs](README.md) · [Design](../../../design/README.md) · [Guide général](../../../REFERENCE_GENERALE.md)
 
-> **Suivi à compléter.** Fiche créée le 19 octobre 2026 lors de la
-> réorganisation documentaire. Les faits ci-dessous viennent du code et des
-> revues du module ; aucune revue propre à cette section n’est encore consignée.
-
 ## Identité
 
 | Élément | Valeur |
@@ -26,10 +22,13 @@ facultatif, identifiant de connexion et email de contact, sans perdre le brouill
 
 ## Composition actuelle
 
-Section « Profil administratif » : groupes Identité et Connexion et contact
-(sous-titres en petites capitales), primitives de champ communes,
-`SectionActionBar` avec soumission native, confirmations de changement
-d’identifiant et de contact.
+La section commence directement par la rubrique Identité (titre « Profil »
+réservé aux lecteurs d’écran, « Lecture seule » à droite de la rubrique si
+aucun champ n’est modifiable), puis Connexion et contact (sous-titres en
+petites capitales), primitives de champ communes, `SectionActionBar` avec
+soumission native, confirmations de changement d’identifiant et de contact.
+Sur sa propre fiche, une liste de descriptions en lecture seule renvoie à Mon
+compte.
 
 ## Décisions retenues
 
@@ -37,6 +36,10 @@ d’identifiant et de contact.
   [harmonisation du 17 octobre 2026](README.md#fiche--harmonisation-des-champs--17-octobre-2026).
 - La barre d’enregistrement de cette fiche est la référence du site
   ([composants](../../../design/composants.md)).
+- 20 octobre 2026 : pas de titre visible qui répète l’onglet ; l’aide de
+  l’identifiant reste grise (« Le modifier déconnectera l’utilisateur de ses
+  sessions actives. ») et devient un avertissement seulement quand
+  l’identifiant change ([reprise](README.md#fiche--reprise-en-profondeur--20-octobre-2026)).
 
 ## Points ouverts
 
@@ -50,3 +53,4 @@ Aucun point propre à cette section ; voir le [README du module](README.md).
 ## Historique
 
 - 19 octobre 2026 : création de la fiche lors de la réorganisation documentaire.
+- 20 octobre 2026 : première revue propre à la section, avec la reprise de la fiche.

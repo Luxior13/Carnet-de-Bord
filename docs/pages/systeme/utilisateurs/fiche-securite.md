@@ -37,6 +37,9 @@ de la valeur enregistrée.
   concurrente pour les sessions (USR-D20 à USR-D22 clos).
 - 15 octobre 2026 : droits de suppression vérifiés (superadmin, admin sur un
   compte standard, jamais entre administrateurs).
+- 20 octobre 2026 : « l’utilisateur » au lieu de « le membre », double
+  authentification « Activée » et rubrique « État ». Les états restent ici, près
+  de leurs actions ; le bandeau n’en garde que la pastille.
 
 ## Points ouverts
 

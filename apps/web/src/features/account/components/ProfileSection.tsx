@@ -1,6 +1,6 @@
 'use client';
 
-import { LockKeyhole, Mail, User } from 'lucide-react';
+import { LockKeyhole, Mail } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -12,10 +12,11 @@ import {
   isOlderAccountSnapshot,
   mergeAccountProfileDraft,
 } from '$features/account/account.utils';
-import { AccountPanel } from '$features/account/components/AccountPanel';
 import { ContactEmailDialog } from '$features/account/components/ContactEmailDialog';
+import { FormSectionTitle } from '$features/users/CreateUserParts';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
+import { Card, CardContent } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { Separator } from '$ui/separator';
@@ -287,145 +288,160 @@ export const ProfileSection: FC<ProfileSectionProps> = ({
 
   return (
     <>
-      <AccountPanel
-        icon={<User className="size-4" />}
-        title="Profil"
-        description="Votre identité et votre adresse de contact"
-      >
-        <form
-          ref={formRef}
-          id="account-profile-form"
-          autoComplete="off"
-          aria-busy={isSaving || isRefreshing || undefined}
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            void handleSaveProfile();
-          }}
-        >
-          {saveError && (
-            <p className="text-destructive mb-3 text-sm" role="alert">
-              {saveError}
-            </p>
-          )}
-          {latestProfileLabel && (
-            <p className="text-muted-foreground mb-3 text-sm" role="status">
-              {latestProfileLabel}
-            </p>
-          )}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-firstName" required>
-                Prénom
-              </Label>
-              <Input
-                id="edit-firstName"
-                value={firstName}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    firstName: event.target.value,
-                  }))
-                }
-                disabled={!canEditProfile || isSaving || isRefreshing}
-                placeholder="Votre prénom"
-                maxLength={PROFILE_FIELD_MAX_LENGTH}
-                aria-invalid={!!firstNameError}
-                aria-describedby={
-                  firstNameError ? 'edit-firstName-error' : undefined
-                }
-              />
-              {firstNameError && (
-                <p
-                  id="edit-firstName-error"
-                  className="text-destructive text-xs"
-                  role="alert"
-                >
-                  {firstNameError}
+      <section aria-labelledby="account-profile-heading" className="min-w-0">
+        <Card>
+          <CardContent className="space-y-5 p-4 sm:p-5">
+            {/* The section link already names the section: no visible title. */}
+            <h2 className="sr-only" id="account-profile-heading" tabIndex={-1}>
+              Profil
+            </h2>
+            <form
+              ref={formRef}
+              id="account-profile-form"
+              autoComplete="off"
+              aria-busy={isSaving || isRefreshing || undefined}
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleSaveProfile();
+              }}
+            >
+              {saveError && (
+                <p className="text-destructive mb-3 text-sm" role="alert">
+                  {saveError}
                 </p>
               )}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-lastName">
-                Nom <span className="font-normal">(facultatif)</span>
-              </Label>
-              <Input
-                id="edit-lastName"
-                value={lastName}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    lastName: event.target.value,
-                  }))
-                }
-                disabled={!canEditProfile || isSaving || isRefreshing}
-                placeholder="Votre nom"
-                maxLength={PROFILE_FIELD_MAX_LENGTH}
-                aria-invalid={!!lastNameError}
-                aria-describedby={
-                  lastNameError ? 'edit-lastName-error' : undefined
-                }
-              />
-              {lastNameError && (
-                <p
-                  id="edit-lastName-error"
-                  className="text-destructive text-xs"
-                  role="alert"
-                >
-                  {lastNameError}
+              {latestProfileLabel && (
+                <p className="text-muted-foreground mb-3 text-sm" role="status">
+                  {latestProfileLabel}
                 </p>
               )}
-            </div>
-          </div>
+              <FormSectionTitle id="account-identity-title">
+                Identité
+              </FormSectionTitle>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-firstName" required>
+                    Prénom
+                  </Label>
+                  <Input
+                    id="edit-firstName"
+                    value={firstName}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        firstName: event.target.value,
+                      }))
+                    }
+                    disabled={!canEditProfile || isSaving || isRefreshing}
+                    placeholder="Votre prénom"
+                    maxLength={PROFILE_FIELD_MAX_LENGTH}
+                    aria-invalid={!!firstNameError}
+                    aria-describedby={
+                      firstNameError ? 'edit-firstName-error' : undefined
+                    }
+                  />
+                  {firstNameError && (
+                    <p
+                      id="edit-firstName-error"
+                      className="text-destructive text-xs"
+                      role="alert"
+                    >
+                      {firstNameError}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit-lastName">
+                    Nom <span className="font-normal">(facultatif)</span>
+                  </Label>
+                  <Input
+                    id="edit-lastName"
+                    value={lastName}
+                    onChange={(event) =>
+                      setDraft((current) => ({
+                        ...current,
+                        lastName: event.target.value,
+                      }))
+                    }
+                    disabled={!canEditProfile || isSaving || isRefreshing}
+                    placeholder="Votre nom"
+                    maxLength={PROFILE_FIELD_MAX_LENGTH}
+                    aria-invalid={!!lastNameError}
+                    aria-describedby={
+                      lastNameError ? 'edit-lastName-error' : undefined
+                    }
+                  />
+                  {lastNameError && (
+                    <p
+                      id="edit-lastName-error"
+                      className="text-destructive text-xs"
+                      role="alert"
+                    >
+                      {lastNameError}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-          {!canEditProfile && (
-            <div className="text-muted-foreground border-warning/25 bg-warning/10 mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
-              <LockKeyhole className="text-warning mt-0.5 size-3.5 shrink-0" />
-              La modification du prénom et du nom est verrouillée sur ce compte.
-            </div>
-          )}
-
-          <Separator className="my-4" />
-
-          <div className="space-y-3">
-            <div className="border-border/60 bg-surface-inset rounded-md border p-3">
-              <p className="text-muted-foreground text-xs">Identifiant</p>
-              <p className="text-foreground mt-1 font-mono text-sm break-all">
-                {userData.loginName}
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                {userData.isProtected
-                  ? 'Identifiant racine permanent, modifiable uniquement par une procédure de récupération hors ligne.'
-                  : 'Distinct de votre adresse email. Seul un administrateur habilité peut le modifier.'}
-              </p>
-            </div>
-            <div className="border-border/60 bg-surface-inset rounded-md border p-3">
-              <p className="text-muted-foreground text-xs">Email de contact</p>
-              <p className="text-foreground mt-1 text-sm break-all">
-                {userData.contactEmail ?? 'Non renseigné'}
-              </p>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Facultatif, distinct de l&apos;identifiant et jamais utilisé
-                pour vous connecter.
-              </p>
-              {canEditContact && (
-                <Button
-                  ref={contactTriggerRef}
-                  disabled={isSaving || isRefreshing}
-                  className="mt-2"
-                  onClick={() => setShowContactEmailDialog(true)}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <Mail className="size-4" />
-                  {userData.contactEmail ? 'Gérer' : 'Ajouter'}
-                </Button>
+              {!canEditProfile && (
+                <div className="text-muted-foreground border-warning/25 bg-warning/10 mt-3 flex items-start gap-2 rounded-md border px-3 py-2 text-xs">
+                  <LockKeyhole className="text-warning mt-0.5 size-3.5 shrink-0" />
+                  La modification du prénom et du nom est verrouillée sur ce
+                  compte.
+                </div>
               )}
-            </div>
-          </div>
-        </form>
-      </AccountPanel>
+
+              <Separator className="my-4" />
+
+              <FormSectionTitle id="account-connection-title">
+                Connexion et contact
+              </FormSectionTitle>
+              {/* Reading values: a description list, no nested cards. */}
+              <dl className="mt-3 space-y-4">
+                <div className="min-w-0">
+                  <dt className="text-muted-foreground text-xs">Identifiant</dt>
+                  <dd className="text-foreground mt-1 font-mono text-sm break-all">
+                    {userData.loginName}
+                  </dd>
+                  <dd className="text-muted-foreground mt-1 text-xs">
+                    {userData.isProtected
+                      ? 'Identifiant racine permanent, modifiable uniquement par une procédure de récupération hors ligne.'
+                      : 'Distinct de votre adresse email. Seul un administrateur habilité peut le modifier.'}
+                  </dd>
+                </div>
+                <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <dt className="text-muted-foreground text-xs">
+                      Email de contact
+                    </dt>
+                    <dd className="text-foreground mt-1 text-sm break-all">
+                      {userData.contactEmail ?? 'Non renseigné'}
+                    </dd>
+                    <dd className="text-muted-foreground mt-1 text-xs">
+                      Facultatif, distinct de l&apos;identifiant et jamais
+                      utilisé pour vous connecter.
+                    </dd>
+                  </div>
+                  {canEditContact && (
+                    <Button
+                      ref={contactTriggerRef}
+                      disabled={isSaving || isRefreshing}
+                      onClick={() => setShowContactEmailDialog(true)}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      <Mail className="size-4" />
+                      {userData.contactEmail ? 'Gérer' : 'Ajouter'}
+                    </Button>
+                  )}
+                </div>
+              </dl>
+            </form>
+          </CardContent>
+        </Card>
+      </section>
       {(hasProfileChanges || conflict) && canEditProfile && (
         <SectionActionBar
           hasChanges={hasProfileChanges}

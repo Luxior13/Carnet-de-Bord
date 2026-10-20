@@ -49,18 +49,22 @@ Pages adoptant ce gabarit : voir [Harmonisation](harmonisation.md#état-par-page
 
 ```text
 PageShell · PageCanvas (EntityDetailLayout ou composition équivalente)
-├─ PageIdentityHero compact : avatar · nom · rôle ou statut · retour à la liste
-├─ [Synthèse : UserOverviewCard, rail dès 118 rem]
+├─ PageIdentityHero compact : avatar · nom · états en pastilles · identifiant et dates · rôle à droite
 ├─ PageSectionNavigation : vrais liens, section active, point de brouillon
 └─ Section active (chargée à la demande)
-   ├─ SectionPanel : titre h2, groupes titrés en petites capitales
+   ├─ Carte de section : titre h2 pour les lecteurs d’écran, rubriques en petites capitales
    ├─ Champs aux primitives communes (40/44 px, rayon 8 px)
    └─ SectionActionBar (collante avec un brouillon)
 ```
 
 - Une section par sujet ; elle possède sa propre URL (`?section=`).
-- La synthèse porte l’état utile (accès, double authentification, mot de
-  passe, compteur d’autorisations) sans répéter le contenu des sections.
+- Pas de carte de synthèse ni de rail (décision du 20 octobre 2026) : les
+  états utiles (compte, mot de passe, double authentification) sont des
+  pastilles à côté du nom, l’identifiant et les dates sous le titre ; un
+  compteur propre à une section vit dans cette section.
+- Le haut d’une section n’a pas de titre visible qui répète son lien ; il
+  commence par sa première rubrique (titre de section réservé aux lecteurs
+  d’écran).
 - Les réglages répétitifs (autorisations) sont des cartes compactes avec aide
   en popover ; les conséquences critiques restent visibles.
 - La suppression vit dans sa section (Sécurité, Identité) avec
@@ -111,13 +115,6 @@ styles, viewport) et proposent une reprise par rechargement ou un retour à l’
 
 Détail : [Connexion](../pages/connexion.md), [états techniques](../pages/transverse/etats-techniques.md).
 
-## Rail de synthèse
-
-`PageAsideLayout` affiche le rail à partir de 118 rem de viewport, sur 16 rem ;
-en dessous, la synthèse passe entre le bandeau et le contenu, en version
-compacte. Le rail porte un contexte de décision (compteurs, état du compte),
-jamais un champ à enregistrer ni une copie du contenu central.
-
 ## Hiérarchie d'une page
 
 De haut en bas :
@@ -127,12 +124,11 @@ De haut en bas :
    La sidebar reste ouverte à 264 px sur ordinateur.
 2. **Héro de page** : titre, description, éventuellement une action principale.
 3. **Toile de page** : `PageShell` puis `PageCanvas`, largeur bornée.
-4. **Sections** : `SectionPanel`, chacune avec un titre et une action locale.
-   Il compose `Card`, `CardHeader` et `CardContent`. `AccountPanel` est uniquement
-   un adaptateur qui lui fournit un identifiant accessible.
+4. **Sections** : une carte par section ou par rubrique d’actions, sans titre
+   visible qui répète le lien de section.
 5. **Listes** : `DataTableSection` avec recherche, filtres, tri et pagination.
 6. **Fiche** : identité compacte, navigation par sections, contenu de la section
-   active et synthèse secondaire si utile.
+   active ; les états utiles vivent dans le bandeau.
 
 Pagination : partir de **25 éléments**, via `PAGINATION.DEFAULT_LIMIT` partagé
 entre client et serveur. Une page peut définir une exception justifiée par sa
