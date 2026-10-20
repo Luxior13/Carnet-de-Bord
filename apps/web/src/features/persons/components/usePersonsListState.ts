@@ -17,7 +17,6 @@ import {
 } from '../person-list-state';
 import type {
   PersonListSort,
-  PersonOverview,
   PersonsListResponse,
 } from '../types/person.types';
 import type { StatusFilter } from './PersonsListToolbar';
@@ -49,14 +48,16 @@ type UsePersonsListStateParams = {
    */
   cancelPageChangeRef: React.MutableRefObject<() => void>;
   initialState: InitialState | undefined;
-  onOverviewChange?: (state: {
-    isLoading: boolean;
-    stats: PersonOverview | null;
-  }) => void;
 };
 
 export type UsePersonsListStateResult = {
   appliedQuery: string;
+  applyFilters: (
+    query: string,
+    status: StatusFilter,
+    sort: PersonListSort,
+    missingContacts?: boolean,
+  ) => void;
   cursorStack: Map<number, string | undefined>;
   data: PersonsListResponse | null;
   dataPageIndex: number;
@@ -66,30 +67,23 @@ export type UsePersonsListStateResult = {
   isLoading: boolean;
   /** True when URL params match the current in-memory request and page. */
   isUrlInSync: boolean;
+  load: () => Promise<void>;
   missingContacts: boolean;
   pageIndex: number;
   retryRequestedRef: React.MutableRefObject<boolean>;
-  sort: PersonListSort;
-  status: StatusFilter;
-  applyFilters: (
-    query: string,
-    status: StatusFilter,
-    sort: PersonListSort,
-    missingContacts?: boolean,
-  ) => void;
-  load: () => Promise<void>;
   setCursorStack: React.Dispatch<
     React.SetStateAction<Map<number, string | undefined>>
   >;
   setDraftQuery: (query: string) => void;
   setPageIndex: React.Dispatch<React.SetStateAction<number>>;
+  sort: PersonListSort;
+  status: StatusFilter;
   updateUrl: (params: UpdateUrlParams) => void;
 };
 
 export function usePersonsListState({
   cancelPageChangeRef,
   initialState,
-  onOverviewChange,
 }: UsePersonsListStateParams): UsePersonsListStateResult {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -160,13 +154,6 @@ export function usePersonsListState({
   const isUrlInSync =
     haveSamePersonsListRequest(location.request, request) &&
     location.pageIndex === pageIndex;
-
-  useEffect(() => {
-    onOverviewChange?.({
-      isLoading: !data && isLoading,
-      stats: data?.overview ?? null,
-    });
-  }, [data, isLoading, onOverviewChange]);
 
   const updateUrl = useCallback(
     ({
@@ -363,6 +350,7 @@ export function usePersonsListState({
 
   return {
     appliedQuery,
+    applyFilters,
     cursorStack,
     data,
     dataPageIndex,
@@ -371,16 +359,15 @@ export function usePersonsListState({
     isDataCurrent,
     isLoading,
     isUrlInSync,
+    load,
     missingContacts,
     pageIndex,
     retryRequestedRef,
-    sort,
-    status,
-    applyFilters,
-    load,
     setCursorStack,
     setDraftQuery,
     setPageIndex,
+    sort,
+    status,
     updateUrl,
   };
 }

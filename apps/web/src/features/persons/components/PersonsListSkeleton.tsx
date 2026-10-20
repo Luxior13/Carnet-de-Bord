@@ -9,10 +9,18 @@ export const PersonsListSkeleton: FC = () => (
     role="status"
   >
     <div className="bg-surface-content-header p-4">
-      <div className="flex flex-wrap items-center gap-2.5">
-        <Skeleton className="bg-surface-table-head h-[38px] min-w-[180px] flex-1 rounded-md" />
-        <Skeleton className="bg-surface-table-head hidden h-[38px] w-[170px] rounded-md sm:block" />
-        <Skeleton className="bg-surface-table-head hidden h-[38px] w-[170px] rounded-md sm:block" />
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
+        <Skeleton className="bg-surface-table-head h-[38px] w-[320px] max-w-full rounded-md" />
+        <Skeleton className="bg-surface-table-head h-[38px] w-full rounded-md sm:w-[220px]" />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {[56, 132, 118, 136].map((width) => (
+          <Skeleton
+            className="bg-surface-table-head h-11 rounded-md sm:h-[30px]"
+            key={width}
+            style={{ width }}
+          />
+        ))}
       </div>
     </div>
     <div aria-hidden="true" className="divide-border-divider divide-y">

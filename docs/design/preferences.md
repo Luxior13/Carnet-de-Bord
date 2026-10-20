@@ -21,6 +21,9 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 
 | Sujet | Règle retenue | Portée | Fichier propriétaire |
 | --- | --- | --- | --- |
+| Compteurs d’une liste | Pas de carte de synthèse : les compteurs sont des filtres rapides à bascule sous la recherche, qui remplacent le menu de statut ; un compteur ne s’affiche que s’il égale le résultat annoncé ; le bouton enfoncé tient lieu de filtre actif | Listes de gestion (gabarit A) | [Comportements](comportements.md#listes-recherche-et-pagination), [Gabarit A](gabarits.md#a-liste-de-gestion) |
+| Pastilles de statut | Composant commun `StatusBadge` ; une catégorie neutre (« Hors structure ») prend le ton `muted`, jamais une couleur d’alerte | Tout le site | [Fondations](fondations.md#variantes-autorisées) |
+| Cellules d’une liste | Pas de total qui répète un détail voisin ; indications de recherche en gris discret ; un seul anneau de focus par ligne | Listes de gestion | [Comportements](comportements.md#focus-et-états), [Liste du Répertoire](../pages/membres/repertoire/liste.md) |
 | Réglages répétés dans une fiche | Une carte par réglage (`surface-row-alternate`, `border-content`, rayon 8 px, 8 px d’écart), sans alternance ; rubriques en petites capitales suivies d’un filet ; aide dans un popover, jamais un dépliage ; conséquences critiques et blocages toujours visibles | Fiches à sections | [Gabarit B](gabarits.md#b-fiche-à-sections), [Utilisateur — Autorisations](../pages/systeme/utilisateurs/fiche-autorisations.md) |
 | Commandes redondantes | Pas de commande qui refait ce qu’un choix fait déjà (retour au rôle par ligne retiré) ; garder les réinitialisations groupées | Éditeurs de réglages | [Utilisateur — Autorisations](../pages/systeme/utilisateurs/fiche-autorisations.md) |
 | Haut d’une section | Pas de bandeau qui répète les droits de l’acteur, pas de titre identique au lien de section, pas de compteur déjà présent dans la synthèse ; les sélecteurs principaux rejoignent la barre de filtres, une seule ligne d’aide | Fiches à sections | [Gabarit B](gabarits.md#b-fiche-à-sections) |
@@ -39,7 +42,7 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 | Méthode de revue des composants | Examiner les composants un par un, réutiliser ceux qui servent, sans multiplier les variantes | Tout le site | [Composants](composants.md) |
 | Autocomplétion | Désactivée partout, sans exception, connexion et MFA comprises | Tout le site | [Comportements](comportements.md#autocomplétion) |
 | Avatars de compte | Fond selon l’accès : Superadmin rouge clair, Administrateur ambre, Utilisateur bleu clair ; dessin conservé | Avatars de compte | [Liste des utilisateurs](../pages/systeme/utilisateurs/liste.md) |
-| Listes de gestion | Synthèse compacte jusqu’au rail, recherche des mots dans les deux ordres, compteurs qui ouvrent leur sous-ensemble, retour de fiche avec contexte | Listes de gestion | [Comportements](comportements.md#listes-recherche-et-pagination) |
+| Listes de gestion | Recherche des mots dans les deux ordres, retour de fiche avec contexte ; la synthèse compacte du 10 octobre est remplacée par les filtres rapides le 20 octobre 2026 | Listes de gestion | [Comportements](comportements.md#listes-recherche-et-pagination) |
 | Page de référence | `/membres/repertoire` est la référence visuelle et UX, complétée par `/systeme/utilisateurs` | Tout le site | [Pages de référence](README.md#pages-de-référence) |
 | Taille des listes | Pas de réglage global du nombre de lignes ; 25 par défaut dans le code | Listes | [Gabarits](gabarits.md#hiérarchie-dune-page) |
 | Sidebar | Toujours ouverte à 264 px sur ordinateur, sans mode réduit | Navigation générale | [Navigation générale](../pages/transverse/navigation-generale.md) |
@@ -49,6 +52,7 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 
 | Date | Contexte | Retour du propriétaire | Décision appliquée |
 | --- | --- | --- | --- |
+| 20 octobre 2026 | Liste du Répertoire, reprise en profondeur | « Ok go » sur toutes les recommandations (REP-21 à REP-28) | Synthèse remplacée par des filtres rapides avec compteurs ; « Hors structure » neutre ; coordonnées réduites au détail par type ; indication de recherche en gris ; un seul anneau de focus ; pastille commune `StatusBadge` ([détail](../pages/membres/repertoire/liste.md#reprise-en-profondeur--20-octobre-2026)) |
 | 18 octobre 2026 | Section Autorisations de la fiche utilisateur | Juge que la hiérarchie ne fait pas assez ressortir chaque ligne ; veut que l’icône d’aide ouvre un popover plutôt qu’un dépliage | Une carte par autorisation, rubriques en petites capitales avec filet, popover partagé ([détail](../pages/systeme/utilisateurs/fiche-autorisations.md#autorisations--une-carte-par-ligne-détails-en-popover--18-octobre-2026)) |
 | 18 octobre 2026 | Retour au rôle par ligne | « Ok go » sur le retrait | Bouton ↺ retiré ; choisir la valeur du rôle supprime déjà l’exception |
 | 18 octobre 2026 | Autorisations d’un Administrateur | « Oui pour moi » | Un Administrateur possède toujours les 25 autorisations délégables ; aucune exception ne les restreint |
@@ -83,7 +87,7 @@ attendant, appliquer la colonne « Par défaut ».
 
 | ID | Question | Par défaut | Effet |
 | --- | --- | --- | --- |
-| PREF-Q1 | Sous 118 rem, la carte de synthèse placée au-dessus du contenu pèse davantage sur la hauteur que l’en-tête de section allégé le 18 octobre 2026 : faut-il la réduire, la replier ou la déplacer ? | Synthèse compacte actuelle conservée | Proposition à formuler et à valider avant tout changement ([source](../pages/systeme/utilisateurs/fiche-autorisations.md#autorisations--une-carte-par-ligne-détails-en-popover--18-octobre-2026)) |
+| PREF-Q1 | Sous 118 rem, la carte de synthèse placée au-dessus du contenu pèse davantage sur la hauteur que l’en-tête de section allégé le 18 octobre 2026 : faut-il la réduire, la replier ou la déplacer ? | Tranchée pour les listes le 20 octobre 2026 : plus de synthèse, compteurs en filtres rapides. Pour les fiches à sections, synthèse compacte actuelle conservée | Proposition à formuler et à valider avant tout changement ([source](../pages/systeme/utilisateurs/fiche-autorisations.md#autorisations--une-carte-par-ligne-détails-en-popover--18-octobre-2026)) |
 
 ## Questions tranchées
 

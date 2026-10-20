@@ -12,6 +12,7 @@ import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
 import { DataTableDesktop, DataTableMobileList } from '$ui/data-table-section';
 import directoryStyles from '$ui/directory.module.css';
+import { StatusBadge } from '$ui/status-badge';
 import {
   Table,
   TableBody,
@@ -200,13 +201,7 @@ export const UsersListResults: FC<Props> = ({
                         Masqué
                       </span>
                     ) : user.mustChangePassword ? (
-                      <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
-                        <span
-                          aria-hidden="true"
-                          className="size-1.5 shrink-0 rounded-full bg-current"
-                        />
-                        À changer
-                      </span>
+                      <StatusBadge tone="warning">À changer</StatusBadge>
                     ) : (
                       <span className="text-muted-foreground text-[11px]">
                         <span aria-hidden="true">—</span>
@@ -300,13 +295,9 @@ export const UsersListResults: FC<Props> = ({
                 </div>
                 {securityDetailsVisible && user.mustChangePassword && (
                   <div>
-                    <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
-                      <span
-                        aria-hidden="true"
-                        className="size-1.5 shrink-0 rounded-full bg-current"
-                      />
+                    <StatusBadge tone="warning">
                       Mot de passe à changer
-                    </span>
+                    </StatusBadge>
                   </div>
                 )}
                 <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">

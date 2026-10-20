@@ -137,7 +137,6 @@ describe('direct Person page permission boundaries', () => {
           '/membres/repertoire/nouveau?returnTo=%2Fmembres%2Frepertoire',
         initialState: undefined,
         navigationScope: 'user-1',
-        onOverviewChange: expect.any(Function),
         returnHref: '/membres/repertoire',
       },
       undefined,

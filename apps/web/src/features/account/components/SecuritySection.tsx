@@ -44,6 +44,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Separator } from '$ui/separator';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
+import { StatusBadge } from '$ui/status-badge';
 import { ApiClientError } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 import { securityRequest } from '$utils/security-request.utils';
@@ -90,33 +91,6 @@ const SectionTitle: FC<{
     {children}
   </h3>
 );
-
-const StatusBadge: FC<{
-  label: string;
-  tone: 'muted' | 'success' | 'warning';
-}> = ({ label, tone }) => {
-  const toneClassName =
-    tone === 'warning'
-      ? 'border-warning/40 bg-warning/15 text-warning'
-      : tone === 'success'
-        ? 'border-success/40 bg-success/15 text-success'
-        : 'border-muted-foreground/35 bg-muted/30 text-muted-foreground';
-
-  return (
-    <span
-      className={cn(
-        'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
-        toneClassName,
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className="size-1.5 shrink-0 rounded-full bg-current"
-      />
-      {label}
-    </span>
-  );
-};
 
 export const SecuritySection: FC<SecuritySectionProps> = ({
   canChangePassword,
@@ -432,9 +406,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 <div className="flex items-center justify-between gap-4">
                   <span className="text-muted-foreground text-sm">État</span>
                   {userData.mustChangePassword ? (
-                    <StatusBadge label="À changer" tone="warning" />
+                    <StatusBadge tone="warning">À changer</StatusBadge>
                   ) : (
-                    <StatusBadge label="À jour" tone="success" />
+                    <StatusBadge tone="success">À jour</StatusBadge>
                   )}
                 </div>
                 <Separator className="bg-border/60" />
@@ -528,9 +502,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                         État
                       </span>
                       {isMfaEnabled ? (
-                        <StatusBadge label="Active" tone="success" />
+                        <StatusBadge tone="success">Active</StatusBadge>
                       ) : (
-                        <StatusBadge label="À activer" tone="warning" />
+                        <StatusBadge tone="warning">À activer</StatusBadge>
                       )}
                     </div>
                     {mfaEnabledAt && (

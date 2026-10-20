@@ -4,7 +4,11 @@ import { PAGE_PATHS } from '$constants/routes.constants';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 
 import { calculateCivilAge } from './person.utils';
-import type { PersonDetail, PersonStructureStatus } from './types/person.types';
+import type {
+  PersonAuditActor,
+  PersonDetail,
+  PersonStructureStatus,
+} from './types/person.types';
 
 export type PersonFormErrors = Record<string, string>;
 
@@ -62,6 +66,12 @@ export const getPersonInitials = (person: {
 export const formatPersonDateTime = (value: string): string =>
   DATE_TIME_FORMATTER.format(new Date(value));
 
+/** Author of a change: display name, plus the login when it differs. */
+export const formatPersonActor = (actor: PersonAuditActor): string =>
+  actor.loginName && actor.loginName !== actor.displayName
+    ? `${actor.displayName} (${actor.loginName})`
+    : actor.displayName;
+
 export const formatPersonBirthDate = (value: string): string =>
   DATE_FORMATTER.format(new Date(`${value}T00:00:00.000Z`));
 
@@ -79,8 +89,7 @@ export const getAgeDescription = (birthDate: string | null): string | null => {
 
 export const getStructureStatusTone = (
   status: PersonStructureStatus,
-): 'secondary' | 'success' =>
-  status === 'IN_STRUCTURE' ? 'success' : 'secondary';
+): 'muted' | 'success' => (status === 'IN_STRUCTURE' ? 'success' : 'muted');
 
 export const zodErrorMap = (error: ZodError): PersonFormErrors => {
   const errors = new Map<string, string>();

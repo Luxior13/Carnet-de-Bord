@@ -16,6 +16,7 @@ import { Checkbox } from '$ui/checkbox';
 import { Label } from '$ui/label';
 import { Separator } from '$ui/separator';
 import { ServiceIcon } from '$ui/service-icon';
+import { StatusBadge } from '$ui/status-badge';
 
 import { FormSectionTitle } from './CreateUserParts';
 import type { CreateUserController } from './useCreateUser';
@@ -127,13 +128,7 @@ export const NewUserSuccess: FC<{
               <span className="text-muted-foreground text-xs">
                 Mot de passe
               </span>
-              <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
-                <span
-                  aria-hidden="true"
-                  className="size-1.5 shrink-0 rounded-full bg-current"
-                />
-                À changer
-              </span>
+              <StatusBadge tone="warning">À changer</StatusBadge>
             </div>
           </div>
         </section>

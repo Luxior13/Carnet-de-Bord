@@ -26,8 +26,7 @@ vers la liste (voir les [routes](../../../systeme/routes.md)).
   [page Répertoire](../../../domaines/permissions.md#page-répertoire).
 - **Cadre de la fiche** : [PersonDetailPage](../../../../apps/web/src/features/persons/components/PersonDetailPage.tsx)
   compose `EntityDetailLayout` (bandeau compact, `PageSectionNavigation`) et
-  charge chaque section à la demande ; la synthèse `PersonOverview` suit le
-  seuil du rail.
+  charge chaque section à la demande.
 - **Règles métier** : statut `IN_STRUCTURE` / `OUTSIDE_STRUCTURE` ; futures
   relations datées rattachées à la personne, jamais empilées sur `Person`
   ([sujets futurs](../../../propositions/sujets-futurs.md)).

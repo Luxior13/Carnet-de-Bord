@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import React, { type FC, useCallback, useEffect, useRef } from 'react';
 
@@ -25,18 +25,20 @@ import {
   TableRow,
 } from '$ui/table';
 
-import { formatPersonDateTime, getPersonDisplayName } from '../person.ui';
+import {
+  formatPersonActor,
+  formatPersonDateTime,
+  getPersonDisplayName,
+} from '../person.ui';
 import { retainPersonsCursors } from '../person-list-navigation';
 import {
   MAX_PERSONS_PAGE,
   type PersonsListRequest,
 } from '../person-list-state';
-import type {
-  PersonOverview,
-  PersonsListResponse,
-} from '../types/person.types';
-import { PersonAvatar } from './PersonAvatar';
+import type { PersonsListResponse } from '../types/person.types';
 import {
+  PersonAvatarFrame,
+  PersonContactMatchHint,
   PersonContacts,
   PersonIdentity,
   PersonLastModified,
@@ -56,10 +58,6 @@ type PersonsListProps = {
     request: PersonsListRequest;
   };
   navigationScope?: string;
-  onOverviewChange?: (state: {
-    isLoading: boolean;
-    stats: PersonOverview | null;
-  }) => void;
   returnHref: string;
 };
 
@@ -77,7 +75,6 @@ export const PersonsList: FC<PersonsListProps> = ({
   createHref,
   initialState,
   navigationScope = '',
-  onOverviewChange,
   returnHref,
 }) => {
   // cancelPageChange comes from usePersonsListNavigation but is also needed by
@@ -109,7 +106,6 @@ export const PersonsList: FC<PersonsListProps> = ({
   } = usePersonsListState({
     cancelPageChangeRef,
     initialState,
-    onOverviewChange,
   });
 
   const {
@@ -220,12 +216,14 @@ export const PersonsList: FC<PersonsListProps> = ({
 
   const toolbar = (
     <PersonsListToolbar
-      canViewContact={canViewContact}
+      appliedQuery={appliedQuery}
       applyFilters={applyFilters}
+      canViewContact={canViewContact}
       draftQuery={draftQuery}
       error={error}
       isRefreshing={isRefreshing}
       missingContacts={missingContacts}
+      overview={data?.overview ?? null}
       setDraftQuery={setDraftQuery}
       sort={sort}
       status={status}
@@ -321,7 +319,7 @@ export const PersonsList: FC<PersonsListProps> = ({
 
                     return (
                       <TableRow
-                        className="focus-within:ring-ring relative focus-within:ring-2 focus-within:ring-inset"
+                        className="has-[a:focus-visible]:ring-ring relative has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-inset"
                         key={person.id}
                       >
                         <TableCell>
@@ -364,46 +362,25 @@ export const PersonsList: FC<PersonsListProps> = ({
                     key={person.id}
                   >
                     <div className="flex items-start gap-3">
-                      <span
-                        aria-hidden="true"
-                        className="border-border-default bg-surface-inset relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[7px] border"
-                      >
-                        <PersonAvatar
-                          className="size-full rounded-[inherit]"
-                          person={person}
-                        />
-                      </span>
+                      <PersonAvatarFrame person={person} />
                       <div className="min-w-0 flex-1 space-y-2">
                         <div className="min-w-0">
-                          <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
+                          <h3 className="text-foreground group-hover:text-primary-emphasis min-w-0 text-sm font-semibold [overflow-wrap:anywhere] group-hover:underline group-hover:underline-offset-[3px]">
                             {getPersonDisplayName(person)}
                           </h3>
                           {person.matchedByContact && (
-                            <p className="text-success mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px] leading-5">
-                              <Search
-                                aria-hidden="true"
-                                className="size-3 shrink-0"
-                              />
-                              <span>
-                                Trouvée par email, téléphone ou réseau
-                              </span>
-                            </p>
+                            <PersonContactMatchHint />
                           )}
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <PersonStatusBadge status={person.structureStatus} />
                           <PersonContacts person={person} />
                         </div>
-                        <p className="text-muted-foreground text-[11px] leading-5 tabular-nums">
+                        <p className="text-muted-foreground text-xs leading-5 tabular-nums">
                           Modifiée le {formatPersonDateTime(person.updatedAt)}
                           {person.lastModifiedBy && (
                             <span className="block [overflow-wrap:anywhere]">
-                              Par {person.lastModifiedBy.displayName}
-                              {person.lastModifiedBy.loginName &&
-                              person.lastModifiedBy.loginName !==
-                                person.lastModifiedBy.displayName
-                                ? ` (${person.lastModifiedBy.loginName})`
-                                : ''}
+                              Par {formatPersonActor(person.lastModifiedBy)}
                             </span>
                           )}
                         </p>

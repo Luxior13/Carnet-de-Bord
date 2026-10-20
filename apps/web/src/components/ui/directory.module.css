@@ -187,6 +187,51 @@
   color: var(--m-muted);
 }
 
+/* Filtres rapides : boutons à bascule (`aria-pressed`) sous la recherche. */
+.directory .filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.directory .quickFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.directory .quickFilter {
+  height: 30px;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--m-border-button);
+  border-radius: 6px;
+  background: var(--m-control);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.directory .quickFilter:hover {
+  border-color: var(--m-border-hover);
+  background: var(--surface-navigation-hover);
+  color: var(--m-foreground);
+}
+
+.directory .quickFilter[aria-pressed='true'] {
+  border-color: var(--m-accent-soft-border);
+  background: var(--m-accent-soft);
+  color: var(--m-foreground);
+}
+
+.directory .quickFilterCount {
+  color: var(--m-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ------------------------------------------------------------------ Cartes */
 .directory [data-slot='card'] {
   border-color: var(--m-border);
@@ -369,6 +414,10 @@
 
   .directory .search {
     width: 100%;
+  }
+
+  .directory .quickFilter {
+    height: 44px;
   }
 
   .directory .filterSelects {

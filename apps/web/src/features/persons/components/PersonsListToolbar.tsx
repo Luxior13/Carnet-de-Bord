@@ -1,6 +1,6 @@
 'use client';
 
-import { RotateCcw, X } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import React, { type FC, useRef } from 'react';
 
 import { Button } from '$ui/button';
@@ -18,10 +18,10 @@ import { cn } from '$utils/css.utils';
 import {
   PERSON_LIST_SORTS,
   PERSON_STRUCTURE_STATUS_LABELS,
-  PERSON_STRUCTURE_STATUSES,
 } from '../person.constants';
 import type {
   PersonListSort,
+  PersonOverview,
   PersonStructureStatus,
 } from '../types/person.types';
 
@@ -39,36 +39,39 @@ const getSortLabel = (sort: PersonListSort): string => {
   return SORT_LABELS.name;
 };
 
-const getStatusLabel = (status: PersonStructureStatus): string =>
-  status === 'IN_STRUCTURE'
-    ? PERSON_STRUCTURE_STATUS_LABELS.IN_STRUCTURE
-    : PERSON_STRUCTURE_STATUS_LABELS.OUTSIDE_STRUCTURE;
-
-const DirectorySelect: FC<{
-  ariaLabel: string;
-  onValueChange: (value: string) => void;
-  options: ReadonlyArray<{ label: string; value: string }>;
-  value: string;
-}> = ({ ariaLabel, onValueChange, options, value }) => (
-  <Select onValueChange={onValueChange} value={value}>
-    <SelectTrigger
-      aria-label={ariaLabel}
-      className={directoryStyles.selectTrigger}
-      variant="compact"
-    >
-      <SelectValue />
-    </SelectTrigger>
-    <SelectContent variant="compact">
-      {options.map((option) => (
-        <SelectItem key={option.value} value={option.value}>
-          {option.label}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
+/**
+ * Toggle of the quick filter row. The count is only given when it equals the
+ * result the filter would show, so a number never contradicts the list.
+ */
+const QuickFilter: FC<{
+  count: number | null;
+  label: string;
+  onClick: () => void;
+  pressed: boolean;
+}> = ({ count, label, onClick, pressed }) => (
+  <Button
+    aria-label={
+      count === null
+        ? undefined
+        : `${label}, ${count.toLocaleString('fr-FR')} fiche${count > 1 ? 's' : ''}`
+    }
+    aria-pressed={pressed}
+    className={directoryStyles.quickFilter}
+    onClick={onClick}
+    type="button"
+    variant="ghost"
+  >
+    {label}
+    {count !== null && (
+      <span className={directoryStyles.quickFilterCount}>
+        {count.toLocaleString('fr-FR')}
+      </span>
+    )}
+  </Button>
 );
 
 type Props = {
+  appliedQuery: string;
   applyFilters: (
     query: string,
     status: StatusFilter,
@@ -80,6 +83,7 @@ type Props = {
   error: Error | null;
   isRefreshing: boolean;
   missingContacts: boolean;
+  overview: PersonOverview | null;
   setDraftQuery: (query: string) => void;
   sort: PersonListSort;
   status: StatusFilter;
@@ -87,12 +91,14 @@ type Props = {
 };
 
 export const PersonsListToolbar: FC<Props> = ({
+  appliedQuery,
   applyFilters,
   canViewContact = false,
   draftQuery,
   error,
   isRefreshing,
   missingContacts,
+  overview,
   setDraftQuery,
   sort,
   status,
@@ -107,17 +113,28 @@ export const PersonsListToolbar: FC<Props> = ({
   const hasActiveToolbarFilters = Boolean(
     draftQuery || status !== 'ALL' || sort !== 'name' || missingContacts,
   );
-  const statusOptions = [
-    { label: 'Tous les statuts', value: 'ALL' },
-    ...PERSON_STRUCTURE_STATUSES.map((item) => ({
-      label: getStatusLabel(item),
-      value: item,
-    })),
+  // The overview counts the whole directory: a count is shown only while no
+  // other criterion narrows the result it announces.
+  const statusCounts = !appliedQuery && !missingContacts ? overview : null;
+  const missingContactsCount =
+    !appliedQuery && status === 'ALL' ? (overview?.noContacts ?? null) : null;
+  const statusFilters: ReadonlyArray<{
+    count: number | null;
+    label: string;
+    value: StatusFilter;
+  }> = [
+    { count: statusCounts?.total ?? null, label: 'Tous', value: 'ALL' },
+    {
+      count: statusCounts?.inStructure ?? null,
+      label: PERSON_STRUCTURE_STATUS_LABELS.IN_STRUCTURE,
+      value: 'IN_STRUCTURE',
+    },
+    {
+      count: statusCounts?.outsideStructure ?? null,
+      label: PERSON_STRUCTURE_STATUS_LABELS.OUTSIDE_STRUCTURE,
+      value: 'OUTSIDE_STRUCTURE',
+    },
   ];
-  const sortOptions = PERSON_LIST_SORTS.map((item) => ({
-    label: getSortLabel(item),
-    value: item,
-  }));
 
   return (
     <div className="w-full" ref={toolbarRef}>
@@ -146,22 +163,27 @@ export const PersonsListToolbar: FC<Props> = ({
           value={draftQuery}
         />
         <div className={directoryStyles.filterSelects}>
-          <DirectorySelect
-            ariaLabel="Filtrer par statut"
-            onValueChange={(value) =>
-              applyFilters(draftQuery, value as StatusFilter, sort)
-            }
-            options={statusOptions}
-            value={status}
-          />
-          <DirectorySelect
-            ariaLabel="Trier le répertoire"
+          <Select
             onValueChange={(value) =>
               applyFilters(draftQuery, status, value as PersonListSort)
             }
-            options={sortOptions}
             value={sort}
-          />
+          >
+            <SelectTrigger
+              aria-label="Trier le répertoire"
+              className={directoryStyles.selectTrigger}
+              variant="compact"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent variant="compact">
+              {PERSON_LIST_SORTS.map((item) => (
+                <SelectItem key={item} value={item}>
+                  {getSortLabel(item)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             aria-hidden={!hasActiveToolbarFilters || undefined}
             aria-label="Réinitialiser les filtres"
@@ -182,29 +204,44 @@ export const PersonsListToolbar: FC<Props> = ({
           </Button>
         </div>
       </form>
-      {missingContacts && (
-        <Button
-          className="mt-3 min-h-11 sm:min-h-8"
-          size="sm"
-          variant="outline"
-          type="button"
-          onClick={() => {
-            applyFilters(draftQuery, status, sort, false);
-            focusSearch();
-          }}
-          aria-label="Retirer le filtre Sans coordonnées"
+      <div className={directoryStyles.filterBar}>
+        <div
+          aria-label="Filtres rapides"
+          className={directoryStyles.quickFilters}
+          role="group"
         >
-          Sans coordonnées <X aria-hidden="true" className="size-3" />
-        </Button>
-      )}
-      <div className={cn(directoryStyles.listCaption, 'mt-3')}>
-        <p aria-live="polite" role="status">
-          {isRefreshing
-            ? 'Actualisation…'
-            : error
-              ? 'Résultats non actualisés'
-              : `${total.toLocaleString('fr-FR')} fiche${total !== 1 ? 's' : ''} trouvée${total !== 1 ? 's' : ''}`}
-        </p>
+          {statusFilters.map((filter) => (
+            <QuickFilter
+              count={filter.count}
+              key={filter.value}
+              label={filter.label}
+              onClick={() => {
+                if (filter.value !== status)
+                  applyFilters(draftQuery, filter.value, sort);
+              }}
+              pressed={filter.value === status}
+            />
+          ))}
+          {canViewContact && (
+            <QuickFilter
+              count={missingContactsCount}
+              label="Sans coordonnées"
+              onClick={() =>
+                applyFilters(draftQuery, status, sort, !missingContacts)
+              }
+              pressed={missingContacts}
+            />
+          )}
+        </div>
+        <div className={directoryStyles.listCaption}>
+          <p aria-live="polite" role="status">
+            {isRefreshing
+              ? 'Actualisation…'
+              : error
+                ? 'Résultats non actualisés'
+                : `${total.toLocaleString('fr-FR')} fiche${total !== 1 ? 's' : ''} trouvée${total !== 1 ? 's' : ''}`}
+          </p>
+        </div>
       </div>
     </div>
   );

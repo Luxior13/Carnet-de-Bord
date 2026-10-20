@@ -5,6 +5,7 @@ import React, { type FC } from 'react';
 import { UserStatusBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
 import directoryStyles from '$ui/directory.module.css';
+import { StatusBadge } from '$ui/status-badge';
 import { cn } from '$utils/css.utils';
 
 import {
@@ -65,62 +66,46 @@ export const UserOverviewCard: FC<{
         {user.isProtected && (
           <div className={styles.value}>
             <span className="text-muted-foreground text-xs">Protection</span>
-            <span className="border-warning/40 bg-warning/15 text-warning inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
-              <span
-                aria-hidden="true"
-                className="size-1.5 shrink-0 rounded-full bg-current"
-              />
-              Compte racine
-            </span>
+            <StatusBadge tone="warning">Compte racine</StatusBadge>
           </div>
         )}
         <div className={styles.value}>
           <span className="text-muted-foreground text-xs">Mot de passe</span>
-          <span
-            className={cn(
-              'inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
+          <StatusBadge
+            tone={
               user.securityDetailsVisible === false
-                ? 'border-border text-muted-foreground'
+                ? 'muted'
                 : user.mustChangePassword
-                  ? 'border-warning/40 bg-warning/15 text-warning'
-                  : 'border-success/40 bg-success/15 text-success',
-            )}
+                  ? 'warning'
+                  : 'success'
+            }
           >
-            <span
-              aria-hidden="true"
-              className="size-1.5 shrink-0 rounded-full bg-current"
-            />
             {user.securityDetailsVisible === false
               ? 'Masqué'
               : user.mustChangePassword
                 ? 'À changer'
                 : 'À jour'}
-          </span>
+          </StatusBadge>
         </div>
         <div className={styles.value}>
           <span className="text-muted-foreground text-xs">
             Double authentification
           </span>
-          <span
-            className={cn(
-              'inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
+          <StatusBadge
+            tone={
               user.securityDetailsVisible === false
-                ? 'border-border text-muted-foreground'
+                ? 'muted'
                 : user.mfaEnabledAt
-                  ? 'border-success/40 bg-success/15 text-success'
-                  : 'border-warning/40 bg-warning/15 text-warning',
-            )}
+                  ? 'success'
+                  : 'warning'
+            }
           >
-            <span
-              aria-hidden="true"
-              className="size-1.5 shrink-0 rounded-full bg-current"
-            />
             {user.securityDetailsVisible === false
               ? 'Masquée'
               : user.mfaEnabledAt
                 ? 'Activée'
                 : 'À configurer'}
-          </span>
+          </StatusBadge>
         </div>
         {canViewAccess !== undefined && (
           <div className={styles.value}>

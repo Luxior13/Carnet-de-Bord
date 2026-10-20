@@ -30,6 +30,7 @@ import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Separator } from '$ui/separator';
 import { ServiceIcon } from '$ui/service-icon';
+import { StatusBadge } from '$ui/status-badge';
 
 export const NewUserForm: FC<{
   returnHref: string;
@@ -122,13 +123,7 @@ export const NewUserForm: FC<{
               createdUser ? (
                 <>
                   <UserAccessBadge user={createdUser} />
-                  <span className="border-success/40 bg-success/15 text-success inline-flex w-fit items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap">
-                    <span
-                      aria-hidden="true"
-                      className="size-1.5 shrink-0 rounded-full bg-current"
-                    />
-                    Créé
-                  </span>
+                  <StatusBadge tone="success">Créé</StatusBadge>
                 </>
               ) : undefined
             }

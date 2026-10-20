@@ -1,0 +1,436 @@
+{
+  "date": "2026-10-20",
+  "browser": "149.0.7827.55",
+  "environment": "Chromium real page components/CSS with simulated API, router, session and 240 px desktop shell inset; fonts fall back to Arial; timezone Europe/Paris; reduced motion",
+  "scenarios": [
+    {
+      "name": "presentation-and-keyboard",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ],
+      "details": {
+        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "firstRowAccessibility": "- link \"Ouvrir la fiche de CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire\n  - heading \"CamilleJeu · Camille Exemple\" [level=3]\n  - text: Dans la structure 1 email 0 téléphone 2 profils sociaux\n  - paragraph: Modifiée le 11 oct. 2026, 12:30 Par Alex Exemple (alex.exemple)",
+        "computedFont": {
+          "link": "Arial, sans-serif",
+          "body": "Arial, sans-serif"
+        }
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25",
+        "limit=25&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25&sort=updated&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "quick-filter-and-empty",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&contacts=missing",
+        "limit=25",
+        "limit=25&q=Introuvable",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "long-values-and-large-counts",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "presentation-and-keyboard",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ],
+      "details": {
+        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "firstRowAccessibility": "- link \"Ouvrir la fiche de CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire\n  - heading \"CamilleJeu · Camille Exemple\" [level=3]\n  - text: Dans la structure 1 email 0 téléphone 2 profils sociaux\n  - paragraph: Modifiée le 11 oct. 2026, 12:30 Par Alex Exemple (alex.exemple)",
+        "computedFont": {
+          "link": "Arial, sans-serif",
+          "body": "Arial, sans-serif"
+        }
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25",
+        "limit=25&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25&sort=updated&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "quick-filter-and-empty",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&contacts=missing",
+        "limit=25",
+        "limit=25&q=Introuvable",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "long-values-and-large-counts",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "presentation-and-keyboard",
+      "width": 768,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ],
+      "details": {
+        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "firstRowAccessibility": "- link \"Ouvrir la fiche de CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire\n  - heading \"CamilleJeu · Camille Exemple\" [level=3]\n  - text: Dans la structure 1 email 0 téléphone 2 profils sociaux\n  - paragraph: Modifiée le 11 oct. 2026, 12:30 Par Alex Exemple (alex.exemple)",
+        "computedFont": {
+          "link": "Arial, sans-serif",
+          "body": "Arial, sans-serif"
+        }
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 768,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25",
+        "limit=25&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25&sort=updated&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "quick-filter-and-empty",
+      "width": 768,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&contacts=missing",
+        "limit=25",
+        "limit=25&q=Introuvable",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "long-values-and-large-counts",
+      "width": 768,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "presentation-and-keyboard",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ],
+      "details": {
+        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "firstRowAccessibility": "- link \"CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire",
+        "computedFont": {
+          "link": "Arial, sans-serif",
+          "body": "Arial, sans-serif"
+        }
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25",
+        "limit=25&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25&sort=updated&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "quick-filter-and-empty",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&contacts=missing",
+        "limit=25",
+        "limit=25&q=Introuvable",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "long-values-and-large-counts",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "presentation-and-keyboard",
+      "width": 1920,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ],
+      "details": {
+        "quickFiltersAccessibility": "- group \"Filtres rapides\":\n  - button \"Tous, 3 fiches\" [pressed]: Tous 3\n  - button \"Dans la structure, 2 fiches\": Dans la structure 2\n  - button \"Hors structure, 1 fiche\": Hors structure 1\n  - button \"Sans coordonnées, 1 fiche\": Sans coordonnées 1",
+        "firstRowAccessibility": "- link \"CamilleJeu · Camille Exemple\":\n  - /url: /membres/repertoire/fiche-camille?returnTo=%2Fmembres%2Frepertoire",
+        "computedFont": {
+          "link": "Arial, sans-serif",
+          "body": "Arial, sans-serif"
+        }
+      }
+    },
+    {
+      "name": "filters-and-reset-focus",
+      "width": 1920,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25",
+        "limit=25&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25&sort=updated&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "quick-filter-and-empty",
+      "width": 1920,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&contacts=missing",
+        "limit=25",
+        "limit=25&q=Introuvable",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "long-values-and-large-counts",
+      "width": 1920,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "initial-loading",
+      "width": 320,
+      "result": "passed",
+      "requests": []
+    },
+    {
+      "name": "global-empty",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "feature-unavailable",
+      "width": 390,
+      "result": "passed",
+      "requests": []
+    },
+    {
+      "name": "native-modified-links",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "initial-data-refresh-after-search",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25&q=Camille",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "access-401-purges-data",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille"
+      ]
+    },
+    {
+      "name": "access-403-purges-data",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille"
+      ]
+    },
+    {
+      "name": "pagination-error-then-filter-keeps-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&cursor=page-2",
+        "limit=25&q=Personne+01"
+      ]
+    },
+    {
+      "name": "slow-search-preserves-newer-draft",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25&q=Zo%C3%A9"
+      ]
+    },
+    {
+      "name": "contact-search-discloses-match-reason",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=contact"
+      ]
+    },
+    {
+      "name": "slow-response-cannot-replace-newer-results",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25&q=Zo%C3%A9"
+      ]
+    },
+    {
+      "name": "delayed-url-preserves-newer-draft",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25&q=Zo%C3%A9"
+      ]
+    },
+    {
+      "name": "initial-error-retry",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "initial-retry-error-then-success-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25",
+        "limit=25"
+      ]
+    },
+    {
+      "name": "refresh-retry-error-then-success-focus",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&q=Camille",
+        "limit=25&q=Camille",
+        "limit=25&q=Camille"
+      ]
+    },
+    {
+      "name": "filters-keyboard-and-escape",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25&sort=created&structureStatus=OUTSIDE_STRUCTURE"
+      ]
+    },
+    {
+      "name": "forced-colors-focus",
+      "width": 320,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "filters-keyboard-and-escape",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25",
+        "limit=25&structureStatus=OUTSIDE_STRUCTURE",
+        "limit=25&sort=created&structureStatus=OUTSIDE_STRUCTURE"
+      ]
+    },
+    {
+      "name": "forced-colors-focus",
+      "width": 1440,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    },
+    {
+      "name": "access-denied-client",
+      "width": 390,
+      "result": "passed",
+      "requests": []
+    },
+    {
+      "name": "read-only-empty-client",
+      "width": 390,
+      "result": "passed",
+      "requests": [
+        "limit=25"
+      ]
+    }
+  ]
+}

@@ -51,11 +51,14 @@ Références : [liste du Répertoire](../pages/membres/repertoire/liste.md) et
 - Recherche côté serveur, bornée en longueur, accents et casse normalisés, mots
   d’identité dans n’importe quel ordre lorsque le module le prend en charge.
 - Critères dans l’URL ; un changement de critère repart au début de la liste.
-  Les filtres actifs sont visibles et retirables un par un ; reset et retrait
-  rendent le focus à la recherche.
-- Les compteurs de la synthèse portent sur le périmètre global autorisé ; un
-  compteur cliquable ouvre exactement son sous-ensemble, en effaçant les autres
-  filtres et en conservant le tri.
+  Les filtres actifs restent visibles : bouton enfoncé pour un filtre rapide,
+  valeur affichée pour un menu. La réinitialisation rend le focus à la
+  recherche ; un filtre rapide garde le focus sur son bouton.
+- Filtres rapides (décision du 20 octobre 2026) : boutons à bascule
+  (`aria-pressed`) sous la recherche, à la place d’une carte de synthèse et du
+  menu équivalent. Un filtre se combine aux autres critères. Son compteur porte
+  sur le périmètre global autorisé et ne s’affiche que s’il égale le résultat
+  que le filtre montrerait ; le nom accessible du bouton porte ce nombre.
 - Pagination à 25 lignes (`PAGINATION.DEFAULT_LIMIT`, partagé client et
   serveur) ; une exception de densité se justifie dans la fiche. Le nombre de
   lignes n’est pas un paramètre système.
@@ -65,7 +68,7 @@ Références : [liste du Répertoire](../pages/membres/repertoire/liste.md) et
 - Retour depuis une fiche : un seul instantané de navigation par onglet,
   limité à 30 minutes, lié au compte, aux droits et aux critères ; il restaure
   critères, page, position et lien focalisé, puis s’efface. Aucune copie des lignes.
-- Un refus 401/403 retire les lignes, synthèses et dates déjà affichées.
+- Un refus 401/403 retire les lignes, compteurs et dates déjà affichés.
 
 ## Saisie, brouillon et enregistrement
 
@@ -185,8 +188,10 @@ déjà visible dans la page ne reçoit pas de toast supplémentaire.
 - Cibles tactiles de 44 px sous 640 px ; champs de saisie à 16 px sous 1024 px.
 - Sous 740 px de conteneur, le tableau d’une liste devient une liste de cartes
   qui garde les relations libellé/valeur.
-- La sidebar devient un volet mobile sous 1024 px ; le rail de synthèse passe
-  au-dessus du contenu sous 118 rem, en version compacte.
+- La sidebar devient un volet mobile sous 1024 px ; le rail de synthèse d’une
+  fiche passe au-dessus du contenu sous 118 rem, en version compacte.
+- Les filtres rapides d’une liste passent à la ligne et prennent 44 px de haut
+  sous 640 px.
 - La barre d’enregistrement reste dans le flux en faible largeur ou hauteur.
 
 ## Autocomplétion

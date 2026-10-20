@@ -34,6 +34,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
+import { StatusBadge } from '$ui/status-badge';
 import { Switch } from '$ui/switch';
 import { cn } from '$utils/css.utils';
 
@@ -195,35 +196,6 @@ const SectionTitle: FC<{
     {children}
   </h3>
 );
-
-const StatusBadge: FC<{
-  label: string;
-  tone: 'danger' | 'muted' | 'success' | 'warning';
-}> = ({ label, tone }) => {
-  const toneClassName =
-    tone === 'danger'
-      ? 'border-destructive/40 bg-destructive/15 text-destructive'
-      : tone === 'warning'
-        ? 'border-warning/40 bg-warning/15 text-warning'
-        : tone === 'success'
-          ? 'border-success/40 bg-success/15 text-success'
-          : 'border-muted-foreground/35 bg-muted/30 text-muted-foreground';
-
-  return (
-    <span
-      className={cn(
-        'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
-        toneClassName,
-      )}
-    >
-      <span
-        aria-hidden="true"
-        className="size-1.5 shrink-0 rounded-full bg-current"
-      />
-      {label}
-    </span>
-  );
-};
 
 const SecurityInfoBlock: FC<{
   children?: React.ReactNode;
@@ -512,9 +484,9 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   label="État du mot de passe"
                   value={
                     user.mustChangePassword ? (
-                      <StatusBadge label="À changer" tone="warning" />
+                      <StatusBadge tone="warning">À changer</StatusBadge>
                     ) : (
-                      <StatusBadge label="À jour" tone="success" />
+                      <StatusBadge tone="success">À jour</StatusBadge>
                     )
                   }
                 >
@@ -524,9 +496,9 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   label="Verrouillage"
                   value={
                     isLocked ? (
-                      <StatusBadge label="Verrouillé" tone="danger" />
+                      <StatusBadge tone="danger">Verrouillé</StatusBadge>
                     ) : (
-                      <StatusBadge label="Aucun" tone="muted" />
+                      <StatusBadge tone="muted">Aucun</StatusBadge>
                     )
                   }
                 >
@@ -583,12 +555,11 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   label="État MFA"
                   value={
                     isMfaEnabled ? (
-                      <StatusBadge label="Active" tone="success" />
+                      <StatusBadge tone="success">Active</StatusBadge>
                     ) : (
-                      <StatusBadge
-                        label="Configuration obligatoire"
-                        tone="warning"
-                      />
+                      <StatusBadge tone="warning">
+                        Configuration obligatoire
+                      </StatusBadge>
                     )
                   }
                 >

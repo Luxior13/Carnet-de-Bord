@@ -24,11 +24,15 @@ un retour de fiche qui conservent le contexte.
 ## Composition actuelle
 
 - Bandeau `PageIdentityHero` (dégradé, icône, titre, description, action de création).
-- Synthèse `PersonOverview` : rail à partir de 118 rem, compacte au-dessus sinon ;
-  ses compteurs ouvrent leur sous-ensemble global.
-- `DataTableSection` et `directory.module.css` : recherche `ListSearchField`,
-  filtres statut et sans coordonnées (variante compacte), tri, filtres actifs
-  retirables, tableau puis cartes sous 740 px, `ListPagination` par curseur de 25 lignes.
+- `DataTableSection` et `directory.module.css` : recherche `ListSearchField`
+  et tri à droite ; en dessous, filtres rapides (Tous, Dans la structure, Hors
+  structure, Sans coordonnées) à gauche et nombre de fiches trouvées à droite ;
+  tableau puis cartes sous 740 px, `ListPagination` par curseur de 25 lignes.
+- Plus de carte de synthèse ni de rail : ses compteurs sont portés par les
+  filtres rapides (décision du 20 octobre 2026).
+- Cellules : `PersonAvatarFrame`, `PersonStatusBadge` (pastille commune
+  `StatusBadge`), détail des coordonnées par type, date avec infobulle
+  « Modifiée par ».
 - États : squelette, vide, erreur avec « Première page » et « Réessayer », accès refusé.
 
 ## Décisions retenues
@@ -40,28 +44,98 @@ un retour de fiche qui conservent le contexte.
   normalisés ; liste sans coordonnées complètes, seulement leurs compteurs.
 - Retour de fiche : page, historique de curseurs, position et lien d’origine
   conservés en stockage de session (30 minutes, 64 curseurs au plus).
+- Filtres rapides (20 octobre 2026) : boutons à bascule `aria-pressed` dans un
+  groupe « Filtres rapides ». Un statut se combine à la recherche et au filtre
+  Sans coordonnées ; Sans coordonnées est un interrupteur réservé à
+  `persons:view_contact`. Le focus reste sur le bouton actionné.
+- Compteurs : ils comptent tout le répertoire et ne s’affichent que s’ils
+  égalent le résultat annoncé (statuts sans recherche ni filtre Sans
+  coordonnées ; Sans coordonnées sans recherche et avec Tous). Le nom
+  accessible du bouton porte le nombre (« Tous, 12 fiches »).
+- Le bouton enfoncé tient lieu de filtre actif : pas d’étiquette retirable en
+  plus (REP-23).
+- « Hors structure » est une catégorie neutre (ton `muted`), pas une alerte.
+- Coordonnées : seulement le détail email / téléphone / réseau, zéros atténués,
+  « — » et « Aucune coordonnée » pour les lecteurs d’écran quand il n’y en a pas.
+- Indication « Trouvée par email, téléphone ou réseau » en gris discret.
+- Focus : un seul anneau, celui de la ligne quand son lien a le focus clavier
+  (`has-[a:focus-visible]`) ; la date focalisée garde son propre anneau.
 
 ## Points ouverts
 
-Aucun point ouvert propre à la liste : REP-01 et REP-03 à REP-20 sont clos
-(voir le [registre du module](README.md#points-ouverts)).
+Aucun point ouvert. REP-01 et REP-03 à REP-20 sont clos (voir le
+[registre du module](README.md#points-ouverts)). Points de la
+[reprise du 20 octobre 2026](#reprise-en-profondeur--20-octobre-2026), validés
+par le propriétaire (« ok go ») et clos le même jour :
+
+| ID | Nature / priorité | État | Point et traitement |
+| --- | --- | --- | --- |
+| REP-21 | Cohérence visuelle, P2 | Clos | « Hors structure » utilisait le ton Attention (ambre) ; ton neutre `muted` |
+| REP-22 | Lisibilité, P2 | Clos | Pastille « N coordonnées » redondante retirée ; seul le détail par type reste, zéros atténués |
+| REP-23 | Harmonisation, P2 | Clos | Couvert par REP-24 : le bouton enfoncé montre le filtre actif ; l’étiquette « Sans coordonnées ✕ » est retirée |
+| REP-24 | Composition, P2 | Clos | Carte « Vue d’ensemble » et rail supprimés ; leurs compteurs deviennent les filtres rapides qui remplacent le menu de statut ([PREF-Q1](../../../design/preferences.md#questions-ouvertes) tranchée) |
+| REP-25 | Accessibilité, P2 | Clos | Anneau de la ligne seulement quand son lien a le focus clavier ; contour du lien retiré (rétabli en couleurs forcées) |
+| REP-26 | Sens des couleurs, P3 | Clos | Indication « Trouvée par… » en gris discret, composant `PersonContactMatchHint` |
+| REP-27 | Code, P3 | Clos | `PersonAvatarFrame`, `formatPersonActor`, tailles `text-xs` / `text-sm` ; pastille commune `StatusBadge` ([HARMO-01](../../../design/harmonisation.md)) |
+| REP-28 | Preuve, P3 | Clos | [Banc client du 20 octobre](../../../audits/repertoire-2026-10-20/banc-client/README.md) : 41 scénarios sur 41 |
 
 ## Références
 
 - [Page Répertoire](../../../domaines/permissions.md#page-répertoire), fiche [Listes et recherche](../../../references/listes-recherche.md)
 - Audits : [10 octobre 2026](../../../audits/2026-10-10-repertoire.md), [11 octobre 2026](../../../audits/2026-10-11-repertoire.md)
+- Banc client de la reprise : [20 octobre 2026](../../../audits/repertoire-2026-10-20/banc-client/README.md)
 
 ## Historique
 
 - 9 octobre 2026 : inventaire, refactorisation et désignation comme référence.
 - 10 et 11 octobre 2026 : audits, corrections, améliorations autorisées.
 - 19 octobre 2026 : fiche propre à la liste, créée par découpage du suivi du module.
+- 20 octobre 2026 : reprise en profondeur ; REP-21 à REP-28 ouverts, validés
+  (« ok go ») puis clos : filtres rapides à la place de la synthèse, pastille
+  commune, cellules allégées, nouveau banc client.
 
 ## Revues datées
 
 Sections déplacées le 19 octobre 2026 depuis l’ancien suivi du module, sans
 modification de leur contenu. Elles conservent leur date, leur portée et leurs
 preuves ; la synthèse ci-dessus porte l’état courant.
+
+### Reprise en profondeur — 20 octobre 2026
+
+Première page de la reprise générale des pages existantes, après la
+réorganisation documentaire. Commit de départ `f224f80`, arbre propre.
+
+- **Rendu** : banc client du 11 octobre relancé sur le code actuel (vrais
+  composants et CSS, API, session et routeur simulés, Arial à la place de Geist,
+  sidebar réelle absente). 40 scénarios sur 41 réussis à 320, 390, 768, 1 440 et
+  1 920 px ; l’échec restant est une attente périmée du banc (REP-28), pas un
+  défaut : sans `persons:view_contact`, le champ s’intitule « Rechercher par
+  pseudo ou nom » depuis la séparation des droits du 15 octobre.
+- **Code relu** : `PersonsPageClient`, `PersonsList`, `PersonListCells`,
+  `PersonsListToolbar`, `PersonOverview`, `PersonStatusBadge`, comparés à la
+  liste Utilisateurs (`UsersListToolbar`).
+- **Conservé** : bandeau, tableau puis cartes, recherche, tri, pagination par
+  curseur, retour de fiche, états vide, erreur et refus, contrats d’accès.
+- **Constats** : REP-21 à REP-28 ci-dessus ; propositions présentées au
+  propriétaire, aucune modification de code avant sa décision.
+- **Décision** : « ok go » du propriétaire sur l’ensemble des recommandations
+  ([journal](../../../design/preferences.md#journal)).
+- **Livré** : `PersonsListToolbar` (filtres rapides, menu de statut et
+  étiquette retirés), `PersonListCells` (cadre d’avatar, indication,
+  coordonnées, date), `PersonsList` (anneau unique, cartes mobiles sur les
+  mêmes composants), `PersonsPageClient` sans `PageAsideLayout`,
+  `usePersonsListState` sans remontée de synthèse ; `PersonOverview` et son
+  module CSS supprimés ; squelette aligné sur la nouvelle barre. Pastille
+  `$ui/status-badge` adoptée aussi par les pages Utilisateurs, Mon compte et
+  Création d’utilisateur.
+- **Vérifié** : types, lint (deux avertissements anciens résorbés au passage),
+  budget d’architecture, Vitest complet avec le nouveau
+  `persons-list-toolbar.test.ts` (affichage des compteurs, noms accessibles,
+  droit sur les coordonnées) ;
+  [banc client](../../../audits/repertoire-2026-10-20/banc-client/README.md)
+  41 scénarios sur 41, captures avant/après.
+- **Non vérifié** : session, hydratation Next et PostgreSQL réels (aucun
+  changement serveur), lecteur d’écran réel.
 
 ### Rôle de référence (décision du 2026-10-09)
 
@@ -281,6 +355,8 @@ un contrôle navigateur, lecteur d'écran ou base réelle.
   (magic number destiné à l'aligner sous le titre, fragile).
 
 #### Vue d'ensemble
+
+Carte retirée le 20 octobre 2026 (REP-24) ; section conservée comme historique.
 
 - Composant partagé `features/persons/components/PersonOverview.tsx`, construit
   sur `directory.module.css` (`overviewCard`, `overviewHeader`), comme

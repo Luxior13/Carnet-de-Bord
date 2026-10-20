@@ -23,16 +23,17 @@ pour tous les gabarits du cadre privé.
 Cadre privé (sidebar 264 px, header 56 px)
 └─ PageShell (76 rem) · PageCanvas
    ├─ PageIdentityHero : icône · titre · description · action principale
-   ├─ [Synthèse : rail de 16 rem dès 118 rem, compacte au-dessus sinon]
    └─ DataTableSection (directory.module.css, rayon 10 px)
-      ├─ Barre de filtres : recherche · filtres compacts 38 px · tri · filtres actifs retirables
+      ├─ Barre de filtres : recherche · menus compacts 38 px · tri · réinitialisation
+      ├─ Filtres rapides à bascule avec compteurs · nombre de résultats
       ├─ En-tête de colonnes (surface-table-head)
       ├─ Lignes alternées (cartes sous 740 px de conteneur)
       └─ ListPagination (25 lignes, curseur ou numéro selon le contrat)
 ```
 
-- Le bandeau ne porte pas de statistiques ; elles vont dans la synthèse, dont
-  les compteurs ouvrent leur sous-ensemble.
+- Ni bandeau ni carte de synthèse ne portent de statistiques : les compteurs
+  sont dans les filtres rapides, affichés seulement s’ils égalent le résultat
+  (décision du 20 octobre 2026). Pas de rail sur une liste.
 - Une ligne : identité à gauche (avatar, nom, contexte en dessous), puis
   colonnes de données autorisées, statut en badge à pastille, date.
 - Les colonnes dépendent des droits ; leurs seuils de passage en cartes sont
@@ -46,7 +47,7 @@ Pages adoptant ce gabarit : voir [Harmonisation](harmonisation.md#état-par-page
 ```text
 PageShell · PageCanvas (EntityDetailLayout ou composition équivalente)
 ├─ PageIdentityHero compact : avatar · nom · rôle ou statut · retour à la liste
-├─ [Synthèse : UserOverviewCard ou PersonOverview, rail dès 118 rem]
+├─ [Synthèse : UserOverviewCard, rail dès 118 rem]
 ├─ PageSectionNavigation : vrais liens, section active, point de brouillon
 └─ Section active (chargée à la demande)
    ├─ SectionPanel : titre h2, groupes titrés en petites capitales

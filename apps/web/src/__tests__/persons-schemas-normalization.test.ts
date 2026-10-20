@@ -157,7 +157,7 @@ describe('person schemas and stable normalisation', () => {
     expect(inside).toContain(PERSON_STRUCTURE_STATUS_LABELS.IN_STRUCTURE);
     expect(outside).toContain(PERSON_STRUCTURE_STATUS_LABELS.OUTSIDE_STRUCTURE);
     expect(getStructureStatusTone('IN_STRUCTURE')).toBe('success');
-    expect(getStructureStatusTone('OUTSIDE_STRUCTURE')).toBe('secondary');
+    expect(getStructureStatusTone('OUTSIDE_STRUCTURE')).toBe('muted');
   });
 
   it('rejects duplicate initial contacts and multiple primaries', () => {
