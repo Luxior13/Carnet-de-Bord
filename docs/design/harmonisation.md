@@ -55,11 +55,11 @@ codées** : valeurs hexadécimales dans les styles chargés par la page ;
 | `/` | F | Aligné | 0 | 0 | `PageIdentityHero` |
 | `/login` | G | Aligné ; champs adoucis vérifiés sur le serveur local le 17 octobre 2026 | 0 | 0 | Carte hors cadre, `MfaCodeInput` |
 | `/membres/repertoire` | A | **Référence** ; reprise du 20 octobre 2026, banc client 41/41, rendu réel validé par le propriétaire | 0 | 0 | `PageIdentityHero`, `DataTableSection`, `QuickFilter`, `StatusBadge` |
-| `/membres/repertoire/nouveau` | C | Aligné | 0 | 0 | `PageIdentityHero` compact, `SectionActionBar` |
-| `/membres/repertoire/[id]` | B | Aligné | 0 | 0 | `EntityDetailLayout`, `PageSectionNavigation`, `SectionActionBar` |
+| `/membres/repertoire/nouveau` | C | Aligné ; reprise du 23 octobre 2026, banc client 28/28 | 0 | 0 | `PageIdentityHero` compact, `SectionActionBar` |
+| `/membres/repertoire/[id]` | B | Aligné ; reprise du 22 octobre 2026 (dates dans le bandeau, sans titre de section), banc client 30/30 | 0 | 0 | `EntityDetailLayout`, `PageSectionNavigation`, `SectionActionBar` |
 | `/mon-compte` | B | Aligné ; reprise du 20 octobre 2026 (états dans le bandeau, sections sans titre répété ni cadre imbriqué), banc client 23/23 | 0 | 0 | `UserIdentityStatus`, `PageSectionNavigation`, `SectionActionBar` |
 | `/systeme/utilisateurs` | A | **Référence** (complément) ; reprise du 20 octobre 2026, banc client 42/42, ligne de filtres revue sur le rendu réel | 0 | 0 | `DataTableSection`, `QuickFilter`, `StatusBadge` |
-| `/systeme/utilisateurs/nouveau` | C | Aligné | 0 | 0 | `PageIdentityHero` compact, `SectionActionBar` |
+| `/systeme/utilisateurs/nouveau` | C | Aligné ; reprise du 23 octobre 2026, banc client 28/28 | 0 | 0 | `PageIdentityHero` compact, `SectionActionBar` |
 | `/systeme/utilisateurs/[id]` | B | **Référence** (barre d’enregistrement) ; reprise du 20 octobre 2026, banc client 48/48 à cinq largeurs | 0 | 0 | `UserIdentityStatus`, `PermissionsEditor`, `SectionActionBar` |
 | `/systeme/parametres` | D | Aligné (refonte du 14 octobre 2026) | 0 | 0 | `PageIdentityHero`, `SectionActionBar` |
 | `/systeme/feuille-de-route` | E | Aligné | 0 | 0 | `PageIdentityHero`, `directory.module.css` |

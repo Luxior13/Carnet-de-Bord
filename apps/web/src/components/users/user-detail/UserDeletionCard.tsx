@@ -33,7 +33,7 @@ export const UserDeletionCard: FC<UserDeletionCardProps> = ({
         className="text-destructive flex items-center gap-2 text-sm font-semibold"
       >
         <Trash2 className="size-4" />
-        Zone danger
+        Zone dangereuse
       </h3>
     </CardHeader>
     <CardContent className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">

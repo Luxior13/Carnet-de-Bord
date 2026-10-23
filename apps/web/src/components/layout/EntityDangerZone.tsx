@@ -171,9 +171,10 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
   }
 
   return (
-    <Card className="border-destructive/35">
-      <CardHeader className="bg-destructive/5">
-        <CardTitle className="text-destructive text-sm">
+    <Card className="border-destructive/30 bg-destructive/5 rounded-lg">
+      <CardHeader className="border-destructive/20 bg-destructive/10 border-b p-3 sm:p-4">
+        <CardTitle className="text-destructive flex items-center gap-2 text-sm">
+          <Trash2 aria-hidden="true" className="size-4" />
           Zone dangereuse
         </CardTitle>
       </CardHeader>

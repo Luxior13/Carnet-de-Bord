@@ -45,6 +45,8 @@ Aucun point ouvert ; REP-19 et REP-20 sont clos.
 ## Historique
 
 - 19 octobre 2026 : fiche propre à la section, créée par découpage du suivi du module.
+- 22 octobre 2026 : pied « Dernière modification » retiré, la date est dans le
+  bandeau de la fiche ([reprise](fiche-identite.md#reprise--22-octobre-2026)).
 
 ## Revues datées
 

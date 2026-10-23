@@ -1,0 +1,473 @@
+{
+  "completedAt": "2026-10-23T20:55:59.776Z",
+  "timezone": "Europe/Paris",
+  "browser": "Chromium",
+  "passed": 28,
+  "total": 28,
+  "observations": [
+    {
+      "name": "composition-clavier",
+      "width": 320,
+      "status": "pass",
+      "barInsideCard": false,
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320,
+        "hero": 286,
+        "heroWidth": 286
+      }
+    },
+    {
+      "name": "composition-clavier",
+      "width": 390,
+      "status": "pass",
+      "barInsideCard": false,
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "composition-clavier",
+      "width": 768,
+      "status": "pass",
+      "barInsideCard": false,
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768,
+        "hero": 734,
+        "heroWidth": 734
+      }
+    },
+    {
+      "name": "composition-clavier",
+      "width": 1024,
+      "status": "pass",
+      "barInsideCard": false,
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 1024,
+        "document": 1024,
+        "main": 784,
+        "mainWidth": 784,
+        "hero": 741,
+        "heroWidth": 741
+      }
+    },
+    {
+      "name": "composition-clavier",
+      "width": 1440,
+      "status": "pass",
+      "barInsideCard": false,
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200,
+        "hero": 772,
+        "heroWidth": 772
+      }
+    },
+    {
+      "name": "composition-clavier",
+      "width": 1920,
+      "status": "pass",
+      "barInsideCard": false,
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1680,
+        "mainWidth": 1680,
+        "hero": 766,
+        "heroWidth": 766
+      }
+    },
+    {
+      "name": "validation-vide-puis-pseudo-entree",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "identite-civile-statut",
+      "width": 768,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768
+      }
+    },
+    {
+      "name": "erreur-champ-et-reprise",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 2,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "double-soumission-en-attente",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "depart-annule-focus-puis-confirme",
+      "width": 320,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    },
+    {
+      "name": "saisie-effacee-sans-confirmation",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "compte-change-reponse-tardive",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "droits-retires-reponse-tardive",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "chargement-disponibilite",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "service-indisponible-reverification",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "sans-permission",
+      "width": 320,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    },
+    {
+      "name": "retour-externe-neutralise",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "valeurs-longues-et-paysage",
+      "width": 390,
+      "status": "pass",
+      "position": "static",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "incertain-verification-explicite-lost",
+      "width": 390,
+      "status": "pass",
+      "noAutomaticReplay": true,
+      "samePayloadAfterExplicitConfirmation": true,
+      "requestCounts": {
+        "posts": 2,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "incertain-verification-explicite-error",
+      "width": 390,
+      "status": "pass",
+      "noAutomaticReplay": true,
+      "samePayloadAfterExplicitConfirmation": true,
+      "requestCounts": {
+        "posts": 2,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "incertain-verification-explicite-invalidjson",
+      "width": 390,
+      "status": "pass",
+      "noAutomaticReplay": true,
+      "samePayloadAfterExplicitConfirmation": true,
+      "requestCounts": {
+        "posts": 2,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "reprise-refusee-conserve-incertitude",
+      "width": 320,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 2,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320,
+        "hero": 286,
+        "heroWidth": 286
+      }
+    },
+    {
+      "name": "timeout-borne-sans-rejeu",
+      "width": 390,
+      "status": "pass",
+      "timer30000AcceleratedTo100": true,
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "succes-navigation-refusee-stockage-bloque",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    {
+      "name": "disponibilite-brouillon-focus-conserves",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 0,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "refus-definitif-reprise",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390,
+        "hero": 356,
+        "heroWidth": 356
+      }
+    },
+    {
+      "name": "depart-pendant-requete-reponse-ignoree",
+      "width": 390,
+      "status": "pass",
+      "requestCounts": {
+        "posts": 1,
+        "gets": 0
+      },
+      "metrics": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    }
+  ]
+}

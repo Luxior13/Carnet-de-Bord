@@ -18,18 +18,11 @@ import { useCreateUser } from '$features/users/useCreateUser';
 import { UserAccessBadge } from '$features/users/user-badges';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import type { UserType } from '$types/auth.types';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '$ui/card';
+import { Card, CardContent } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { Separator } from '$ui/separator';
-import { ServiceIcon } from '$ui/service-icon';
 import { StatusBadge } from '$ui/status-badge';
 
 export const NewUserForm: FC<{
@@ -151,22 +144,8 @@ export const NewUserForm: FC<{
                 disabled={isCreating || isChecking || !!recovery}
                 className="min-w-0"
               >
+                {/* The hero explains the flow: the card starts with its fields. */}
                 <Card>
-                  <CardHeader className="p-3.5 sm:p-4">
-                    <div className="flex items-start gap-3">
-                      <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
-                        <UserPlus className="size-4" />
-                      </ServiceIcon>
-                      <div className="min-w-0">
-                        <CardTitle>Création du compte</CardTitle>
-                        <CardDescription className="mt-1 text-xs leading-5">
-                          Renseignez l&apos;identité, la connexion et le niveau
-                          d&apos;accès, puis transmettez les identifiants
-                          générés.
-                        </CardDescription>
-                      </div>
-                    </div>
-                  </CardHeader>
                   <CardContent className="space-y-5 p-4 sm:p-5">
                     <section
                       aria-labelledby="new-identity-title"
@@ -341,7 +320,7 @@ export const NewUserForm: FC<{
                             id="newContactAddress-hint"
                           >
                             Adresse de contact facultative, distincte de
-                            l&apos;identifiant et jamais utilisée pour vous
+                            l&apos;identifiant et jamais utilisée pour se
                             connecter.
                           </p>
                         )}
@@ -393,10 +372,10 @@ export const NewUserForm: FC<{
                           {errors.role}
                         </p>
                       )}
-                      <div className="border-warning/25 bg-warning/10 text-muted-foreground rounded-md border px-2.5 py-2 text-xs">
-                        Le mot de passe temporaire sera généré à la création et
-                        à changer à la première connexion.
-                      </div>
+                      <p className="text-muted-foreground text-xs">
+                        Un mot de passe temporaire est généré à la création ; il
+                        devra être changé à la première connexion.
+                      </p>
                     </section>
                   </CardContent>
                   <SectionActionBar
@@ -407,7 +386,7 @@ export const NewUserForm: FC<{
                     saveLabel="Créer le compte"
                     saveType="submit"
                     savingLabel="Création…"
-                    status="Le compte pourra être complété après création."
+                    status={null}
                   />
                 </Card>
               </fieldset>

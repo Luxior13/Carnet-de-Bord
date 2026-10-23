@@ -112,6 +112,7 @@ porte la composition et l’adaptation à l’espace disponible.
 | --- | --- |
 | Formulaire inchangé | `hasChanges={false}` : enregistrement inactif et barre dans le flux ; le module peut aussi masquer la barre. |
 | Brouillon modifié | Message de modifications non enregistrées, Annuler et Enregistrer. Une éventuelle confirmation d’abandon reste au formulaire. |
+| Formulaire de création | `status={null}` : aucun message de brouillon, trompeur sur un formulaire encore vide ; un `status` explicite reste possible pour un état à signaler. |
 | Écriture ou actualisation en cours | `isSaving` et `isResolvingConflict` sont distincts ; contrôles concurrents indisponibles, libellé décrivant l’opération réelle. |
 | Conflit de version | `conflict` bloque l’écriture ; `onResolveConflict` propose la reprise lorsqu’elle appartient à la barre. Le formulaire conserve le brouillon et attend une nouvelle confirmation pour écrire. |
 | Enregistrement indisponible | `saveDisabled` et `saveDisabledReason` expliquent la cause sans l’assimiler à un conflit. Les erreurs restent persistantes près du formulaire. |

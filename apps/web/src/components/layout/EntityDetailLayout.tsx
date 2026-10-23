@@ -17,6 +17,8 @@ type EntityDetailLayoutProps<SectionId extends string> = {
   children: ReactNode;
   dirtySections?: readonly SectionId[];
   heroActions?: ReactNode;
+  /** Line under the title: identifier, creation and last change. */
+  heroDescription?: ReactNode;
   heroIcon: ReactNode;
   heroMeta?: ReactNode;
   heroTitle: ReactNode;
@@ -35,6 +37,7 @@ export const EntityDetailLayout = <SectionId extends string>({
   children,
   dirtySections = [],
   heroActions,
+  heroDescription,
   heroIcon,
   heroMeta,
   heroTitle,
@@ -47,6 +50,7 @@ export const EntityDetailLayout = <SectionId extends string>({
       <PageIdentityHero
         actions={heroActions}
         compact
+        description={heroDescription}
         icon={heroIcon}
         meta={heroMeta}
         title={heroTitle}

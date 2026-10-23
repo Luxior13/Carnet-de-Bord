@@ -68,7 +68,8 @@ PageShell · PageCanvas (EntityDetailLayout ou composition équivalente)
 - Les réglages répétitifs (autorisations) sont des cartes compactes avec aide
   en popover ; les conséquences critiques restent visibles.
 - La suppression vit dans sa section (Sécurité, Identité) avec
-  `EntityDangerZone` ou une carte dédiée.
+  `EntityDangerZone` ou une carte dédiée, toujours intitulée « Zone dangereuse »
+  avec la même icône et le même en-tête teinté.
 
 Détail et preuves : [Utilisateurs](../pages/systeme/utilisateurs/README.md).
 
@@ -78,6 +79,13 @@ Détail et preuves : [Utilisateurs](../pages/systeme/utilisateurs/README.md).
 champs partagés avec la fiche, `SectionActionBar` en soumission native,
 confirmation après succès (secret à copier une seule fois pour un compte),
 reprise explicite après réponse perdue, garde de départ jusqu’au chargement.
+
+- Le bandeau explique le déroulé ; la carte commence par ses champs, sans
+  en-tête qui le répète, et chaque règle de saisie n’est écrite qu’une fois,
+  près de son champ (décision du 23 octobre 2026).
+- La barre d’enregistrement n’affiche pas « Modifications non enregistrées »
+  sur un formulaire de création (`status={null}`) ; elle garde un message
+  seulement pour un état utile, par exemple un résultat à vérifier.
 
 Détail : [Nouvel utilisateur](../pages/systeme/utilisateurs/creation.md),
 [Nouvelle fiche personne](../pages/membres/repertoire/creation.md).

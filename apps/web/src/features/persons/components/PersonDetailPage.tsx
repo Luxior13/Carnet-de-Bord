@@ -29,13 +29,17 @@ import { personDetailPath } from '$constants/routes.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
-import { Card, CardFooter } from '$ui/card';
+import { Card } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { ApiClientError } from '$utils/api.utils';
 
 import { getPerson } from '../person.api';
 import { getPersonCapabilities } from '../person.permissions';
-import { formatPersonDateTime, getPersonDisplayName } from '../person.ui';
+import {
+  formatPersonActor,
+  formatPersonDateTime,
+  getPersonDisplayName,
+} from '../person.ui';
 import type { PersonDetail } from '../types/person.types';
 import { PersonAvatar } from './PersonAvatar';
 import { PersonDangerZone } from './PersonDangerZone';
@@ -83,26 +87,26 @@ const DetailSkeleton: FC = () => (
   </PageShell>
 );
 
-const PersonLastChangeSummary: FC<{ person: PersonDetail }> = ({ person }) => {
+/**
+ * Creation and last change, shown once in the hero for the whole record (as
+ * on the user record) instead of a footer repeated under each section.
+ */
+const PersonRecordDates: FC<{ person: PersonDetail }> = ({ person }) => {
   const actor = person.lastChange?.actor;
+  const changedAt = person.lastChange?.at ?? person.updatedAt;
 
   return (
-    <p className="text-muted-foreground text-xs">
-      Dernière modification le{' '}
-      <time dateTime={person.lastChange?.at ?? person.updatedAt}>
-        {formatPersonDateTime(person.lastChange?.at ?? person.updatedAt)}
-      </time>{' '}
-      par {actor?.displayName ?? 'un auteur non disponible'}
-      {actor?.loginName ? ` (${actor.loginName})` : ''}.
-    </p>
+    <>
+      Créée le{' '}
+      <time dateTime={person.createdAt}>
+        {formatPersonDateTime(person.createdAt)}
+      </time>
+      {' · '}Modifiée le{' '}
+      <time dateTime={changedAt}>{formatPersonDateTime(changedAt)}</time> par{' '}
+      {actor ? formatPersonActor(actor) : 'un auteur non disponible'}
+    </>
   );
 };
-
-const PersonLastChangeFooter: FC<{ person: PersonDetail }> = ({ person }) => (
-  <CardFooter>
-    <PersonLastChangeSummary person={person} />
-  </CardFooter>
-);
 
 const PersonContactSummary: FC<{ person: PersonDetail }> = ({ person }) => {
   const items = [
@@ -365,6 +369,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
         heroActions={
           canViewContact ? <PersonContactSummary person={person} /> : undefined
         }
+        heroDescription={<PersonRecordDates person={person} />}
         heroIcon={
           <PersonAvatar className="size-full rounded-md" person={person} />
         }
@@ -389,7 +394,6 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
                 onReload={load}
                 person={person}
               />
-              <PersonLastChangeFooter person={person} />
             </Card>
             {canDelete && (
               <PersonDangerZone
@@ -410,9 +414,6 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
               onReload={load}
               person={person}
             />
-            <div className="px-1">
-              <PersonLastChangeSummary person={person} />
-            </div>
           </section>
         )}
 

@@ -593,7 +593,11 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(collectionsSource).not.toContain('SecondaryItemsToggle');
     expect(collectionsSource).not.toContain('showOther');
     expect(collectionsSource).not.toContain('Masquer les autres');
-    expect(detailPageSource).toContain('<div className="px-1">');
+    // Dates of the record live once in the hero since 2026-10-20.
+    expect(detailPageSource).toContain(
+      'heroDescription={<PersonRecordDates person={person} />}',
+    );
+    expect(detailPageSource).not.toContain('PersonLastChangeFooter');
     expect(detailPageSource).not.toContain(
       'bg-surface-inset rounded-lg border px-4 py-3',
     );
@@ -647,14 +651,15 @@ describe('person short-lived sensitive UX contracts', () => {
       "headerLayout?: 'inline' | 'stacked'",
     );
     expect(identitySectionSource).toContain('variant="quiet"');
-    expect(identitySectionSource).toContain('Informations personnelles');
-    expect(identitySectionSource).toContain(
-      '<CardHeader className="p-3.5 sm:p-4">',
-    );
+    // No visible title repeating the section link (gabarit B).
+    expect(identitySectionSource).not.toContain('Informations personnelles');
+    expect(identitySectionSource).not.toContain('<CardHeader');
     expect(identitySectionSource).toContain(
       '<CardContent className="p-4 sm:p-5">',
     );
-    expect(identitySectionSource).toContain('<ServiceIcon');
+    expect(identitySectionSource).toContain(
+      '<h2 className="sr-only" id="person-identity-title" tabIndex={-1}>',
+    );
     expect(identitySectionSource).toContain('<SectionActionBar');
     expect(identitySectionSource).not.toContain('sm:max-w-4xl');
     expect(identityFieldsSource).toContain('sm:grid-cols-2');

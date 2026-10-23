@@ -25,8 +25,9 @@ vers la liste (voir les [routes](../../../systeme/routes.md)).
   `persons:delete` ; contrôles serveur sous `/api/personnes`. Référence :
   [page Répertoire](../../../domaines/permissions.md#page-répertoire).
 - **Cadre de la fiche** : [PersonDetailPage](../../../../apps/web/src/features/persons/components/PersonDetailPage.tsx)
-  compose `EntityDetailLayout` (bandeau compact, `PageSectionNavigation`) et
-  charge chaque section à la demande.
+  compose `EntityDetailLayout` (bandeau compact avec statut, dates de création
+  et de dernière modification, compteurs de coordonnées ; `PageSectionNavigation`)
+  et charge chaque section à la demande ([reprise du 22 octobre 2026](fiche-identite.md#reprise--22-octobre-2026)).
 - **Règles métier** : statut `IN_STRUCTURE` / `OUTSIDE_STRUCTURE` ; futures
   relations datées rattachées à la personne, jamais empilées sur `Person`
   ([sujets futurs](../../../propositions/sujets-futurs.md)).

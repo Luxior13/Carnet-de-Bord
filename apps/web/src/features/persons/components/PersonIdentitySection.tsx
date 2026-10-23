@@ -1,6 +1,5 @@
 'use client';
 
-import { UserRound } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
@@ -8,8 +7,7 @@ import { toast } from 'sonner';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
-import { CardContent, CardHeader } from '$ui/card';
-import { ServiceIcon } from '$ui/service-icon';
+import { CardContent } from '$ui/card';
 import { ApiClientError } from '$utils/api.utils';
 
 import { updatePerson } from '../person.api';
@@ -372,27 +370,11 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   return (
     <>
       <section id="person-identity">
-        <CardHeader className="p-3.5 sm:p-4">
-          <div className="flex min-w-0 items-start gap-3">
-            <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
-              <UserRound className="size-4" />
-            </ServiceIcon>
-            <div className="min-w-0">
-              <h2
-                className="text-sm font-semibold"
-                id="person-identity-title"
-                tabIndex={-1}
-              >
-                Informations personnelles
-              </h2>
-              <p className="text-muted-foreground mt-1 text-xs">
-                Identité civile et informations utiles à la structure.
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-
         <CardContent className="p-4 sm:p-5">
+          {/* The section link already names the section: no visible title. */}
+          <h2 className="sr-only" id="person-identity-title" tabIndex={-1}>
+            Identité
+          </h2>
           <form
             aria-busy={isBusy || undefined}
             aria-labelledby="person-identity-title"

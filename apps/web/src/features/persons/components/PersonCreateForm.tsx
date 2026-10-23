@@ -1,6 +1,6 @@
 'use client';
 
-import { ExternalLink, UserPlus } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { type FC, useEffect, useRef, useState } from 'react';
@@ -21,7 +21,6 @@ import {
 } from '$ui/card';
 import { Checkbox } from '$ui/checkbox';
 import { Label } from '$ui/label';
-import { ServiceIcon } from '$ui/service-icon';
 import { ApiClientError } from '$utils/api.utils';
 
 import { createPerson } from '../person.api';
@@ -355,21 +354,8 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({
             </AlertDescription>
           </Alert>
         )}
+        {/* The hero explains the flow and the field states the rule once. */}
         <Card>
-          <CardHeader className="p-3.5 sm:p-4">
-            <div className="flex items-start gap-3">
-              <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
-                <UserPlus aria-hidden="true" className="size-4" />
-              </ServiceIcon>
-              <div className="min-w-0">
-                <CardTitle>Informations essentielles</CardTitle>
-                <CardDescription className="mt-1 text-xs leading-5">
-                  Un pseudo suffit. Sans pseudo, le prénom et le nom sont
-                  nécessaires.
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
           <CardContent className="p-4 sm:p-5">
             <PersonIdentityFields
               disabled={isSubmitting || uncertain}
@@ -394,7 +380,7 @@ export const PersonCreateForm: FC<PersonCreateFormProps> = ({
           status={
             uncertain
               ? 'Vérifiez le résultat avant de relancer la création.'
-              : 'Un pseudo suffit ; la fiche pourra être complétée ensuite.'
+              : null
           }
         />
       </form>

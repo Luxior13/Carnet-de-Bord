@@ -22,8 +22,8 @@ double action ou réponse perdue, et un secret remis sans être conservé.
 
 ## Composition actuelle
 
-Bandeau compact ; groupes Identité et Connexion et contact ; choix du rôle en
-cartes radio ; `SectionActionBar` avec soumission native ; confirmation avec
+Bandeau compact ; carte sans en-tête, groupes Identité, Connexion et Accès ;
+choix du rôle en cartes radio, aide grise sur le mot de passe temporaire ; `SectionActionBar` avec soumission native ; confirmation avec
 copie du mot de passe provisoire et repère de conservation ; reprise après
 réponse perdue par recherche exacte du compte.
 
@@ -47,6 +47,24 @@ Aucun point ouvert : USR-N01 à USR-N14 sont clos au périmètre vérifié.
 
 - 10 au 12 octobre 2026 : audit, corrections et reprise de l’autorisation à l’exécution.
 - 19 octobre 2026 : fiche propre à la création, créée par découpage du suivi du module.
+- 23 octobre 2026 : reprise, voir ci-dessous.
+
+## Reprise — 23 octobre 2026
+
+Même passe que la création de fiche personne.
+
+| ID | Nature / priorité | État | Point et traitement |
+| --- | --- | --- | --- |
+| USR-N15 | Composition, P2 | Clos | En-tête « Création du compte · Renseignez l’identité… » retiré : il répétait le bandeau |
+| USR-N16 | Sens des couleurs, P3 | Clos | Note sur le mot de passe temporaire encadrée en jaune alors qu’elle n’alerte pas : aide grise |
+| USR-N17 | Libellés, P2 | Clos | Aide de l’email « jamais utilisée pour vous connecter » sur le compte d’un tiers : « pour se connecter » |
+| USR-N18 | Libellés, P3 | Clos | Barre : plus de « Le compte pourra être complété… » ni de « Modifications non enregistrées » sur un formulaire vide (`status={null}`) |
+
+- **Vérifié** : types, lint, Vitest complet ;
+  [banc client du 23 octobre](../../../audits/creation-utilisateur-2026-10-23/banc-client/README.md),
+  28 scénarios sur 28, avec désormais une capture du formulaire à cinq largeurs.
+- **Non vérifié** : session et serveur réels ; pas de capture « avant » du
+  formulaire, l’ancien banc ne capturait que l’écran de succès.
 
 ## Revues datées
 

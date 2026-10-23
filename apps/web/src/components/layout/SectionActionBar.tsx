@@ -29,6 +29,10 @@ type SectionActionBarProps = {
   saveDisabledReason?: string;
   saveLabel?: string;
   savingLabel?: string;
+  /**
+   * Message next to the actions. Omitted: the draft state. `null`: no message,
+   * for a creation form where « unsaved changes » would be misleading.
+   */
   status?: ReactNode;
 } & (
   | { onSave: () => void; saveForm?: never; saveType?: 'button' }
@@ -74,10 +78,12 @@ export const SectionActionBar: FC<SectionActionBarProps> = ({
       ? savingLabel
       : conflict
         ? 'Vérifiez la version enregistrée avant de poursuivre. Votre saisie est conservée.'
-        : (status ??
-          (hasChanges
-            ? 'Modifications non enregistrées'
-            : 'Aucune modification en attente'));
+        : status === null
+          ? ''
+          : (status ??
+            (hasChanges
+              ? 'Modifications non enregistrées'
+              : 'Aucune modification en attente'));
 
   return (
     <div

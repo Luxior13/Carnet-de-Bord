@@ -44,6 +44,18 @@ describe('shared form action bar', () => {
     expect(actions[1]).toContain('Créer la fiche');
   });
 
+  it('shows no draft message on a creation form that asks for none', () => {
+    const creation = render({
+      saveForm: 'create-person',
+      saveType: 'submit',
+      status: null,
+    });
+    expect(creation).not.toContain('Modifications non enregistrées');
+    expect(creation).toMatch(/role="status"[^>]*><\/p>/);
+    // Omitted, the message still describes the draft.
+    expect(render()).toContain('Modifications non enregistrées');
+  });
+
   it.each([
     ['no changes', { hasChanges: false }],
     ['saving', { isSaving: true }],

@@ -22,9 +22,11 @@ sans doublon involontaire, avec un retour vers la liste ou la fiche.
 
 ## Composition actuelle
 
-Bandeau compact ; quatre champs partagés avec la fiche (`PersonIdentityFields`) ;
-`SectionActionBar` avec soumission native ; alerte de doublon ; reprise
-manuelle après réponse perdue.
+Bandeau compact ; carte sans en-tête avec quatre champs partagés avec la fiche
+(`PersonIdentityFields`), la règle « un pseudo, ou le prénom et le nom » écrite
+une seule fois sous le pseudo ; `SectionActionBar` avec soumission native,
+sans message sauf résultat à vérifier ; alerte de doublon ; reprise manuelle
+après réponse perdue.
 
 ## Décisions retenues
 
@@ -46,6 +48,23 @@ garantie d’idempotence (limite documentée).
 
 - 11 et 12 octobre 2026 : contrôle, décisions et audit de la création.
 - 19 octobre 2026 : fiche propre à la création, créée par découpage du suivi du module.
+- 23 octobre 2026 : reprise, voir ci-dessous.
+
+## Reprise — 23 octobre 2026
+
+Suite de la reprise des fiches (« go si tu recommandes »), mêmes règles que la
+fiche personne.
+
+| ID | Nature / priorité | État | Point et traitement |
+| --- | --- | --- | --- |
+| REP-N01 | Composition, P2 | Clos | En-tête de carte « Informations essentielles » retiré ; le bandeau explique déjà le déroulé |
+| REP-N02 | Contenu, P2 | Clos | La règle « un pseudo suffit » était écrite trois fois (en-tête, sous le champ, barre) ; elle ne reste que sous le pseudo |
+| REP-N03 | Libellés, P2 | Clos | La barre affichait « Modifications non enregistrées » sur un formulaire vide une fois son message retiré ; `status={null}` sur `SectionActionBar` |
+
+- **Vérifié** : types, lint, Vitest complet (test de la barre ajouté) ;
+  [banc client du 23 octobre](../../../audits/creation-personne-2026-10-23/banc-client/README.md),
+  28 scénarios sur 28, captures avant/après.
+- **Non vérifié** : session et serveur réels.
 
 ## Revues datées
 
