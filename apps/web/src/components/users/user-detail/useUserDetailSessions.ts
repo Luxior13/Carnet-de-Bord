@@ -18,11 +18,11 @@ type UseUserDetailSessionsReturn = {
   securitySessions: UserSessionInfo[];
   securitySessionsError: string | null;
   securitySessionsNotice: string | null;
+  setSecuritySessions: React.Dispatch<React.SetStateAction<UserSessionInfo[]>>;
   setSecuritySessionsError: React.Dispatch<React.SetStateAction<string | null>>;
   setSecuritySessionsNotice: React.Dispatch<
     React.SetStateAction<string | null>
   >;
-  setSecuritySessions: React.Dispatch<React.SetStateAction<UserSessionInfo[]>>;
 };
 
 export function useUserDetailSessions({
@@ -95,8 +95,8 @@ export function useUserDetailSessions({
     securitySessions,
     securitySessionsError,
     securitySessionsNotice,
+    setSecuritySessions,
     setSecuritySessionsError,
     setSecuritySessionsNotice,
-    setSecuritySessions,
   };
 }

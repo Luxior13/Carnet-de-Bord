@@ -1,19 +1,61 @@
 import { UserRole } from '@repo/shared';
 import { useCallback, useMemo } from 'react';
 
+import type { PermissionMutationPolicy } from '$components/users/permission-editor-policy';
 import {
   decideUserAccessMutation,
   getUserAccessMutationCapabilities,
+  type UserAccessMutationCapabilities,
 } from '$components/users/user-detail/user-access-editor-policy';
-import { USER_DETAIL_SECTIONS } from '$components/users/user-detail/UserDetailNavigation';
+import {
+  USER_DETAIL_SECTIONS,
+  type UserDetailSection,
+} from '$components/users/user-detail/UserDetailNavigation';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import type { UserType } from '$types/auth.types';
 import { isUserIdentityMasked } from '$utils/user-display.utils';
 
+/** What the current actor may see and do on the target user record. */
+export type UserDetailCapabilities = Record<
+  | 'canDeleteAccounts'
+  | 'canEditTargetContact'
+  | 'canEditTargetLogin'
+  | 'canEditTargetProfile'
+  | 'canEditTargetRole'
+  | 'canEditTargetStatus'
+  | 'canGrantTargetAccessPermissions'
+  | 'canManageTargetAccessPermissions'
+  | 'canManageTargetAccountPolicy'
+  | 'canMutateTargetAccess'
+  | 'canRequestDeleteTargetUser'
+  | 'canResetTargetMfa'
+  | 'canResetTargetPassword'
+  | 'canRevokeTargetSessions'
+  | 'canUpdateUserContact'
+  | 'canUpdateUserLogin'
+  | 'canUpdateUsers'
+  | 'canViewTargetAccess'
+  | 'canViewTargetContact'
+  | 'canViewTargetPersonalAccount'
+  | 'canViewTargetSecurity'
+  | 'canViewTargetSessions'
+  | 'canViewUsers'
+  | 'isProtectedActor'
+  | 'isSelf'
+  | 'isTargetAdminAccessRestricted'
+  | 'isTargetIdentityMasked',
+  boolean
+> & {
+  accessCaps: UserAccessMutationCapabilities;
+  decideAccessPermissionMutation: PermissionMutationPolicy;
+  loginReadOnlyHint: string;
+  visibleUserDetailSections: UserDetailSection[];
+};
+
 export function useUserDetailCapabilities(
   currentUser: UserType | null | undefined,
   user: UserType | null | undefined,
-) {
+): UserDetailCapabilities {
   const isProtectedActor = currentUser?.isProtected === true;
   const canViewUsers = currentUser
     ? isProtectedActor ||

@@ -59,23 +59,23 @@ type SidebarProps = {
 };
 
 const SIDEBAR_POPOVER = {
+  action:
+    'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground',
+  actionBase:
+    'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150',
+  chevron:
+    'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:text-foreground',
+  dangerAction:
+    'hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive',
+  iconAction:
+    'text-muted-foreground group-hover/menu-action:text-foreground group-focus/menu-action:text-foreground',
+  iconBase:
+    'flex size-5 shrink-0 items-center justify-center transition-colors duration-150',
+  iconDanger:
+    'text-muted-foreground group-hover/menu-action:text-destructive group-focus/menu-action:text-destructive',
   panel:
     'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] overflow-y-auto overscroll-contain border p-1.5',
   section: 'space-y-0.5',
-  actionBase:
-    'group/menu-action text-foreground flex min-h-10 w-full cursor-pointer items-center gap-2.5 px-2.5 py-2 text-left text-sm font-medium transition-colors duration-150',
-  action:
-    'hover:bg-surface-navigation-hover hover:text-foreground focus:bg-surface-navigation-hover focus:text-foreground',
-  dangerAction:
-    'hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive',
-  iconBase:
-    'flex size-5 shrink-0 items-center justify-center transition-colors duration-150',
-  iconAction:
-    'text-muted-foreground group-hover/menu-action:text-foreground group-focus/menu-action:text-foreground',
-  iconDanger:
-    'text-muted-foreground group-hover/menu-action:text-destructive group-focus/menu-action:text-destructive',
-  chevron:
-    'text-muted-foreground size-3.5 shrink-0 transition-[color,opacity,transform] duration-150 group-hover/menu-action:text-foreground',
 } as const;
 
 function isActivePath(pathname: string, href: string): boolean {

@@ -16,9 +16,7 @@ import {
 } from './user-detail-page.helpers';
 import type { UserDetailSectionId } from './UserDetailNavigation';
 import type { useUserMutationFeedback } from './UserMutationFeedback';
-import type { useUserDetailCapabilities } from './useUserDetailCapabilities';
-
-type Capabilities = ReturnType<typeof useUserDetailCapabilities>;
+import type { UserDetailCapabilities } from './useUserDetailCapabilities';
 
 type ProfileFieldErrors = Record<
   'contactEmail' | 'firstName' | 'lastName' | 'loginName',
@@ -69,7 +67,7 @@ export const useUserDetailChanges = ({
   user,
 }: {
   capabilities: Pick<
-    Capabilities,
+    UserDetailCapabilities,
     | 'canEditTargetContact'
     | 'canEditTargetLogin'
     | 'canEditTargetProfile'

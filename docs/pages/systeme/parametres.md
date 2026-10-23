@@ -14,6 +14,25 @@
 | Contrôle d’accès | `settings:view` et `settings:update`, liés au rôle ADMIN ; preuve récente pour réduire la conservation ou réparer une valeur |
 | Chargement / erreur dédiés | squelette dérivé du catalogue / commune à l’application |
 
+## Reprise générale — 23 octobre 2026
+
+Dernière page de la reprise générale (« ok go »), relue contre les règles
+validées depuis le 20 octobre sur les listes et les fiches : pas de titre de
+section répété, pas de cadre imbriqué, une information une seule fois, couleurs
+d’alerte réservées aux alertes, barre d’enregistrement au message juste.
+
+- **Résultat** : conforme, **aucune modification**. La carte « Conservation du
+  journal » est un groupe de réglages (gabarit D), pas un titre de section ; la
+  barre n’apparaît qu’avec un brouillon et son message « Modifications non
+  enregistrées » y est exact.
+- **Preuves** : banc client du 11 octobre rejoué sans modification,
+  [33 scénarios sur 33](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-2026-10-23.json) ;
+  captures relues : [repos bureau](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-repos-1440-2026-10-23.png),
+  [repos mobile](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-repos-390-2026-10-23.png),
+  [modification bureau](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-edition-1440-2026-10-23.png)
+  et [modification à 320 px](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-edition-320-2026-10-23.png).
+- **Non vérifié** : session et serveur réels.
+
 ## Autorisations actuelles — 15 octobre 2026
 
 L'[audit transverse du site actuel](../../audits/2026-10-15-autorisations-site.md)

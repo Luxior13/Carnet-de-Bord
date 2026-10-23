@@ -10,12 +10,12 @@ vi.mock('$server/prisma', () => ({
 }));
 
 import { GET } from '$app/api/users/[id]/audit/route';
+import { normalizeUserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import {
   getAllPermissionKeys,
   hasPermission,
   isPermissionGrantable,
 } from '$constants/permissions.constants';
-import { normalizeUserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 
 // Test-owned paths only; no URL receives external input.
 const sourceUrl = (path: string): URL => new URL(path, import.meta.url);

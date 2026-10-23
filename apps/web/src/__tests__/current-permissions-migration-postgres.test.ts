@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+
 import { Prisma, PrismaClient } from '@prisma/client';
 import { describe, expect, it } from 'vitest';
 
@@ -30,66 +31,66 @@ describe.skipIf(!target)(
           const cases = [
             {
               id: 'admin',
-              role: 'ADMIN',
               permissions: null,
-              view: true,
+              role: 'ADMIN',
               update: true,
+              view: true,
             },
             {
               id: 'user',
-              role: 'USER',
               permissions: null,
-              view: false,
+              role: 'USER',
               update: false,
+              view: false,
             },
             {
               id: 'reader',
-              role: 'USER',
               permissions: { 'persons:view': true },
-              view: true,
+              role: 'USER',
               update: false,
+              view: true,
             },
             {
               id: 'editor',
-              role: 'USER',
               permissions: {
-                'persons:view': true,
-                'persons:update': true,
                 'audit:view': true,
+                'persons:update': true,
+                'persons:view': true,
               },
-              view: true,
+              role: 'USER',
               update: true,
+              view: true,
             },
             {
               id: 'denied-admin',
-              role: 'ADMIN',
               permissions: { 'persons:update': false },
-              view: true,
+              role: 'ADMIN',
               update: false,
+              view: true,
             },
             {
               id: 'no-view',
-              role: 'ADMIN',
               permissions: { 'persons:view': false },
-              view: false,
+              role: 'ADMIN',
               update: false,
+              view: false,
             },
             {
               id: 'explicit',
-              role: 'ADMIN',
               permissions: {
-                'persons:view_contact': false,
                 'persons:update_contact': false,
+                'persons:view_contact': false,
               },
-              view: false,
+              role: 'ADMIN',
               update: false,
+              view: false,
             },
             {
               id: 'invalid-json',
-              role: 'USER',
               permissions: [],
-              view: false,
+              role: 'USER',
               update: false,
+              view: false,
             },
           ];
           for (const row of cases)

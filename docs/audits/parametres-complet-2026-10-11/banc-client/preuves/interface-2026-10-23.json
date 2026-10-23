@@ -1,0 +1,788 @@
+[
+  {
+    "name": "read-edit-keyboard-responsive",
+    "width": 320,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "reading": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      },
+      "editing": {
+        "viewport": 320,
+        "document": 320,
+        "main": 320,
+        "mainWidth": 320
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "read-edit-keyboard-responsive",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "reading": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      },
+      "editing": {
+        "viewport": 390,
+        "document": 390,
+        "main": 390,
+        "mainWidth": 390
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "read-edit-keyboard-responsive",
+    "width": 768,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "reading": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768
+      },
+      "editing": {
+        "viewport": 768,
+        "document": 768,
+        "main": 768,
+        "mainWidth": 768
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "read-edit-keyboard-responsive",
+    "width": 1024,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "reading": {
+        "viewport": 1024,
+        "document": 1024,
+        "main": 784,
+        "mainWidth": 784
+      },
+      "editing": {
+        "viewport": 1024,
+        "document": 1024,
+        "main": 784,
+        "mainWidth": 784
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "read-edit-keyboard-responsive",
+    "width": 1440,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "reading": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200
+      },
+      "editing": {
+        "viewport": 1440,
+        "document": 1440,
+        "main": 1200,
+        "mainWidth": 1200
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "read-edit-keyboard-responsive",
+    "width": 1920,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "reading": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1680,
+        "mainWidth": 1680
+      },
+      "editing": {
+        "viewport": 1920,
+        "document": 1920,
+        "main": 1680,
+        "mainWidth": 1680
+      }
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "native-save-pending-double-submit",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1200
+        }
+      }
+    ]
+  },
+  {
+    "name": "save-preserves-deliberately-moved-focus",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1200
+        }
+      }
+    ]
+  },
+  {
+    "name": "restore-default-from-saved-custom-value",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "refresh-dirty-confirmation-focus",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "navigation-draft-cancel-and-leave",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "numeric-equivalence-default-and-reduction-cancel",
+    "width": 1440,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "initial-error-retry-focus",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "incomplete-catalogue",
+    "width": 320,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "refresh-error-preserves-draft-retry-focus",
+    "width": 1440,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "conflict-reread-unavailable-then-keep-draft",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1600
+        }
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 3,
+          "value": 1600
+        }
+      }
+    ]
+  },
+  {
+    "name": "conflict-adopt-current",
+    "width": 1440,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1600
+        }
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "refresh-denied-forbidden-json",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "refresh-denied-forbidden-html",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "write-uncertain-commit-abort",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1600
+        }
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "write-uncertain-error",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1600
+        }
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1600
+        }
+      }
+    ]
+  },
+  {
+    "name": "uncertain-cancel-keeps-verification",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1600
+        }
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "reduction-stepup-invalid-then-valid",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 900
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "password"
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "password"
+        }
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 900
+        }
+      }
+    ]
+  },
+  {
+    "name": "actor-change-during-save",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 1200
+        }
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "rights-removed-during-reduction-proof",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 900
+        }
+      }
+    ]
+  },
+  {
+    "name": "admin-role-bound-ignores-invalid-override",
+    "width": 320,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "no-settings-access",
+    "width": 320,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "viewport": 320,
+      "document": 320,
+      "main": 320,
+      "mainWidth": 320
+    },
+    "requests": []
+  },
+  {
+    "name": "strictmode-load-and-cancel",
+    "width": 1920,
+    "height": 900,
+    "pass": true,
+    "result": {
+      "viewport": 1920,
+      "document": 1920,
+      "main": 1680,
+      "mainWidth": 1680
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "forced-colors-small-height",
+    "width": 390,
+    "height": 550,
+    "pass": true,
+    "result": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    },
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      }
+    ]
+  },
+  {
+    "name": "step-up-refusal-focus",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 0,
+          "value": 900
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "password"
+        }
+      }
+    ]
+  },
+  {
+    "name": "invalid-stored-value-explicit-repair",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/systeme/parametres",
+        "method": "GET",
+        "body": null
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 4,
+          "value": 1095
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "password"
+        }
+      },
+      {
+        "path": "/api/systeme/parametres/audit.retentionDays",
+        "method": "PUT",
+        "body": {
+          "expectedVersion": 4,
+          "value": 1095
+        }
+      }
+    ]
+  },
+  {
+    "name": "shared-step-up-full-refusal-focus",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "full"
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "full"
+        }
+      }
+    ]
+  },
+  {
+    "name": "shared-step-up-critical-mfa-refusal-focus",
+    "width": 390,
+    "height": 900,
+    "pass": true,
+    "requests": [
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "critical-mfa"
+        }
+      },
+      {
+        "path": "/api/auth/step-up",
+        "method": "POST",
+        "body": {
+          "kind": "critical-mfa"
+        }
+      }
+    ]
+  }
+]

@@ -61,7 +61,7 @@ codées** : valeurs hexadécimales dans les styles chargés par la page ;
 | `/systeme/utilisateurs` | A | **Référence** (complément) ; reprise du 20 octobre 2026, banc client 42/42, ligne de filtres revue sur le rendu réel | 0 | 0 | `DataTableSection`, `QuickFilter`, `StatusBadge` |
 | `/systeme/utilisateurs/nouveau` | C | Aligné ; reprise du 23 octobre 2026, banc client 28/28 | 0 | 0 | `PageIdentityHero` compact, `SectionActionBar` |
 | `/systeme/utilisateurs/[id]` | B | **Référence** (barre d’enregistrement) ; reprise du 20 octobre 2026, banc client 48/48 à cinq largeurs | 0 | 0 | `UserIdentityStatus`, `PermissionsEditor`, `SectionActionBar` |
-| `/systeme/parametres` | D | Aligné (refonte du 14 octobre 2026) | 0 | 0 | `PageIdentityHero`, `SectionActionBar` |
+| `/systeme/parametres` | D | Aligné (refonte du 14 octobre 2026) ; revu le 23 octobre 2026, conforme, banc client 33/33 | 0 | 0 | `PageIdentityHero`, `SectionActionBar` |
 | `/systeme/feuille-de-route` | E | Aligné | 0 | 0 | `PageIdentityHero`, `directory.module.css` |
 | États techniques (erreur, 404, chargement) | G | Aligné | 0 | 0 | `RouteErrorState`, `PageState`, `Skeleton` |
 
