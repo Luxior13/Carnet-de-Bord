@@ -8,3 +8,10 @@ export const focusUserSecurityElement = (target: HTMLElement | null): void => {
     inline: 'nearest',
   });
 };
+
+/** Bring the keyboard back to the sessions after a revocation dialog closes. */
+export const focusSecuritySessionsHeading = (): void => {
+  focusUserSecurityElement(
+    document.getElementById('user-security-sessions-heading'),
+  );
+};

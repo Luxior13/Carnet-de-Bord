@@ -23,9 +23,13 @@ const securitySource = readSourceFile(
 const sectionRailSource = readSourceFile(
   '../components/layout/PageSectionNavigation.tsx',
 );
-const userDetailPageSource = readSourceFile(
+// The record page and the frame split out of it on 2026-10-23.
+const userDetailPageSource = [
   '../components/users/UserDetailPage.tsx',
-);
+  '../components/users/user-detail/UserDetailFrame.tsx',
+]
+  .map(readSourceFile)
+  .join('\n');
 const userDetailCapabilitiesSource = readSourceFile(
   '../components/users/user-detail/useUserDetailCapabilities.ts',
 );

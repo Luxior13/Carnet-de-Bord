@@ -8,6 +8,7 @@ import type { UserType } from '$types/auth.types';
 import {
   ACCESS_PERMISSION_KEYS,
   ACCOUNT_PERMISSION_KEYS,
+  resetPermissionOverridesForKeys,
 } from './user-detail-page.helpers';
 
 export type UserDetailForm = {
@@ -60,6 +61,44 @@ export const createUserDetailDraft = (
   permissions: user?.permissions ?? null,
   user: user ?? null,
 });
+
+/**
+ * Cancel one section: its fields go back to the saved user, other sections
+ * keep their draft. Without a saved user the draft is left unchanged.
+ */
+export const restoreUserDetailSection = (
+  current: UserDetailDraft,
+  section: SubmittedUserDraft['section'],
+): UserDetailDraft => {
+  const user = current.user;
+  if (!user) return current;
+  if (section === 'profile')
+    return {
+      ...current,
+      form: {
+        ...current.form,
+        contactEmail: user.contactEmail ?? '',
+        firstName: user.firstName,
+        lastName: user.lastName,
+        loginName: user.loginName,
+      },
+    };
+  if (section === 'security')
+    return { ...current, form: { ...current.form, isActive: user.isActive } };
+
+  return {
+    ...current,
+    form:
+      section === 'access'
+        ? { ...current.form, role: user.role }
+        : current.form,
+    permissions: resetPermissionOverridesForKeys(
+      current.permissions,
+      user.permissions,
+      section === 'access' ? ACCESS_PERMISSION_KEYS : ACCOUNT_PERMISSION_KEYS,
+    ),
+  };
+};
 
 /** Merge a server response against the last displayed version (or the submitted
  * values for the saved section). Later input and other dirty sections survive. */

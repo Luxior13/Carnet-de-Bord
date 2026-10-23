@@ -1,9 +1,7 @@
 import React, { Suspense } from 'react';
 
-import {
-  UserDetailPage,
-  UserDetailPageSkeleton,
-} from '$components/users/UserDetailPage';
+import { UserDetailPageSkeleton } from '$components/users/user-detail/UserDetailFrame';
+import { UserDetailPage } from '$components/users/UserDetailPage';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { getUserForActor } from '$features/users/server/user-detail.service';
 import { getUserDetailScope } from '$features/users/user-detail-scope';

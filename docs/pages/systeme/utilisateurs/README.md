@@ -62,7 +62,7 @@ s’alignent sur elle.
 | USR-D24 | Composition, P2 | Clos | Profil garde un bandeau « Profil utilisateur » qui répète le lien de section, contrairement à Autorisations et Sécurité (règle du 18 octobre) ; l’avertissement « Modifier l’identifiant déconnectera… » est affiché en permanence, même sans modification |
 | USR-D25 | Libellés, P2 | Clos | « Le membre peut se connecter » et « ce que ce membre peut modifier » : un compte n’est pas un membre du Répertoire. Double authentification « Activée » dans la synthèse, « Active » dans Sécurité ; « État MFA » en jargon |
 | USR-D26 | Alignement, P3 | Clos | Compte personnel : l’interrupteur est au milieu de la carte au lieu d’être au bord droit |
-| USR-D27 | Code, P3 | Partiel | \`UserDetailPage.tsx\` fait 1 752 lignes (exception plafonnée à 2 650, budget courant 800) |
+| USR-D27 | Code, P3 | Clos | `UserDetailPage.tsx` faisait 1 752 lignes (exception plafonnée à 2 650, budget courant 800) ; 770 lignes le 23 octobre, exception retirée |
 | USR-D28 | Preuve, P3 | Clos | Banc du 11 octobre périmé sur deux attentes ; à rafraîchir dans un banc daté |
 
 - **Livré** :
@@ -81,17 +81,38 @@ s’alignent sur elle.
     réinitialisation de double authentification ; « Activée » aussi dans
     Mon compte ; « État » au lieu d’« État MFA ».
   - USR-D26 : interrupteur du compte personnel au bord droit de sa carte.
-  - USR-D27 (partiel) : `runUserDetailPatch` factorise les quatre
+  - USR-D27 : `runUserDetailPatch` factorise les quatre
     enregistrements, `useUserDetailChanges` l’état dérivé du brouillon ;
-    1 740 → 1 495 lignes, plafond resserré de 2 650 à 1 500. Reste au-dessus du
-    budget de 800 : extraire le rendu des sections, qui dépend d’une
-    quarantaine de valeurs, est un chantier à part entière.
+    1 740 → 1 495 lignes le 20 octobre. Terminé le 23 octobre (« ok go la
+    suite »), voir [découpage de la fiche](#fiche--découpage-du-23-octobre-2026).
   - USR-D28 : [banc client du 20 octobre](../../../audits/fiche-utilisateur-2026-10-20/banc-client/README.md),
     48 scénarios sur 48 ; banc de Mon compte rejoué, 23 sur 23.
 - **Vérifié** : types, lint, budget d’architecture, Vitest complet (tests de
   contrat mis à jour), bancs ci-dessus.
 - **Non vérifié** : session, hydratation Next et PostgreSQL réels, lecteur
   d’écran réel, rendu sur le serveur de dev.
+
+## Fiche : découpage du 23 octobre 2026
+
+Refactorisation sans changement visible ni de contrat serveur : la fiche
+passe de 1 495 à 770 lignes, sous le budget de 800, et son exception est
+retirée du contrôle d’architecture.
+
+| Module (`components/users/user-detail/`) | Responsabilité |
+| --- | --- |
+| `UserDetailFrame` | Squelette, écrans d’indisponibilité (refus, introuvable, erreur), bandeaux « compte protégé » et « votre fiche » |
+| `UserAuthorizationsSection` | Section Autorisations et sélecteur Autorisations administratives / Compte personnel |
+| `UserSecurityActions` | Révocation des sessions et suppression du compte : état, confirmations, issues incertaines, retour du focus, et leurs deux fenêtres |
+| `user-detail-saves` | Les quatre enregistrements (profil, accès, compte personnel, état), gardes locales puis `runUserDetailPatch` |
+| `useUserDetailLoader` | Lecture de la fiche : premier chargement, actualisations, refus qui purgent l’instantané, borne de 30 s, durée de vie de la page |
+| `useUserDetailDraft` | Brouillon ; s’enrichit de `restoreSavedSection` et `restoreSavedDraft`, qui remplacent quatre gestionnaires d’annulation |
+
+- **Vérifié** : types, lint (0 avertissement), budget d’architecture, Vitest
+  complet (trois tests de contrat lisent désormais aussi les modules extraits) ;
+  [banc client de la fiche](../../../audits/fiche-utilisateur-2026-10-20/banc-client/README.md)
+  rejoué après chaque étape, 48 scénarios sur 48 ; banc de Mon compte, 23 sur 23.
+- Au passage, les plafonds historiques restants sont resserrés au plus près de
+  la taille réelle, et celui de `UserSecurityTab.tsx` (782 lignes) est retiré.
 
 ## Compteur d'autorisations dans la synthèse — 15 octobre 2026
 

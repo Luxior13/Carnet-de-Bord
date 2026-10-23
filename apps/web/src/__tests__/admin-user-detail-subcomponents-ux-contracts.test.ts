@@ -41,13 +41,20 @@ const permissionStatePickerSource = readSourceFile(
 const userAccessSource = readSourceFile(
   '../components/users/user-detail/UserAccessTab.tsx',
 );
-// The record page and the modules split out of it on 2026-10-20.
+// The record page and the modules split out of it on 2026-10-20 and 23.
+const securityActionsSource = readSourceFile(
+  '../components/users/user-detail/UserSecurityActions.tsx',
+);
 const userDetailSource = [
   '../components/users/UserDetailPage.tsx',
   '../components/users/user-detail/useUserDetailChanges.ts',
   '../components/users/user-detail/user-detail-patch.ts',
+  '../components/users/user-detail/user-detail-saves.ts',
+  '../components/users/user-detail/UserDetailFrame.tsx',
+  '../components/users/user-detail/UserAuthorizationsSection.tsx',
 ]
   .map(readSourceFile)
+  .concat(securityActionsSource)
   .join('\n');
 const dialogsSource = readSourceFile(
   '../components/users/user-detail/UserDetailDialogs.tsx',
@@ -160,19 +167,21 @@ describe('administrative user detail subcomponent UX contracts', () => {
   });
 
   it('confirms irreversible deletion by login and recent password only', () => {
-    const deletionHandler = userDetailSource.slice(
-      userDetailSource.indexOf('const handleDelete = async'),
-      userDetailSource.indexOf('const renderAuthorizationContent'),
+    const deletionHandler = securityActionsSource.slice(
+      securityActionsSource.indexOf('const deleteUser = async'),
+      securityActionsSource.indexOf('  return {'),
     );
 
-    expect(deletionHandler).toContain('if (user?.isActive !== false)');
+    expect(deletionHandler).toContain('if (user.isActive !== false)');
     expect(deletionHandler).toContain(
       'Désactivez d’abord ce compte avant de le supprimer',
     );
-    expect(deletionHandler).toContain(
-      'requestPasswordReauthenticationForResponse(data',
+    // A deletion asks for the password, never for the lighter step-up proof.
+    expect(deletionHandler).toContain('confirmPassword(data');
+    expect(deletionHandler).not.toContain('confirmStepUp');
+    expect(userDetailSource).toContain(
+      'confirmPassword: requestPasswordReauthenticationForResponse',
     );
-    expect(deletionHandler).not.toContain('requestStepUpForResponse');
     expect(deletionHandler).toContain('Compte supprimé définitivement');
     expect(deletionHandler).toContain(
       'Le compte sera supprimé irréversiblement et son identité sera anonymisée.',
@@ -261,7 +270,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
       'onProofKindRequired={adminStepUp.setPendingStepUpProofKind}',
     );
     expect(userDetailSource).toContain(
-      'requestPasswordReauthenticationForResponse(data',
+      'request: requestPasswordReauthenticationForResponse',
     );
     expect(adminStepUpControllerSource).toContain(
       "setPendingStepUpAction({ ...action, proofKind: 'password' })",

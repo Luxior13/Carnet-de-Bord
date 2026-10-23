@@ -8,6 +8,7 @@ import type { UserType } from '$types/auth.types';
 import {
   createUserDetailDraft,
   receiveUserDetail,
+  restoreUserDetailSection,
   type SubmittedUserDraft,
   type UserDetailForm,
 } from './user-detail-draft';
@@ -16,6 +17,10 @@ type UserDetailDraftController = {
   clearUserState: () => void;
   editForm: UserDetailForm;
   permissions: PermissionsData | null;
+  /** Drop every draft and show the saved user again. */
+  restoreSavedDraft: () => void;
+  /** Drop the draft of one section only. */
+  restoreSavedSection: (section: SubmittedUserDraft['section']) => void;
   setEditForm: (update: SetStateAction<UserDetailForm>) => void;
   setPermissions: (update: SetStateAction<PermissionsData | null>) => void;
   syncUserState: (user: UserType, submitted?: SubmittedUserDraft) => void;
@@ -48,6 +53,17 @@ export const useUserDetailDraft = (
     },
     [],
   );
+  const restoreSavedDraft = useCallback((): void => {
+    setState((current) =>
+      current.user ? createUserDetailDraft(current.user) : current,
+    );
+  }, []);
+  const restoreSavedSection = useCallback(
+    (section: SubmittedUserDraft['section']): void => {
+      setState((current) => restoreUserDetailSection(current, section));
+    },
+    [],
+  );
   const syncUserState = useCallback(
     (user: UserType, submitted?: SubmittedUserDraft): void => {
       setState((current) => receiveUserDetail(current, user, submitted));
@@ -59,6 +75,8 @@ export const useUserDetailDraft = (
     clearUserState,
     editForm: state.form,
     permissions: state.permissions,
+    restoreSavedDraft,
+    restoreSavedSection,
     setEditForm,
     setPermissions,
     syncUserState,
