@@ -187,28 +187,44 @@ export const createSession = async (
     // This conditional write both checks and locks the user row. A concurrent
     // password reset or access change therefore either revokes this session
     // after commit, or makes this transaction fail before issuing it.
-    const userUpdate = await transaction.user.updateMany({
-      data: {
-        ...(securityOptions.sourceSessionToken ? {} : { lastLoginAt: loginAt }),
-        ...(securityOptions.advanceSecurityVersion
-          ? { securityVersion: { increment: 1 } }
-          : {}),
-      },
-      where: {
-        deletedAt: null,
-        id: userId,
-        isActive: true,
-        // A protected recovery account must never receive a persistent
-        // session, even if a future caller forwards an unsafe preference.
-        ...(rememberMe ? { isProtected: false } : {}),
-        ...(securityOptions.requireMfaEnabled
-          ? { mfaEnabledAt: { not: null } }
-          : {}),
-        securityVersion: authenticatedSecurityVersion,
-      },
-    });
+    // A protected recovery account must never receive a persistent session,
+    // even if a future caller forwards an unsafe preference.
+    const updatedRows = securityOptions.advanceSecurityVersion
+      ? (
+          await transaction.user.updateMany({
+            data: {
+              ...(securityOptions.sourceSessionToken
+                ? {}
+                : { lastLoginAt: loginAt }),
+              securityVersion: { increment: 1 },
+            },
+            where: {
+              deletedAt: null,
+              id: userId,
+              isActive: true,
+              ...(rememberMe ? { isProtected: false } : {}),
+              ...(securityOptions.requireMfaEnabled
+                ? { mfaEnabledAt: { not: null } }
+                : {}),
+              securityVersion: authenticatedSecurityVersion,
+            },
+          })
+        ).count
+      : // A plain login only stamps lastLoginAt. Raw SQL keeps `updatedAt`,
+        // the optimistic revision of the account: a login is not an edit, and
+        // an administrator editing this account must not be told it changed.
+        await transaction.$executeRaw`
+          UPDATE "User"
+          SET "lastLoginAt" = ${loginAt}
+          WHERE "id" = ${userId}
+            AND "deletedAt" IS NULL
+            AND "isActive" = true
+            AND "securityVersion" = ${authenticatedSecurityVersion}
+            AND (${!rememberMe} OR "isProtected" = false)
+            AND (${!securityOptions.requireMfaEnabled} OR "mfaEnabledAt" IS NOT NULL)
+        `;
 
-    if (userUpdate.count !== 1) {
+    if (updatedRows !== 1) {
       throw new SecurityVersionMismatchError();
     }
 

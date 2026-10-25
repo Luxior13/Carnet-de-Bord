@@ -498,8 +498,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       activePermission({
         action: 'update',
         dependencies: [PERMISSIONS.USERS.VIEW],
-        description:
-          "Modifier l'identifiant de connexion d'un compte standard et fermer ses sessions",
+        description: "Modifier l'identifiant de connexion d'un compte standard",
         grantable: true,
         key: PERMISSIONS.USERS.UPDATE_LOGIN,
         label: "Modifier l'identifiant de connexion",

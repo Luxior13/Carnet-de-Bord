@@ -33,6 +33,18 @@ commune avec récapitulatif avant enregistrement.
 
 ## Décisions retenues
 
+- **25 octobre 2026 — enregistrer sans déconnecter** (retour du propriétaire :
+  devoir recharger la fiche et faire reconnecter l'utilisateur à chaque
+  changement « est très gênant », puis « ok go »). Enregistrer des autorisations
+  ne ferme plus les sessions de l'utilisateur, un changement de rôle non plus
+  (décision complémentaire du même jour) ; la barre n'annonce plus aucune
+  déconnexion. Cause du rechargement forcé :
+  l'utilisateur, déconnecté, se reconnectait et sa connexion avançait la
+  révision de la fiche ; la date de connexion ne la touche plus. Banc client
+  de la fiche : 50/50, capture de la barre relue à 390 px ; 227 tests
+  PostgreSQL, dont la connexion complète sans changement de révision
+  ([règle](../../../domaines/permissions.md#principes)).
+
 - 20 octobre 2026 : la ligne d’aide d’un Utilisateur donne le total « X sur Y
   utilisables », calculé sur le brouillon ; il remplace le compteur de l’ancienne
   carte de synthèse. Compte personnel : interrupteur au bord droit, « cet

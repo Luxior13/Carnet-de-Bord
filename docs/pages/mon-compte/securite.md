@@ -29,6 +29,11 @@ ou globale) ; fenêtres de confirmation communes ; attentes bornées à 30 secon
 
 ## Décisions retenues
 
+- 25 octobre 2026 : générer de nouveaux codes de secours ne déconnecte plus
+  les autres appareils ni ne renouvelle la session courante ; la vérification,
+  la consommation du code, le remplacement des codes et l'audit restent une
+  seule transaction ([règle](../../domaines/permissions.md#principes)).
+
 - Attente et reprise des sessions sans rejeu : voir la revue du 12 octobre 2026 ci-dessous.
 - 24 octobre 2026 : la rubrique Mot de passe se limite à l’état et au dernier
   changement ; la ligne « Connexions refusées » disparaît avec le verrou par

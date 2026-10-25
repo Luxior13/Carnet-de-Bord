@@ -29,6 +29,31 @@ La migration conserve les accès effectifs aux coordonnées des comptes existant
   [garde partagé](../../apps/web/src/shared/server/user-action-authorization.ts)
   porte ce contrat ; chaque module conserve ses règles de cible et de métier.
   Un refus ne produit ni mutation partielle ni audit de réussite.
+- **On ne déconnecte que si la session peut être compromise ou n'a plus de
+  raison d'exister** (décisions du propriétaire du 25 octobre 2026). Le rôle et
+  les droits sont relus en base à chaque requête et dans chaque mutation : un
+  changement de rôle ou d'autorisations s'applique dès la requête suivante, et
+  le navigateur de l'utilisateur relit son compte au plus toutes les
+  60 secondes d'activité. L'identifiant ne sert qu'à se connecter. Ferment
+  des sessions, et seulement eux :
+
+  | Origine | Événement | Sessions fermées |
+  | --- | --- | --- |
+  | Administrateur | Désactivation, suppression | Toutes |
+  | Administrateur | Réinitialisation du mot de passe ou de la double authentification | Toutes |
+  | Administrateur | « Révoquer » une session ou toutes | Celles visées |
+  | Utilisateur | Changement de son mot de passe | Les autres appareils |
+  | Utilisateur | Configuration ou remplacement de son application d'authentification | Les autres appareils (la session courante est renouvelée) |
+  | Utilisateur | « Déconnecter » un appareil, les autres sessions, ou se déconnecter | Celles visées |
+  | Durée | 30 min d'inactivité ou 24 h ; appareil de confiance : 7 j d'inactivité ou 30 j | La session expirée |
+  | Exploitation | Procédure hors ligne du compte racine ; premier déploiement HTTPS (cookies `__Host-`) | Celles concernées |
+
+  Ne déconnectent pas : rôle, autorisations, identifiant, prénom, nom, adresse
+  de contact, régénération des codes de secours.
+- La date de dernière connexion s'écrit sans avancer `updatedAt`, révision
+  optimiste du compte : une connexion n'est pas une modification et ne bloque
+  pas un administrateur qui édite la fiche (« Cette fiche a été modifiée
+  entre-temps »).
 - Une dépendance manquante rend la permission dépendante inefficace, même si
   une surcharge individuelle la contient à `true`.
 - Les surcharges sont différentielles : elles ajoutent ou retirent uniquement
@@ -151,7 +176,7 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:view_contact`          | voir les adresses de contact                    | `users:view`                                | sensible  | Non               |
 | `users:update_profile`        | modifier prénom et nom                          | `users:view`                                | sensible  | Non               |
 | `users:update_contact`        | modifier une adresse de contact                 | `users:view`, `users:view_contact`          | sensible  | Non               |
-| `users:update_login`          | modifier l'identifiant et fermer les sessions   | `users:view`                                | critique  | Oui               |
+| `users:update_login`          | modifier l'identifiant de connexion             | `users:view`                                | critique  | Oui               |
 | `users:view_security`         | voir l'état du mot de passe et de la MFA                | `users:view`                                | sensible  | Non               |
 | `users:update_status`         | désactiver ou réactiver un compte               | `users:view`, `users:view_security`         | critique  | Oui               |
 | `users:view_access`           | consulter les autorisations administratives     | `users:view`                                | sensible  | Non               |

@@ -111,8 +111,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
   const loginHint = !canEditLogin
     ? loginReadOnlyHint
     : loginChanged
-      ? "Enregistrer ce nouvel identifiant déconnectera l'utilisateur de ses sessions actives."
-      : "Le modifier déconnectera l'utilisateur de ses sessions actives.";
+      ? "L'utilisateur devra utiliser ce nouvel identifiant à sa prochaine connexion."
+      : "Sert à la connexion de l'utilisateur.";
   const contactHint = canEditContact
     ? "Adresse facultative, distincte de l'identifiant de connexion."
     : "L'email de contact est en lecture seule depuis cette fiche.";

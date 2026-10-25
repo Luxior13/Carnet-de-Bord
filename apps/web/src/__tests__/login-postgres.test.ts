@@ -427,6 +427,25 @@ describe.skipIf(!target)(
       },
     );
 
+    it('stamps the last login without changing the account revision', async () => {
+      const { secret, user } = await configured();
+      const before = await db.user.findUniqueOrThrow({
+        where: { id: user.id },
+      });
+      await begin(user);
+      expect(
+        (await verifyMfa(request('mfa/verify', { code: await totp(secret) })))
+          .status,
+      ).toBe(200);
+      const after = await db.user.findUniqueOrThrow({
+        where: { id: user.id },
+      });
+      expect(after.lastLoginAt).not.toBeNull();
+      // An administrator editing this account is not told it changed.
+      expect(after.updatedAt).toEqual(before.updatedAt);
+      expect(after.securityVersion).toBe(before.securityVersion);
+    });
+
     it('rolls back challenge consumption, TOTP state, last login and session when the success audit fails', async () => {
       const { secret, user } = await configured();
       await begin(user);

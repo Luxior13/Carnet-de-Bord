@@ -315,13 +315,10 @@ describe('users access hardening', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           loginName: 'nouveau.login',
-          securityVersion: { increment: 1 },
         }),
       }),
     );
-    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
   });
 
   it('requires a recent MFA proof before a sensitive account patch', async () => {
@@ -976,9 +973,8 @@ describe('users access hardening', () => {
         where: expect.objectContaining({ id: 'target-1' }),
       }),
     );
-    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
+    // Permissions are re-read on every request: no sign-out (25 October 2026).
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
     expect(mockCreateAuditLogWithHeaders).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'PERMISSION_UPDATE',
@@ -1660,9 +1656,7 @@ describe('users access hardening', () => {
         data: expect.objectContaining({ permissions: mergedPermissions }),
       }),
     );
-    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
   });
 
   it('rejects permission keys outside the declared scope', async () => {
@@ -1831,7 +1825,7 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.update).not.toHaveBeenCalled();
   });
 
-  it('revokes existing sessions when the login name changes', async () => {
+  it('keeps the sessions when the login name changes', async () => {
     const existingUser = buildUser({ id: 'target-1' });
     mockRequireAuth.mockResolvedValueOnce({
       session: buildRecentSensitiveSession(),
@@ -1863,9 +1857,8 @@ describe('users access hardening', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
+    // The login name only serves to sign in (owner decision, 25 October 2026).
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
     expect(mockPrisma.loginNameReservation.create).toHaveBeenCalledWith({
       data: {
         loginName: 'nouveau.login',
@@ -1957,7 +1950,6 @@ describe('users access hardening', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           loginName: 'former.login',
-          securityVersion: { increment: 1 },
         }),
       }),
     );
@@ -2186,7 +2178,6 @@ describe('users access hardening', () => {
       expect.objectContaining({
         data: expect.objectContaining({
           role: 'ADMIN',
-          securityVersion: { increment: 1 },
         }),
       }),
     );
@@ -2427,15 +2418,14 @@ describe('users access hardening', () => {
     expect(response.status).toBe(200);
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          permissions,
-          securityVersion: { increment: 1 },
-        }),
+        data: expect.objectContaining({ permissions }),
       }),
     );
-    expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
+    // Permissions are re-read on every request: no sign-out (25 October 2026).
+    expect(mockPrisma.user.update.mock.calls[0]?.[0].data).not.toHaveProperty(
+      'securityVersion',
+    );
+    expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
   });
 
   it('requires only password unlock for a critical permission change', async () => {
@@ -2535,11 +2525,12 @@ describe('users access hardening', () => {
     expect(response.status).toBe(200);
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: expect.objectContaining({
-          permissions: reducedPermissions,
-          securityVersion: { increment: 1 },
-        }),
+        data: expect.objectContaining({ permissions: reducedPermissions }),
       }),
+    );
+    // Permissions are re-read on every request: no sign-out (25 October 2026).
+    expect(mockPrisma.user.update.mock.calls[0]?.[0].data).not.toHaveProperty(
+      'securityVersion',
     );
   });
 

@@ -5,6 +5,7 @@ import { createUser } from '$features/users/server/user-create.service';
 
 const mocks = vi.hoisted(() => {
   const transaction = {
+    $executeRaw: vi.fn(),
     $queryRaw: vi.fn(),
     auditLog: { create: vi.fn() },
     loginNameReservation: { create: vi.fn() },
@@ -233,6 +234,7 @@ describe('auth security transactions', () => {
     });
     mocks.transaction.user.update.mockResolvedValue({ id: 'user-1' });
     mocks.transaction.user.updateMany.mockResolvedValue({ count: 1 });
+    mocks.transaction.$executeRaw.mockResolvedValue(1);
     mocks.prisma.session.deleteMany.mockResolvedValue({ count: 1 });
     mocks.prisma.session.updateMany.mockResolvedValue({ count: 1 });
   });
@@ -291,16 +293,14 @@ describe('auth security transactions', () => {
       }),
       select: expect.objectContaining({ user: expect.any(Object) }),
     });
-    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
-      data: { lastLoginAt: expect.any(Date) },
-      where: {
-        deletedAt: null,
-        id: 'user-1',
-        isActive: true,
-        mfaEnabledAt: { not: null },
-        securityVersion: 3,
-      },
-    });
+    // A plain login stamps lastLoginAt without touching the account revision.
+    expect(mocks.transaction.user.updateMany).not.toHaveBeenCalled();
+    const [loginQuery, ...loginValues] =
+      mocks.transaction.$executeRaw.mock.calls[0] ?? [];
+    const loginSql = (loginQuery as string[]).join('?');
+    expect(loginSql).toContain('SET "lastLoginAt" = ?');
+    expect(loginSql).not.toContain('updatedAt');
+    expect(loginValues).toEqual([expect.any(Date), 'user-1', 3, true, false]);
     expect(mocks.transaction.auditLog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         action: 'LOGIN_SUCCESS',
@@ -486,7 +486,7 @@ describe('auth security transactions', () => {
   });
 
   it('fails closed when a protected account requests a remembered session', async () => {
-    mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
+    mocks.transaction.$executeRaw.mockResolvedValueOnce(0);
 
     await expect(
       createSession('root-session-token', 'root-user', 9, true, undefined, {
@@ -496,20 +496,20 @@ describe('auth security transactions', () => {
       }),
     ).rejects.toBeInstanceOf(SecurityVersionMismatchError);
 
-    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
-      data: { lastLoginAt: expect.any(Date) },
-      where: expect.objectContaining({
-        id: 'root-user',
-        isProtected: false,
-        mfaEnabledAt: { not: null },
-        securityVersion: 9,
-      }),
-    });
+    const [, ...rootValues] = mocks.transaction.$executeRaw.mock.calls[0] ?? [];
+    // rememberMe requested: the write requires a non-protected account.
+    expect(rootValues).toEqual([
+      expect.any(Date),
+      'root-user',
+      9,
+      false,
+      false,
+    ]);
     expect(mocks.transaction.session.create).not.toHaveBeenCalled();
   });
 
   it('does not issue a session when the authenticated security version became stale', async () => {
-    mocks.transaction.user.updateMany.mockResolvedValueOnce({ count: 0 });
+    mocks.transaction.$executeRaw.mockResolvedValueOnce(0);
 
     await expect(
       createSession('raw-session-token', 'user-1', 3, false, undefined, {
@@ -535,16 +535,9 @@ describe('auth security transactions', () => {
       requireMfaEnabled: true,
     });
 
-    expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
-      data: { lastLoginAt: authenticatedAt },
-      where: {
-        deletedAt: null,
-        id: 'user-1',
-        isActive: true,
-        mfaEnabledAt: { not: null },
-        securityVersion: 3,
-      },
-    });
+    const [, ...loginValues] =
+      mocks.transaction.$executeRaw.mock.calls[0] ?? [];
+    expect(loginValues).toEqual([authenticatedAt, 'user-1', 3, true, false]);
     expect(precondition).toHaveBeenCalledWith(
       mocks.transaction,
       authenticatedAt,

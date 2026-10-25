@@ -37,9 +37,14 @@ compte.
 - La barre d’enregistrement de cette fiche est la référence du site
   ([composants](../../../design/composants.md)).
 - 20 octobre 2026 : pas de titre visible qui répète l’onglet ; l’aide de
-  l’identifiant reste grise (« Le modifier déconnectera l’utilisateur de ses
-  sessions actives. ») et devient un avertissement seulement quand
+  l’identifiant reste grise et devient un avertissement seulement quand
   l’identifiant change ([reprise](README.md#fiche--reprise-en-profondeur--20-octobre-2026)).
+- 25 octobre 2026 : changer l’identifiant ne déconnecte plus l’utilisateur
+  ([règle](../../../domaines/permissions.md#principes)). Aide : « Sert à la
+  connexion de l’utilisateur. », puis « L’utilisateur devra utiliser ce nouvel
+  identifiant à sa prochaine connexion. » ; la confirmation précise que ses
+  sessions restent actives et que l’ancien identifiant reste réservé à ce
+  compte (bouton « Modifier l’identifiant »).
 
 ## Points ouverts
 

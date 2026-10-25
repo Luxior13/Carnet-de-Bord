@@ -1115,20 +1115,15 @@ describe.skipIf(!target)(
           user.id,
         ),
       ).not.toBeNull();
-      const sessions = await db.session.findMany({
-        where: { userId: user.id },
-      });
-      expect(sessions).toHaveLength(1);
-      expect(sessions[0]).toMatchObject({
-        expiresAt: current.expiresAt,
-        idleExpiresAt: current.idleExpiresAt,
-        securityVersion: 3,
-      });
+      // New codes are not a sign of compromise: every session is kept and
+      // the security version stays (owner decision of 25 October 2026).
+      expect(await db.session.count({ where: { userId: user.id } })).toBe(2);
       const updatedUser = await db.user.findUniqueOrThrow({
         where: { id: user.id },
       });
+      expect(updatedUser.securityVersion).toBe(2);
       connection.session.mockResolvedValue({
-        session: sessions[0],
+        session: current,
         user: mapUserToUserType(updatedUser),
       });
       expect((await regenerate()).status).toBe(400);

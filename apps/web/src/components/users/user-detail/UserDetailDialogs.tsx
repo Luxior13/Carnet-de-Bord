@@ -44,9 +44,9 @@ export const UserLoginChangeDialog: React.FC<UserLoginChangeDialogProps> = ({
             Modifier l&apos;identifiant de connexion ?
           </AlertDialogTitle>
           <AlertDialogDescription className="text-muted-foreground">
-            Toutes les sessions de cet utilisateur seront fermées. Il devra
-            ensuite utiliser le nouvel identifiant <strong>{loginName}</strong>{' '}
-            pour se reconnecter.
+            Il devra utiliser le nouvel identifiant <strong>{loginName}</strong>{' '}
+            à sa prochaine connexion. Ses sessions ouvertes restent actives et
+            l&apos;ancien identifiant reste réservé à ce compte.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">
@@ -57,7 +57,7 @@ export const UserLoginChangeDialog: React.FC<UserLoginChangeDialogProps> = ({
             className="bg-warning text-warning-foreground hover:bg-warning/90"
             onClick={onConfirm}
           >
-            Modifier et déconnecter
+            Modifier l&apos;identifiant
           </AlertDialogAction>
         </AlertDialogFooter>
       </div>

@@ -5,7 +5,6 @@ import { Prisma } from '@prisma/client';
 import { FEATURES } from '$constants/feature-registry.constants';
 import {
   arePermissionOverridesEqual,
-  getAccessPermissionKeys,
   getAccountPermissionKeys,
   normalizePermissionOverrides,
 } from '$constants/permissions.constants';
@@ -36,7 +35,6 @@ export class LoginNameReservationConflictError extends Error {
 
 const USERS_PAGE_AUDIT_LOCATION = FEATURES.users.audit;
 const ACCOUNT_PERMISSION_KEY_SET = new Set(getAccountPermissionKeys());
-const ACCESS_PERMISSION_KEY_SET = new Set(getAccessPermissionKeys());
 export type UserForUpdate = Prisma.UserGetPayload<{
   select: typeof USER_DETAIL_SELECT;
 }>;
@@ -133,14 +131,12 @@ export const prepareUserUpdate = (
         afterValues.permissions,
       )
     : [];
-  const hasAccessPermissionChange = changedPermissionKeys.some(
-    (permissionKey) => ACCESS_PERMISSION_KEY_SET.has(permissionKey),
-  );
+  // Role and permissions are read again on every request and every guarded
+  // mutation, and the login name only serves to sign in: those changes apply
+  // without signing the user out (owner decisions of 25 October 2026). Only a
+  // deactivation closes the sessions.
   const shouldInvalidateSessions =
-    (changedKeys.includes('isActive') && isActive === false) ||
-    changedKeys.includes('loginName') ||
-    changedKeys.includes('role') ||
-    hasAccessPermissionChange;
+    changedKeys.includes('isActive') && isActive === false;
 
   if (shouldInvalidateSessions) {
     updateData.securityVersion = { increment: 1 };

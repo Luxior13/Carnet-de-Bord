@@ -1,6 +1,7 @@
 import 'server-only';
 
-import { SecurityVersionMismatchError } from '$server/auth-errors';
+import { PERMISSIONS } from '$constants/permissions.constants';
+import { createAuditLogWithHeaders } from '$server/audit-log';
 import {
   consumeVerifiedMfaProof,
   generateRecoveryCodes,
@@ -13,15 +14,11 @@ import {
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 import { serviceErrors } from '$server/service-error';
-import {
-  createSession,
-  generateSessionToken,
-  setSessionTokenCookie,
-} from '$server/session';
+import { authorizeUserAction } from '$server/user-action-authorization';
 import { mapUserToUserType } from '$server/user-projection';
 import type { SessionType, UserType } from '$types/auth.types';
 
-/** Any lost race during a regeneration ends the session, like a password change. */
+/** A concurrent security change or a replayed code ends the operation. */
 export const MFA_ACCOUNT_SESSION_EXPIRED_MESSAGE =
   'Votre session a expiré. Veuillez vous reconnecter.';
 
@@ -72,6 +69,8 @@ export type RecoveryCodesRegeneration = {
  * Replaces every recovery code. Regenerating the last-resort proofs requires
  * the password and the normal authenticator: accepting one recovery code to
  * replace all the others could strand the user if the response were lost.
+ * Sessions are kept (owner decision of 25 October 2026): new codes are not a
+ * sign of compromise; "sign out other sessions" covers that case.
  */
 export const regenerateRecoveryCodes = async (input: {
   currentPassword: string;
@@ -112,57 +111,60 @@ export const regenerateRecoveryCodes = async (input: {
   await clearRateLimit(mfaManageKey);
 
   const generatedCodes = generateRecoveryCodes(storedUser.id);
-  const session = await createSession(
-    generateSessionToken(),
-    storedUser.id,
-    input.session.securityVersion,
-    input.session.rememberMe,
-    {
-      action: 'MFA_RECOVERY_CODES_REGENERATED',
-      category: 'AUTH',
-      description: 'Codes de récupération MFA régénérés',
-      metadata: {
-        ...SECURITY_AUDIT_LOCATION,
-        recoveryCodesGenerated: generatedCodes.length,
-      },
-      targetUserId: storedUser.id,
+  const updatedUser = await prisma.$transaction(async (transaction) => {
+    // Session, security version and permission are checked again under lock.
+    const authorized = await authorizeUserAction(
+      transaction,
+      { actorId: storedUser.id, session: input.session },
+      PERMISSIONS.ACCOUNT.MANAGE_MFA,
+    );
+    const current = await transaction.user.findUnique({
+      select: { mfaEnabledAt: true },
+      where: { id: storedUser.id },
+    });
+    if (!current?.mfaEnabledAt) {
+      throw serviceErrors.conflict(
+        'La double authentification n’est pas activée',
+      );
+    }
+    await consumeVerifiedMfaProof(transaction, {
+      authenticatedAt: authorized.checkedAt,
+      credentialUpdatedAt: credential.updatedAt,
+      proof,
       userId: storedUser.id,
-    },
-    {
-      advanceSecurityVersion: true,
-      mfaMethod: 'TOTP',
-      precondition: async (transaction, authenticatedAt) => {
-        await consumeVerifiedMfaProof(transaction, {
-          authenticatedAt,
-          credentialUpdatedAt: credential.updatedAt,
-          proof,
-          userId: storedUser.id,
-        });
-        await transaction.mfaRecoveryCode.deleteMany({
-          where: { userId: storedUser.id },
-        });
-        await transaction.mfaRecoveryCode.createMany({
-          data: generatedCodes.map((recoveryCode) => ({
-            codeHash: recoveryCode.codeHash,
-            salt: recoveryCode.salt,
-            userId: storedUser.id,
-          })),
-        });
-        await transaction.rateLimit.deleteMany({
-          where: { key: { in: [reauthKey, mfaManageKey] } },
-        });
+    });
+    await transaction.mfaRecoveryCode.deleteMany({
+      where: { userId: storedUser.id },
+    });
+    await transaction.mfaRecoveryCode.createMany({
+      data: generatedCodes.map((recoveryCode) => ({
+        codeHash: recoveryCode.codeHash,
+        salt: recoveryCode.salt,
+        userId: storedUser.id,
+      })),
+    });
+    await transaction.rateLimit.deleteMany({
+      where: { key: { in: [reauthKey, mfaManageKey] } },
+    });
+    await createAuditLogWithHeaders(
+      {
+        action: 'MFA_RECOVERY_CODES_REGENERATED',
+        category: 'AUTH',
+        description: 'Codes de récupération MFA régénérés',
+        metadata: {
+          ...SECURITY_AUDIT_LOCATION,
+          recoveryCodesGenerated: generatedCodes.length,
+        },
+        targetUserId: storedUser.id,
+        userId: storedUser.id,
       },
-      requireMfaEnabled: true,
-      revokeExistingSessions: true,
-      sourceSessionToken: input.session.token,
-    },
-  );
+      { client: transaction, required: true },
+    );
 
-  await setSessionTokenCookie(session.token, session.expiresAt);
-  const updatedUser = await prisma.user.findUnique({
-    where: { id: storedUser.id },
+    return transaction.user.findUniqueOrThrow({
+      where: { id: storedUser.id },
+    });
   });
-  if (!updatedUser) throw new SecurityVersionMismatchError();
 
   return {
     recoveryCodes: generatedCodes.map((code) => code.plaintext),

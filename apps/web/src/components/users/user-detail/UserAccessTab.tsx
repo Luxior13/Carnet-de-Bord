@@ -1,7 +1,7 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import { Crown, LogOut, ShieldAlert } from 'lucide-react';
+import { Crown, ShieldAlert } from 'lucide-react';
 import React, { type FC, useRef } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
@@ -259,18 +259,6 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               {hasChanges && mutationSummaryLabel && (
                 <p className="text-foreground text-xs">
                   {mutationSummaryLabel}
-                </p>
-              )}
-              {hasChanges && (
-                <p className="text-warning flex items-start gap-1.5 text-xs leading-5">
-                  <LogOut
-                    aria-hidden="true"
-                    className="mt-0.5 size-3.5 shrink-0"
-                  />
-                  <span>
-                    Enregistrer déconnectera cet utilisateur de toutes ses
-                    sessions.
-                  </span>
                 </p>
               )}
             </>

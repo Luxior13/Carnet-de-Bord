@@ -441,7 +441,7 @@ describe.skipIf(!target)(
       ).toBe('Initial');
     });
 
-    it('rolls back a rename, reservation and session revocation when auditing fails, then permits retry', async () => {
+    it('rolls back a rename and its reservation when auditing fails, then renames without signing out', async () => {
       const user = await account();
       const nextLogin = login();
       await session(user);
@@ -459,7 +459,8 @@ describe.skipIf(!target)(
         expect(await auditCount(user.id)).toBe(0);
       });
       expect((await patch(user, { loginName: nextLogin })).status).toBe(200);
-      expect(await db.session.count({ where: { userId: user.id } })).toBe(0);
+      // The login name only serves to sign in (owner decision, 25 October 2026).
+      expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
       expect(
         await db.loginNameReservation.count({ where: { userId: user.id } }),
       ).toBe(2);
@@ -497,7 +498,7 @@ describe.skipIf(!target)(
       expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
     });
 
-    it('preserves sessions for personal policy changes and revokes them for access changes', async () => {
+    it('keeps the sessions for personal policy and access changes', async () => {
       const user = await account();
       await session(user);
       expect(
@@ -520,7 +521,13 @@ describe.skipIf(!target)(
           })
         ).status,
       ).toBe(200);
-      expect(await db.session.count({ where: { userId: user.id } })).toBe(0);
+      // Permissions are read again on every request: a grant applies without
+      // signing the user out (owner decision of 25 October 2026).
+      expect(await db.session.count({ where: { userId: user.id } })).toBe(1);
+      expect(
+        (await db.user.findUniqueOrThrow({ where: { id: user.id } }))
+          .securityVersion,
+      ).toBe(current.securityVersion);
       expect(await auditCount(user.id)).toBe(2);
     });
 

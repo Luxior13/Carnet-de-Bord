@@ -485,11 +485,11 @@ async function main() {
           if (section === "profile") {
             const hint = page.locator("#user-login-name-hint");
             await expect(hint).toHaveText(
-              "Le modifier déconnectera l'utilisateur de ses sessions actives.",
+              "Sert à la connexion de l'utilisateur.",
             );
             await page.locator("#user-login-name").fill("camille.nouvelle");
             await expect(hint).toHaveText(
-              "Enregistrer ce nouvel identifiant déconnectera l'utilisateur de ses sessions actives.",
+              "L'utilisateur devra utiliser ce nouvel identifiant à sa prochaine connexion.",
             );
             await page.locator("#user-login-name").fill("camille.exemple");
           }
@@ -877,6 +877,13 @@ async function main() {
       await expect(
         row.getByRole("button", { name: /Autoriser/ }),
       ).toHaveAttribute("aria-pressed", "true");
+      // Since 25 October 2026 a permission change no longer signs the user
+      // out; only a role change announces it.
+      await expect(page.getByText(/déconnectera/)).toHaveCount(0);
+      await page.screenshot({
+        path: path.join(work, "permissions-save-bar-390.png"),
+        fullPage: true,
+      });
       await page
         .getByRole("button", { name: "Enregistrer", exact: true })
         .click();
