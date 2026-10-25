@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import { verify as verifyArgon2 } from '@node-rs/argon2';
 import { type Prisma, PrismaClient, type User } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { NextRequest } from 'next/server';
@@ -31,10 +32,11 @@ const connection = vi.hoisted(() => ({
 vi.mock('server-only', () => ({}));
 vi.mock('$env', () => ({
   env: {
-    MFA_ENCRYPTION_KEY_V1: Buffer.alloc(32, 19).toString('base64'),
     NODE_ENV: 'test',
   },
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv('MFA_ENCRYPTION_KEY_V1', Buffer.alloc(32, 19).toString('base64'));
 vi.mock('$server/logger', () => ({ logger: { error: vi.fn() } }));
 vi.mock('$server/prisma', () => ({
   prisma: new Proxy(
@@ -57,12 +59,12 @@ vi.mock('next/headers', () => ({
   headers: vi.fn(async () => new Headers()),
 }));
 vi.mock('$server/rate-limiter', () => ({
-  recordLoginAttempt: vi.fn(async () => undefined),
+  clearRateLimit: vi.fn(async () => undefined),
   reserveAuthenticatedApiRateLimit: vi.fn(async () => ({ allowed: true })),
   reserveSensitiveActionRateLimit: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('$server/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('$server/auth')>()),
+vi.mock('$server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/session')>()),
   getAuthSession: connection.session,
 }));
 
@@ -522,11 +524,8 @@ describe.skipIf(!target)(
       expect(await auditCount(user.id)).toBe(2);
     });
 
-    it('returns a verifiable reset secret after atomic hash, lock, session and audit updates', async () => {
-      const user = await account({
-        failedLoginAttempts: 5,
-        lockedUntil: new Date(Date.now() + 3600_000),
-      });
+    it('returns a verifiable reset secret after atomic hash, session and audit updates', async () => {
+      const user = await account();
       await session(user);
       const response = await resetPassword(
         new NextRequest(
@@ -541,13 +540,11 @@ describe.skipIf(!target)(
         where: { id: user.id },
       });
       expect(current).toMatchObject({
-        failedLoginAttempts: 0,
-        lockedUntil: null,
         mustChangePassword: true,
         passwordChangedAt: null,
         securityVersion: 3,
       });
-      expect(await bcrypt.compare(password, current.passwordHash)).toBe(true);
+      expect(await verifyArgon2(current.passwordHash, password)).toBe(true);
       expect(await db.session.count({ where: { userId: user.id } })).toBe(0);
       const logs = await db.auditLog.findMany({
         where: { targetUserId: user.id },
@@ -669,14 +666,11 @@ describe.skipIf(!target)(
         });
         const user = await account();
         const selected = await session(user);
+        // An ADMIN keeps every administrative access whatever its
+        // overrides (rule of 18 October 2026): losing the right means losing
+        // the role.
         await db.user.update({
-          data: {
-            permissions: {
-              [operation === 'GET'
-                ? PERMISSIONS.USERS.VIEW_SESSIONS
-                : PERMISSIONS.USERS.REVOKE_SESSIONS]: false,
-            },
-          },
+          data: { role: 'USER' },
           where: { id: delegated.id },
         });
         const response = await (

@@ -64,10 +64,8 @@ describe('global MFA UX contracts', () => {
     expect(mfaActionSource).not.toContain('RoutesApi.mfa,');
   });
 
-  it('identifies the only administrative recovery authority precisely', () => {
-    expect(managedUserSecuritySource).toContain('Récupération superadmin');
-    expect(managedUserSecuritySource).not.toContain(
-      'Récupération administrateur',
-    );
+  it('presents the delegable recovery as a last resort, not as a root privilege', () => {
+    expect(managedUserSecuritySource).toContain('À utiliser seulement si');
+    expect(managedUserSecuritySource).not.toContain('Récupération superadmin');
   });
 });

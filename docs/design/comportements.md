@@ -172,6 +172,16 @@ Le choix entre retour local, toast, notification, alerte et rappel suit la
 [Toasts et retours immédiats](../references/toasts-feedback.md). Un résultat
 déjà visible dans la page ne reçoit pas de toast supplémentaire.
 
+Le résultat d’une action lancée depuis une carte (secret émis, échec à
+vérifier, résultat expiré) s’affiche **dans cette carte, à la place de son pied
+d’action**, jamais dans un panneau séparé en haut de la section : un encart
+d’alerte compact (`rounded-control`, ton d’avertissement), un champ limité à sa
+largeur utile, puis un pied de carte avec la confirmation à gauche et l’action
+finale à droite. Une copie réussie se lit sur le bouton (« Copié ») ; seul un
+échec reste écrit en clair. Référence : mot de passe temporaire de la
+[fiche utilisateur](../pages/systeme/utilisateurs/fiche-securite.md) (préférence
+du 25 octobre 2026).
+
 ## Fenêtres et panneaux
 
 - `Dialog` et `AlertDialog` utilisent `surface-panel`, `border-content` et un
@@ -208,14 +218,27 @@ déjà visible dans la page ne reçoit pas de toast supplémentaire.
 
 ## Autocomplétion
 
-Autocomplétion du navigateur et des gestionnaires de mots de passe
-**désactivée partout, sans exception**, y compris connexion, mots de passe et
-MFA (règle du propriétaire du 10 octobre 2026, réaffirmée le 11 octobre).
-`Input`, `Textarea` et `CommandInput` imposent `autoComplete="off"` et les
-attributs d'exclusion Bitwarden/1Password/LastPass après les props du parent.
-Les formulaires portent également `autoComplete="off"`. Aucun opt-in
-`allowPasswordManager`, jeton d'autocomplétion positif ou champ invisible
-d'association compte/mot de passe. Les listes de choix métier restent utiles.
+Décision du propriétaire du 25 octobre 2026 (REV-07), qui remplace la règle
+des 10 et 11 octobre : un gestionnaire de mots de passe favorise des mots de
+passe longs et uniques, il peut donc remplir **les seuls champs
+d'authentification** :
+
+| Champ | Jeton |
+| --- | --- |
+| Identifiant de connexion | `username` |
+| Mot de passe actuel (connexion, confirmations) | `current-password` |
+| Nouveau mot de passe et sa confirmation | `new-password` |
+| Code à 6 chiffres de l'application | `one-time-code` |
+
+Tout autre champ reste exclu, **codes de secours compris** (usage unique).
+`Input` n'accepte que ces jetons ou `off`, vérifiés aussi à l'exécution ;
+sans jeton valide, il impose `autoComplete="off"` et les attributs d'exclusion
+Bitwarden/1Password/LastPass après les props du parent. `Textarea` et
+`CommandInput` restent toujours exclus. Les formulaires gardent
+`autoComplete="off"` : le jeton d'un champ l'emporte sur celui du formulaire.
+Les jetons ne sont admis que dans les fichiers d'authentification listés par
+`autofill-contracts.test.ts` ; toujours aucun champ invisible d'association.
+Les listes de choix métier restent utiles.
 Ces attributs expriment la politique du site ; une extension peut les ignorer
 selon sa version et ses réglages. Ne pas annoncer un blocage garanti sans
 essai de l'extension concernée. [Contrôle et limites](../audits/2026-10-11-autocompletion.md).

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/knip@6.41.0/schema.json",
+  // Dated audit evidence is not application code.
+  "ignore": ["docs/**"],
+  "workspaces": {
+    ".": {
+      "entry": ["scripts/*.mjs"],
+      // scripts/codex-preview.mjs is a local capture tool run from the root
+      // with the workspace packages already installed.
+      "ignoreDependencies": ["@prisma/client", "@playwright/test"]
+    },
+    "apps/web": {
+      // The Playwright config requires a dedicated E2E database to load, so
+      // its plugin is disabled and the suite is declared explicitly.
+      "entry": [
+        "scripts/*.{mjs,ts}",
+        "e2e/**/*.spec.ts",
+        "playwright.config.ts"
+      ],
+      "playwright": false
+    },
+    "packages/database": {
+      "entry": ["scripts/*.ts", "test/*.test.ts"]
+    },
+    "packages/shared": {}
+  }
+}

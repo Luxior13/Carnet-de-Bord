@@ -185,7 +185,9 @@ describe('navigation availability', () => {
   });
 
   it('shows system settings live for administrators and removes them from the roadmap', () => {
-    const liveHrefs = getVisibleHrefs({ [PERMISSIONS.AUDIT.VIEW]: true });
+    const liveHrefs = getVisibleHrefs({
+      [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
+    });
     const adminHrefs = getVisibleNavigationSpaces(buildAdmin()).flatMap(
       (space) =>
         space.sections.flatMap((section) => flattenHrefs(section.items)),

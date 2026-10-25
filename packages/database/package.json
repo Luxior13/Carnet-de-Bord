@@ -9,18 +9,17 @@
     "db:migrate:baseline": "bun run scripts/baseline-existing-database.ts",
     "db:migrate:deploy": "bun run scripts/safe-migrate-deploy.ts",
     "db:migrate:status": "prisma migrate status",
+    "db:mfa:reencrypt": "bun run scripts/reencrypt-mfa-secrets.ts",
     "db:persons:performance-check": "bun run scripts/verify-persons-performance.ts",
-    "db:permissions:retire-historical": "bun run scripts/retire-historical-permission-overrides.ts",
     "db:root:mfa:recover": "bun run scripts/reset-root-mfa.ts",
     "deploy": "bun run db:migrate:deploy",
     "seed": "bun run prisma/seed.ts",
     "lint": "eslint \"{src,scripts,test}/**/*.{js,jsx,ts,tsx}\"",
     "lint:fix": "eslint \"{src,scripts,test}/**/*.{js,jsx,ts,tsx}\" --fix",
-    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test test/database-backup-format.test.ts test/database-backup-signature.test.ts test/database-restore-encryption.test.ts test/internal-news-storage.test.ts test/persons-performance-plan.test.ts",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test test/database-backup-format.test.ts test/database-backup-signature.test.ts test/database-restore-encryption.test.ts test/totp-secret-crypto.test.ts test/persons-performance-plan.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^24.13.3",
     "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
@@ -36,10 +35,9 @@
     "typescript-eslint": "^8.63.0"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.2.2",
     "@prisma/client": "6.19.3",
-    "bcryptjs": "^2.4.3",
     "prisma": "6.19.3",
-    "prisma-json-types-generator": "^3.5.1",
     "server-only": "^0.0.1"
   }
 }

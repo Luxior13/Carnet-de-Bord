@@ -65,7 +65,9 @@ Détails et limites : [tests et contrôles](../systeme/tests.md).
   composants sont rendus avec `renderToStaticMarkup`.
 - Les suites `*-postgres.test.ts` sont ignorées tant que leur variable
   `<MODULE>_TEST_DATABASE_URL` n’est pas définie ; elles visent une base locale
-  jetable et refusent une autre cible.
+  jetable et refusent une autre cible. `bun run test:postgres` prépare ces bases
+  sur un PostgreSQL local (`POSTGRES_TEST_ADMIN_URL`) et les lance ; la CI le fait
+  à chaque poussée.
 - `packages/database` utilise `node --test`.
 - Aucun seuil de couverture : couvrir les comportements modifiés par des tests
   ciblés, sans test décoratif.

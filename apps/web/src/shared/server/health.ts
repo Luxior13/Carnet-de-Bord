@@ -11,6 +11,7 @@ import { isPersonSchemaCatalogReady } from '$features/persons/server/person-sche
 import { getRequestId } from '$utils/request-context.utils';
 
 import { logger } from './logger';
+import { areMfaKeysConfigured } from './mfa-keys';
 import { prisma } from './prisma';
 
 const READINESS_TIMEOUT_MS = 1_500;
@@ -24,6 +25,8 @@ const NO_STORE_HEADERS = {
 type ReadinessResponse = {
   checks: {
     database: 'connected' | 'disconnected';
+    /** Without a readable key no account can complete its login. */
+    mfa: 'not_configured' | 'ready' | 'unknown';
     persons: 'not_configured' | 'ready' | 'schema_not_ready' | 'unknown';
     schema: 'not_ready' | 'ready' | 'unknown';
   };
@@ -87,6 +90,7 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
     return {
       checks: {
         database: 'connected',
+        mfa: 'unknown',
         persons: 'unknown',
         schema: 'not_ready',
       },
@@ -94,6 +98,19 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
       timestamp: new Date().toISOString(),
     };
   }
+
+  const storedMfaKeyVersions = await prisma.$queryRaw<
+    Array<{ version: number }>
+  >`
+    SELECT "secretKeyVersion" AS "version" FROM "TotpCredential"
+    UNION
+    SELECT "secretKeyVersion" AS "version" FROM "TotpEnrollment"
+  `;
+  const mfaStatus = areMfaKeysConfigured(
+    storedMfaKeyVersions.map(({ version }) => version),
+  )
+    ? 'ready'
+    : 'not_configured';
 
   const personSchemaReady = await isPersonSchemaCatalogReady(prisma);
   let personsStatus: ReadinessResponse['checks']['persons'] =
@@ -115,10 +132,11 @@ const performReadinessCheck = async (): Promise<ReadinessResponse> => {
   return {
     checks: {
       database: 'connected',
+      mfa: mfaStatus,
       persons: personsStatus,
       schema: 'ready',
     },
-    status: 'healthy',
+    status: mfaStatus === 'ready' ? 'healthy' : 'unhealthy',
     timestamp: new Date().toISOString(),
   };
 };
@@ -166,6 +184,7 @@ export async function createReadinessResponse(): Promise<
       {
         checks: {
           database: 'disconnected',
+          mfa: 'unknown',
           persons: 'unknown',
           schema: 'unknown',
         },

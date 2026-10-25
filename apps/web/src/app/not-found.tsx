@@ -10,7 +10,7 @@ const NotFoundPage: FC = () => {
   return (
     <div className="route-state relative isolate flex items-center justify-center p-4">
       <div aria-hidden="true" className="site-background-column" />
-      <Card className="border-border-content bg-surface-panel relative z-10 w-full max-w-md rounded-[10px] text-center">
+      <Card className="border-border-content bg-surface-panel rounded-panel relative z-10 w-full max-w-md text-center">
         <CardContent className="space-y-6 px-6">
           <ServiceIcon aria-hidden="true" className="mx-auto size-14">
             <SearchX className="size-7" />

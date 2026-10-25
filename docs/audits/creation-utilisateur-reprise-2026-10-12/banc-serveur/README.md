@@ -23,7 +23,7 @@ du compte racine et la preuve récente pour ADMIN. Une erreur métier typée por
 le refus ; le POST la traduit en réponse sans données.
 
 La garde possède deux consommateurs actuels. L’adaptateur HTTP
-[des sessions](../../../../apps/web/src/features/users/server/user-session-authorization.ts)
+des sessions (retiré le 25 octobre 2026, logique reprise dans [user-sessions.service.ts](../../../../apps/web/src/features/users/server/user-sessions.service.ts))
 conserve ses refus et filtres de cible. Pas de catalogue de politiques, migration,
 nouveau rôle, changement de durée ou table d’idempotence. Compte, réservation et
 audit restent atomiques ; générateur du secret et coût bcrypt inchangés.

@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    clearRateLimit: vi.fn(),
     consumeVerifiedMfaProof: vi.fn(),
     createAuditLogWithHeaders: vi.fn(),
     mapUserToUserType: vi.fn((user) => user),
@@ -27,7 +28,6 @@ const mocks = vi.hoisted(() => {
       ),
       user: { findUnique: vi.fn() },
     },
-    recordLoginAttempt: vi.fn(),
     requireAuth: vi.fn(),
     reserveSensitiveActionRateLimit: vi.fn(),
     transaction,
@@ -38,13 +38,35 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('server-only', () => ({}));
 
-vi.mock('$server/api-auth', () => ({
-  requireAuth: mocks.requireAuth,
-}));
+// The real permission rule, without the session and rate-limit lookups.
+vi.mock('$server/api-auth', async () => {
+  const { hasPermission, isKnownPermissionKey } =
+    await import('$constants/permissions.constants');
 
-vi.mock('$server/auth', () => ({
+  return {
+    requireAuth: mocks.requireAuth,
+    requirePermission: (
+      user: {
+        isProtected: boolean;
+        permissions?: null;
+        role: 'ADMIN' | 'USER';
+      },
+      permissionKey: string,
+    ): { response?: Response; success: boolean } =>
+      (user.isProtected && isKnownPermissionKey(permissionKey)) ||
+      hasPermission(user.role, permissionKey, user.permissions ?? null)
+        ? { success: true }
+        : { response: Response.json({}, { status: 403 }), success: false },
+  };
+});
+
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
+}));
+vi.mock('$server/user-projection', () => ({
   mapUserToUserType: mocks.mapUserToUserType,
+}));
+vi.mock('$server/password', () => ({
   verifyPassword: mocks.verifyPassword,
 }));
 
@@ -64,7 +86,7 @@ vi.mock('$server/prisma', () => ({
 }));
 
 vi.mock('$server/rate-limiter', () => ({
-  recordLoginAttempt: mocks.recordLoginAttempt,
+  clearRateLimit: mocks.clearRateLimit,
   reserveSensitiveActionRateLimit: mocks.reserveSensitiveActionRateLimit,
 }));
 
@@ -96,6 +118,14 @@ const ROOT = {
   role: 'ADMIN',
   securityVersion: 7,
   totpCredential: ROOT_CREDENTIAL,
+};
+const DELEGATE = {
+  ...ROOT,
+  firstName: 'Admin',
+  id: 'admin-user',
+  isProtected: false,
+  loginName: 'admin.delegue',
+  totpCredential: { ...ROOT_CREDENTIAL, userId: 'admin-user' },
 };
 const TARGET = {
   firstName: 'Membre',
@@ -184,9 +214,9 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     );
   });
 
-  it('refuses every non-root actor before loading account secrets', async () => {
+  it('refuses an actor without users:reset_mfa before loading account secrets', async () => {
     mocks.requireAuth.mockResolvedValue(
-      buildAuth({ id: 'admin-user', isProtected: false }),
+      buildAuth({ id: 'member-user', isProtected: false, role: 'USER' }),
     );
     const { POST } = await import('$app/api/users/[id]/reset-mfa/route');
 
@@ -201,6 +231,59 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     expect(response.status).toBe(403);
     expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
     expect(mocks.verifyPassword).not.toHaveBeenCalled();
+  });
+
+  it('lets a delegated administrator reset a standard member with strong proof', async () => {
+    mocks.requireAuth.mockResolvedValue(
+      buildAuth({ id: 'admin-user', isProtected: false }),
+    );
+    mocks.prisma.user.findUnique.mockReset();
+    mocks.prisma.user.findUnique
+      .mockResolvedValueOnce(DELEGATE)
+      .mockResolvedValueOnce(TARGET);
+    mocks.transaction.user.findUnique.mockImplementation(
+      async ({ where }: { where: { id: string } }) =>
+        where.id === DELEGATE.id ? DELEGATE : UPDATED_TARGET,
+    );
+    const { POST } = await import('$app/api/users/[id]/reset-mfa/route');
+
+    const response = await POST(
+      createRequest({ currentPassword: 'Secret1!', currentTotpCode: '123456' }),
+      routeParams,
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.reserveSensitiveActionRateLimit).toHaveBeenCalledWith(
+      'admin-mfa-reset-password:admin-user',
+    );
+    expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'MFA_RESET',
+        metadata: expect.objectContaining({ actorIsProtected: false }),
+        userId: 'admin-user',
+      }),
+      { client: mocks.transaction, required: true },
+    );
+  });
+
+  it("keeps another administrator's double authentication reserved to the root", async () => {
+    mocks.requireAuth.mockResolvedValue(
+      buildAuth({ id: 'admin-user', isProtected: false }),
+    );
+    mocks.prisma.user.findUnique.mockReset();
+    mocks.prisma.user.findUnique
+      .mockResolvedValueOnce(DELEGATE)
+      .mockResolvedValueOnce({ ...TARGET, role: 'ADMIN' });
+    const { POST } = await import('$app/api/users/[id]/reset-mfa/route');
+
+    const response = await POST(
+      createRequest({ currentPassword: 'Secret1!', currentTotpCode: '123456' }),
+      routeParams,
+    );
+
+    expect(response.status).toBe(403);
+    expect(mocks.verifyPassword).not.toHaveBeenCalled();
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('accepts only a strict six-digit TOTP, never a recovery code', async () => {

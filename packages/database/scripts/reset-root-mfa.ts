@@ -27,12 +27,10 @@ const REQUIRED_TABLES = [
 
 type RootRow = {
   deletedAt: Date | null;
-  failedLoginAttempts: number;
   firstName: string;
   id: string;
   isActive: boolean;
   lastName: string | null;
-  lockedUntil: Date | null;
   loginName: string;
   mfaEnabledAt: Date | null;
   role: UserRole;
@@ -162,12 +160,10 @@ try {
   const preflightRoots = await prisma.user.findMany({
     select: {
       deletedAt: true,
-      failedLoginAttempts: true,
       firstName: true,
       id: true,
       isActive: true,
       lastName: true,
-      lockedUntil: true,
       loginName: true,
       mfaEnabledAt: true,
       role: true,
@@ -194,9 +190,7 @@ try {
             "role",
             "isActive",
             "deletedAt",
-            "failedLoginAttempts",
             "firstName",
-            "lockedUntil",
             "lastName",
             "mfaEnabledAt"
           FROM "public"."User"
@@ -246,8 +240,6 @@ try {
 
         await transaction.user.update({
           data: {
-            failedLoginAttempts: 0,
-            lockedUntil: null,
             mfaEnabledAt: null,
             securityVersion: { increment: 1 },
           },
@@ -269,8 +261,6 @@ try {
               deletedRateLimits: deletedRateLimits.count,
               deletedRecoveryCodes: deletedRecoveryCodes.count,
               deletedSessions: deletedSessions.count,
-              previousAccountLock: root.lockedUntil !== null,
-              previousFailedLoginAttempts: root.failedLoginAttempts,
               previousMfaEnabled: root.mfaEnabledAt !== null,
               recoveryMode: 'OFFLINE_ROOT_MFA_RESET',
             },

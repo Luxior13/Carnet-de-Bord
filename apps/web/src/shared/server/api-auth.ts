@@ -1,4 +1,3 @@
-import { type UserRole } from '@repo/database';
 import { NextResponse } from 'next/server';
 
 import {
@@ -8,8 +7,9 @@ import {
 import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
 import type { SessionType, UserType } from '$types/auth.types';
 
-import { getAuthSession } from './auth';
 import { reserveAuthenticatedApiRateLimit } from './rate-limiter';
+import { serviceErrors } from './service-error';
+import { getAuthSession } from './session';
 
 type RequireAuthSuccess = {
   response?: never;
@@ -44,10 +44,10 @@ type RequirePermissionResult =
   RequirePermissionSuccess | RequirePermissionFailure;
 
 /**
- * Requires authentication for an API route
+ * Requires an authenticated session for an API route. Authorization is decided
+ * afterwards by `requirePermission` or the module policy, never by role.
  */
 export async function requireAuth(
-  allowedRoles?: UserRole[],
   options: RequireAuthOptions = {},
 ): Promise<RequireAuthResult> {
   const { session, user } = await getAuthSession();
@@ -63,22 +63,6 @@ export async function requireAuth(
           success: false,
         },
         { status: 401 },
-      ),
-      success: false,
-    };
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return {
-      response: NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message: 'Accès refusé',
-          },
-          success: false,
-        },
-        { status: 403 },
       ),
       success: false,
     };
@@ -123,83 +107,41 @@ export async function requireAuth(
   return { session, success: true, user };
 }
 
+const PERMISSION_DENIED_MESSAGE =
+  "Vous n'avez pas la permission d'effectuer cette action";
+
+// A protected account bypasses policy decisions, never catalogue typos.
+const isAllowed = (user: UserType, permissionKey: string): boolean =>
+  (user.isProtected && isKnownPermissionKey(permissionKey)) ||
+  hasPermission(user.role, permissionKey, user.permissions);
+
 /**
- * Checks if a user has a specific permission
- * Protected users always have full access
+ * Route-level check: returns the 403 response when the user lacks the
+ * permission. Protected users always have full access.
  */
 export function requirePermission(
   user: UserType,
   permissionKey: string,
 ): RequirePermissionResult {
-  // A protected account bypasses policy decisions, never catalogue typos.
-  if (user.isProtected && isKnownPermissionKey(permissionKey)) {
-    return { success: true };
-  }
+  if (isAllowed(user, permissionKey)) return { success: true };
 
-  const hasAccess = hasPermission(user.role, permissionKey, user.permissions);
-
-  if (!hasAccess) {
-    return {
-      response: NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message: "Vous n'avez pas la permission d'effectuer cette action",
-          },
-          success: false,
+  return {
+    response: NextResponse.json(
+      {
+        error: {
+          code: ErrorCode.FORBIDDEN,
+          message: PERMISSION_DENIED_MESSAGE,
         },
-        { status: 403 },
-      ),
-      success: false,
-    };
-  }
-
-  return { success: true };
+        success: false,
+      },
+      { status: 403 },
+    ),
+    success: false,
+  };
 }
 
-/**
- * Checks whether the user has at least one permission from a list.
- * Useful for gradual permission migrations (fine-grained + legacy fallback).
- */
-export function requireAnyPermission(
-  user: UserType,
-  permissionKeys: readonly string[],
-): RequirePermissionResult {
-  // A protected account bypasses known policies, never unknown keys.
-  if (
-    user.isProtected &&
-    permissionKeys.some((permissionKey) => isKnownPermissionKey(permissionKey))
-  ) {
-    return { success: true };
-  }
-
-  const hasAccess = permissionKeys.some((permissionKey) =>
-    hasPermission(user.role, permissionKey, user.permissions),
-  );
-
-  if (!hasAccess) {
-    return {
-      response: NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message: "Vous n'avez pas la permission d'effectuer cette action",
-          },
-          success: false,
-        },
-        { status: 403 },
-      ),
-      success: false,
-    };
-  }
-
-  return { success: true };
+/** Service-level variant of `requirePermission`: throws the same refusal. */
+export function assertPermission(user: UserType, permissionKey: string): void {
+  if (!isAllowed(user, permissionKey))
+    throw serviceErrors.forbidden(PERMISSION_DENIED_MESSAGE);
 }
-
-/**
- * Shorthand role groups
- */
-export const Roles = {
-  ADMIN: ['ADMIN'] as UserRole[],
-  ALL: ['ADMIN', 'USER'] as UserRole[],
-};

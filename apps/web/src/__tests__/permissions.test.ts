@@ -15,18 +15,14 @@ import {
   getRoleBasePermissions,
   getUnknownPermissionKeys,
   hasPermission,
-  isHistoricalAuditPermissionKey,
   isKnownPermissionKey,
   isPermissionAlwaysEnabled,
   isPermissionGrantable,
-  LEGACY_PERMISSION_ALIASES,
   normalizePermissionOverrides,
   omitAccessPermissionOverrides,
   PERMISSION_CATEGORIES,
   PERMISSION_POLES,
   PERMISSIONS,
-  preserveRetiringPermissionOverrides,
-  requiresMfaForAccess,
   ROADMAP_PERMISSIONS,
   ROLE_PERMISSIONS,
 } from '../shared/constants/permissions.constants';
@@ -63,7 +59,7 @@ describe('hasPermission', () => {
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.DELEGATE_ACCESS)).toBe(
       true,
     );
-    expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW)).toBe(false);
+    expect(hasPermission('ADMIN', ROADMAP_PERMISSIONS.AUDIT.VIEW)).toBe(false);
     expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY)).toBe(
       true,
     );
@@ -81,7 +77,7 @@ describe('hasPermission', () => {
     expect(hasPermission('USER', PERMISSIONS.USERS.REVOKE_SESSIONS)).toBe(
       false,
     );
-    expect(hasPermission('USER', PERMISSIONS.AUDIT.VIEW)).toBe(false);
+    expect(hasPermission('USER', ROADMAP_PERMISSIONS.AUDIT.VIEW)).toBe(false);
     expect(hasPermission('USER', PERMISSIONS.PERSONS.VIEW)).toBe(false);
   });
 
@@ -209,7 +205,9 @@ describe('hasPermission', () => {
     }
     expect(userRoleBasePermissions[PERMISSIONS.DASHBOARD.VIEW]).toBe(true);
     expect(userRoleBasePermissions[PERMISSIONS.USERS.VIEW]).toBe(false);
-    expect(userRoleBasePermissions).not.toHaveProperty(PERMISSIONS.AUDIT.VIEW);
+    expect(userRoleBasePermissions).not.toHaveProperty(
+      ROADMAP_PERMISSIONS.AUDIT.VIEW,
+    );
     expect(userRoleBasePermissions).not.toHaveProperty(
       ROADMAP_PERMISSIONS.INTERNAL.VIEW,
     );
@@ -293,8 +291,8 @@ describe('hasPermission', () => {
       }),
     ).toBe(true);
     expect(
-      requiresMfaForAccess('USER', {
-        [PERMISSIONS.AUDIT.VIEW]: true,
+      hasPermission('USER', ROADMAP_PERMISSIONS.AUDIT.VIEW, {
+        [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
       }),
     ).toBe(false);
   });
@@ -344,34 +342,6 @@ describe('hasPermission', () => {
     expect(
       hasPermission('USER', PERMISSIONS.ACCOUNT.UPDATE_PROFILE, {
         [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
-      }),
-    ).toBe(false);
-  });
-});
-
-describe('requiresMfaForAccess', () => {
-  it('requires MFA for administrators with critical access', () => {
-    expect(requiresMfaForAccess('ADMIN')).toBe(true);
-  });
-
-  it('does not require MFA for a standard user by default', () => {
-    expect(requiresMfaForAccess('USER')).toBe(false);
-  });
-
-  it('requires MFA when a critical delegated permission is effective', () => {
-    expect(
-      requiresMfaForAccess('USER', {
-        [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
-        [PERMISSIONS.USERS.VIEW]: true,
-      }),
-    ).toBe(true);
-  });
-
-  it('ignores a critical override whose dependency is disabled', () => {
-    expect(
-      requiresMfaForAccess('USER', {
-        [PERMISSIONS.USERS.UPDATE_LOGIN]: true,
-        [PERMISSIONS.USERS.VIEW]: false,
       }),
     ).toBe(false);
   });
@@ -486,8 +456,6 @@ describe('permission catalogue', () => {
   it('contains only the canonical effective permission families', () => {
     expect(getAllPermissionKeys()).toEqual([
       'dashboard:view',
-      'internal_news:view',
-      'internal_news:manage',
       'settings:view',
       'settings:update',
       'persons:view',
@@ -512,6 +480,7 @@ describe('permission catalogue', () => {
       'users:view_account_policy',
       'users:update_account_policy',
       'users:reset_password',
+      'users:reset_mfa',
       'users:view_sessions',
       'users:revoke_sessions',
       'users:delete_account',
@@ -527,7 +496,6 @@ describe('permission catalogue', () => {
 
   it('shows every live administrative page without widening delegation', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
-      'internal-news',
       'persons',
       'users',
       'system-settings',
@@ -545,21 +513,6 @@ describe('permission catalogue', () => {
         (category) => category.permissions,
       ).every(
         (permission) => permission.grantable && permission.surface === 'page',
-      ),
-    ).toBe(true);
-
-    const internalNewsCategory = PERMISSION_CATEGORIES.find(
-      (category) => category.key === 'internal-news',
-    );
-    expect(internalNewsCategory).toMatchObject({
-      accessPermissionKey: PERMISSIONS.INTERNAL_NEWS.VIEW,
-      assignment: 'role-bound',
-      poleKey: 'activity',
-      routes: ['/activite/actualites'],
-    });
-    expect(
-      internalNewsCategory?.permissions.every(
-        (permission) => !permission.grantable,
       ),
     ).toBe(true);
 
@@ -612,7 +565,6 @@ describe('permission catalogue', () => {
       { key: 'system', label: 'Système' },
     ]);
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([
-      'Actualité interne',
       'Répertoire',
       'Utilisateurs',
       'Paramètres système',
@@ -636,43 +588,46 @@ describe('permission catalogue', () => {
     );
   });
 
-  it('keeps roadmap names unique and disjoint from every legacy alias', () => {
+  it('keeps roadmap names unique', () => {
     expect(new Set(roadmapPermissionKeys).size).toBe(
       roadmapPermissionKeys.length,
     );
-    expect(
-      roadmapPermissionKeys.filter((permissionKey) =>
-        Object.hasOwn(LEGACY_PERMISSION_ALIASES, permissionKey),
-      ),
-    ).toEqual([]);
-
-    for (const canonicalKeys of Object.values(LEGACY_PERMISSION_ALIASES)) {
-      // Retired aliases resolve to no active capabilities.
-      expect(canonicalKeys.every(isKnownPermissionKey)).toBe(true);
-    }
   });
 
-  it('keeps historical lifecycle keys unknown for authorization', () => {
+  // The compatibility layer for retired names was removed on 24 October 2026
+  // (REV-13): an old key is now simply unknown, never translated.
+  it('treats every retired or misspelled key as unknown', () => {
     expect(
       getUnknownPermissionKeys({
         'audit:view_sensitive': true,
-        'members:update': false,
         'members:view': true,
-        'system:audit': true,
-        'system:audit_sensitive': true,
+        'system:settings': true,
         'users:archive': true,
-        'users:delete': false,
         'users:ghost': false,
+        'users:update_access': true,
       }),
     ).toEqual([
       'audit:view_sensitive',
-      'members:update',
       'members:view',
-      'system:audit_sensitive',
+      'system:settings',
       'users:archive',
-      'users:delete',
       'users:ghost',
+      'users:update_access',
     ]);
+    expect(
+      normalizePermissionOverrides({
+        'audit:view_sensitive': true,
+        'users:update_access': true,
+        [PERMISSIONS.PERSONS.VIEW]: true,
+      }),
+    ).toEqual({ [PERMISSIONS.PERSONS.VIEW]: true });
+    expect(
+      hasPermission('USER', PERMISSIONS.USERS.GRANT_ACCESS, {
+        [PERMISSIONS.USERS.VIEW]: true,
+        [PERMISSIONS.USERS.VIEW_ACCESS]: true,
+        'users:update_access': true,
+      }),
+    ).toBe(false);
   });
 
   it('identifies baseline and role-bound keys as non-assignable inputs', () => {
@@ -680,57 +635,11 @@ describe('permission catalogue', () => {
       getNonAssignablePermissionKeys({
         [PERMISSIONS.DASHBOARD.VIEW]: false,
         [PERMISSIONS.SETTINGS.UPDATE]: true,
-        'system:settings': true,
         [PERMISSIONS.USERS.VIEW]: true,
         'users:archive': false,
         'users:delete': false,
       }),
-    ).toEqual([
-      PERMISSIONS.DASHBOARD.VIEW,
-      PERMISSIONS.SETTINGS.UPDATE,
-      'system:settings',
-    ]);
-  });
-
-  it('normalizes legacy aliases to canonical keys', () => {
-    expect(
-      normalizePermissionOverrides({
-        'system:audit': true,
-        'system:settings': true,
-        'users:export': true,
-      }),
-    ).toBeNull();
-    expect(
-      normalizePermissionOverrides({
-        'users:update_access': true,
-      }),
-    ).toEqual({
-      [PERMISSIONS.USERS.DELEGATE_ACCESS]: true,
-      [PERMISSIONS.USERS.GRANT_ACCESS]: true,
-      [PERMISSIONS.USERS.REVOKE_ACCESS]: true,
-    });
-    expect(
-      normalizePermissionOverrides({
-        'users:edit_permissions': true,
-        [PERMISSIONS.USERS.DELEGATE_ACCESS]: false,
-      }),
-    ).toEqual({
-      [PERMISSIONS.USERS.DELEGATE_ACCESS]: false,
-      [PERMISSIONS.USERS.GRANT_ACCESS]: true,
-      [PERMISSIONS.USERS.REVOKE_ACCESS]: true,
-    });
-    expect(
-      normalizePermissionOverrides(
-        Object.fromEntries([
-          ['users:update_access', false],
-          ['users:edit_permissions', true],
-        ]),
-      ),
-    ).toEqual({
-      [PERMISSIONS.USERS.DELEGATE_ACCESS]: false,
-      [PERMISSIONS.USERS.GRANT_ACCESS]: false,
-      [PERMISSIONS.USERS.REVOKE_ACCESS]: false,
-    });
+    ).toEqual([PERMISSIONS.DASHBOARD.VIEW, PERMISSIONS.SETTINGS.UPDATE]);
   });
 
   it('never upgrades historical lifecycle grants to irreversible deletion', () => {
@@ -755,67 +664,11 @@ describe('permission catalogue', () => {
     ).toEqual({ [PERMISSIONS.USERS.DELETE_ACCOUNT]: false });
   });
 
-  it('preserves only rollout keys for legacy instances without authorizing them', () => {
-    expect(
-      preserveRetiringPermissionOverrides(
-        {
-          'audit:view_sensitive': true,
-          'members:view': false,
-          'system:audit_sensitive': true,
-          'users:archive': true,
-          'users:ghost': true,
-        },
-        { [PERMISSIONS.PERSONS.VIEW]: true },
-      ),
-    ).toEqual({
-      'audit:view_sensitive': true,
-      'members:view': false,
-      'system:audit_sensitive': true,
-      [PERMISSIONS.PERSONS.VIEW]: true,
-    });
-    expect(
-      hasPermission('USER', 'audit:view_sensitive', {
-        'audit:view_sensitive': true,
-      }),
-    ).toBe(false);
-    expect(preserveRetiringPermissionOverrides(null, null)).toBeNull();
-  });
-
-  it('uses explicit historical labels without making old keys active', () => {
-    for (const permissionKey of [
-      'audit:view_sensitive',
-      'members:update',
-      'members:view',
-      'system:audit_sensitive',
-    ]) {
-      expect(isHistoricalAuditPermissionKey(permissionKey)).toBe(true);
-      expect(isKnownPermissionKey(permissionKey)).toBe(false);
-      expect(isPermissionGrantable(permissionKey)).toBe(false);
-    }
-    expect(
-      normalizePermissionOverrides({
-        'audit:view_sensitive': true,
-        'members:update': true,
-        'members:view': true,
-        'system:audit_sensitive': true,
-      }),
-    ).toBeNull();
-    expect(getPermissionDisplayLabel('users:archive')).toBe(
-      'Archiver un utilisateur (historique)',
+  it('labels a live key by its catalogue entry and anything else by its name', () => {
+    expect(getPermissionDisplayLabel(PERMISSIONS.USERS.VIEW)).toBe(
+      getPermissionItem(PERMISSIONS.USERS.VIEW)?.label,
     );
-    expect(getPermissionDisplayLabel('users:delete')).toBe(
-      'Archiver un utilisateur (historique)',
-    );
-    expect(isHistoricalAuditPermissionKey('users:archive')).toBe(true);
-    expect(isHistoricalAuditPermissionKey('users:delete')).toBe(true);
-    expect(isKnownPermissionKey('users:archive')).toBe(false);
-    expect(isKnownPermissionKey('users:delete')).toBe(false);
-    expect(getPermissionDisplayLabel('system:audit')).toBe(
-      'Consulter le journal global (historique)',
-    );
-    expect(getPermissionDisplayLabel('users:update_access')).toBe(
-      'Modifier les autorisations administratives (historique)',
-    );
+    expect(getPermissionDisplayLabel('users:archive')).toBe('users:archive');
     expect(getPermissionDisplayLabel(ROADMAP_PERMISSIONS.TASKS.VIEW)).toBe(
       ROADMAP_PERMISSIONS.TASKS.VIEW,
     );
@@ -837,7 +690,6 @@ describe('permission catalogue', () => {
         [PERMISSIONS.ACCOUNT.MANAGE_MFA]: false,
         [PERMISSIONS.ACCOUNT.UPDATE_CONTACT]: false,
         [PERMISSIONS.ACCOUNT.UPDATE_PROFILE]: false,
-        [PERMISSIONS.ACCOUNT.VIEW_ACTIVITY]: false,
         [PERMISSIONS.ACCOUNT.VIEW_PROFILE]: false,
         [PERMISSIONS.ACCOUNT.VIEW_SECURITY]: false,
       }),
@@ -872,8 +724,6 @@ describe('permission catalogue', () => {
         category.permissions.map((item) => item.key),
       ),
       PERMISSIONS.DASHBOARD.VIEW,
-      PERMISSIONS.INTERNAL_NEWS.VIEW,
-      PERMISSIONS.INTERNAL_NEWS.MANAGE,
       PERMISSIONS.SETTINGS.VIEW,
       PERMISSIONS.SETTINGS.UPDATE,
       ...getAccessPermissionKeys(),
@@ -883,7 +733,6 @@ describe('permission catalogue', () => {
         category.permissions.map((item) => item.key),
       ),
       PERMISSIONS.DASHBOARD.VIEW,
-      PERMISSIONS.INTERNAL_NEWS.VIEW,
     ]);
     expect(ROLE_PERMISSIONS.ADMIN).not.toEqual(
       expect.arrayContaining(roadmapPermissionKeys),

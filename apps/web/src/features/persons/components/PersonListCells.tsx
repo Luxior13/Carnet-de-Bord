@@ -21,7 +21,7 @@ export const PersonAvatarFrame: FC<{ person: PersonSummary }> = ({
 }) => (
   <span
     aria-hidden="true"
-    className="border-border-default bg-surface-inset relative flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-[7px] border"
+    className="border-border-default bg-surface-inset rounded-tile relative flex size-9 shrink-0 items-center justify-center overflow-hidden border"
   >
     <PersonAvatar className="size-full rounded-[inherit]" person={person} />
   </span>

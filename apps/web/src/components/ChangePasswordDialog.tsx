@@ -1,8 +1,9 @@
 'use client';
 
-import { KeyRound } from 'lucide-react';
+import { Check, Circle, KeyRound } from 'lucide-react';
 import React, { type FC, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
 import {
   Dialog,
@@ -17,8 +18,9 @@ import { ServiceIcon } from '$ui/service-icon';
 import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 import {
-  getPasswordStrengthColor,
-  getPasswordStrengthLabel,
+  getPasswordLength,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_RULES,
   validatePassword,
 } from '$utils/password.utils';
 
@@ -45,6 +47,7 @@ const ChangePasswordDialogContent: FC<ChangePasswordDialogProps> = ({
       requestRef.current?.abort();
     };
   }, []);
+  const { userData } = useUser();
   const canCancel = !!onCancel;
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -55,8 +58,31 @@ const ChangePasswordDialogContent: FC<ChangePasswordDialogProps> = ({
   const [outcomeUnknown, setOutcomeUnknown] = useState(false);
 
   const passwordValidation = useMemo(
-    () => validatePassword(newPassword),
-    [newPassword],
+    () => validatePassword(newPassword, userData ?? {}),
+    [newPassword, userData],
+  );
+  // The common-password list is checked by the server, which answers in the
+  // alert above the fields.
+  const passwordRules = [
+    {
+      label: `${PASSWORD_MIN_LENGTH} caractères au moins`,
+      met: getPasswordLength(newPassword) >= PASSWORD_MIN_LENGTH,
+    },
+    {
+      label: 'Ni suite ni répétition simple (« azertyuiop »)',
+      met:
+        newPassword.length > 0 &&
+        !passwordValidation.errors.includes(PASSWORD_RULES.trivial),
+    },
+    {
+      label: 'Ni votre identifiant, ni votre nom, ni « Noctambule »',
+      met:
+        newPassword.length > 0 &&
+        !passwordValidation.errors.includes(PASSWORD_RULES.personal),
+    },
+  ];
+  const exceedsMaxLength = passwordValidation.errors.includes(
+    PASSWORD_RULES.maxLength,
   );
   const isConfirmMismatch =
     confirmPassword.length > 0 && newPassword !== confirmPassword;
@@ -65,9 +91,6 @@ const ChangePasswordDialogContent: FC<ChangePasswordDialogProps> = ({
     passwordValidation.isValid &&
     confirmPassword.length > 0 &&
     !isConfirmMismatch;
-
-  const strengthLabel = getPasswordStrengthLabel(passwordValidation.score);
-  const strengthColor = getPasswordStrengthColor(passwordValidation.score);
 
   useEffect(() => {
     if (!open) {
@@ -212,6 +235,7 @@ const ChangePasswordDialogContent: FC<ChangePasswordDialogProps> = ({
                       Mot de passe actuel
                     </Label>
                     <Input
+                      autoComplete="current-password"
                       id="currentPassword"
                       name="current-password"
                       required
@@ -230,74 +254,57 @@ const ChangePasswordDialogContent: FC<ChangePasswordDialogProps> = ({
                     Nouveau mot de passe
                   </Label>
                   <Input
+                    autoComplete="new-password"
                     id="newPassword"
                     name="new-password"
                     required
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Minimum 8 caractères"
+                    placeholder={`${PASSWORD_MIN_LENGTH} caractères au moins`}
                     disabled={isLoading}
                     autoFocus={!canCancel}
-                    aria-describedby={
-                      newPassword.length > 0 ? 'password-strength' : undefined
-                    }
+                    aria-describedby="password-rules"
                     aria-invalid={
                       newPassword.length > 0 && !passwordValidation.isValid
                     }
                   />
-                  {newPassword.length > 0 && (
-                    <div
-                      className="space-y-1.5"
-                      id="password-strength"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      <div
-                        className="flex gap-1"
-                        role="progressbar"
-                        aria-valuenow={passwordValidation.score}
-                        aria-valuemin={0}
-                        aria-valuemax={4}
-                        aria-label={`Force du mot de passe: ${strengthLabel}`}
-                      >
-                        {[1, 2, 3, 4].map((bar) => (
-                          <div
-                            key={bar}
-                            className={cn(
-                              'h-1.5 flex-1 rounded-full transition-colors duration-200',
-                              bar <= passwordValidation.score
-                                ? strengthColor
-                                : 'bg-secondary',
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <p
+                  <ul
+                    className="space-y-1 text-xs"
+                    id="password-rules"
+                    aria-label="Règles du nouveau mot de passe"
+                  >
+                    {passwordRules.map((rule) => (
+                      <li
+                        key={rule.label}
                         className={cn(
-                          'text-xs font-medium',
-                          passwordValidation.score <= 1 && 'text-destructive',
-                          passwordValidation.score === 2 && 'text-warning',
-                          passwordValidation.score === 3 && 'text-warning',
-                          passwordValidation.score === 4 && 'text-success',
+                          'flex items-start gap-1.5',
+                          rule.met ? 'text-success' : 'text-muted-foreground',
                         )}
                       >
-                        Force du mot de passe : {strengthLabel}
-                      </p>
-                      {passwordValidation.errors.length > 0 && (
-                        <ul className="text-destructive list-inside list-disc space-y-0.5 text-xs">
-                          {passwordValidation.errors.map((err, idx) => (
-                            <li key={idx}>{err}</li>
-                          ))}
-                        </ul>
-                      )}
-                      <p className="text-muted-foreground text-xs">
-                        Utilisez au moins 8 caractères avec majuscules,
-                        minuscules, chiffres. Les caractères spéciaux améliorent
-                        la sécurité.
-                      </p>
-                    </div>
-                  )}
+                        {rule.met ? (
+                          <Check aria-hidden className="mt-px size-3.5" />
+                        ) : (
+                          <Circle aria-hidden className="mt-px size-3.5" />
+                        )}
+                        <span>
+                          {rule.label}
+                          <span className="sr-only">
+                            {rule.met ? ' : respectée' : ' : à respecter'}
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                    {exceedsMaxLength && (
+                      <li className="text-destructive" role="alert">
+                        {PASSWORD_RULES.maxLength}
+                      </li>
+                    )}
+                  </ul>
+                  <p className="text-muted-foreground text-xs">
+                    Une phrase de plusieurs mots est longue et facile à retenir.
+                    Les mots de passe trop courants sont refusés.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword" required>
@@ -312,6 +319,7 @@ const ChangePasswordDialogContent: FC<ChangePasswordDialogProps> = ({
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirmez votre mot de passe"
                     disabled={isLoading}
+                    autoComplete="new-password"
                     aria-invalid={isConfirmMismatch}
                     aria-describedby={
                       isConfirmMismatch ? 'confirmPassword-error' : undefined

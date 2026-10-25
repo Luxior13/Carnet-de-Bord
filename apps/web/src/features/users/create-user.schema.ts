@@ -21,6 +21,8 @@ export const createUserSchema = z
   })
   .strict();
 
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+
 export type NewUserForm = {
   contactEmail: string;
   firstName: string;

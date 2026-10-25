@@ -12,7 +12,7 @@ import { isPublicPagePath } from '$constants/security.constants';
 import { FeatureAvailabilityProvider } from '$context/FeatureAvailabilityContext';
 import { UserProvider } from '$context/UserContext';
 import { env } from '$env';
-import { getPageAuthSession } from '$server/auth';
+import { getPageAuthSession } from '$server/session';
 import type { UserType } from '$types/auth.types';
 import { Toaster } from '$ui/sonner';
 import { cn } from '$utils/css.utils';

@@ -48,17 +48,40 @@ const normalizeIpAddress = (value: string | null): string | null => {
   return normalized;
 };
 
+const DEFAULT_TRUSTED_PROXY_HOPS = 1;
+const MAX_TRUSTED_PROXY_HOPS = 10;
+
 /**
- * Uses the hop appended by the closest reverse proxy. Reading the first
- * x-forwarded-for value would let a client-controlled prefix bypass limits
- * when a proxy appends instead of replacing that header.
+ * Number of reverse proxies in front of the application that each append the
+ * address they received to x-forwarded-for (`TRUSTED_PROXY_HOPS`, validated
+ * at start-up by `env.ts`; read here directly because the Edge middleware
+ * shares this module).
  */
-export function getClientIp(headers: HeaderReader): string | null {
-  const forwardedFor = headers.get('x-forwarded-for');
-  const closestForwardedHop = forwardedFor?.split(',').at(-1) ?? null;
+export const parseTrustedProxyHops = (value: string | undefined): number => {
+  if (value === undefined || value.trim() === '')
+    return DEFAULT_TRUSTED_PROXY_HOPS;
+  const hops = Number(value);
+
+  return Number.isInteger(hops) && hops >= 1 && hops <= MAX_TRUSTED_PROXY_HOPS
+    ? hops
+    : DEFAULT_TRUSTED_PROXY_HOPS;
+};
+
+/**
+ * The client is the entry written by the outermost trusted proxy: counting
+ * `hops` entries from the end of x-forwarded-for. Every entry to its left
+ * was supplied by the client itself and would let it choose its address.
+ */
+export function getClientIp(
+  headers: HeaderReader,
+  hops = parseTrustedProxyHops(process.env.TRUSTED_PROXY_HOPS),
+): string | null {
+  const forwardedHops = headers.get('x-forwarded-for')?.split(',') ?? [];
+  const clientHop =
+    forwardedHops.length >= hops ? (forwardedHops.at(-hops) ?? null) : null;
 
   return (
-    normalizeIpAddress(closestForwardedHop) ??
+    normalizeIpAddress(clientHop) ??
     normalizeIpAddress(headers.get('x-real-ip'))
   );
 }

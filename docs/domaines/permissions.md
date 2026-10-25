@@ -10,7 +10,7 @@ examine uniquement les pages utilisables et les capacités encore présentées d
 leur éditeur. Après accord de l'utilisateur, les corrections du 15 octobre sont
 appliquées : retrait des quatre droits d'activité sans écran actuel, provenance
 rattachée au Répertoire et séparation des coordonnées. L'éditeur présente
-**27 capacités administratives** (25 délégables et deux liées au rôle) et
+**28 capacités administratives** (26 délégables et deux liées au rôle) et
 **sept capacités personnelles** (une configurable et six garanties de base).
 La migration conserve les accès effectifs aux coordonnées des comptes existants.
 
@@ -45,9 +45,9 @@ La migration conserve les accès effectifs aux coordonnées des comptes existant
 L'éditeur affiche deux pôles : **Membres** (`internal`) et **Système** (`system`).
 Sa projection [permission-editor-view](../../apps/web/src/components/users/permission-editor-view.ts)
 croise le catalogue technique avec la disponibilité du registre des fonctionnalités.
-Les pôles vides et l'Actualité interne prévue ne sont pas proposés. Le catalogue
-technique conserve des clés historiques de cette dernière ; leur présence ne
-signifie pas qu'une page est livrée et n'autorise pas à activer un module futur.
+Les pôles vides ne sont pas proposés. L'Actualité interne et le journal global,
+prévus, n'ont que des noms réservés dans `ROADMAP_PERMISSIONS` (depuis le
+24 octobre 2026).
 
 ## Vocabulaire canonique de l'interface
 
@@ -68,14 +68,21 @@ Le mot `permission` reste accepté dans le code et dans cette documentation
 technique. Dans l'interface, `autorisation` désigne le réglage et `accès`
 désigne son résultat effectif (page accessible ou inaccessible).
 
+> **Revue du 23 octobre 2026** ([rapport](../audits/2026-10-23-revue-complete.md)) :
+> clés d’activité mortes et clés `internal_news:*` actives d’un module
+> `planned` (REV-14), couche d’alias et de clés en retrait pour un déploiement
+> inexistant (REV-13) : **corrigés le 24 octobre 2026**. Reste ouvert : le modèle
+> global à deux rôles ne porte pas encore les portées par entité, équipe et
+> période des [rôles métier](roles-metier.md) (REV-15, décision attendue).
+
 ## Trois ensembles à ne pas confondre
 
-1. `PERMISSIONS` contient les identifiants techniques. Leur présence seule ne
-   rend pas un droit actif : les anciennes clés d'activité y subsistent pour
-   identifier les événements historiques, mais sont inconnues du moteur actif,
-   non attribuables et refusées pour les comptes non protégés.
-2. `PERMISSION_CATEGORIES` regroupe les autorisations administratives du catalogue
-   technique, dont des entrées historiques de pages prévues. La projection
+1. `PERMISSIONS` contient les identifiants des droits effectifs, et eux seuls.
+   Une clé retirée disparaît du code ; si elle reste stockée sur un compte, elle
+   est inconnue, sans effet, refusée en entrée et supprimée au prochain
+   enregistrement des droits de ce compte.
+2. `PERMISSION_CATEGORIES` regroupe les autorisations administratives des pages
+   livrées. La projection
    `PERMISSION_EDITOR_CATEGORIES` distingue pages livrées et droits transverses
    réellement affichés. `DELEGABLE_PERMISSION_CATEGORIES` isole les catégories dont
    les droits sont configurables individuellement ; les droits liés au rôle
@@ -145,7 +152,7 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:update_profile`        | modifier prénom et nom                          | `users:view`                                | sensible  | Non               |
 | `users:update_contact`        | modifier une adresse de contact                 | `users:view`, `users:view_contact`          | sensible  | Non               |
 | `users:update_login`          | modifier l'identifiant et fermer les sessions   | `users:view`                                | critique  | Oui               |
-| `users:view_security`         | voir verrouillage, état du mot de passe et MFA          | `users:view`                                | sensible  | Non               |
+| `users:view_security`         | voir l'état du mot de passe et de la MFA                | `users:view`                                | sensible  | Non               |
 | `users:update_status`         | désactiver ou réactiver un compte               | `users:view`, `users:view_security`         | critique  | Oui               |
 | `users:view_access`           | consulter les autorisations administratives     | `users:view`                                | sensible  | Non               |
 | `users:grant_access`          | accorder des autorisations administratives      | `users:view_access`                         | critique  | Mot de passe selon les changements, voir ci-dessous |
@@ -154,6 +161,7 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | `users:view_account_policy`   | voir l'autonomie personnelle                    | `users:view`                                | sensible  | Non               |
 | `users:update_account_policy` | autoriser/interdire l'édition du prénom et du nom propres | `users:view_account_policy`                 | sensible  | Non pour cette seule modification |
 | `users:reset_password`        | émettre un mot de passe temporaire              | `users:view_security`                       | critique  | Oui               |
+| `users:reset_mfa`             | retirer la double authentification d'un compte qui a perdu son application et ses codes de secours | `users:view_security` | critique | Mot de passe et code TOTP saisis dans la demande |
 | `users:view_sessions`         | voir les sessions actives                       | `users:view_security`                       | sensible  | Non               |
 | `users:revoke_sessions`       | révoquer une ou toutes les sessions             | `users:view_sessions`                       | critique  | Oui               |
 | `users:delete_account`        | supprimer irréversiblement un compte désactivé  | `users:view_security`                       | critique  | Mot de passe récent |
@@ -266,14 +274,12 @@ mutation), un auteur protégé est présenté comme « Superadministrateur », s
 identifiant de connexion, sauf lorsque le lecteur est ce compte protégé.
 L'identité originale demeure dans les snapshots d'audit.
 
-`audit:view`, `users:view_activity`, `users:export_activity` et
-`account:view_activity` sont retirés du catalogue actif et des presets.
-L'ancien endpoint `/api/users/[id]/audit` répond uniformément **410**, sans
-lecture de base ni export CSV. La migration retire les surcharges de ces clés
-et de leurs alias `system:audit` et `users:export` des comptes courants.
-Les libellés historiques restent disponibles pour interpréter les anciennes
-traces ; ils ne sont pas des permissions attribuables.
-`audit:export` et la page du journal global avaient déjà été retirés.
+`users:view_activity`, `users:export_activity` et `account:view_activity`
+n'existent plus ; `audit:view` est un nom réservé du journal global prévu.
+L'ancien endpoint `/api/users/[id]/audit` a été supprimé le 25 octobre 2026.
+Les alias (`system:audit`, `users:export`,
+`users:update_access`…) et leurs libellés « historique » ont été retirés le
+24 octobre 2026 : une clé ancienne est simplement inconnue.
 
 ### Paramètres système : droits attachés au rôle
 
@@ -311,7 +317,7 @@ pas en droits délégables individuellement.
 | `/systeme/utilisateurs/[id]?section=security` | sécurité, statut, sessions, mot de passe et suppression définitive via les clés `users:*` correspondantes                                                  |
 | `/systeme/utilisateurs/[id]?section=access`   | `users:view_access` pour lire ; `users:grant_access` pour accorder ; `users:revoke_access` pour retirer ; `users:delegate_access` pour déléguer la gestion |
 | `/systeme/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
-| `/systeme/utilisateurs/[id]?section=history` | ancien onglet normalisé vers Profil ; endpoint d'activité fermé (410), aucune capacité active |
+| `/systeme/utilisateurs/[id]?section=history` | ancien onglet normalisé vers Profil ; aucun endpoint d'activité, aucune capacité active |
 | `/systeme/parametres`                                | `settings:view` pour lire ; `settings:update` pour modifier ; droits exclusivement liés au rôle ADMIN                                                      |
 | `/systeme/journal-activite`                          | redirection vers `/systeme/feuille-de-route` ; la vue globale est replanifiée, sans permission active                                                       |
 | pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |
@@ -327,11 +333,10 @@ attribuables. La liste exhaustive et leur statut produit sont maintenus dans
 Pour un compte non protégé, le calcul suit cet ordre :
 
 1. partir du preset USER ou ADMIN ;
-2. convertir temporairement les alias legacy vers leurs cibles canoniques ;
-3. ne conserver et appliquer que les surcharges individuelles configurables,
+2. ne conserver et appliquer que les surcharges individuelles configurables,
    en ignorant pour un ADMIN celles des autorisations administratives ;
-4. forcer les clés `alwaysEnabled` à `true` ;
-5. résoudre récursivement toutes les dépendances et refuser toute clé inconnue
+3. forcer les clés `alwaysEnabled` à `true` ;
+4. résoudre récursivement toutes les dépendances et refuser toute clé inconnue
    ou seulement planifiée.
 
 Une surcharge stockée est volontairement parcimonieuse. `true` signifie un
@@ -379,7 +384,13 @@ redemandé, sans nouveau code MFA. La cible devait déjà avoir été désactiv�
 une mutation distincte et toutes les opérations restent auditées.
 
 Cas supplémentaires : la création d'un compte ADMIN est réservée au compte
-racine et exige aussi un step-up. Le compte racine protégé ne peut être
+racine et exige aussi un step-up. Depuis le 25 octobre 2026 (REV-11), la
+réinitialisation de la double authentification d'un membre est l'autorisation
+délégable `users:reset_mfa` au lieu d'un privilège du seul compte racine : un
+administrateur la possède, un USER seulement si elle lui est accordée. Elle
+exige le mot de passe et un code TOTP frais de l'acteur, jamais un code de
+secours ; seule la racine peut réinitialiser un ADMIN ; la racine elle-même
+garde la [procédure hors ligne](../../packages/database/ROOT_RECOVERY.md). Le compte racine protégé ne peut être
 supprimé, désactivé ou rétrogradé, et ses accès ne sont jamais gérés
 manuellement.
 
@@ -399,6 +410,8 @@ Les identifiants suivants sont réservés dans `ROADMAP_PERMISSIONS`, mais ne so
 pas des permissions effectives :
 
 - Dashboard : `dashboard:manage_widgets` ;
+- actualité interne : `internal_news:view`, `internal_news:manage` ;
+- journal global : `audit:view` ;
 - tâches : `tasks:view`, `tasks:create`, `tasks:update`, `tasks:assign`,
   `tasks:delete` ;
 - notifications : `notifications:manage` ;
@@ -419,9 +432,6 @@ rôle, `PERMISSION_CATEGORIES` ou une politique serveur avant leur activation.
 `hasPermission` les refuse et la normalisation les supprime.
 
 La future capacité de sauvegarde utilise déjà le nom réservé `backups:view`.
-L'alias historique `system:exports` et la permission `audit:export` sont retirés
-avec l'export du journal ; les surcharges stockées sont conservées sans
-autorisation.
 
 ## Cycle de vie planned vers active
 
@@ -436,9 +446,11 @@ Une capacité passe par les étapes suivantes dans un même flux de livraison :
 4. **Activation atomique** : déplacer la clé vers `PERMISSIONS`, ajouter son
    `PermissionItem`, décider `grantable`, intégrer le preset voulu et passer la
    fonctionnalité/navigation à `live` dans le même changement.
-5. **Dépréciation éventuelle** : empêcher les nouvelles attributions, migrer
-   les données et consommateurs, conserver temporairement un alias de lecture,
-   puis retirer la clé après vérification qu'elle n'est plus stockée.
+5. **Retrait éventuel** : retirer la clé du code, de ses consommateurs et des
+   presets dans le même changement, sans alias ni période de transition (aucune
+   instance déployée à ménager tant que le projet est en développement). Une
+   valeur restée stockée est inerte et disparaît au prochain enregistrement ;
+   la nettoyer en base relève d'une opération explicite, après sauvegarde.
 
 Le compte racine peut consulter le catalogue planifié, mais son bypass ne rend
 pas une capacité planifiée opérationnelle : sans politique et module actifs,

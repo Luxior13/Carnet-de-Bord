@@ -49,9 +49,11 @@ Monorepo Bun (version du `packageManager` racine) + Turborepo. Depuis la racine 
 | Serveur de dev (web sur http://localhost:3001) | `bun run dev` |
 | Vérification complète, identique à la CI | `bun run check` |
 | Lint / types / tests de tous les paquets | `bun run lint` · `bun run typecheck` · `bun run test` |
+| Code mort : fichiers, exports et dépendances sans usage (inclus dans `check`) | `bun run knip` (configuration `knip.jsonc`) |
 | Contrôle des liens, index et fiches (après toute modif de `docs/`) | `bun run docs:check` (`docs:check:test` si `scripts/check-docs.mjs` change) |
 | Budget d'architecture (taille des fichiers, frontière base de données) | `bun run --filter web check:architecture` |
 | E2E Playwright (build de production + base dédiée) | `bun run test:e2e` |
+| Suites SQL `*-postgres` sur bases locales jetables | `bun run test:postgres` (`POSTGRES_TEST_ADMIN_URL` local requis) |
 | Migrations | `bun run db:migrate:deploy` (wrapper sûr, voir `packages/database/prisma/README.md`) |
 | Client Prisma (requis avant typecheck/tests sur un clone neuf) | `bun --cwd packages/database run build` |
 
@@ -65,7 +67,8 @@ Dans `apps/web` :
 Les tests Vitest ne couvrent que `src/**/*.test.ts` (pas de `.tsx`), tournent
 côté serveur et rendent les composants avec `renderToStaticMarkup`. Les suites
 `*-postgres.test.ts` sont ignorées (`describe.skipIf`) tant que leur variable
-`<MODULE>_TEST_DATABASE_URL` n'est pas définie (liste dans `turbo.json`).
+`<MODULE>_TEST_DATABASE_URL` n'est pas définie (liste dans `turbo.json`) ;
+`bun run test:postgres` les prépare et les lance sur un PostgreSQL local.
 `packages/database` utilise `node --test`, pas Vitest.
 
 Variables d'environnement : `apps/web/.env.sample` et
@@ -98,18 +101,24 @@ src/app/api/<module>/route.ts   adaptateur HTTP mince
 Une route enchaîne toujours : `requireAuth()` → `requirePermission(user,
 PERMISSIONS.X.Y)` (`$server/api-auth`) → `parseJsonBody` + `schema.safeParse` →
 service de `features/<module>/server` → `apiSuccess` / `apiErrors` enveloppés
-dans `withPrivateNoStore` (`$server/api-response`). Les mutations utilisent une
-version optimiste et écrivent l'audit dans la même transaction.
+dans `withPrivateNoStore` (`$server/api-response`). Un service signale un refus
+en levant une `ServiceError` (`$server/service-error`, avec `assertPermission`
+et `assertRecent…` pour les droits et preuves) ; la route la traduit avec
+`serviceErrorResponse`. Les mutations utilisent une version optimiste et
+écrivent l'audit dans la même transaction.
 
 Chaque fonctionnalité est déclarée dans `feature-registry.constants.ts`
 (clé, route, permissions, statut `planned`/`live`). Les permissions des
 fonctionnalités `planned` (`ROADMAP_PERMISSIONS`) ne sont jamais effectives.
-Référentiel des droits : `$constants/permissions.constants.ts` et
+Référentiel des droits : `$constants/permissions.constants.ts` (règles ; il
+réexporte le catalogue de `permission-catalog.constants.ts`) et
 [docs/domaines/permissions.md](docs/domaines/permissions.md).
 
-`src/middleware.ts` gère CSRF (cookie + en-tête `x-csrf-token` sur toute
+`src/middleware.ts` gère CSRF (cookie + en-tête `x-csrf-token`, refus d'une
+mutation dont `Sec-Fetch-Site` n'est pas `same-origin`, sur toute
 mutation), CSP avec nonce, identifiant de requête et limitation de débit ;
-la session est un cookie `session` résolu par `$server/auth`.
+la session est un cookie `session` résolu par `$server/session` (mots de
+passe : `$server/password` ; journal d'audit : `$server/audit-log`).
 
 ### Contraintes vérifiées par `check:architecture`
 

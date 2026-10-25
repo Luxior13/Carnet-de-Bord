@@ -5,9 +5,7 @@ import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import * as React from 'react';
 
 import { Button } from '$ui/button';
-import { Separator } from '$ui/separator';
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '$ui/sheet';
-import { Skeleton } from '$ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
@@ -621,24 +619,6 @@ function SidebarGroupLabel({
   );
 }
 
-function SidebarGroupAction({
-  className,
-  ...props
-}: React.ComponentProps<'button'>): React.ReactNode {
-  return (
-    <button
-      data-sidebar="group-action"
-      data-slot="sidebar-group-action"
-      type="button"
-      className={cn(
-        'text-sidebar-foreground/65 hover:bg-sidebar-accent/45 hover:text-sidebar-accent-foreground focus-visible:ring-sidebar-ring absolute top-1 right-1 flex size-11 items-center justify-center rounded-lg border border-transparent transition-colors outline-none group-data-[collapsible=icon]/sidebar:hidden focus-visible:ring-2 lg:top-3 lg:right-3 lg:size-7',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
 function SidebarGroupContent({
   className,
   ...props
@@ -753,46 +733,6 @@ function SidebarMenuAction({
   );
 }
 
-function SidebarMenuBadge({
-  className,
-  ...props
-}: React.ComponentProps<'div'>): React.ReactNode {
-  return (
-    <div
-      data-sidebar="menu-badge"
-      data-slot="sidebar-menu-badge"
-      className={cn(
-        'text-sidebar-foreground/95 border-sidebar-border/70 bg-sidebar-accent/30 pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-full border px-1 text-xs font-medium group-data-[collapsible=icon]/sidebar:hidden',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
-function SidebarMenuSkeleton({
-  className,
-  showIcon = false,
-  ...props
-}: React.ComponentProps<'div'> & {
-  showIcon?: boolean;
-}): React.ReactNode {
-  return (
-    <div
-      data-sidebar="menu-skeleton"
-      data-slot="sidebar-menu-skeleton"
-      className={cn(
-        'flex h-10 items-center gap-2.5 rounded-xl px-3',
-        className,
-      )}
-      {...props}
-    >
-      {showIcon && <Skeleton className="size-4 rounded-md" />}
-      <Skeleton className="h-4 flex-1 rounded-full" />
-    </div>
-  );
-}
-
 function SidebarMenuSub({
   className,
   ...props
@@ -850,41 +790,23 @@ function SidebarMenuSubButton({
   );
 }
 
-function SidebarSeparator({
-  className,
-  ...props
-}: React.ComponentProps<typeof Separator>): React.ReactNode {
-  return (
-    <Separator
-      data-sidebar="separator"
-      data-slot="sidebar-separator"
-      className={cn('bg-sidebar-border/70 mx-3 w-auto', className)}
-      {...props}
-    />
-  );
-}
-
 export {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuAction,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
-  SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 };

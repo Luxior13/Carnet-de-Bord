@@ -1,13 +1,9 @@
 import { FEATURES } from '$constants/feature-registry.constants';
 import {
-  DEFAULT_ROLE_LABEL,
   getAccessLabel as getPermissionAccessLabel,
-  getRoleLabel as getPermissionRoleLabel,
   hasPermission,
   isKnownPermissionKey,
   type PermissionsData,
-  PROTECTED_ROLE_LABEL,
-  ROLE_LABELS,
 } from '$constants/permissions.constants';
 import { RESERVED_PLANNED_HREFS } from '$constants/reserved-planned-hrefs.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
@@ -28,7 +24,6 @@ export const SITE_CONFIG = {
   tag: 'NC',
 };
 
-export { DEFAULT_ROLE_LABEL, PROTECTED_ROLE_LABEL, ROLE_LABELS };
 export type {
   NavigationAvailability,
   NavigationAvailabilityFilter,
@@ -121,8 +116,6 @@ export const NAV_SPACES: NavigationSpace[] = [
 export const NAV_SECTIONS: NavSection[] = NAV_SPACES.flatMap(
   (space) => space.sections,
 );
-
-export const getRoleLabel = getPermissionRoleLabel;
 
 export function getNavigationAvailability(
   item: NavItem,
@@ -242,7 +235,7 @@ function isPathInSpace(pathname: string, space: NavigationSpace): boolean {
   );
 }
 
-export function filterNavigationSpace(
+function filterNavigationSpace(
   space: NavigationSpace,
   user: NavigationUser,
   availability: NavigationAvailabilityFilter = 'live',
@@ -268,7 +261,7 @@ export function filterNavigationSpace(
   };
 }
 
-export function flattenNavItems(items: readonly NavItem[]): NavItem[] {
+function flattenNavItems(items: readonly NavItem[]): NavItem[] {
   return items.flatMap((item) => [
     item,
     ...flattenNavItems(item.children ?? []),

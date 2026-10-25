@@ -93,7 +93,7 @@ const backup = (rows: Rows): string => {
     stringifyBackupRecord({
       backupId: '123e4567-e89b-42d3-a456-426614174000',
       createdAt: '2026-10-13T01:00:00.000Z',
-      formatVersion: 9,
+      formatVersion: 10,
       requiredAuditEncryptionKeyVersions: [1],
       tables: DATABASE_BACKUP_TABLES.map(({ property, tableName }) => ({
         property,
@@ -204,10 +204,20 @@ test('rejects authenticated audit plaintext that the reader cannot parse', async
   await assert.rejects(preflight({ auditFieldChanges: [audit('not-json')] }));
 });
 
-test('rejects unsupported MFA key versions', async () => {
+test('authenticates each TOTP secret with the key of its own version', async () => {
+  const rotated = { totpCredentials: [{ ...totp(), secretKeyVersion: 2 }] };
   await assert.rejects(
-    preflight({ totpCredentials: [{ ...totp(), secretKeyVersion: 2 }] }),
-    /Unsupported TOTP encryption key version/u,
+    preflight(rotated),
+    /MFA_ENCRYPTION_KEY_V2 must contain/u,
+  );
+  await preflight(rotated, {
+    ...environment,
+    MFA_ENCRYPTION_KEY_V1: undefined,
+    MFA_ENCRYPTION_KEY_V2: key.toString('base64'),
+  });
+  await assert.rejects(
+    preflight({ totpCredentials: [{ ...totp(), secretKeyVersion: 0 }] }),
+    /Invalid TOTP encryption key version/u,
   );
 });
 

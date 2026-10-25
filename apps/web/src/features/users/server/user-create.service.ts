@@ -7,8 +7,8 @@ import {
   type AuditLogInput,
   createAuditLog,
   getAuditRequestContext,
-  hashPassword,
-} from '$server/auth';
+} from '$server/audit-log';
+import { hashPassword } from '$server/password';
 import { prisma } from '$server/prisma';
 import { hasRecentSensitiveActionProof } from '$server/sensitive-action';
 import {

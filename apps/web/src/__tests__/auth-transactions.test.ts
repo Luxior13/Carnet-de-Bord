@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createUser } from '$features/users/server/user-create.service';
@@ -25,15 +26,16 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
-    bcryptCompare: vi.fn(),
-    bcryptHash: vi.fn(),
     cookieStore: {
       delete: vi.fn(),
       get: vi.fn(),
       set: vi.fn(),
     },
     loggerError: vi.fn(),
+    passwordHash: vi.fn(),
+    passwordVerify: vi.fn(),
     prisma: {
+      $executeRaw: vi.fn(),
       $transaction: vi.fn(),
       auditLog: { create: vi.fn() },
       session: {
@@ -53,11 +55,15 @@ const mocks = vi.hoisted(() => {
 
 vi.mock('server-only', () => ({}));
 
-vi.mock('bcryptjs', () => ({
-  default: {
-    compare: mocks.bcryptCompare,
-    hash: mocks.bcryptHash,
-  },
+vi.mock('@node-rs/argon2', () => ({
+  hash: mocks.passwordHash,
+  parseOptions: (): Record<string, number> => ({
+    memoryCost: 19_456,
+    parallelism: 1,
+    timeCost: 2,
+  }),
+  verify: (passwordHash: string, password: string): Promise<boolean> =>
+    mocks.passwordVerify(password, passwordHash),
 }));
 
 vi.mock('next/headers', () => ({
@@ -84,30 +90,32 @@ vi.mock('$server/prisma', () => ({
   prisma: mocks.prisma,
 }));
 
+import { createAuditLog } from '$server/audit-log';
+import {
+  ProtectedAccountMutationError,
+  SecurityVersionMismatchError,
+} from '$server/auth-errors';
 import {
   authenticateUser,
-  createAuditLog,
+  resetUserPassword,
+  updateUserPassword,
+} from '$server/password';
+import {
   createSession,
   getAuthSession,
   getPageAuthSession,
-  ProtectedAccountMutationError,
-  resetUserPassword,
-  SecurityVersionMismatchError,
-  updateUserPassword,
-} from '$server/auth';
+} from '$server/session';
 
 const SESSION_USER = {
   contactEmail: 'user@example.com',
   contactEmailVerifiedAt: new Date('2026-01-02T00:00:00.000Z'),
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  failedLoginAttempts: 0,
   firstName: 'Jean',
   id: 'user-1',
   isActive: true,
   isProtected: false,
   lastLoginAt: new Date('2026-07-01T00:00:00.000Z'),
   lastName: 'Dupont',
-  lockedUntil: null,
   loginName: 'user.name',
   mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z') as Date | null,
   mustChangePassword: false,
@@ -166,7 +174,7 @@ const acceptSessionPrecondition = (): Promise<void> => Promise.resolve();
 describe('auth security transactions', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    mocks.bcryptHash.mockImplementation(
+    mocks.passwordHash.mockImplementation(
       async (password: string) => `hash:${password}`,
     );
     mocks.prisma.$transaction.mockImplementation(
@@ -712,7 +720,11 @@ describe('auth security transactions', () => {
       where: { token: 'stored-session-hash' },
     });
     expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
-    expect(mocks.cookieStore.delete).toHaveBeenCalledWith('session');
+    expect(mocks.cookieStore.set).toHaveBeenCalledWith(
+      'session',
+      '',
+      expect.objectContaining({ maxAge: 0, path: '/' }),
+    );
   });
 
   it('deletes a session issued under an obsolete security version', async () => {
@@ -735,7 +747,11 @@ describe('auth security transactions', () => {
       },
     });
     expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
-    expect(mocks.cookieStore.delete).toHaveBeenCalledWith('session');
+    expect(mocks.cookieStore.set).toHaveBeenCalledWith(
+      'session',
+      '',
+      expect.objectContaining({ maxAge: 0, path: '/' }),
+    );
   });
 
   it('does not mutate an invalid cookie while checking a Server Component page', async () => {
@@ -962,29 +978,21 @@ describe('auth security transactions', () => {
     expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
   });
 
-  it('migrates a legacy plaintext token with an idempotent update', async () => {
-    const legacyToken = 'a'.repeat(52);
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-07-13T12:00:00.000Z'));
-    mocks.cookieStore.get.mockReturnValue({ value: legacyToken });
-    mocks.prisma.session.findUnique
-      .mockResolvedValueOnce(null)
-      .mockResolvedValueOnce(
-        buildStoredSession({
-          lastSeenAt: new Date('2026-07-13T12:00:00.000Z'),
-          token: legacyToken,
-        }),
-      );
+  it('looks a cookie up by its hash only, never by its clear value', async () => {
+    const cookieToken = 'a'.repeat(52);
+    mocks.cookieStore.get.mockReturnValue({ value: cookieToken });
+    mocks.prisma.session.findUnique.mockResolvedValueOnce(null);
 
     const result = await getAuthSession(false);
 
-    expect(mocks.prisma.session.findUnique).toHaveBeenCalledTimes(2);
-    expect(mocks.prisma.session.updateMany).toHaveBeenCalledWith({
-      data: { token: expect.not.stringMatching(legacyToken) },
-      where: { token: legacyToken },
-    });
-    expect(result.session?.token).not.toBe(legacyToken);
-    expect(result.user?.id).toBe('user-1');
+    expect(mocks.prisma.session.findUnique).toHaveBeenCalledTimes(1);
+    expect(mocks.prisma.session.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { token: expect.stringMatching(/^[0-9a-f]{64}$/) },
+      }),
+    );
+    expect(mocks.prisma.session.updateMany).not.toHaveBeenCalled();
+    expect(result).toEqual({ session: null, user: null });
   });
 
   it('caps the refreshed idle limit at the absolute expiration', async () => {
@@ -1023,7 +1031,11 @@ describe('auth security transactions', () => {
       rateLimitKey: 'password-change:user-1',
     });
 
-    expect(mocks.bcryptHash).toHaveBeenCalledWith(' NewPassword1! ', 12);
+    expect(mocks.passwordHash).toHaveBeenCalledWith(' NewPassword1! ', {
+      memoryCost: 19_456,
+      parallelism: 1,
+      timeCost: 2,
+    });
     expect(mocks.prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -1040,20 +1052,13 @@ describe('auth security transactions', () => {
       },
       where: {
         securityVersion: 3,
-        token: {
-          in: ['current-session-hash', expect.stringMatching(/^[0-9a-f]{64}$/)],
-        },
+        token: 'current-session-hash',
         userId: 'user-1',
       },
     });
     expect(mocks.transaction.session.deleteMany).toHaveBeenCalledWith({
       where: {
-        token: {
-          notIn: [
-            'current-session-hash',
-            expect.stringMatching(/^[0-9a-f]{64}$/),
-          ],
-        },
+        token: { not: 'current-session-hash' },
         userId: 'user-1',
       },
     });
@@ -1106,14 +1111,12 @@ describe('auth security transactions', () => {
       contactEmailVerifiedAt: null,
       createdAt: new Date('2026-07-12T00:00:00.000Z'),
       deletedAt: null,
-      failedLoginAttempts: 0,
       firstName: 'New',
       id: 'new-user',
       isActive: true,
       isProtected: false,
       lastLoginAt: null,
       lastName: 'User',
-      lockedUntil: null,
       loginName: 'new.user',
       mustChangePassword: true,
       passwordChangedAt: null,
@@ -1241,7 +1244,6 @@ describe('auth security transactions', () => {
     expect(mocks.transaction.user.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          failedLoginAttempts: 0,
           mustChangePassword: true,
           securityVersion: { increment: 1 },
         }),
@@ -1307,31 +1309,29 @@ describe('auth security transactions', () => {
     ).rejects.toThrow('audit unavailable');
   });
 
-  it('locks and audits the fifth failed login atomically', async () => {
-    mocks.bcryptCompare.mockResolvedValueOnce(false);
+  // The per-account lock was removed on 24 October 2026 (REV-01): failures
+  // are bounded by the login rate limiter only, so no attempt may write to the
+  // account row, whatever its outcome.
+  it('never writes to the account row when the password is wrong', async () => {
+    mocks.passwordVerify.mockResolvedValueOnce(false);
     mocks.prisma.user.findUnique.mockResolvedValueOnce({
       contactEmail: 'user@example.com',
       contactEmailVerifiedAt: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
-      failedLoginAttempts: 4,
       firstName: 'Jean',
       id: 'user-1',
       isActive: true,
       isProtected: false,
       lastLoginAt: null,
       lastName: 'Dupont',
-      lockedUntil: null,
       loginName: 'user.name',
       mustChangePassword: false,
       passwordChangedAt: null,
-      passwordHash: 'stored-hash',
+      passwordHash: '$argon2id$stored-hash',
       permissions: null,
       role: 'USER',
       securityVersion: 3,
     });
-    mocks.transaction.user.update
-      .mockResolvedValueOnce({ failedLoginAttempts: 5 })
-      .mockResolvedValueOnce({ id: 'user-1' });
 
     const result = await authenticateUser('USER.NAME', 'Wrong1!');
 
@@ -1340,50 +1340,32 @@ describe('auth security transactions', () => {
         where: { deletedAt: null, loginName: 'user.name' },
       }),
     );
-
-    expect(result).toMatchObject({
-      error: 'ACCOUNT_LOCKED',
+    expect(result).toEqual({
+      error: 'INVALID_CREDENTIALS',
       success: false,
       userId: 'user-1',
     });
-    expect(mocks.transaction.user.update).toHaveBeenNthCalledWith(1, {
-      data: { failedLoginAttempts: { increment: 1 } },
-      select: { failedLoginAttempts: true },
-      where: { id: 'user-1' },
-    });
-    expect(mocks.transaction.user.update).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        data: { lockedUntil: expect.any(Date) },
-      }),
-    );
-    expect(mocks.transaction.auditLog.create).toHaveBeenCalledWith({
-      data: expect.objectContaining({
-        action: 'ACCOUNT_LOCKED',
-        targetUserId: 'user-1',
-        userId: null,
-      }),
-    });
+    expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.prisma.user.update).not.toHaveBeenCalled();
+    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
   });
 
-  it('does not persist failed-attempt or lock mutations on the protected root account', async () => {
-    mocks.bcryptCompare.mockResolvedValueOnce(false);
+  it('treats the protected root account like any other on failure', async () => {
+    mocks.passwordVerify.mockResolvedValueOnce(false);
     mocks.prisma.user.findUnique.mockResolvedValueOnce({
       contactEmail: 'root@example.com',
       contactEmailVerifiedAt: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
-      failedLoginAttempts: 0,
       firstName: 'Lucas',
       id: 'root-user',
       isActive: true,
       isProtected: true,
       lastLoginAt: null,
       lastName: 'These',
-      lockedUntil: null,
       loginName: 'superadmin',
       mustChangePassword: false,
       passwordChangedAt: null,
-      passwordHash: 'stored-hash',
+      passwordHash: '$argon2id$stored-hash',
       permissions: null,
       role: 'ADMIN',
       securityVersion: 3,
@@ -1398,46 +1380,104 @@ describe('auth security transactions', () => {
     });
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.prisma.user.update).not.toHaveBeenCalled();
-    expect(mocks.transaction.user.update).not.toHaveBeenCalled();
-    expect(mocks.transaction.auditLog.create).not.toHaveBeenCalled();
   });
 
-  it('returns cleaned login state after an expired lock with one update', async () => {
-    mocks.bcryptCompare.mockResolvedValueOnce(true);
+  it('reports a disabled account without writing to it', async () => {
+    mocks.passwordVerify.mockResolvedValueOnce(true);
     mocks.prisma.user.findUnique.mockResolvedValueOnce({
       contactEmail: 'user@example.com',
       contactEmailVerifiedAt: null,
       createdAt: new Date('2026-01-01T00:00:00.000Z'),
-      failedLoginAttempts: 5,
+      firstName: 'Jean',
+      id: 'user-1',
+      isActive: false,
+      isProtected: false,
+      lastLoginAt: null,
+      lastName: 'Dupont',
+      loginName: 'user.name',
+      mustChangePassword: false,
+      passwordChangedAt: null,
+      passwordHash: '$argon2id$stored-hash',
+      permissions: null,
+      role: 'USER',
+      securityVersion: 3,
+    });
+
+    const result = await authenticateUser('user.name', 'Correct1!');
+
+    expect(result).toEqual({
+      error: 'ACCOUNT_DISABLED',
+      success: false,
+      userId: 'user-1',
+    });
+    expect(mocks.prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('authenticates a valid password without any account-row write', async () => {
+    mocks.passwordVerify.mockResolvedValueOnce(true);
+    mocks.prisma.user.findUnique.mockResolvedValueOnce({
+      contactEmail: 'user@example.com',
+      contactEmailVerifiedAt: null,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
       firstName: 'Jean',
       id: 'user-1',
       isActive: true,
       isProtected: false,
       lastLoginAt: null,
       lastName: 'Dupont',
-      lockedUntil: new Date('2020-01-01T00:00:00.000Z'),
       loginName: 'user.name',
       mustChangePassword: false,
       passwordChangedAt: null,
-      passwordHash: 'stored-hash',
+      passwordHash: '$argon2id$stored-hash',
       permissions: null,
       role: 'USER',
       securityVersion: 3,
     });
-    mocks.prisma.user.update.mockResolvedValueOnce({ id: 'user-1' });
 
     const result = await authenticateUser('user.name', 'Correct1!');
 
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.user.failedLoginAttempts).toBe(0);
-      expect(result.user.lockedUntil).toBeNull();
-    }
-    expect(mocks.prisma.user.update).toHaveBeenCalledTimes(1);
-    expect(mocks.prisma.user.update).toHaveBeenCalledWith({
-      data: { failedLoginAttempts: 0, lockedUntil: null },
-      where: { id: 'user-1' },
-    });
+    expect(mocks.prisma.user.update).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
+    expect(mocks.prisma.$executeRaw).not.toHaveBeenCalled();
+  });
+
+  it('upgrades a legacy bcrypt hash to argon2id once the password is proved', async () => {
+    const legacyHash = await bcrypt.hash('Correct1!', 4);
+    mocks.prisma.user.findUnique.mockResolvedValueOnce({
+      id: 'user-1',
+      isActive: true,
+      passwordHash: legacyHash,
+    });
+
+    const result = await authenticateUser('user.name', 'Correct1!');
+
+    expect(result.success).toBe(true);
+    expect(mocks.passwordVerify).not.toHaveBeenCalled();
+    expect(mocks.passwordHash).toHaveBeenCalledWith('Correct1!', {
+      memoryCost: 19_456,
+      parallelism: 1,
+      timeCost: 2,
+    });
+    // Only the hash changes, and only if it is still the proved one.
+    const [query, ...values] = mocks.prisma.$executeRaw.mock.calls[0] ?? [];
+    expect((query as string[]).join('?')).toContain('SET "passwordHash" = ?');
+    expect((query as string[]).join('?')).not.toContain('updatedAt');
+    expect(values).toEqual(['hash:Correct1!', 'user-1', legacyHash]);
+    expect(mocks.prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it('refuses a legacy bcrypt proof longer than bcrypt ever stored', async () => {
+    const password = 'a'.repeat(72);
+    mocks.prisma.user.findUnique.mockResolvedValueOnce({
+      id: 'user-1',
+      isActive: true,
+      passwordHash: await bcrypt.hash(password, 4),
+    });
+
+    const result = await authenticateUser('user.name', `${password}suffix`);
+
+    expect(result.success).toBe(false);
+    expect(mocks.prisma.$executeRaw).not.toHaveBeenCalled();
   });
 });

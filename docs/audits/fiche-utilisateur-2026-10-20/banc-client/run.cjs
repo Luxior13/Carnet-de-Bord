@@ -684,6 +684,48 @@ async function main() {
     },
     { section: "security", sessionsMode: "error" },
   );
+  for (const width of [390, 1440]) {
+    await run(
+      "temporary-password-in-card",
+      width,
+      async ({ page }) => {
+        await page
+          .getByRole("button", {
+            name: "Réinitialiser le mot de passe",
+            exact: true,
+          })
+          .click();
+        await page
+          .getByRole("alertdialog")
+          .getByRole("button", { name: "Réinitialiser", exact: true })
+          .click();
+        // The result replaces the reset action inside the Password card.
+        const card = page.locator(
+          '[aria-labelledby="user-security-password-heading"]',
+        );
+        await expect(
+          card.getByRole("heading", {
+            name: "Mot de passe temporaire à transmettre",
+          }),
+        ).toBeVisible();
+        await expect(
+          card.getByRole("button", { name: "Réinitialiser le mot de passe" }),
+        ).toHaveCount(0);
+        await card
+          .getByRole("button", { name: "Copier le mot de passe temporaire" })
+          .click();
+        await expect(
+          card.getByRole("button", { name: "Terminer et masquer" }),
+        ).toBeDisabled();
+        await page.screenshot({
+          path: path.join(work, "temporary-password-in-card-" + width + ".png"),
+          fullPage: true,
+        });
+        return noOverflow(page);
+      },
+      { section: "security" },
+    );
+  }
   await run(
     "secret-copy-stale-result",
     390,

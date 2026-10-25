@@ -314,10 +314,19 @@ async function main() {
         await opener.click();
         const dialog = page.getByRole("dialog");
         await expect(dialog.locator("#currentPassword")).toBeFocused();
-        for (const input of await dialog.locator("input").all()) {
-          await expect(input).toHaveAttribute("autocomplete", "off");
-          await expect(input).toHaveAttribute("data-bwignore", "true");
+        // Since 25 October 2026 (REV-07), password managers may fill the
+        // authentication fields; no ignore attribute remains on them.
+        const expected = {
+          confirmPassword: "new-password",
+          currentPassword: "current-password",
+          newPassword: "new-password",
+        };
+        for (const [id, token] of Object.entries(expected)) {
+          const input = dialog.locator("#" + id);
+          await expect(input).toHaveAttribute("autocomplete", token);
+          await expect(input).not.toHaveAttribute("data-bwignore", "true");
         }
+        await expect(dialog.locator("#password-rules li")).toHaveCount(3);
         await dialog
           .getByRole("button", { name: "Annuler", exact: true })
           .click();
@@ -400,6 +409,29 @@ async function main() {
     },
     security,
   );
+  for (const width of [390, 1440]) {
+    await run(
+      "password-rules-feedback",
+      width,
+      async ({ page }) => {
+        await page
+          .getByRole("button", { name: "Changer le mot de passe", exact: true })
+          .click();
+        const dialog = page.getByRole("dialog");
+        const rules = dialog.locator("#password-rules li");
+        await expect(rules.filter({ hasText: "à respecter" })).toHaveCount(3);
+        await dialog.locator("#newPassword").fill("Noctambule 26");
+        await expect(rules.nth(0)).toContainText("respectée");
+        await expect(rules.nth(1)).toContainText("respectée");
+        await expect(rules.nth(2)).toContainText("à respecter");
+        await expect(
+          dialog.getByRole("button", { name: "Changer le mot de passe" }),
+        ).toBeDisabled();
+        return noOverflow(page);
+      },
+      security,
+    );
+  }
   await run(
     "password-success-double-submit",
     390,

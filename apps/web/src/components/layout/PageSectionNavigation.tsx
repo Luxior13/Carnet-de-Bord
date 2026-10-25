@@ -214,7 +214,7 @@ export const PageSectionNavigation = <SectionId extends string>({
             aria-controls={viewportId}
             aria-disabled={!scrollState.canScrollLeft}
             aria-label="Afficher les sections précédentes"
-            className="h-12 w-10 rounded-[6px] focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
+            className="rounded-compact h-12 w-10 focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
             onClick={() => scrollSections(-1)}
             size="icon"
             type="button"
@@ -239,7 +239,7 @@ export const PageSectionNavigation = <SectionId extends string>({
                     <Link
                       aria-current={isActive ? 'page' : undefined}
                       className={cn(
-                        'focus-visible:ring-ring relative inline-flex min-h-12 shrink-0 items-center gap-2 rounded-t-[6px] border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
+                        'focus-visible:ring-ring rounded-t-compact relative inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
                         isActive
                           ? 'border-primary bg-surface-navigation-active text-foreground'
                           : 'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground border-transparent',
@@ -294,7 +294,7 @@ export const PageSectionNavigation = <SectionId extends string>({
             aria-controls={viewportId}
             aria-disabled={!scrollState.canScrollRight}
             aria-label="Afficher les sections suivantes"
-            className="h-12 w-10 rounded-[6px] focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
+            className="rounded-compact h-12 w-10 focus-visible:ring-inset aria-disabled:opacity-35 lg:h-12 lg:w-10"
             onClick={() => scrollSections(1)}
             size="icon"
             type="button"

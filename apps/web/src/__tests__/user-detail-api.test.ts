@@ -19,9 +19,12 @@ vi.mock('$server/rate-limiter', () => ({
 vi.mock('$server/prisma', () => ({
   prisma: { $transaction: mocks.transaction, user: { findUnique: mocks.find } },
 }));
-vi.mock('$server/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('$server/auth')>()),
+vi.mock('$server/audit-log', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/audit-log')>()),
   createAuditLogWithHeaders: mocks.audit,
+}));
+vi.mock('$server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/session')>()),
   getAuthSession: mocks.auth,
 }));
 
@@ -30,14 +33,12 @@ const row = {
   contactEmail: 'private@example.test',
   contactEmailVerifiedAt: new Date(revision),
   createdAt: new Date(revision),
-  failedLoginAttempts: 3,
   firstName: 'Fictif',
   id: 'target',
   isActive: true,
   isProtected: false,
   lastLoginAt: null,
   lastName: 'Exemple',
-  lockedUntil: new Date(revision),
   loginName: 'fictive.account',
   mfaEnabledAt: new Date(revision),
   mustChangePassword: true,

@@ -30,7 +30,7 @@ ce relevé n’est pas une revue de sécurité.
 | `/api/auth/mfa/setup` | POST, PUT | `account:manage_mfa`, `requireMfaEnabled` |
 | `/api/auth/mfa/recovery-codes` | POST | `account:manage_mfa`, `requireMfaEnabled` |
 | `/api/auth/sessions` | GET, DELETE | `account:manage_sessions` |
-| `/api/auth/step-up` | GET, POST, DELETE | `requireAuth`, `requireRecentPasswordReauthentication` |
+| `/api/auth/step-up` | POST | `requireAuth` ; mot de passe seul (`password`) ou mot de passe et code (`full`) ; GET et DELETE retirés le 24 octobre 2026 |
 
 ## Répertoire
 
@@ -56,8 +56,7 @@ Toutes ces routes répondent avec `withPrivateNoStore`.
 | `/api/users/[id]` | GET, PATCH, DELETE | `users:view`, `users:update_profile`, `users:update_login`, `users:update_contact`, `users:update_status`, `users:delete_account`, preuves récentes |
 | `/api/users/[id]/sessions` | GET, DELETE | `users:view_sessions`, `users:revoke_sessions`, preuve récente |
 | `/api/users/[id]/reset-password` | POST | `users:reset_password`, preuve récente |
-| `/api/users/[id]/reset-mfa` | POST | `requireAuth`, autorisation et preuve déléguées au service (récupération par le compte racine) |
-| `/api/users/[id]/audit` | GET | **Retirée** : répond 410 sans lecture, conservée volontairement ([SYS-03](constats.md)) |
+| `/api/users/[id]/reset-mfa` | POST | `requireAuth`, `users:reset_mfa` ; preuve, garde d'un administrateur cible et transaction dans le service |
 
 ## Système et observation
 

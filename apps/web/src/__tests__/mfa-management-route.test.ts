@@ -23,13 +23,19 @@ vi.mock('$server/api-auth', () => ({
   requirePermission: mocks.requirePermission,
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/session', () => ({
   createSession: mocks.createSession,
   generateSessionToken: mocks.generateSessionToken,
-  isSecurityVersionMismatchError: vi.fn(() => false),
-  mapUserToUserType: vi.fn(),
-  SecurityVersionMismatchError: class SecurityVersionMismatchError extends Error {},
   setSessionTokenCookie: vi.fn(),
+}));
+vi.mock('$server/auth-errors', () => ({
+  isSecurityVersionMismatchError: vi.fn(() => false),
+  SecurityVersionMismatchError: class SecurityVersionMismatchError extends Error {},
+}));
+vi.mock('$server/user-projection', () => ({
+  mapUserToUserType: vi.fn(),
+}));
+vi.mock('$server/password', () => ({
   verifyPassword: vi.fn(),
 }));
 
@@ -50,7 +56,7 @@ vi.mock('$server/prisma', () => ({
 }));
 
 vi.mock('$server/rate-limiter', () => ({
-  recordLoginAttempt: vi.fn(),
+  clearRateLimit: vi.fn(),
   reserveSensitiveActionRateLimit: vi.fn(),
 }));
 
@@ -83,24 +89,12 @@ describe('/api/auth/mfa management invariants', () => {
     mocks.prisma.mfaRecoveryCode.count.mockResolvedValue(0);
   });
 
-  it('refuses to disable MFA for every administrator before parsing secrets', async () => {
-    mocks.requireAuth.mockResolvedValue(
-      buildAuth({
-        id: 'admin-user',
-        isProtected: false,
-        mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z'),
-        role: 'ADMIN',
-      }),
-    );
-    const { DELETE } = await import('$app/api/auth/mfa/route');
+  // MFA is mandatory: the always-refusing DELETE had no caller and was
+  // removed on 25 October 2026, so the route only reads the state.
+  it('offers no way to disable MFA', async () => {
+    const route = await import('$app/api/auth/mfa/route');
 
-    const response = await DELETE();
-    const body = await response.json();
-
-    expect(response.status).toBe(403);
-    expect(body.error.message).toContain('obligatoire');
-    expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
-    expect(mocks.createSession).not.toHaveBeenCalled();
+    expect(Object.keys(route)).toEqual(['GET']);
   });
 
   it('reports MFA as mandatory for an administrator', async () => {
@@ -113,7 +107,9 @@ describe('/api/auth/mfa management invariants', () => {
     });
     const { GET } = await import('$app/api/auth/mfa/route');
 
-    const response = await GET();
+    const response = await GET(
+      new NextRequest('http://localhost/api/auth/mfa'),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -139,7 +135,9 @@ describe('/api/auth/mfa management invariants', () => {
     });
     const { GET } = await import('$app/api/auth/mfa/route');
 
-    const response = await GET();
+    const response = await GET(
+      new NextRequest('http://localhost/api/auth/mfa'),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -157,7 +155,9 @@ describe('/api/auth/mfa management invariants', () => {
     });
     const { GET } = await import('$app/api/auth/mfa/route');
 
-    const response = await GET();
+    const response = await GET(
+      new NextRequest('http://localhost/api/auth/mfa'),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -167,23 +167,6 @@ describe('/api/auth/mfa management invariants', () => {
     });
   });
 
-  it('refuses to disable MFA for an ordinary USER', async () => {
-    mocks.requireAuth.mockResolvedValue(
-      buildAuth({
-        mfaEnabledAt: new Date('2026-07-10T12:00:00.000Z'),
-      }),
-    );
-    const { DELETE } = await import('$app/api/auth/mfa/route');
-
-    const response = await DELETE();
-    const body = await response.json();
-
-    expect(response.status).toBe(403);
-    expect(body.error.message).toContain('obligatoire');
-    expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
-    expect(mocks.createSession).not.toHaveBeenCalled();
-  });
-
   it('reports an inconsistent MFA marker/credential state instead of masking it', async () => {
     mocks.requireAuth.mockResolvedValue(buildAuth());
     mocks.prisma.totpCredential.findUnique.mockResolvedValue({
@@ -191,7 +174,9 @@ describe('/api/auth/mfa management invariants', () => {
     });
     const { GET } = await import('$app/api/auth/mfa/route');
 
-    const response = await GET();
+    const response = await GET(
+      new NextRequest('http://localhost/api/auth/mfa'),
+    );
     const body = await response.json();
 
     expect(response.status).toBe(409);

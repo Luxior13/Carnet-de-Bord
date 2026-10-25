@@ -6,7 +6,7 @@ import { Prisma } from '@prisma/client';
 
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PERMISSIONS } from '$constants/permissions.constants';
-import { createAuditLogWithHeaders } from '$server/auth';
+import { createAuditLogWithHeaders } from '$server/audit-log';
 import { prisma } from '$server/prisma';
 import {
   assertUserActionProof,
@@ -78,13 +78,11 @@ export const deleteUserPermanently = async ({
         contactEmail: null,
         contactEmailVerifiedAt: null,
         deletedAt,
-        failedLoginAttempts: 0,
         firstName: 'Compte',
         isActive: false,
         isProtected: false,
         lastLoginAt: null,
         lastName: 'supprimé',
-        lockedUntil: null,
         loginName: deletedLoginName,
         mfaEnabledAt: null,
         mustChangePassword: false,
@@ -108,9 +106,6 @@ export const deleteUserPermanently = async ({
       throw new UserDeletionStateChangedError();
     }
 
-    await transaction.archivedStaffProfile.deleteMany({
-      where: { userId },
-    });
     await transaction.mfaLoginChallenge.deleteMany({ where: { userId } });
     await transaction.mfaRecoveryCode.deleteMany({ where: { userId } });
     await transaction.session.deleteMany({ where: { userId } });

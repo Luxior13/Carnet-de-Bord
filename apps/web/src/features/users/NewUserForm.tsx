@@ -106,7 +106,7 @@ export const NewUserForm: FC<{
               createdUser ? (
                 <UserAvatar
                   user={createdUser}
-                  className="size-full rounded-[7px]"
+                  className="rounded-tile size-full"
                 />
               ) : (
                 <UserPlus />

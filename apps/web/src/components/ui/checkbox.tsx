@@ -12,7 +12,7 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer border-border-control bg-input data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground focus-visible:border-ring focus-visible:ring-ring aria-invalid:border-destructive aria-invalid:ring-destructive/20 hover:border-ring/70 dark:aria-invalid:ring-destructive/40 relative size-4 shrink-0 rounded-[4px] border shadow-none transition-[border-color,background-color,box-shadow] outline-none after:absolute after:-inset-3 after:content-[''] focus-visible:ring-[length:var(--ring-width)] disabled:cursor-not-allowed disabled:opacity-50 lg:after:inset-0",
+        "peer border-border-control bg-input data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground focus-visible:border-ring focus-visible:ring-ring aria-invalid:border-destructive aria-invalid:ring-destructive/20 hover:border-ring/70 dark:aria-invalid:ring-destructive/40 rounded-option relative size-4 shrink-0 border shadow-none transition-[border-color,background-color,box-shadow] outline-none after:absolute after:-inset-3 after:content-[''] focus-visible:ring-[length:var(--ring-width)] disabled:cursor-not-allowed disabled:opacity-50 lg:after:inset-0",
         className,
       )}
       {...props}

@@ -146,7 +146,7 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   permission,
 }) => (
   // The text keeps a readable measure; the switch sits on the right edge.
-  <div className="border-border-divider bg-surface-content flex items-start justify-between gap-4 rounded-[6px] border p-3">
+  <div className="border-border-divider bg-surface-content rounded-compact flex items-start justify-between gap-4 border p-3">
     <div className="max-w-3xl min-w-0 space-y-1">
       <h3 className="text-foreground text-sm font-semibold">
         {permission.label}

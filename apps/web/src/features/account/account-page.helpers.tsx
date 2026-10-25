@@ -13,20 +13,8 @@ import {
 import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
-import type { GuardedNavigationAction } from '$utils/guarded-navigation.utils';
 
 export type AccountSectionId = 'activity' | 'profile' | 'security';
-
-export type AccountPendingNavigation =
-  | {
-      action?: GuardedNavigationAction;
-      href: string;
-      kind: 'href';
-    }
-  | {
-      href: string;
-      kind: 'section';
-    };
 
 export const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
   {
@@ -68,40 +56,6 @@ export const buildAccountSectionHref = (
   return nextQueryString ? `${pathname}?${nextQueryString}` : pathname;
 };
 
-export const isPlainLeftClick = (event: MouseEvent): boolean =>
-  event.button === 0 &&
-  !event.metaKey &&
-  !event.altKey &&
-  !event.ctrlKey &&
-  !event.shiftKey;
-
-export const findAnchorElement = (
-  target: EventTarget | null,
-): HTMLAnchorElement | null => {
-  if (!(target instanceof Element)) return null;
-
-  return target.closest('a[href]');
-};
-
-export const isInternalNavigationLink = (
-  anchor: HTMLAnchorElement,
-): boolean => {
-  const target = anchor.getAttribute('target');
-  const href = anchor.getAttribute('href');
-
-  if (!href) return false;
-  if (target && target !== '_self') return false;
-  if (
-    href.startsWith('#') ||
-    href.startsWith('mailto:') ||
-    href.startsWith('tel:')
-  ) {
-    return false;
-  }
-
-  return anchor.origin === window.location.origin;
-};
-
 const getAccountDisplayName = (userData: UserType): string =>
   [userData.firstName, userData.lastName].filter(Boolean).join(' ').trim() ||
   userData.loginName;
@@ -115,7 +69,7 @@ export const AccountHeader: FC<{ returnHref?: string; userData: UserType }> = ({
     eyebrow="Mon compte"
     title={getAccountDisplayName(userData)}
     description={formatUserIdentityLine(userData, userData.loginName)}
-    icon={<UserAvatar user={userData} className="size-full rounded-[7px]" />}
+    icon={<UserAvatar user={userData} className="rounded-tile size-full" />}
     meta={<UserIdentityStatus user={userData} />}
     actions={
       <div className="flex flex-wrap items-center gap-3">

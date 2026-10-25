@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  executeRaw: vi.fn(),
   queryRaw: vi.fn(),
   rateLimitDeleteMany: vi.fn(),
   rateLimitFindUnique: vi.fn(),
@@ -14,7 +13,6 @@ vi.mock('server-only', () => ({}));
 
 vi.mock('$server/prisma', () => ({
   prisma: {
-    $executeRaw: mocks.executeRaw,
     $transaction: mocks.transaction,
     rateLimit: {
       deleteMany: mocks.rateLimitDeleteMany,
@@ -25,9 +23,9 @@ vi.mock('$server/prisma', () => ({
 }));
 
 import {
+  clearRateLimit,
   createLoginRateLimitKeys,
   createMfaRateLimitKeys,
-  recordLoginAttempt,
   recordSuccessfulLogin,
   reserveLoginRateLimits,
   reserveMfaRateLimits,
@@ -39,7 +37,6 @@ describe('login rate limiter', () => {
     vi.resetAllMocks();
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-07-14T12:00:00.000Z'));
-    mocks.executeRaw.mockResolvedValue(1);
     mocks.queryRaw.mockResolvedValue([{ blockedUntil: null, count: 1 }]);
     mocks.rateLimitDeleteMany.mockResolvedValue({ count: 0 });
     mocks.rateLimitFindUnique.mockResolvedValue(null);
@@ -174,8 +171,8 @@ describe('login rate limiter', () => {
       ])
       .mockResolvedValueOnce([
         {
-          blockedUntil: new Date('2026-07-14T12:30:00.000Z'),
-          count: 5,
+          blockedUntil: new Date('2026-07-14T12:15:00.000Z'),
+          count: 20,
         },
       ])
       .mockResolvedValueOnce([
@@ -188,6 +185,26 @@ describe('login rate limiter', () => {
     const result = await reserveLoginRateLimits(keys);
 
     expect(result).toEqual({ allowed: true, remainingAttempts: 0 });
+  });
+
+  it('lets the account bucket absorb more failures than one source can send', async () => {
+    const keys = createLoginRateLimitKeys('203.0.113.7', 'member.one');
+    // IP, account and pair buckets after a fifth failure from one source.
+    mocks.queryRaw
+      .mockResolvedValueOnce([{ blockedUntil: null, count: 5 }])
+      .mockResolvedValueOnce([{ blockedUntil: null, count: 5 }])
+      .mockResolvedValueOnce([
+        { blockedUntil: new Date('2026-07-14T12:30:00.000Z'), count: 5 },
+      ]);
+
+    await reserveLoginRateLimits(keys);
+
+    // The pair blocks at five (30 minutes); the account only at twenty, for
+    // one 15-minute window, so a single source can never block the account.
+    const [, accountCall, pairCall] = mocks.queryRaw.mock.calls;
+    expect(accountCall).toContain(20);
+    expect(accountCall).not.toContain(5);
+    expect(pairCall).toContain(5);
   });
 
   it('rolls every reservation back when one bucket is already blocked', async () => {
@@ -243,15 +260,12 @@ describe('login rate limiter', () => {
     expect(mocks.queryRaw).toHaveBeenCalledTimes(5);
   });
 
-  it('does not lose parallel increments to a read-then-write sequence', async () => {
-    await Promise.all(
-      Array.from({ length: 20 }, () =>
-        recordLoginAttempt('password-change:user-1', false),
-      ),
-    );
+  it('clears a sensitive-action bucket once its proof is verified', async () => {
+    await clearRateLimit('account-reauth:user-1');
 
-    expect(mocks.executeRaw).toHaveBeenCalledTimes(20);
-    expect(mocks.rateLimitFindUnique).not.toHaveBeenCalled();
+    expect(mocks.rateLimitDeleteMany).toHaveBeenCalledWith({
+      where: { key: 'account-reauth:user-1' },
+    });
   });
 
   it('atomically reserves one sensitive password check', async () => {

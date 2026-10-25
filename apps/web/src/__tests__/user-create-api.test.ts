@@ -18,9 +18,12 @@ vi.mock('$server/prisma', () => ({
 vi.mock('$server/rate-limiter', () => ({
   reserveAuthenticatedApiRateLimit: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('$server/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('$server/auth')>()),
+vi.mock('$server/temporary-password', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/temporary-password')>()),
   generateTemporaryPassword: mocks.generate,
+}));
+vi.mock('$server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/session')>()),
   getAuthSession: mocks.session,
 }));
 
@@ -43,14 +46,12 @@ const created = {
   contactEmail: null,
   contactEmailVerifiedAt: null,
   createdAt: new Date(),
-  failedLoginAttempts: 0,
   firstName: 'Fictif',
   id: 'new-account',
   isActive: true,
   isProtected: false,
   lastLoginAt: null,
   lastName: '',
-  lockedUntil: null,
   loginName: 'new.account',
   mfaEnabledAt: null,
   mustChangePassword: true,

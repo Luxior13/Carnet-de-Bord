@@ -183,7 +183,7 @@ export function RoadmapPage(): React.ReactNode {
           </Disclosure>
           <div
             ref={filtersRef}
-            className="border-border-content bg-surface-content-header grid gap-3 rounded-[10px] border p-4 @min-[44rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[44rem]/page:items-end"
+            className="border-border-content bg-surface-content-header rounded-panel grid gap-3 border p-4 @min-[44rem]/page:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] @min-[44rem]/page:items-end"
           >
             <div
               className={cn(
@@ -288,7 +288,7 @@ export function RoadmapPage(): React.ReactNode {
               <section
                 key={area.id}
                 aria-labelledby={`roadmap-area-${area.id}`}
-                className="border-border-content bg-surface-panel overflow-hidden rounded-[10px] border"
+                className="border-border-content bg-surface-panel rounded-panel overflow-hidden border"
               >
                 <div className="border-border-divider bg-surface-panel-header flex items-start gap-3 border-b px-4 py-4 @min-[40rem]/page:px-5">
                   <ServiceIcon className={cn('size-9', tone.icon)}>

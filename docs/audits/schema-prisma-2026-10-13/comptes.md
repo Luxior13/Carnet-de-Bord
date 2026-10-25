@@ -339,7 +339,7 @@ Ce lot n'a jamais accédé à la base de développement habituelle.
 [S]: ../../../packages/database/prisma/schema.prisma
 [PG]: preuves/catalogue-apres.json
 [PK]: ../../../packages/database/package.json
-[A]: ../../../apps/web/src/shared/server/auth.ts
+[A]: ../../systeme/architecture.md "auth.ts, réparti par responsabilité le 25 octobre 2026"
 [G]: ../../../apps/web/src/shared/server/user-action-authorization.ts
 [F]: ../../../apps/web/src/shared/server/mfa.ts
 [FS]: ../../../apps/web/src/app/api/auth/mfa/setup/route.ts

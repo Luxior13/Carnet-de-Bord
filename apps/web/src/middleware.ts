@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import { isPublicPagePath } from '$constants/security.constants';
+import {
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+  isPublicPagePath,
+  SESSION_COOKIE_NAME,
+} from '$constants/security.constants';
 import { checkRateLimit } from '$server/api-rate-limiter';
 import {
   getClientIp,
@@ -10,11 +15,8 @@ import {
   REQUEST_TARGET_HEADER,
 } from '$utils/request-context.utils';
 
-const CSRF_COOKIE = 'csrf-token';
-const CSRF_HEADER = 'x-csrf-token';
 const CSP_HEADER = 'Content-Security-Policy';
 const CSP_NONCE_HEADER = 'x-nonce';
-const SESSION_COOKIE = 'session';
 const CSRF_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const HEALTH_API_PATHS = new Set([
@@ -86,7 +88,6 @@ function addResponseHeaders(
   response.headers.set('X-DNS-Prefetch-Control', 'off');
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
-  response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
   response.headers.set(
     'Permissions-Policy',
@@ -184,10 +185,10 @@ export function middleware(request: NextRequest): NextResponse {
     );
 
     // Ensure CSRF cookie exists on every response
-    const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
+    const existingToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
     if (!isHealthEndpoint && !isValidToken(existingToken)) {
       const token = generateToken();
-      response.cookies.set(CSRF_COOKIE, token, {
+      response.cookies.set(CSRF_COOKIE_NAME, token, {
         httpOnly: false, // Must be readable by JS to send in header
         path: '/',
         sameSite: 'strict',
@@ -197,10 +198,15 @@ export function middleware(request: NextRequest): NextResponse {
 
     // Validate CSRF on mutation API requests
     if (!isHealthEndpoint && MUTATION_METHODS.has(request.method)) {
-      const cookieToken = request.cookies.get(CSRF_COOKIE)?.value;
-      const headerToken = request.headers.get(CSRF_HEADER);
+      const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
+      const headerToken = request.headers.get(CSRF_HEADER_NAME);
+      // Browsers state the origin relation of every request themselves. A
+      // mutation sent by another site is refused outright; a client without
+      // this header (scripts, tests) still needs the double-submit token.
+      const fetchSite = request.headers.get('sec-fetch-site');
 
       if (
+        (fetchSite !== null && fetchSite !== 'same-origin') ||
         !isValidToken(cookieToken) ||
         !isValidToken(headerToken) ||
         !tokensMatch(cookieToken, headerToken)
@@ -241,7 +247,7 @@ export function middleware(request: NextRequest): NextResponse {
   // Non-API routes
   if (
     !isPublicPagePath(request.nextUrl.pathname) &&
-    !request.cookies.get(SESSION_COOKIE)?.value
+    !request.cookies.get(SESSION_COOKIE_NAME)?.value
   ) {
     const loginUrl = request.nextUrl.clone();
     const requestedPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
@@ -263,10 +269,10 @@ export function middleware(request: NextRequest): NextResponse {
   );
 
   // Ensure CSRF cookie exists on every response
-  const existingToken = request.cookies.get(CSRF_COOKIE)?.value;
+  const existingToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
   if (!isValidToken(existingToken)) {
     const token = generateToken();
-    response.cookies.set(CSRF_COOKIE, token, {
+    response.cookies.set(CSRF_COOKIE_NAME, token, {
       httpOnly: false, // Must be readable by JS to send in header
       path: '/',
       sameSite: 'strict',

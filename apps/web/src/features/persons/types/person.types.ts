@@ -118,7 +118,7 @@ export type PersonMutationResponse = {
   person: PersonDetail;
 };
 
-export type PersonFieldHistoryItem = {
+type PersonFieldHistoryItem = {
   action: string;
   actor: PersonAuditActor;
   at: string;

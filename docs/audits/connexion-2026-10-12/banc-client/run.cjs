@@ -173,8 +173,20 @@ async function main() {
           lastpass: node.getAttribute("data-lpignore"),
         })),
       );
+    // Since 25 October 2026 (REV-07), authentication fields carry their
+    // autofill token; every other field, recovery codes included, stays off.
+    const tokens = [
+      "current-password",
+      "new-password",
+      "one-time-code",
+      "username",
+    ];
     for (const item of attributes) {
-      assert.equal(item.autocomplete, "off");
+      if (tokens.includes(item.autocomplete)) {
+        assert.equal(item.bitwarden, null);
+        continue;
+      }
+      assert.equal(item.autocomplete, "off", JSON.stringify(item));
       assert.equal(item.bitwarden, "true");
       assert.equal(item.onepassword, "true");
       assert.equal(item.lastpass, "true");
@@ -250,13 +262,6 @@ async function main() {
               throw new DOMException("Storage blocked", "SecurityError");
             },
           });
-      else
-        for (const key of [
-          "team-control:last-login-name",
-          "team-control:last-login-email",
-          "team-control:login-emails",
-        ])
-          localStorage.setItem(key, "ancien.fictif");
       if (options.fastTimeout) {
         const original = window.setTimeout.bind(window);
         window.setTimeout = (handler, delay, ...args) =>
@@ -574,17 +579,6 @@ async function main() {
       },
       { blockedStorage: true },
     );
-    await run("anciens-identifiants-effaces", 768, async (page) => {
-      await expect(loginField(page)).toHaveValue("");
-      const hints = await page.evaluate(() =>
-        [
-          "team-control:last-login-name",
-          "team-control:last-login-email",
-          "team-control:login-emails",
-        ].map((key) => localStorage.getItem(key)),
-      );
-      assert.deepEqual(hints, [null, null, null]);
-    });
     await run("erreurs-reseau-identifiants-reprise", 390, async (page, api) => {
       for (const mode of ["abort", "invalid-json", "429", "disabled"]) {
         await credentials(page);

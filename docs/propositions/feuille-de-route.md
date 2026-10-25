@@ -52,7 +52,7 @@ Clarifier la structure, les périmètres d’accès et les règles communes.
 
 - **Identité juridique & périmètres** (Structure) : Entité porteuse, identifiants, règles datées, assurances et responsabilités.
 - **Confidentialité, image & mineurs** (Structure) : Finalités, accès, conservation, demandes de droits et preuves d’autorisation selon le besoin.
-- **Accès & responsabilités métier** (Système) : Périmètres par entité/équipe, fonctions métier distinctes du rôle technique et attribution explicite des ressources personnelles.
+- **Accès & responsabilités métier** (Système) : Périmètres par entité/équipe, fonctions métier distinctes du rôle technique et attribution explicite des ressources personnelles. Modèle retenu le 25 octobre 2026 : liaison compte ↔ personne, affectations datées par portée et politique `can()` par module ([décision](../domaines/roles-metier.md#décision-du-25-octobre-2026--modèle-dautorisation-retenu-rev-15)).
 
 ## 2. Quotidien esport
 

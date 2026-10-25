@@ -12,7 +12,7 @@ type UserVisibilityActor = Pick<
   'id' | 'isProtected' | 'permissions' | 'role'
 >;
 
-export const isProtectedUserIdentityMasked = (
+const isProtectedUserIdentityMasked = (
   user: Pick<UserType, 'id' | 'isProtected'>,
   actor: ProtectedIdentityActor,
 ): boolean => user.isProtected && user.id !== actor.id;
@@ -48,12 +48,10 @@ export const protectUserIdentityForActor = (
     contactEmail: null,
     contactEmailVerifiedAt: null,
     criticalAccessReady: undefined,
-    failedLoginAttempts: 0,
     firstName: PROTECTED_USER_PUBLIC_FIRST_NAME,
     identityDetailsVisible: false,
     lastLoginAt: null,
     lastName: PROTECTED_USER_PUBLIC_LAST_NAME,
-    lockedUntil: null,
     loginName: PROTECTED_USER_MASKED_LOGIN_NAME,
     mfaEnabledAt: null,
     mustChangePassword: false,

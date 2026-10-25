@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
-import {
-  requireAnyPermission,
-  requireAuth,
-  requirePermission,
-} from '$server/api-auth';
+import { requireAuth, requirePermission } from '$server/api-auth';
 import { ErrorCode } from '$types/api.types';
 
 const { mockGetAuthSession, mockReserveAuthenticatedApiRateLimit } = vi.hoisted(
@@ -23,7 +19,7 @@ const { mockGetAuthSession, mockReserveAuthenticatedApiRateLimit } = vi.hoisted(
 
 vi.mock('server-only', () => ({}));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/session', () => ({
   getAuthSession: mockGetAuthSession,
 }));
 
@@ -37,14 +33,12 @@ const buildAuthUser = (
   contactEmail: 'user@example.com',
   contactEmailVerifiedAt: null,
   createdAt: new Date('2026-03-01T00:00:00.000Z'),
-  failedLoginAttempts: 0,
   firstName: 'Jean',
   id: 'user-1',
   isActive: true,
   isProtected: false,
   lastLoginAt: null,
   lastName: 'Dupont',
-  lockedUntil: null,
   loginName: 'user.test',
   mustChangePassword: false,
   passwordChangedAt: null,
@@ -90,9 +84,7 @@ describe('requireAuth', () => {
       user: buildAuthUser({ mustChangePassword: true }),
     });
 
-    const auth = await requireAuth(undefined, {
-      allowPasswordChangeRequired: true,
-    });
+    const auth = await requireAuth({ allowPasswordChangeRequired: true });
 
     expect(auth.success).toBe(true);
   });
@@ -135,16 +127,6 @@ describe('protected permission bypass', () => {
     const result = requirePermission(
       buildAuthUser({ isProtected: true }) as never,
       'users:veiw',
-    );
-
-    expect(result.success).toBe(false);
-    if (!result.success) expect(result.response.status).toBe(403);
-  });
-
-  it('fails closed when every alternative permission is unknown', () => {
-    const result = requireAnyPermission(
-      buildAuthUser({ isProtected: true }) as never,
-      ['users:veiw', 'audit:reed'],
     );
 
     expect(result.success).toBe(false);

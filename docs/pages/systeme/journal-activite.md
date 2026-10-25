@@ -3,8 +3,8 @@
 [Index des pages](../../pages/README.md) · [Espace Système](README.md) · [Design](../../design/README.md) · [Guide général](../../REFERENCE_GENERALE.md)
 
 > **Page retirée le 9 octobre 2026**, replanifiée (`planned` dans le registre des
-> fonctionnalités). Aucune route `page.tsx` ne l’affiche ; `GET /api/users/[id]/audit`
-> répond 410. Cette fiche conserve les décisions et constats pour sa reconstruction.
+> fonctionnalités). Aucune route `page.tsx` ne l’affiche ; l’ancien
+> `GET /api/users/[id]/audit` est supprimé depuis le 25 octobre 2026. Cette fiche conserve les décisions et constats pour sa reconstruction.
 
 ## Identité
 

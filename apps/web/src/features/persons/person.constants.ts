@@ -10,7 +10,7 @@ export const PERSON_STRUCTURE_STATUS_LABELS = {
   OUTSIDE_STRUCTURE: 'Hors structure',
 } as const satisfies Record<(typeof PERSON_STRUCTURE_STATUSES)[number], string>;
 
-export type PersonSocialNetworkStatus = 'active' | 'deprecated';
+type PersonSocialNetworkStatus = 'active' | 'deprecated';
 
 export type PersonSocialNetworkDefinition = {
   key: string;

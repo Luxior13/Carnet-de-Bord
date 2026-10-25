@@ -25,10 +25,20 @@ vi.mock('$features/persons/server/person-readiness', () => ({
 }));
 import { createReadinessResponse } from '$server/health';
 
+const MFA_KEY = Buffer.alloc(32, 3).toString('base64');
+let storedMfaKeyVersions: number[] = [];
+
 describe('readiness without a background worker', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.queryRaw.mockResolvedValue([{ ready: true }]);
+    vi.unstubAllEnvs();
+    vi.stubEnv('MFA_ENCRYPTION_KEY_V1', MFA_KEY);
+    storedMfaKeyVersions = [1];
+    mocks.queryRaw.mockImplementation(async (query: TemplateStringsArray) =>
+      query.join('').includes('secretKeyVersion')
+        ? storedMfaKeyVersions.map((version) => ({ version }))
+        : [{ ready: true }],
+    );
     mocks.isPersonSchemaCatalogReady.mockResolvedValue(true);
     mocks.auditEncryptionKeyVersion.findMany.mockResolvedValue([
       { version: 1 },
@@ -44,6 +54,7 @@ describe('readiness without a background worker', () => {
     expect(body).toMatchObject({
       checks: {
         database: 'connected',
+        mfa: 'ready',
         persons: 'ready',
         schema: 'ready',
       },
@@ -78,6 +89,34 @@ describe('readiness without a background worker', () => {
     });
   });
 
+  it('is unhealthy without the current MFA key, since no login can finish', async () => {
+    vi.stubEnv('MFA_ENCRYPTION_KEY_V1', '');
+
+    const response = await createReadinessResponse();
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({
+      checks: { mfa: 'not_configured', schema: 'ready' },
+      status: 'unhealthy',
+    });
+  });
+
+  it('requires the key of every version still stored after a rotation', async () => {
+    vi.stubEnv('MFA_ENCRYPTION_CURRENT_VERSION', '2');
+    vi.stubEnv('MFA_ENCRYPTION_KEY_V2', Buffer.alloc(32, 4).toString('base64'));
+    storedMfaKeyVersions = [1, 2];
+    expect((await createReadinessResponse()).status).toBe(200);
+
+    vi.stubEnv('MFA_ENCRYPTION_KEY_V1', '');
+    const response = await createReadinessResponse();
+    expect(response.status).toBe(503);
+    expect((await response.json()).checks.mfa).toBe('not_configured');
+
+    // Once every secret is re-encrypted, V1 can go.
+    storedMfaKeyVersions = [2];
+    expect((await createReadinessResponse()).status).toBe(200);
+  });
+
   it('returns 503 when the database check fails', async () => {
     mocks.queryRaw.mockRejectedValue(new Error('database unavailable'));
 
@@ -87,6 +126,7 @@ describe('readiness without a background worker', () => {
     expect(await response.json()).toMatchObject({
       checks: {
         database: 'disconnected',
+        mfa: 'unknown',
         persons: 'unknown',
         schema: 'unknown',
       },

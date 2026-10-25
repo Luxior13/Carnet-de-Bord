@@ -32,10 +32,10 @@ type RateLimitResult = {
 
 type RateLimitReservationClient = Pick<Prisma.TransactionClient, '$queryRaw'>;
 
-class LoginRateLimitDeniedError extends Error {
+class RateLimitDeniedError extends Error {
   constructor(readonly result: RateLimitResult) {
-    super('Login rate-limit reservation denied');
-    this.name = 'LoginRateLimitDeniedError';
+    super('Rate-limit reservation denied');
+    this.name = 'RateLimitDeniedError';
   }
 }
 
@@ -46,12 +46,18 @@ const DEFAULT_POLICY: RateLimitPolicy = {
 };
 
 /**
- * The pair bucket stops focused brute force, the account bucket stops a
- * distributed attack, and the wider IP allowance stops identifier rotation
- * without making a shared office/NAT too easy to lock accidentally.
+ * The pair bucket stops focused brute force and the wider IP allowance stops
+ * identifier rotation without making a shared office/NAT too easy to lock.
+ * The account bucket only caps a distributed attack: one source exhausts its
+ * pair bucket after five failures, so blocking an account requires at least
+ * four sources failing continuously, and the block lasts one window, not two.
  */
 const LOGIN_POLICIES = {
-  account: DEFAULT_POLICY,
+  account: {
+    blockDurationMs: 15 * 60 * 1000,
+    maxAttempts: 20,
+    windowMs: 15 * 60 * 1000,
+  },
   ip: {
     blockDurationMs: 30 * 60 * 1000,
     maxAttempts: 30,
@@ -128,8 +134,8 @@ export function createMfaRateLimitKeys(
 }
 
 /**
- * Stale rows do not affect correctness: checks ignore expired windows and the
- * next failed attempt resets its row atomically. Cleanup is therefore an
+ * Stale rows do not affect correctness: the next reservation of an expired
+ * window resets its row atomically. Cleanup is therefore an
  * infrequent, non-blocking maintenance task instead of work awaited by every
  * login request.
  */
@@ -155,118 +161,6 @@ const scheduleExpiredEntriesCleanup = (now: Date): void => {
       // Cleanup is best-effort and must not turn authentication into a 500.
       nextCleanupAt = 0;
     });
-};
-
-export async function checkRateLimit(
-  identifier: string,
-  policy: RateLimitPolicy = DEFAULT_POLICY,
-): Promise<RateLimitResult> {
-  const now = new Date();
-  scheduleExpiredEntriesCleanup(now);
-
-  const entry = await prisma.rateLimit.findUnique({
-    where: { key: identifier },
-  });
-
-  if (!entry) {
-    return {
-      allowed: true,
-      remainingAttempts: policy.maxAttempts,
-    };
-  }
-
-  if (entry.blockedUntil && now < entry.blockedUntil) {
-    return {
-      allowed: false,
-      remainingAttempts: 0,
-      retryAfter: Math.max(
-        1,
-        Math.ceil((entry.blockedUntil.getTime() - now.getTime()) / 1000),
-      ),
-    };
-  }
-
-  const windowExpired =
-    now.getTime() - entry.firstAttempt.getTime() >= policy.windowMs;
-
-  if (windowExpired || entry.blockedUntil) {
-    return {
-      allowed: true,
-      remainingAttempts: policy.maxAttempts,
-    };
-  }
-
-  // This also safely handles rows produced by an older implementation where
-  // the threshold was reached before blockedUntil was persisted.
-  if (entry.count >= policy.maxAttempts) {
-    return {
-      allowed: false,
-      remainingAttempts: 0,
-      retryAfter: Math.ceil(policy.blockDurationMs / 1000),
-    };
-  }
-
-  return {
-    allowed: true,
-    remainingAttempts: Math.max(0, policy.maxAttempts - entry.count),
-  };
-}
-
-/**
- * Records a failure in one SQL statement. PostgreSQL serializes the
- * ON CONFLICT update for a given key, so parallel failures cannot overwrite
- * each other's increments. Expired rows are reset in that same statement.
- */
-const recordFailedAttempt = async (
-  identifier: string,
-  policy: RateLimitPolicy,
-): Promise<void> => {
-  const now = new Date();
-  const windowStartedAfter = new Date(now.getTime() - policy.windowMs);
-  const blockedUntil = new Date(now.getTime() + policy.blockDurationMs);
-
-  await prisma.$executeRaw`
-    INSERT INTO "RateLimit" (
-      "id", "key", "count", "firstAttempt", "blockedUntil", "createdAt", "updatedAt"
-    )
-    VALUES (${randomUUID()}, ${identifier}, 1, ${now}, NULL, ${now}, ${now})
-    ON CONFLICT ("key") DO UPDATE SET
-      "count" = CASE
-        WHEN (
-          ("RateLimit"."blockedUntil" IS NOT NULL AND "RateLimit"."blockedUntil" <= ${now})
-          OR (
-            "RateLimit"."blockedUntil" IS NULL
-            AND "RateLimit"."firstAttempt" <= ${windowStartedAfter}
-          )
-        ) THEN 1
-        ELSE "RateLimit"."count" + 1
-      END,
-      "firstAttempt" = CASE
-        WHEN (
-          ("RateLimit"."blockedUntil" IS NOT NULL AND "RateLimit"."blockedUntil" <= ${now})
-          OR (
-            "RateLimit"."blockedUntil" IS NULL
-            AND "RateLimit"."firstAttempt" <= ${windowStartedAfter}
-          )
-        ) THEN ${now}
-        ELSE "RateLimit"."firstAttempt"
-      END,
-      "blockedUntil" = CASE
-        WHEN "RateLimit"."blockedUntil" > ${now}
-          THEN "RateLimit"."blockedUntil"
-        WHEN (
-          ("RateLimit"."blockedUntil" IS NOT NULL AND "RateLimit"."blockedUntil" <= ${now})
-          OR (
-            "RateLimit"."blockedUntil" IS NULL
-            AND "RateLimit"."firstAttempt" <= ${windowStartedAfter}
-          )
-        ) THEN NULL
-        WHEN "RateLimit"."count" + 1 >= ${policy.maxAttempts}
-          THEN ${blockedUntil}
-        ELSE NULL
-      END,
-      "updatedAt" = ${now}
-  `;
 };
 
 /**
@@ -365,63 +259,35 @@ const reserveRateLimitAttempt = async (
 };
 
 /**
- * Durable per-account API budget shared by every application instance. The
- * edge limiter remains a cheap first line of defence; this reservation closes
- * the multi-instance bypass after the session has been authenticated.
+ * Reserves every bucket in one transaction before the expensive or sensitive
+ * check. A refusal or database error rolls every earlier reservation back,
+ * preventing partial quota consumption and closing the read-then-write gap.
  */
-export const reserveAuthenticatedApiRateLimit = async (
-  userId: string,
+const reserveRateLimitBuckets = async (
+  buckets: readonly (readonly [key: string, policy: RateLimitPolicy])[],
 ): Promise<RateLimitResult> => {
-  const key = `api:account:${hashKeyPart('api-account', userId)}`;
-
-  return prisma.$transaction((transaction) =>
-    reserveRateLimitAttempt(transaction, key, AUTHENTICATED_API_POLICY),
-  );
-};
-
-/**
- * Reserves the IP, account and pair buckets in one transaction before bcrypt.
- * A refusal or database error rolls every earlier reservation back, preventing
- * partial quota consumption and closing the read-then-write concurrency gap.
- */
-export async function reserveLoginRateLimits(
-  keys: LoginRateLimitKeys,
-): Promise<RateLimitResult> {
   scheduleExpiredEntriesCleanup(new Date());
 
   try {
     return await prisma.$transaction(async (transaction) => {
       const reservations: RateLimitResult[] = [];
-      const deniedReservations: RateLimitResult[] = [];
-      const orderedBuckets = [
-        [keys.ip, LOGIN_POLICIES.ip],
-        [keys.account, LOGIN_POLICIES.account],
-        [keys.pair, LOGIN_POLICIES.pair],
-      ] as const;
+      const denials: RateLimitResult[] = [];
 
-      for (const [key, policy] of orderedBuckets) {
+      for (const [key, policy] of buckets) {
         const reservation = await reserveRateLimitAttempt(
           transaction,
           key,
           policy,
         );
-
-        if (!reservation.allowed) {
-          deniedReservations.push(reservation);
-          continue;
-        }
-
-        reservations.push(reservation);
+        (reservation.allowed ? reservations : denials).push(reservation);
       }
 
-      if (deniedReservations.length > 0) {
-        throw new LoginRateLimitDeniedError({
+      if (denials.length > 0) {
+        throw new RateLimitDeniedError({
           allowed: false,
           remainingAttempts: 0,
           retryAfter: Math.max(
-            ...deniedReservations.map(
-              (reservation) => reservation.retryAfter ?? 1,
-            ),
+            ...denials.map((denial) => denial.retryAfter ?? 1),
           ),
         });
       }
@@ -434,99 +300,64 @@ export async function reserveLoginRateLimits(
       };
     });
   } catch (error) {
-    if (error instanceof LoginRateLimitDeniedError) return error.result;
-
+    if (error instanceof RateLimitDeniedError) return error.result;
     throw error;
   }
-}
+};
+
+/**
+ * Durable per-account API budget shared by every application instance. The
+ * edge limiter remains a cheap first line of defence; this reservation closes
+ * the multi-instance bypass after the session has been authenticated.
+ */
+export const reserveAuthenticatedApiRateLimit = (
+  userId: string,
+): Promise<RateLimitResult> =>
+  reserveRateLimitBuckets([
+    [
+      `api:account:${hashKeyPart('api-account', userId)}`,
+      AUTHENTICATED_API_POLICY,
+    ],
+  ]);
+
+/** Reserves the IP, account and pair buckets before the password hash is verified. */
+export const reserveLoginRateLimits = (
+  keys: LoginRateLimitKeys,
+): Promise<RateLimitResult> =>
+  reserveRateLimitBuckets([
+    [keys.ip, LOGIN_POLICIES.ip],
+    [keys.account, LOGIN_POLICIES.account],
+    [keys.pair, LOGIN_POLICIES.pair],
+  ]);
 
 /**
  * Reserves account, source-IP and challenge quotas before an OTP or recovery
  * proof is evaluated. The account bucket prevents bypassing the six-digit
  * limit by repeatedly obtaining fresh challenges with a known password.
  */
-export async function reserveMfaRateLimits(
+export const reserveMfaRateLimits = (
   keys: MfaRateLimitKeys,
-): Promise<RateLimitResult> {
-  scheduleExpiredEntriesCleanup(new Date());
-
-  try {
-    return await prisma.$transaction(async (transaction) => {
-      const reservations: RateLimitResult[] = [];
-      const deniedReservations: RateLimitResult[] = [];
-      const orderedBuckets = [
-        [keys.ip, MFA_POLICIES.ip],
-        [keys.account, MFA_POLICIES.account],
-        [keys.challenge, MFA_POLICIES.challenge],
-      ] as const;
-
-      for (const [key, policy] of orderedBuckets) {
-        const reservation = await reserveRateLimitAttempt(
-          transaction,
-          key,
-          policy,
-        );
-
-        if (!reservation.allowed) {
-          deniedReservations.push(reservation);
-        } else {
-          reservations.push(reservation);
-        }
-      }
-
-      if (deniedReservations.length > 0) {
-        throw new LoginRateLimitDeniedError({
-          allowed: false,
-          remainingAttempts: 0,
-          retryAfter: Math.max(
-            ...deniedReservations.map(
-              (reservation) => reservation.retryAfter ?? 1,
-            ),
-          ),
-        });
-      }
-
-      return {
-        allowed: true,
-        remainingAttempts: Math.min(
-          ...reservations.map((reservation) => reservation.remainingAttempts),
-        ),
-      };
-    });
-  } catch (error) {
-    if (error instanceof LoginRateLimitDeniedError) return error.result;
-
-    throw error;
-  }
-}
+): Promise<RateLimitResult> =>
+  reserveRateLimitBuckets([
+    [keys.ip, MFA_POLICIES.ip],
+    [keys.account, MFA_POLICIES.account],
+    [keys.challenge, MFA_POLICIES.challenge],
+  ]);
 
 /**
- * Atomically consumes one password-verification attempt for an authenticated
+ * Atomically consumes one password or code verification for an authenticated
  * sensitive action. Keeping the policy private gives every caller the same
  * protection and prevents accidentally weakening an endpoint.
  */
-export async function reserveSensitiveActionRateLimit(
+export const reserveSensitiveActionRateLimit = (
   identifier: string,
-): Promise<RateLimitResult> {
-  scheduleExpiredEntriesCleanup(new Date());
+): Promise<RateLimitResult> =>
+  reserveRateLimitBuckets([[identifier, DEFAULT_POLICY]]);
 
-  return prisma.$transaction((transaction) =>
-    reserveRateLimitAttempt(transaction, identifier, DEFAULT_POLICY),
-  );
-}
-
-export async function recordLoginAttempt(
-  identifier: string,
-  success: boolean,
-): Promise<void> {
-  if (success) {
-    await prisma.rateLimit.deleteMany({ where: { key: identifier } });
-
-    return;
-  }
-
-  await recordFailedAttempt(identifier, DEFAULT_POLICY);
-}
+/** A verified proof clears its sensitive-action bucket. */
+export const clearRateLimit = async (identifier: string): Promise<void> => {
+  await prisma.rateLimit.deleteMany({ where: { key: identifier } });
+};
 
 /**
  * A valid password releases exactly this request's reservation from every

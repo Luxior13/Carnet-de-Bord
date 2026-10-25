@@ -167,6 +167,14 @@ export function useUserDetailCapabilities(
         currentUser.permissions,
       )
     : false;
+  const canResetMfa = currentUser
+    ? isProtectedActor ||
+      hasPermission(
+        currentUser.role,
+        PERMISSIONS.USERS.RESET_MFA,
+        currentUser.permissions,
+      )
+    : false;
   const canDeleteAccounts = currentUser
     ? isProtectedActor ||
       hasPermission(
@@ -237,9 +245,10 @@ export function useUserDetailCapabilities(
     !isTargetAdminAccessRestricted;
   const canResetTargetMfa =
     !!user &&
-    isProtectedActor &&
+    canResetMfa &&
     !isSelf &&
     !user.isProtected &&
+    !isTargetAdminAccessRestricted &&
     user.mfaEnabledAt !== null;
   const canViewTargetSessions =
     !!user &&

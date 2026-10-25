@@ -1,14 +1,11 @@
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+import { SESSION_COOKIE_NAME } from '$constants/security.constants';
 import { requireAuth } from '$server/api-auth';
 import { apiErrors } from '$server/api-response';
-import {
-  createAuditLogWithHeaders,
-  deleteSessionCookie,
-  invalidateSession,
-  SESSION_COOKIE_NAME,
-} from '$server/auth';
+import { createAuditLogWithHeaders } from '$server/audit-log';
+import { deleteSessionCookie, invalidateSession } from '$server/session';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
@@ -27,7 +24,7 @@ export async function POST(): Promise<
   NextResponse<ApiSuccessResponse<{ message: string }> | ApiErrorResponse>
 > {
   try {
-    const auth = await requireAuth(undefined, {
+    const auth = await requireAuth({
       allowPasswordChangeRequired: true,
     });
     if (!auth.success) return auth.response;
@@ -57,8 +54,7 @@ export async function POST(): Promise<
     });
   } catch (error) {
     // Still try to delete cookie even if there's an error
-    const ck = await cookies();
-    ck.delete(SESSION_COOKIE_NAME);
+    await deleteSessionCookie();
 
     return apiErrors.internal('LOGOUT', error);
   }

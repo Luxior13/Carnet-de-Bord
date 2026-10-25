@@ -148,7 +148,7 @@ export const UsersListResults: FC<Props> = ({
                     <span aria-hidden="true" className="shrink-0">
                       <UserAvatar
                         user={user}
-                        className="border-border-default size-9 rounded-[7px] border"
+                        className="border-border-default rounded-tile size-9 border"
                       />
                     </span>
                     <div className="min-w-0">
@@ -265,7 +265,7 @@ export const UsersListResults: FC<Props> = ({
               <span aria-hidden="true" className="shrink-0">
                 <UserAvatar
                   user={user}
-                  className="border-border-default size-9 rounded-[7px] border"
+                  className="border-border-default rounded-tile size-9 border"
                 />
               </span>
               <div className="min-w-0 flex-1 space-y-2">

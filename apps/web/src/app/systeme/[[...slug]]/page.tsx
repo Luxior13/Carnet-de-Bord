@@ -7,7 +7,7 @@ import {
   getVisibleNavigationSpaces,
 } from '$constants/app.constants';
 import { SystemSettingsPage } from '$features/settings/SystemSettingsPage';
-import { getPageAuthSession } from '$server/auth';
+import { getPageAuthSession } from '$server/session';
 
 type SystemePageProps = {
   params: Promise<{ slug?: string[] }>;

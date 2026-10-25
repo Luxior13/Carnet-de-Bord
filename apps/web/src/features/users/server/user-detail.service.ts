@@ -9,8 +9,8 @@ import {
   normalizePermissionOverrides,
   PERMISSIONS,
 } from '$constants/permissions.constants';
-import { mapUserToUserType } from '$server/auth';
 import { prisma } from '$server/prisma';
+import { mapUserToUserType } from '$server/user-projection';
 import { protectUserIdentityForActor } from '$server/user-visibility';
 import type { UserType } from '$types/auth.types';
 
@@ -22,14 +22,12 @@ export const USER_DETAIL_SELECT = {
   contactEmail: true,
   contactEmailVerifiedAt: true,
   createdAt: true,
-  failedLoginAttempts: true,
   firstName: true,
   id: true,
   isActive: true,
   isProtected: true,
   lastLoginAt: true,
   lastName: true,
-  lockedUntil: true,
   loginName: true,
   mfaEnabledAt: true,
   mustChangePassword: true,
@@ -122,8 +120,6 @@ export const mapUserForActor = (
       ...(canViewSecurity
         ? { securityDetailsVisible: true }
         : {
-            failedLoginAttempts: 0,
-            lockedUntil: null,
             mfaEnabledAt: null,
             mustChangePassword: false,
             passwordChangedAt: null,

@@ -15,7 +15,7 @@ const mockResetUserPassword = vi.fn();
 const mockVerifyPassword = vi.fn();
 const mockCreateAuditLogWithHeaders = vi.fn();
 const mockMapUserToUserType = vi.fn((user: unknown): unknown => user);
-const mockRecordLoginAttempt = vi.fn();
+const mockClearRateLimit = vi.fn();
 const mockReserveSensitiveActionRateLimit = vi.fn();
 
 const mockPrisma = {
@@ -41,20 +41,27 @@ vi.mock('$server/api-auth', () => ({
   requirePermission: mockRequirePermission,
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mockCreateAuditLogWithHeaders,
+}));
+vi.mock('$server/session', () => ({
   deleteSessionCookie: mockDeleteSessionCookie,
   getAuthSession: mockGetAuthSession,
-  invalidateOtherUserSessions: mockInvalidateOtherUserSessions,
+}));
+vi.mock('$server/auth-errors', () => ({
   isSecurityVersionMismatchError: mockIsSecurityVersionMismatchError,
+}));
+vi.mock('$server/user-projection', () => ({
   mapUserToUserType: mockMapUserToUserType,
+}));
+vi.mock('$server/password', () => ({
   resetUserPassword: mockResetUserPassword,
   updateUserPassword: mockUpdateUserPassword,
   verifyPassword: mockVerifyPassword,
 }));
 
 vi.mock('$server/rate-limiter', () => ({
-  recordLoginAttempt: mockRecordLoginAttempt,
+  clearRateLimit: mockClearRateLimit,
   reserveSensitiveActionRateLimit: mockReserveSensitiveActionRateLimit,
 }));
 
@@ -129,7 +136,7 @@ describe('account security routes', () => {
       allowed: true,
       remainingAttempts: 5,
     });
-    mockRecordLoginAttempt.mockResolvedValue(undefined);
+    mockClearRateLimit.mockResolvedValue(undefined);
     mockMapUserToUserType.mockImplementation((user: unknown) => user);
     mockRequirePermission.mockReturnValue({ success: true });
     mockCreateAuditLogWithHeaders.mockResolvedValue(undefined);
@@ -140,13 +147,15 @@ describe('account security routes', () => {
   describe('GET /api/auth/me', () => {
     it('returns the personal account without requiring user-management permissions', async () => {
       const route = await import('$app/api/auth/me/route');
-      const response = await route.GET();
+      const response = await route.GET(
+        new NextRequest('http://localhost/api/auth/me'),
+      );
       const body = await response.json();
 
       expect(response.status).toBe(200);
       expect(body.success).toBe(true);
       expect(body.data.user.id).toBe('user-1');
-      expect(mockRequireAuth).toHaveBeenCalledWith(undefined, {
+      expect(mockRequireAuth).toHaveBeenCalledWith({
         allowPasswordChangeRequired: true,
       });
       expect(mockRequirePermission).not.toHaveBeenCalled();
@@ -397,9 +406,9 @@ describe('account security routes', () => {
       const response = await route.POST(
         new Request('http://localhost/api/auth/change-password', {
           body: JSON.stringify({
-            confirmPassword: 'NewPassword1!',
-            currentPassword: 'CurrentPassword1!',
-            newPassword: 'NewPassword1!',
+            confirmPassword: 'lune claire sur le port',
+            currentPassword: 'ancienne phrase du matin',
+            newPassword: 'lune claire sur le port',
           }),
           method: 'POST',
         }),
@@ -410,17 +419,14 @@ describe('account security routes', () => {
       expect(body.success).toBe(true);
       expect(mockUpdateUserPassword).toHaveBeenCalledWith(
         'user-1',
-        'NewPassword1!',
+        'lune claire sur le port',
         expect.objectContaining({
           currentSessionToken: 'session-hash',
           expectedSecurityVersion: 3,
           rateLimitKey: 'account-reauth:user-1',
         }),
       );
-      expect(mockRecordLoginAttempt).toHaveBeenCalledWith(
-        'account-reauth:user-1',
-        true,
-      );
+      expect(mockClearRateLimit).toHaveBeenCalledWith('account-reauth:user-1');
     });
 
     it('requires the current password for standard password changes', async () => {
@@ -428,8 +434,8 @@ describe('account security routes', () => {
       const response = await route.POST(
         new Request('http://localhost/api/auth/change-password', {
           body: JSON.stringify({
-            confirmPassword: 'NewPassword1!',
-            newPassword: 'NewPassword1!',
+            confirmPassword: 'lune claire sur le port',
+            newPassword: 'lune claire sur le port',
           }),
           method: 'POST',
         }),
@@ -450,9 +456,9 @@ describe('account security routes', () => {
       const response = await route.POST(
         new Request('http://localhost/api/auth/change-password', {
           body: JSON.stringify({
-            confirmPassword: 'NewPassword1!',
+            confirmPassword: 'lune claire sur le port',
             currentPassword: 'WrongPassword1!',
-            newPassword: 'NewPassword1!',
+            newPassword: 'lune claire sur le port',
           }),
           method: 'POST',
         }),
@@ -470,7 +476,7 @@ describe('account security routes', () => {
       ).toBeLessThan(
         mockVerifyPassword.mock.invocationCallOrder[0] ?? Infinity,
       );
-      expect(mockRecordLoginAttempt).not.toHaveBeenCalled();
+      expect(mockClearRateLimit).not.toHaveBeenCalled();
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });
 
@@ -485,9 +491,9 @@ describe('account security routes', () => {
       const response = await route.POST(
         new Request('http://localhost/api/auth/change-password', {
           body: JSON.stringify({
-            confirmPassword: 'NewPassword1!',
+            confirmPassword: 'lune claire sur le port',
             currentPassword: 'WrongPassword1!',
-            newPassword: 'NewPassword1!',
+            newPassword: 'lune claire sur le port',
           }),
           method: 'POST',
         }),
@@ -501,7 +507,7 @@ describe('account security routes', () => {
         'account-reauth:user-1',
       );
       expect(mockVerifyPassword).not.toHaveBeenCalled();
-      expect(mockRecordLoginAttempt).not.toHaveBeenCalled();
+      expect(mockClearRateLimit).not.toHaveBeenCalled();
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });
 
@@ -514,9 +520,9 @@ describe('account security routes', () => {
       const response = await route.POST(
         new Request('http://localhost/api/auth/change-password', {
           body: JSON.stringify({
-            confirmPassword: 'CurrentPassword1!',
-            currentPassword: 'CurrentPassword1!',
-            newPassword: 'CurrentPassword1!',
+            confirmPassword: 'ancienne phrase du matin',
+            currentPassword: 'ancienne phrase du matin',
+            newPassword: 'ancienne phrase du matin',
           }),
           method: 'POST',
         }),
@@ -528,10 +534,7 @@ describe('account security routes', () => {
       expect(body.error.message).toBe(
         "Le nouveau mot de passe doit être différent de l'actuel",
       );
-      expect(mockRecordLoginAttempt).toHaveBeenCalledWith(
-        'account-reauth:user-1',
-        true,
-      );
+      expect(mockClearRateLimit).toHaveBeenCalledWith('account-reauth:user-1');
       expect(mockUpdateUserPassword).not.toHaveBeenCalled();
     });
 
@@ -557,8 +560,8 @@ describe('account security routes', () => {
       const response = await route.POST(
         new Request('http://localhost/api/auth/change-password', {
           body: JSON.stringify({
-            confirmPassword: 'NewPassword1!',
-            newPassword: 'NewPassword1!',
+            confirmPassword: 'lune claire sur le port',
+            newPassword: 'lune claire sur le port',
           }),
           method: 'POST',
         }),
@@ -569,7 +572,7 @@ describe('account security routes', () => {
       expect(body.success).toBe(true);
       expect(mockUpdateUserPassword).toHaveBeenCalledWith(
         'user-1',
-        'NewPassword1!',
+        'lune claire sur le port',
         expect.objectContaining({
           audit: expect.objectContaining({
             action: 'PASSWORD_CHANGE',
@@ -606,9 +609,9 @@ describe('account security routes', () => {
       const response = await route.POST(
         new Request('http://localhost/api/auth/change-password', {
           body: JSON.stringify({
-            confirmPassword: 'NewPassword1!',
-            currentPassword: 'CurrentPassword1!',
-            newPassword: 'NewPassword1!',
+            confirmPassword: 'lune claire sur le port',
+            currentPassword: 'ancienne phrase du matin',
+            newPassword: 'lune claire sur le port',
           }),
           method: 'POST',
         }),
@@ -667,7 +670,9 @@ describe('account security routes', () => {
       ]);
 
       const route = await import('$app/api/auth/sessions/route');
-      const response = await route.GET();
+      const response = await route.GET(
+        new NextRequest('http://localhost/api/auth/sessions'),
+      );
       const body = await response.json();
 
       expect(response.status).toBe(200);
@@ -716,7 +721,9 @@ describe('account security routes', () => {
       });
 
       const route = await import('$app/api/auth/sessions/route');
-      const response = await route.GET();
+      const response = await route.GET(
+        new NextRequest('http://localhost/api/auth/sessions'),
+      );
 
       expect(response.status).toBe(403);
       expect(mockPrisma.session.findMany).not.toHaveBeenCalled();

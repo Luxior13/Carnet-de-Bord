@@ -25,7 +25,7 @@ ne change pas.
   Context7. Cela retire le biais de l'ancien calcul par reste, sans conclure à
   une compromission antérieure ni à une distribution uniforme de tous les
   mots de passe respectant ces catégories.
-- [auth.test.ts](../../../../apps/web/src/__tests__/auth.test.ts) teste le vrai
+- auth.test.ts (remplacé le 25 octobre 2026 par [password-hashing.test.ts](../../../../apps/web/src/__tests__/password-hashing.test.ts)) teste le vrai
   générateur au lieu d'une copie locale. Les autres helpers historiques de ce
   fichier ne sont pas concernés par cette correction.
 

@@ -278,7 +278,7 @@ Reproduction minimale des sondes :
   [consommateur de provenance](../../apps/web/src/features/persons/components/PersonFieldProvenanceHint.tsx).
 - [Capacités du Répertoire](../../apps/web/src/features/persons/person.permissions.ts),
   [navigation des onglets utilisateur](../../apps/web/src/components/users/user-detail/UserDetailNavigation.tsx),
-  [API d'activité encore joignable](../../apps/web/src/app/api/users/[id]/audit/route.ts).
+  API d'activité encore joignable (`app/api/users/[id]/audit/route.ts`, [retirée le 25 octobre 2026](2026-10-23-revue-complete.md#suivi--lot-3-du-25-octobre-2026)).
 
 ## Constats suivis
 

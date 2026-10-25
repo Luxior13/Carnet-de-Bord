@@ -159,7 +159,7 @@ export const UsersListPage: FC = () => {
           />
         )}
         <DataTableSection
-          className="border-border-content bg-surface-content rounded-[10px]"
+          className="border-border-content bg-surface-content rounded-panel"
           headerClassName="bg-surface-content-header"
           contentClassName={
             isRefreshing ? 'opacity-60 transition-opacity' : undefined

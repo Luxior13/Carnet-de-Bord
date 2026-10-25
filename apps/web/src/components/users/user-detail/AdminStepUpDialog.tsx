@@ -4,7 +4,6 @@ import { Loader2, ShieldCheck } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { MfaCodeInput } from '$features/auth/components/MfaCodeInput';
-import { ErrorCode } from '$types/api.types';
 import { Button } from '$ui/button';
 import {
   Dialog,
@@ -27,19 +26,16 @@ type AdminStepUpDialogProps = {
     typeof DialogContent
   >['onCloseAutoFocus'];
   onComplete: (result: AdminStepUpResult) => Promise<void> | void;
-  onProofKindRequired?: (proofKind: AdminStepUpKind) => void;
   open: boolean;
   proofKind?: AdminStepUpKind;
   title: string;
 };
 
-export type AdminStepUpKind = 'critical-mfa' | 'full' | 'password';
+export type AdminStepUpKind = 'full' | 'password';
 
 export type AdminStepUpResult = {
-  criticalMfaExpiresAt: string | null;
   expiresAt: string;
   kind: AdminStepUpKind;
-  passwordExpiresAt: string | null;
 };
 
 const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
@@ -47,7 +43,6 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
   onCancel,
   onCloseAutoFocus,
   onComplete,
-  onProofKindRequired,
   open,
   proofKind = 'full',
   title,
@@ -71,10 +66,9 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
   const passwordInputRef = useRef<HTMLInputElement>(null);
   const submissionInFlightRef = useRef(false);
   const totpInputRef = useRef<HTMLInputElement>(null);
-  const requiresPassword = proofKind !== 'critical-mfa';
-  const requiresTotp = proofKind !== 'password';
+  const requiresTotp = proofKind === 'full';
   const canSubmit =
-    (!requiresPassword || currentPassword.length > 0) &&
+    currentPassword.length > 0 &&
     (!requiresTotp || /^\d{6}$/.test(currentTotpCode));
   const focusProofAfterSubmit = (kind: 'password' | 'totp'): void => {
     requestAnimationFrame(() => {
@@ -100,14 +94,8 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
   }, [open, title]);
 
   useEffect(() => {
-    if (!open) return;
-
-    if (requiresPassword) {
-      passwordInputRef.current?.focus();
-    } else {
-      totpInputRef.current?.focus();
-    }
-  }, [open, proofKind, requiresPassword]);
+    if (open) passwordInputRef.current?.focus();
+  }, [open, proofKind]);
 
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>,
@@ -129,9 +117,7 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
           body: JSON.stringify(
             proofKind === 'password'
               ? { currentPassword, kind: proofKind }
-              : proofKind === 'critical-mfa'
-                ? { currentTotpCode, kind: proofKind }
-                : { currentPassword, currentTotpCode, kind: proofKind },
+              : { currentPassword, currentTotpCode, kind: proofKind },
           ),
           headers: { 'Content-Type': 'application/json' },
           method: 'POST',
@@ -146,37 +132,17 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
         failure.status < 500 &&
         failure.code !== 'INVALID_RESPONSE'
       ) {
-        const errorCode = failure.code;
         const errorMessage = failure.message;
-
-        if (
-          proofKind === 'critical-mfa' &&
-          errorCode === ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED
-        ) {
-          setCurrentPassword('');
-          setCurrentTotpCode('');
-          setError(
-            'La confirmation du mot de passe a expiré. Confirmez à nouveau votre mot de passe et votre code MFA.',
-          );
-          onProofKindRequired?.('full');
-          focusProofAfterSubmit('password');
-
-          return;
-        }
 
         setError(errorMessage);
         const passwordFailed =
-          requiresPassword &&
-          (!requiresTotp ||
-            errorMessage.toLowerCase().includes('mot de passe'));
+          !requiresTotp || errorMessage.toLowerCase().includes('mot de passe');
 
         if (passwordFailed) {
           focusProofAfterSubmit('password');
-        } else if (requiresTotp) {
+        } else {
           setCurrentTotpCode('');
           focusProofAfterSubmit('totp');
-        } else {
-          focusProofAfterSubmit('password');
         }
 
         return;
@@ -187,7 +153,7 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
       setError(
         'La confirmation n’a pas pu être reçue. Saisissez une nouvelle preuve ou annulez.',
       );
-      focusProofAfterSubmit(requiresPassword ? 'password' : 'totp');
+      focusProofAfterSubmit('password');
     } finally {
       submissionInFlightRef.current = false;
       if (mountedRef.current) setIsSubmitting(false);
@@ -236,33 +202,29 @@ const AdminStepUpDialogContent: FC<AdminStepUpDialogProps> = ({
             <p className="border-primary/25 bg-primary/[0.08] text-muted-foreground rounded-md border p-3 text-sm leading-6">
               {proofKind === 'password'
                 ? 'La confirmation de votre mot de passe restera valable pendant trente minutes sur cette session.'
-                : proofKind === 'critical-mfa'
-                  ? 'Cette confirmation MFA restera valable quinze minutes pour les autres élévations critiques.'
-                  : 'Cette confirmation protège l’action sensible ; le mot de passe restera reconnu pendant trente minutes.'}
+                : 'Cette confirmation protège l’action sensible ; le mot de passe restera reconnu pendant trente minutes.'}
             </p>
 
-            {requiresPassword && (
-              <div className="space-y-2">
-                <Label htmlFor="admin-step-up-password" required>
-                  Votre mot de passe
-                </Label>
-                <Input
-                  autoFocus
-                  disabled={isSubmitting}
-                  id="admin-step-up-password"
-                  name="current-password"
-                  onChange={(event) => setCurrentPassword(event.target.value)}
-                  ref={passwordInputRef}
-                  required
-                  type="password"
-                  value={currentPassword}
-                />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="admin-step-up-password" required>
+                Votre mot de passe
+              </Label>
+              <Input
+                autoFocus
+                disabled={isSubmitting}
+                id="admin-step-up-password"
+                name="current-password"
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                ref={passwordInputRef}
+                required
+                autoComplete="current-password"
+                type="password"
+                value={currentPassword}
+              />
+            </div>
 
             {requiresTotp && (
               <MfaCodeInput
-                autoFocus={!requiresPassword}
                 disabled={isSubmitting}
                 id="admin-step-up-code"
                 inputRef={totpInputRef}

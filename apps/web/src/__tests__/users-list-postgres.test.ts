@@ -43,8 +43,7 @@ describe.skipIf(!target)('users identity search on PostgreSQL', () => {
       "id" text PRIMARY KEY, "loginName" text, "firstName" text, "lastName" text,
       "contactEmail" text, "isProtected" boolean DEFAULT false, "deletedAt" timestamp,
       "contactEmailVerifiedAt" timestamp, "createdAt" timestamp DEFAULT '2026-03-01',
-      "failedLoginAttempts" integer DEFAULT 0, "isActive" boolean DEFAULT true,
-      "lastLoginAt" timestamp, "lockedUntil" timestamp, "mfaEnabledAt" timestamp,
+      "isActive" boolean DEFAULT true, "lastLoginAt" timestamp, "mfaEnabledAt" timestamp,
       "mustChangePassword" boolean DEFAULT false, "passwordChangedAt" timestamp,
       "role" text DEFAULT 'USER'
     )`;

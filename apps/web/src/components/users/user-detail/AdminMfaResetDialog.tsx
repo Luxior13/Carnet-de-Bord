@@ -251,6 +251,7 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
                 placeholder="Confirmez votre identité"
                 required
                 ref={passwordInputRef}
+                autoComplete="current-password"
                 type="password"
                 value={currentPassword}
               />

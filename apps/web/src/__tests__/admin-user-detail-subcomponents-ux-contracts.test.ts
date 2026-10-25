@@ -66,7 +66,7 @@ describe('administrative user detail subcomponent UX contracts', () => {
       '<PageCanvas contentClassName="relative space-y-3">',
     );
     expect(userDetailSource).toContain('<PageIdentityHero');
-    expect(userDetailSource).toContain('size-full rounded-[7px]');
+    expect(userDetailSource).toContain('rounded-tile size-full');
     // The former overview card lives in the hero since 2026-10-20.
     expect(userDetailSource).toContain('formatUserIdentityLine(');
     expect(userDetailSource).toContain(
@@ -135,7 +135,9 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(securitySource).toContain('user-security-password-heading');
     expect(securitySource).toContain('user-security-mfa-heading');
     expect(securitySource).toContain('user-security-sessions-heading');
-    expect(securitySource).toContain('user.failedLoginAttempts > 0 &&');
+    // The per-account lock was removed on 24 October 2026 (REV-01).
+    expect(securitySource).not.toContain('failedLoginAttempts');
+    expect(securitySource).not.toContain('Verrouillage');
     expect(securitySource).toContain('Révoquer cette session ?');
     expect(securitySource).toContain('Révoquer la session');
   });
@@ -263,12 +265,11 @@ describe('administrative user detail subcomponent UX contracts', () => {
       'ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED',
     );
     expect(adminStepUpControllerSource).toContain(
-      'ErrorCode.CRITICAL_REAUTHENTICATION_REQUIRED',
+      'ErrorCode.REAUTHENTICATION_REQUIRED',
     );
     expect(adminStepUpControllerSource).toContain("? 'password'");
-    expect(userDetailSource).toContain(
-      'onProofKindRequired={adminStepUp.setPendingStepUpProofKind}',
-    );
+    // The server never asks for a code-only proof any more.
+    expect(adminStepUpControllerSource).not.toContain('critical-mfa');
     expect(userDetailSource).toContain(
       'request: requestPasswordReauthenticationForResponse',
     );
@@ -276,14 +277,10 @@ describe('administrative user detail subcomponent UX contracts', () => {
       "setPendingStepUpAction({ ...action, proofKind: 'password' })",
     );
     expect(adminStepUpSource).toContain("proofKind === 'password'");
-    expect(adminStepUpSource).toContain("proofKind === 'critical-mfa'");
+    expect(adminStepUpSource).not.toContain('critical-mfa');
     expect(adminStepUpSource).toContain('trente minutes');
-    expect(adminStepUpSource).toContain('quinze minutes');
+    expect(adminStepUpSource).not.toContain('quinze minutes');
     expect(adminStepUpSource).toContain('submissionInFlightRef.current');
-    expect(adminStepUpSource).toContain(
-      'ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED',
-    );
-    expect(adminStepUpSource).toContain("onProofKindRequired?.('full')");
     expect(adminStepUpSource).toContain('passwordFailed');
   });
 });

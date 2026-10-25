@@ -7,8 +7,8 @@ import type { UsersListResponse } from '$types/auth.types';
 
 import { buildUserSearchPredicate } from './users-list-search';
 
-export type UserListSort = 'created' | 'name' | 'recent';
-export type UserListStatus = 'active' | 'inactive' | 'pending';
+type UserListSort = 'created' | 'name' | 'recent';
+type UserListStatus = 'active' | 'inactive' | 'pending';
 export type UserListVisibility = {
   canViewContact: boolean;
   canViewSecurity: boolean;
@@ -29,14 +29,12 @@ type UserListRecord = Pick<
   | 'contactEmail'
   | 'contactEmailVerifiedAt'
   | 'createdAt'
-  | 'failedLoginAttempts'
   | 'firstName'
   | 'id'
   | 'isActive'
   | 'isProtected'
   | 'lastLoginAt'
   | 'lastName'
-  | 'lockedUntil'
   | 'loginName'
   | 'mfaEnabledAt'
   | 'mustChangePassword'
@@ -116,7 +114,7 @@ const buildUserFilters = (
   };
 };
 
-export const buildUsersPageQuery = (
+const buildUsersPageQuery = (
   input: UserListInput,
   visibility: UserListVisibility,
 ): Prisma.Sql => {
@@ -140,8 +138,8 @@ export const buildUsersPageQuery = (
     )
     SELECT totals.total, u."id", u."loginName", u."firstName", u."lastName",
       u."contactEmail", u."contactEmailVerifiedAt", u."createdAt", u."role",
-      u."isActive", u."isProtected", u."lastLoginAt", u."failedLoginAttempts",
-      u."lockedUntil", u."mfaEnabledAt", u."mustChangePassword", u."passwordChangedAt"
+      u."isActive", u."isProtected", u."lastLoginAt", u."mfaEnabledAt",
+      u."mustChangePassword", u."passwordChangedAt"
     FROM (SELECT COUNT(*)::integer AS total FROM filtered) totals
     LEFT JOIN page ON true
     LEFT JOIN "User" u ON u."id" = page."id"
@@ -154,7 +152,7 @@ export const buildUsersPageQuery = (
  * and the selected role, each role count the search and the selected status,
  * so every number equals the result its filter would show.
  */
-export const buildUsersStatsQuery = (
+const buildUsersStatsQuery = (
   input: UserListInput,
   visibility: UserListVisibility,
 ): Prisma.Sql => {

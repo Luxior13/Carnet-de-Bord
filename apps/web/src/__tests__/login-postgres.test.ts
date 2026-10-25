@@ -21,14 +21,14 @@ import {
   PUT as confirmSetup,
 } from '$app/api/auth/mfa/setup/route';
 import { POST as verifyMfa } from '$app/api/auth/mfa/verify/route';
-import { createSession, getAuthSession } from '$server/auth';
+import { MFA_CHALLENGE_COOKIE_NAME } from '$constants/security.constants';
 import {
   encryptTotpSecret,
   generateRecoveryCodes,
   generateTotpSecret,
-  MFA_CHALLENGE_COOKIE_NAME,
 } from '$server/mfa';
 import { createLoginRateLimitKeys } from '$server/rate-limiter';
+import { createSession, getAuthSession } from '$server/session';
 
 const connection = vi.hoisted(() => ({
   client: null as PrismaClient | null,
@@ -37,10 +37,11 @@ const connection = vi.hoisted(() => ({
 vi.mock('server-only', () => ({}));
 vi.mock('$env', () => ({
   env: {
-    MFA_ENCRYPTION_KEY_V1: Buffer.alloc(32, 11).toString('base64'),
     NODE_ENV: 'test',
   },
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv('MFA_ENCRYPTION_KEY_V1', Buffer.alloc(32, 11).toString('base64'));
 vi.mock('$server/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn() },
 }));
@@ -220,12 +221,25 @@ describe.skipIf(!target)(
       connection.client = null;
     });
 
-    it('keeps unknown, disabled, locked and wrong-password replies indistinguishable', async () => {
-      const users = [
-        await account({ isActive: false }),
-        await account({ lockedUntil: new Date(Date.now() + 60_000) }),
-        await account(),
-      ];
+    it('upgrades a legacy bcrypt hash at the password step without touching the account revision', async () => {
+      const user = await account();
+      expect(user.passwordHash.startsWith('$2')).toBe(true);
+      await begin(user);
+      const upgraded = await db.user.findUniqueOrThrow({
+        where: { id: user.id },
+      });
+      expect(upgraded.passwordHash).toMatch(/^\$argon2id\$v=19\$/);
+      expect(upgraded.updatedAt).toEqual(user.updatedAt);
+      expect(upgraded.securityVersion).toBe(user.securityVersion);
+      expect(upgraded.passwordChangedAt).toEqual(user.passwordChangedAt);
+
+      // The upgraded hash proves the same password.
+      connection.cookies.clear();
+      await begin(upgraded);
+    });
+
+    it('keeps unknown, disabled and wrong-password replies indistinguishable', async () => {
+      const users = [await account({ isActive: false }), await account()];
       const names = [
         'missing.' + randomUUID().replaceAll('-', '').slice(0, 20),
         ...users.map((user) => user.loginName),
@@ -251,7 +265,7 @@ describe.skipIf(!target)(
       ).toBe(0);
     });
 
-    it('atomically counts the fifth bad password, locks the account and denies the sixth request', async () => {
+    it('blocks the source after five bad passwords without blocking the account', async () => {
       const user = await account();
       for (let attempt = 0; attempt < 5; attempt++) {
         expect(
@@ -270,25 +284,19 @@ describe.skipIf(!target)(
       );
       expect(blocked.status).toBe(429);
       expect(Number(blocked.headers.get('Retry-After'))).toBeGreaterThan(0);
-      expect(
-        await db.user.findUnique({ where: { id: user.id } }),
-      ).toMatchObject({
-        failedLoginAttempts: 5,
-        lockedUntil: expect.any(Date),
-      });
+      // REV-01: only the IP + login pair is blocked; nothing locks the account.
       expect(
         await db.auditLog.count({
-          where: {
-            action: 'ACCOUNT_LOCKED',
-            targetUserId: user.id,
-            userId: null,
-          },
+          where: { action: 'ACCOUNT_LOCKED', targetUserId: user.id },
         }),
-      ).toBe(1);
+      ).toBe(0);
       const keys = createLoginRateLimitKeys(null, user.loginName);
       expect(
+        await db.rateLimit.findUnique({ where: { key: keys.pair } }),
+      ).toMatchObject({ blockedUntil: expect.any(Date), count: 5 });
+      expect(
         await db.rateLimit.findUnique({ where: { key: keys.account } }),
-      ).toMatchObject({ count: 5 });
+      ).toMatchObject({ blockedUntil: null, count: 5 });
       expect(keys.account).not.toContain(user.loginName);
     });
 

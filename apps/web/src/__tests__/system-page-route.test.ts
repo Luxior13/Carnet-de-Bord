@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  PERMISSIONS,
+  ROADMAP_PERMISSIONS,
+} from '$constants/permissions.constants';
 
 const mocks = vi.hoisted(() => ({
   getPageAuthSession: vi.fn(),
@@ -18,7 +21,7 @@ vi.mock('next/navigation', () => ({
   redirect: mocks.redirect,
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/session', () => ({
   getPageAuthSession: mocks.getPageAuthSession,
 }));
 
@@ -40,7 +43,7 @@ describe('/systeme route availability', () => {
     [
       {
         isProtected: false,
-        permissions: { [PERMISSIONS.AUDIT.VIEW]: true },
+        permissions: { [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true },
         role: 'USER',
       },
       '/systeme/feuille-de-route',
@@ -57,7 +60,7 @@ describe('/systeme route availability', () => {
       {
         isProtected: false,
         permissions: {
-          [PERMISSIONS.AUDIT.VIEW]: false,
+          [ROADMAP_PERMISSIONS.AUDIT.VIEW]: false,
           [PERMISSIONS.USERS.VIEW]: false,
         },
         role: 'ADMIN',

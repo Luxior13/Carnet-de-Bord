@@ -1,16 +1,6 @@
 'use client';
 
-import {
-  AlertTriangle,
-  KeyRound,
-  Loader2,
-  LogOut,
-  Monitor,
-  QrCode,
-  RefreshCw,
-  Shield,
-  ShieldCheck,
-} from 'lucide-react';
+import { KeyRound, QrCode, RefreshCw, Shield, ShieldCheck } from 'lucide-react';
 import React, {
   type FC,
   useCallback,
@@ -29,20 +19,9 @@ import type {
   MfaStatus,
   UserType,
 } from '$types/auth.types';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '$ui/alert-dialog';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Separator } from '$ui/separator';
-import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { StatusBadge } from '$ui/status-badge';
 import { ApiClientError } from '$utils/api.utils';
@@ -50,12 +29,12 @@ import { cn } from '$utils/css.utils';
 import { securityRequest } from '$utils/security-request.utils';
 
 import { formatRelativeAccountTime } from '../account.utils';
+import { formatSessionDateTime } from './AccountSessionRow';
 import {
-  formatSessionDateTime,
-  getSessionTitle,
-  type SessionInfo,
-  SessionRow,
-} from './AccountSessionRow';
+  AccountSessionsCard,
+  type AccountSessionsHandle,
+} from './AccountSessionsCard';
+import { focusSecurityHeading, SecurityCardTitle } from './SecurityCardTitle';
 
 type SecuritySectionProps = {
   canChangePassword: boolean;
@@ -66,32 +45,7 @@ type SecuritySectionProps = {
   userData: UserType;
 };
 
-const focusSecurityHeading = (id: string): void => {
-  const heading = document.getElementById(id);
-  if (!heading?.getClientRects().length) return;
-  heading.focus({ preventScroll: true });
-  heading.scrollIntoView({
-    behavior: 'instant',
-    block: 'nearest',
-    inline: 'nearest',
-  });
-};
-
-const SectionTitle: FC<{
-  children: React.ReactNode;
-  icon: React.ReactNode;
-  id: string;
-}> = ({ children, icon, id }) => (
-  <h3
-    id={id}
-    tabIndex={-1}
-    className="text-foreground flex scroll-mt-16 items-center gap-2 text-sm font-semibold"
-  >
-    <ServiceIcon className="size-7">{icon}</ServiceIcon>
-    {children}
-  </h3>
-);
-
+/** Password, double authentication and sessions of the signed-in account. */
 export const SecuritySection: FC<SecuritySectionProps> = ({
   canChangePassword,
   canManageMfa,
@@ -101,18 +55,14 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   userData,
 }) => {
   const lifetimeRef = useRef<AbortController | null>(null);
-  const revokingRef = useRef(false);
-  const sessionsRequestRef = useRef(0);
+  const sessionsRef = useRef<AccountSessionsHandle>(null);
   const mfaRequestRef = useRef(0);
-  const sessionsFocusRef = useRef(false);
   const mfaFocusRef = useRef(false);
-  const sessionMutationRef = useRef(false);
   useEffect(() => {
     const controller = new AbortController();
     lifetimeRef.current = controller;
     // A later user action owns the focus, even if an earlier retry finishes.
     const cancelFocus = (): void => {
-      sessionsFocusRef.current = false;
       mfaFocusRef.current = false;
     };
     document.addEventListener('pointerdown', cancelFocus, true);
@@ -134,16 +84,6 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     'activate' | 'replace' | null
   >(null);
   const [showRecoveryCodesDialog, setShowRecoveryCodesDialog] = useState(false);
-  const [sessions, setSessions] = useState<SessionInfo[]>([]);
-  const [loadingSessions, setLoadingSessions] = useState(true);
-  const [sessionsError, setSessionsError] = useState<string | null>(null);
-  const [sessionsNotice, setSessionsNotice] = useState<string | null>(null);
-  const [revokingAll, setRevokingAll] = useState(false);
-  const [revokingId, setRevokingId] = useState<string | null>(null);
-  const [sessionToRevoke, setSessionToRevoke] = useState<SessionInfo | null>(
-    null,
-  );
-  const [showRevokeDialog, setShowRevokeDialog] = useState(false);
 
   const fetchMfaStatus = useCallback(
     async (signal = lifetimeRef.current?.signal): Promise<void> => {
@@ -185,59 +125,9 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     [canManageMfa, canViewSecurity],
   );
 
-  const fetchSessions = useCallback(
-    async (signal = lifetimeRef.current?.signal): Promise<void> => {
-      if (!signal || signal.aborted) return;
-      const requestId = ++sessionsRequestRef.current;
-      const isCurrent = (): boolean =>
-        !signal.aborted && requestId === sessionsRequestRef.current;
-      if (!canManageSessions) {
-        setSessions([]);
-        setSessionsError(null);
-        setLoadingSessions(false);
-
-        return;
-      }
-
-      if (!signal?.aborted) {
-        setLoadingSessions(true);
-        setSessionsError(null);
-      }
-
-      try {
-        const data = await securityRequest<{ sessions: SessionInfo[] }>(
-          '/api/auth/sessions',
-          signal,
-          { cache: 'no-store' },
-        );
-        if (isCurrent()) setSessions(data.sessions);
-      } catch (failure) {
-        if (isCurrent()) {
-          if (
-            failure instanceof ApiClientError &&
-            [401, 403].includes(failure.status)
-          )
-            setSessions([]);
-          setSessionsError('Impossible de charger les sessions');
-        }
-      } finally {
-        if (isCurrent()) {
-          setLoadingSessions(false);
-        }
-      }
-    },
-    [canManageSessions],
-  );
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    void fetchSessions(controller.signal);
-
-    return (): void => {
-      controller.abort();
-    };
-  }, [fetchSessions, userData.mfaEnabledAt]);
+  const reloadSessions = async (): Promise<void> => {
+    if (canManageSessions) await sessionsRef.current?.reload();
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -250,84 +140,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
   }, [fetchMfaStatus, userData.mfaEnabledAt]);
 
   useEffect(() => {
-    if (!loadingSessions && sessionsFocusRef.current) {
-      sessionsFocusRef.current = false;
-      focusSecurityHeading('account-sessions-heading');
-    }
-  }, [loadingSessions, sessionsError]);
-  useEffect(() => {
     if (!loadingMfaStatus && mfaFocusRef.current) {
       mfaFocusRef.current = false;
       focusSecurityHeading('account-mfa-heading');
     }
   }, [loadingMfaStatus, mfaStatusError]);
-
-  const handleRevokeSession = async (sessionId?: string): Promise<void> => {
-    const signal = lifetimeRef.current?.signal;
-    if (!canManageSessions || !signal || signal.aborted || revokingRef.current)
-      return;
-    revokingRef.current = true;
-    sessionMutationRef.current = true;
-    let reload = false;
-    try {
-      setSessionsNotice(null);
-      if (sessionId) setRevokingId(sessionId);
-      else setRevokingAll(true);
-      await securityRequest<null>(
-        sessionId
-          ? `/api/auth/sessions?id=${encodeURIComponent(sessionId)}`
-          : '/api/auth/sessions',
-        signal,
-        { method: 'DELETE' },
-      );
-      if (signal.aborted) return;
-      toast.success(
-        sessionId
-          ? 'Session déconnectée'
-          : 'Toutes les autres sessions ont été déconnectées',
-      );
-      reload = true;
-    } catch (failure) {
-      if (signal.aborted) return;
-      if (
-        failure instanceof ApiClientError &&
-        [401, 403].includes(failure.status)
-      ) {
-        setSessions([]);
-        setSessionsError(
-          'Votre accès aux sessions doit être vérifié. Rechargez la liste avant de continuer.',
-        );
-      } else if (
-        !(failure instanceof ApiClientError) ||
-        failure.status >= 500 ||
-        failure.code === 'INVALID_RESPONSE'
-      ) {
-        setSessionsNotice(
-          'La réponse n’a pas pu être confirmée. Vérifiez les sessions restantes avant de recommencer.',
-        );
-        reload = true;
-      } else if (failure.status === 404) {
-        setSessionsNotice(
-          'Cette session n’est plus disponible. Vérifiez les sessions restantes avant de continuer.',
-        );
-        reload = true;
-      } else {
-        toast.error(failure.message);
-      }
-    } finally {
-      // A completed mutation must not leave its modal locked on a later GET.
-      if (!signal.aborted) {
-        setRevokingAll(false);
-        setRevokingId(null);
-        setShowRevokeDialog(false);
-        setSessionToRevoke(null);
-      }
-      if (!signal.aborted && reload) {
-        await fetchSessions();
-      }
-      revokingRef.current = false;
-    }
-  };
 
   const handleMfaSetupComplete = async (
     data: MfaSetupConfirmationData,
@@ -335,10 +152,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     if (lifetimeRef.current?.signal.aborted) return;
     await onUpdate(data.user);
     if (lifetimeRef.current?.signal.aborted) return;
-    await Promise.all([
-      fetchMfaStatus(),
-      ...(canManageSessions ? [fetchSessions()] : []),
-    ]);
+    await Promise.all([fetchMfaStatus(), reloadSessions()]);
     if (lifetimeRef.current?.signal.aborted) return;
     setMfaSetupMode(null);
     toast.success(
@@ -354,16 +168,11 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
     if (lifetimeRef.current?.signal.aborted) return;
     await onUpdate(updatedUser);
     if (lifetimeRef.current?.signal.aborted) return;
-    await Promise.all([
-      fetchMfaStatus(),
-      ...(canManageSessions ? [fetchSessions()] : []),
-    ]);
+    await Promise.all([fetchMfaStatus(), reloadSessions()]);
     if (lifetimeRef.current?.signal.aborted) return;
     setShowRecoveryCodesDialog(false);
   };
 
-  const currentSession = sessions.find((session) => session.isCurrent);
-  const otherSessions = sessions.filter((session) => !session.isCurrent);
   const passwordChangedLabel = userData.passwordChangedAt
     ? formatRelativeAccountTime(userData.passwordChangedAt)
     : 'Jamais';
@@ -386,12 +195,12 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         {canViewPasswordSecurity && (
           <Card aria-labelledby="account-password-heading" className="min-w-0">
             <CardHeader className="p-4 sm:p-5">
-              <SectionTitle
+              <SecurityCardTitle
                 icon={<KeyRound className="size-3.5" />}
                 id="account-password-heading"
               >
                 Mot de passe
-              </SectionTitle>
+              </SecurityCardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-4 sm:p-5">
               <div className="space-y-3">
@@ -412,22 +221,6 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                     {passwordChangedLabel}
                   </span>
                 </div>
-                {userData.failedLoginAttempts > 0 && (
-                  <>
-                    <Separator className="bg-border/60" />
-                    <div className="flex items-start justify-between gap-4">
-                      <span className="text-muted-foreground text-sm">
-                        Connexions refusées
-                      </span>
-                      <span className="text-warning text-right text-sm font-medium">
-                        {userData.failedLoginAttempts}{' '}
-                        {userData.failedLoginAttempts > 1
-                          ? 'tentatives échouées actuellement comptabilisées'
-                          : 'tentative échouée actuellement comptabilisée'}
-                      </span>
-                    </div>
-                  </>
-                )}
               </div>
             </CardContent>
             {canChangePassword && (
@@ -453,12 +246,12 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             className="min-w-0"
           >
             <CardHeader className="p-4 sm:p-5">
-              <SectionTitle
+              <SecurityCardTitle
                 icon={<QrCode className="size-3.5" />}
                 id="account-mfa-heading"
               >
                 Double authentification
-              </SectionTitle>
+              </SecurityCardTitle>
             </CardHeader>
             <CardContent className="space-y-3 p-4 sm:p-5">
               {loadingMfaStatus ? (
@@ -591,113 +384,10 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           </Card>
         )}
         {canManageSessions && (
-          <Card
-            aria-busy={loadingSessions}
-            aria-labelledby="account-sessions-heading"
-            className="min-w-0"
-          >
-            <CardHeader className="p-4 sm:p-5">
-              <SectionTitle
-                icon={<Monitor className="size-3.5" />}
-                id="account-sessions-heading"
-              >
-                Sessions actives
-              </SectionTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 p-3 sm:p-4">
-              {sessionsNotice && (
-                <p
-                  className="border-warning/30 bg-warning/10 text-warning rounded-md border p-3 text-sm leading-6"
-                  role="status"
-                >
-                  {sessionsNotice}
-                </p>
-              )}
-              {loadingSessions ? (
-                <div aria-live="polite" className="space-y-2" role="status">
-                  <span className="sr-only">
-                    Chargement des sessions actives
-                  </span>
-                  <Skeleton className="h-24 rounded-md" />
-                  <Skeleton className="h-24 rounded-md" />
-                </div>
-              ) : sessionsError ? (
-                <div
-                  className="border-destructive/35 bg-destructive/10 text-destructive flex flex-wrap items-center justify-between gap-3 rounded-md border p-3 text-sm"
-                  role="alert"
-                >
-                  <span>{sessionsError}</span>
-                  <Button
-                    onClick={() => {
-                      sessionsFocusRef.current = true;
-                      void fetchSessions();
-                    }}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    Réessayer
-                  </Button>
-                </div>
-              ) : sessions.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  Aucune session active n&apos;a été trouvée.
-                </p>
-              ) : (
-                <>
-                  {currentSession && (
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground text-xs font-medium uppercase">
-                        Session actuelle
-                      </p>
-                      <SessionRow session={currentSession} />
-                    </div>
-                  )}
-                  {otherSessions.length > 0 ? (
-                    <div className="space-y-2">
-                      <p className="text-muted-foreground text-xs font-medium uppercase">
-                        Autres sessions
-                      </p>
-                      <div className="space-y-2">
-                        {otherSessions.map((session) => (
-                          <SessionRow
-                            key={session.id}
-                            session={session}
-                            isRevoking={revokingId === session.id}
-                            disabled={revokingAll || revokingId !== null}
-                            onRevoke={setSessionToRevoke}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground text-sm">
-                      Aucune autre session active.
-                    </p>
-                  )}
-                </>
-              )}
-            </CardContent>
-            {!loadingSessions && !sessionsError && otherSessions.length > 0 && (
-              <CardFooter className="justify-end p-4 sm:p-5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="gap-2"
-                  onClick={() => setShowRevokeDialog(true)}
-                  disabled={revokingAll || revokingId !== null}
-                >
-                  {revokingAll ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <LogOut className="size-4" />
-                  )}
-                  Déconnecter les autres sessions
-                </Button>
-              </CardFooter>
-            )}
-          </Card>
+          <AccountSessionsCard
+            mfaEnabledAt={userData.mfaEnabledAt}
+            ref={sessionsRef}
+          />
         )}
       </section>
       <ChangePasswordDialog
@@ -707,7 +397,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           if (lifetimeRef.current?.signal.aborted) return;
           await onUpdate();
           if (lifetimeRef.current?.signal.aborted) return;
-          if (canManageSessions) await fetchSessions();
+          await reloadSessions();
           if (lifetimeRef.current?.signal.aborted) return;
           setShowPasswordDialog(false);
           toast.success('Mot de passe modifié avec succès');
@@ -748,107 +438,6 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
           open
         />
       )}
-      <AlertDialog
-        open={sessionToRevoke !== null}
-        onOpenChange={(open) => {
-          if (!open && !revokingId) setSessionToRevoke(null);
-        }}
-      >
-        <AlertDialogContent
-          className="overflow-y-auto p-0"
-          onCloseAutoFocus={(event) => {
-            if (sessionMutationRef.current) {
-              event.preventDefault();
-              sessionMutationRef.current = false;
-              focusSecurityHeading('account-sessions-heading');
-            }
-          }}
-        >
-          <div className="p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <AlertTriangle size={16} className="text-destructive" />
-                </div>
-                Déconnecter cet appareil ?
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                {sessionToRevoke
-                  ? `${getSessionTitle(sessionToRevoke)} ne pourra plus utiliser cette session.`
-                  : 'Cette session sera immédiatement déconnectée.'}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel disabled={!!revokingId}>
-                Annuler
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(event) => {
-                  event.preventDefault();
-                  if (sessionToRevoke) {
-                    void handleRevokeSession(sessionToRevoke.id);
-                  }
-                }}
-                disabled={!sessionToRevoke || !!revokingId}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {revokingId && <Loader2 className="size-4 animate-spin" />}
-                Déconnecter
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
-      <AlertDialog
-        open={showRevokeDialog}
-        onOpenChange={(open) => {
-          if (!revokingRef.current) setShowRevokeDialog(open);
-        }}
-      >
-        <AlertDialogContent
-          className="overflow-y-auto p-0"
-          onCloseAutoFocus={(event) => {
-            if (sessionMutationRef.current) {
-              event.preventDefault();
-              sessionMutationRef.current = false;
-              focusSecurityHeading('account-sessions-heading');
-            }
-          }}
-        >
-          <div className="p-6">
-            <AlertDialogHeader>
-              <AlertDialogTitle className="text-foreground flex items-center gap-2">
-                <div className="bg-destructive/10 flex h-8 w-8 items-center justify-center rounded-lg">
-                  <AlertTriangle size={16} className="text-destructive" />
-                </div>
-                Déconnecter les autres sessions ?
-              </AlertDialogTitle>
-              <AlertDialogDescription>
-                Vous serez déconnecté de {otherSessions.length} autre
-                {otherSessions.length > 1 ? 's' : ''} appareil
-                {otherSessions.length > 1 ? 's' : ''}. Seule cette session
-                restera active.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-4">
-              <AlertDialogCancel disabled={revokingAll}>
-                Annuler
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(event) => {
-                  event.preventDefault();
-                  void handleRevokeSession();
-                }}
-                disabled={revokingAll}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {revokingAll && <Loader2 className="size-4 animate-spin" />}
-                Déconnecter
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };

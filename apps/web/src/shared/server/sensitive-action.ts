@@ -1,12 +1,11 @@
 import 'server-only';
 
-import { NextResponse } from 'next/server';
-
-import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
+import { ErrorCode } from '$types/api.types';
 import type { SessionType } from '$types/auth.types';
 
+import { ServiceError } from './service-error';
+
 export const PASSWORD_REAUTHENTICATION_MAX_AGE_MS = 30 * 60 * 1000;
-export const ELEVATED_MFA_PROOF_MAX_AGE_MS = 15 * 60 * 1000;
 export const SENSITIVE_ACTION_PROOF_MAX_AGE_MS = 5 * 60 * 1000;
 
 const hasRecentProof = (
@@ -43,17 +42,6 @@ export const hasRecentSensitiveActionProof = (
     now,
   );
 
-export const hasRecentElevatedMfaProof = (
-  session: SessionType | null,
-  now = new Date(),
-): boolean =>
-  hasRecentPasswordReauthentication(session, now) &&
-  hasRecentProof(
-    session?.criticalMfaVerifiedAt,
-    ELEVATED_MFA_PROOF_MAX_AGE_MS,
-    now,
-  );
-
 export const getPasswordReauthenticationExpiration = (
   session: SessionType | null,
   now = new Date(),
@@ -66,93 +54,51 @@ export const getPasswordReauthenticationExpiration = (
       )
     : null;
 
-export const getElevatedMfaProofExpiration = (
+/** The sensitive proof ends with whichever of its two proofs expires first. */
+export const getSensitiveActionProofExpiration = (
   session: SessionType | null,
   now = new Date(),
-): Date | null =>
-  hasRecentPasswordReauthentication(session, now) &&
-  hasRecentElevatedMfaProof(session, now) &&
-  session?.criticalMfaVerifiedAt
-    ? new Date(
-        new Date(session.criticalMfaVerifiedAt).getTime() +
-          ELEVATED_MFA_PROOF_MAX_AGE_MS,
-      )
-    : null;
+): Date | null => {
+  const passwordExpiration = getPasswordReauthenticationExpiration(
+    session,
+    now,
+  );
+  if (
+    !passwordExpiration ||
+    !hasRecentSensitiveActionProof(session, now) ||
+    !session?.criticalMfaVerifiedAt
+  )
+    return null;
 
-export const requireRecentPasswordReauthentication = (
-  session: SessionType | null,
-):
-  | { response?: never; success: true }
-  | {
-      response: NextResponse<ApiErrorResponse>;
-      success: false;
-    } => {
-  if (hasRecentPasswordReauthentication(session)) return { success: true };
-
-  return {
-    response: NextResponse.json(
-      {
-        error: {
-          code: ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED,
-          message:
-            'Confirmez votre mot de passe pour enregistrer cette modification importante',
-        },
-        success: false,
-      },
-      { status: 403 },
+  return new Date(
+    Math.min(
+      passwordExpiration.getTime(),
+      new Date(session.criticalMfaVerifiedAt).getTime() +
+        SENSITIVE_ACTION_PROOF_MAX_AGE_MS,
     ),
-    success: false,
-  };
+  );
 };
 
-export const requireRecentElevatedMfaProof = (
+/** Throws unless the session proved its password within thirty minutes. */
+export const assertRecentPasswordReauthentication = (
   session: SessionType | null,
-):
-  | { response?: never; success: true }
-  | {
-      response: NextResponse<ApiErrorResponse>;
-      success: false;
-    } => {
-  if (hasRecentElevatedMfaProof(session)) return { success: true };
-
-  return {
-    response: NextResponse.json(
-      {
-        error: {
-          code: ErrorCode.CRITICAL_REAUTHENTICATION_REQUIRED,
-          message:
-            'Confirmez votre double authentification pour cette élévation critique',
-        },
-        success: false,
-      },
-      { status: 403 },
-    ),
-    success: false,
-  };
+): void => {
+  if (hasRecentPasswordReauthentication(session)) return;
+  throw new ServiceError(
+    ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED,
+    'Confirmez votre mot de passe pour enregistrer cette modification importante',
+    403,
+  );
 };
 
-export const requireRecentSensitiveActionProof = (
+/** Throws unless the session proved its password and a fresh TOTP code. */
+export const assertRecentSensitiveActionProof = (
   session: SessionType | null,
-):
-  | { response?: never; success: true }
-  | {
-      response: NextResponse<ApiErrorResponse>;
-      success: false;
-    } => {
-  if (hasRecentSensitiveActionProof(session)) return { success: true };
-
-  return {
-    response: NextResponse.json(
-      {
-        error: {
-          code: ErrorCode.REAUTHENTICATION_REQUIRED,
-          message:
-            'Confirmez votre mot de passe et votre double authentification pour continuer',
-        },
-        success: false,
-      },
-      { status: 403 },
-    ),
-    success: false,
-  };
+): void => {
+  if (hasRecentSensitiveActionProof(session)) return;
+  throw new ServiceError(
+    ErrorCode.REAUTHENTICATION_REQUIRED,
+    'Confirmez votre mot de passe et votre double authentification pour continuer',
+    403,
+  );
 };

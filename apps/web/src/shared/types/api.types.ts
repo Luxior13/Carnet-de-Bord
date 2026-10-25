@@ -8,7 +8,6 @@ export enum RoutesApi {
   mfaRecoveryCodes = '/api/auth/mfa/recovery-codes',
   mfaSetup = '/api/auth/mfa/setup',
   mfaVerify = '/api/auth/mfa/verify',
-  users = '/api/users',
 }
 
 export enum ErrorCode {
@@ -20,14 +19,11 @@ export enum ErrorCode {
   CONFLICT = 'CONFLICT',
   INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
   ACCOUNT_DISABLED = 'ACCOUNT_DISABLED',
-  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
   PASSWORD_CHANGE_REQUIRED = 'PASSWORD_CHANGE_REQUIRED',
   PASSWORD_REAUTHENTICATION_REQUIRED = 'PASSWORD_REAUTHENTICATION_REQUIRED',
-  CRITICAL_REAUTHENTICATION_REQUIRED = 'CRITICAL_REAUTHENTICATION_REQUIRED',
   REAUTHENTICATION_REQUIRED = 'REAUTHENTICATION_REQUIRED',
   RATE_LIMITED = 'RATE_LIMITED',
   PAYLOAD_TOO_LARGE = 'PAYLOAD_TOO_LARGE',
-  INTERNAL_NEWS_FEATURE_NOT_CONFIGURED = 'INTERNAL_NEWS_FEATURE_NOT_CONFIGURED',
   PERSON_VERSION_CONFLICT = 'PERSON_VERSION_CONFLICT',
   PRIMARY_CONFLICT = 'PRIMARY_CONFLICT',
   PERSON_FEATURE_NOT_CONFIGURED = 'PERSON_FEATURE_NOT_CONFIGURED',
@@ -48,13 +44,6 @@ export type ApiErrorResponse = {
 };
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
-
-export type PaginationMeta = {
-  limit: number;
-  page: number;
-  total: number;
-  totalPages: number;
-};
 
 export type CursorPaginationMeta = {
   hasMore: boolean;

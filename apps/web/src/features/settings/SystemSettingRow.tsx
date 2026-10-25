@@ -39,7 +39,7 @@ type SystemSettingRowProps = {
   setting: NormalizedSystemSettingItem;
 };
 
-const actionClass = 'h-11 rounded-[8px] px-3 lg:h-10';
+const actionClass = 'h-11 rounded-control px-3 lg:h-10';
 const stepButtonClass =
   'border-border-control bg-input size-11 focus-visible:relative focus-visible:z-10 lg:size-10';
 
@@ -189,7 +189,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                       <Button
                         aria-controls={id}
                         aria-label={`Diminuer d'un jour — ${definition.label}`}
-                        className={`${stepButtonClass} rounded-l-[6px] rounded-r-none`}
+                        className={`${stepButtonClass} rounded-l-compact rounded-r-none`}
                         disabled={!canStep || parsed === definition.min}
                         onClick={() => stepDuration(-1)}
                         size="icon"
@@ -217,7 +217,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                       <Button
                         aria-controls={id}
                         aria-label={`Augmenter d'un jour — ${definition.label}`}
-                        className={`${stepButtonClass} rounded-l-none rounded-r-[6px]`}
+                        className={`${stepButtonClass} rounded-r-compact rounded-l-none`}
                         disabled={!canStep || parsed === definition.max}
                         onClick={() => stepDuration(1)}
                         size="icon"
@@ -298,7 +298,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
           )}
           {editing && conflict !== 'none' && (
             <div
-              className="border-warning/40 mt-4 space-y-2 rounded-[8px] border p-3"
+              className="border-warning/40 rounded-control mt-4 space-y-2 border p-3"
               id={`${id}-conflict`}
               role="alert"
             >

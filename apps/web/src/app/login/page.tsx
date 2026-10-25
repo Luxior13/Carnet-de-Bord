@@ -27,11 +27,6 @@ import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { getSafeReturnPath } from '$utils/navigation.utils';
 
-const LAST_LOGIN_NAME_STORAGE_KEY = 'team-control:last-login-name';
-// Keys from previous auth flows, removed on mount to prevent shared-device autofill.
-const LEGACY_LAST_LOGIN_EMAIL_STORAGE_KEY = 'team-control:last-login-email';
-const LEGACY_LOGIN_EMAILS_STORAGE_KEY = 'team-control:login-emails';
-
 type LoginStep = 'credentials' | 'mfa' | 'setup';
 
 function LoginPage(): React.ReactNode {
@@ -107,18 +102,6 @@ function LoginPage(): React.ReactNode {
       ),
     );
     setIsReturnPathReady(true);
-
-    // Old local identity hints must not autofill a shared device.
-    try {
-      for (const key of [
-        LAST_LOGIN_NAME_STORAGE_KEY,
-        LEGACY_LAST_LOGIN_EMAIL_STORAGE_KEY,
-        LEGACY_LOGIN_EMAILS_STORAGE_KEY,
-      ])
-        window.localStorage.removeItem(key);
-    } catch {
-      /* Authentication does not require browser storage. */
-    }
   }, []);
 
   useEffect(() => {
@@ -339,7 +322,7 @@ function LoginPage(): React.ReactNode {
       <div aria-hidden="true" className="site-background-column" />
       <Card
         aria-busy={isSubmitting || !!userData}
-        className="border-border-content bg-surface-panel relative z-10 w-full max-w-md overflow-hidden rounded-[10px] py-0"
+        className="border-border-content bg-surface-panel rounded-panel relative z-10 w-full max-w-md overflow-hidden py-0"
       >
         {userData && (
           <div
@@ -409,6 +392,7 @@ function LoginPage(): React.ReactNode {
                   <UserRound className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
                     autoCapitalize="none"
+                    autoComplete="username"
                     autoCorrect="off"
                     className="h-10 pl-10"
                     disabled={isSubmitting || !!userData}
@@ -432,6 +416,7 @@ function LoginPage(): React.ReactNode {
                 <div className="relative">
                   <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
+                    autoComplete="current-password"
                     className="h-10 px-10"
                     disabled={isSubmitting || !!userData}
                     id="password"

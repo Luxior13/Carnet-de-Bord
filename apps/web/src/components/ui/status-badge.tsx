@@ -27,7 +27,7 @@ export const StatusBadge: FC<StatusBadgeProps> = ({
 }) => (
   <span
     className={cn(
-      'inline-flex w-fit shrink-0 items-center gap-1.5 rounded-[5px] border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
+      'rounded-badge inline-flex w-fit shrink-0 items-center gap-1.5 border px-2 py-0.5 text-xs leading-5 font-medium whitespace-nowrap',
       STATUS_BADGE_TONES.get(tone),
       className,
     )}

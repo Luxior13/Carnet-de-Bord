@@ -16,11 +16,11 @@ export const PersonsDirectorySkeleton: FC = () => (
   <>
     <div
       aria-hidden="true"
-      className="rounded-[10px] border border-[var(--border-hero)] bg-[linear-gradient(110deg,var(--surface-hero-start),var(--surface-hero-end)_75%)] p-5"
+      className="rounded-panel border border-[var(--border-hero)] bg-[linear-gradient(110deg,var(--surface-hero-start),var(--surface-hero-end)_75%)] p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3.5">
         <div className="flex min-w-0 items-center gap-3.5">
-          <Skeleton className="size-10 shrink-0 rounded-[10px] bg-white/15" />
+          <Skeleton className="rounded-panel size-10 shrink-0 bg-white/15" />
           <div className="min-w-0 space-y-1.5">
             <Skeleton className="h-[23px] w-36 max-w-full rounded-md bg-white/15" />
             <Skeleton className="h-[11px] w-64 max-w-full rounded-sm bg-white/10" />

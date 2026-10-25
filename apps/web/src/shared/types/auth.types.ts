@@ -1,4 +1,4 @@
-import type { AuditAction, AuditCategory, UserRole } from '@repo/shared';
+import type { UserRole } from '@repo/shared';
 
 import { type PermissionsData } from '$constants/permissions.constants';
 
@@ -23,7 +23,6 @@ export type UserType = {
   createdAt: Date;
   /** Non-sensitive readiness flag for receiving critical delegated access. */
   criticalAccessReady?: boolean;
-  failedLoginAttempts: number;
   firstName: string;
   id: string;
   identityDetailsVisible?: boolean;
@@ -31,7 +30,6 @@ export type UserType = {
   isProtected: boolean;
   lastLoginAt: Date | null;
   lastName: string;
-  lockedUntil: Date | null;
   loginName: string;
   mfaEnabledAt: Date | null;
   mustChangePassword: boolean;
@@ -52,15 +50,6 @@ export type UserSessionInfo = {
   rememberMe: boolean;
   userAgent: string | null;
 };
-
-// Full user type (server-side)
-export type ServerUserType = UserType & {
-  deletedAt: Date | null;
-  passwordHash: string;
-};
-
-// Auth response type for client
-export type AuthApiResponseType = UserType | null;
 
 // Server auth response type
 export type ServerAuthResponseType = {
@@ -89,7 +78,7 @@ export type AuthenticatedLoginData = {
   user: UserType;
 };
 
-export type PendingMfaLoginData = {
+type PendingMfaLoginData = {
   challengeExpiresAt: string;
   status: 'mfa_required' | 'mfa_setup_required';
 };
@@ -124,34 +113,6 @@ export type MfaRecoveryCodesRegenerationRequest = {
   currentTotpCode: string;
 };
 
-// Password change request
-export type PasswordChangeRequest = {
-  currentPassword?: string;
-  newPassword: string;
-};
-
-// User creation request (admin only)
-export type CreateUserRequest = {
-  contactEmail?: string | null;
-  firstName: string;
-  lastName: string;
-  loginName: string;
-  role: UserRole;
-};
-
-// User update request
-export type UpdateUserRequest = {
-  contactEmail?: string | null;
-  expectedUpdatedAt?: string;
-  firstName?: string;
-  isActive?: boolean;
-  lastName?: string;
-  loginName?: string;
-  permissions?: PermissionsData | null;
-  permissionScope?: 'access' | 'account';
-  role?: UserRole;
-};
-
 // User statistics
 export type UserStatsType = {
   active: number;
@@ -179,28 +140,4 @@ export type UsersListResponse = {
   securityDetailsVisible: boolean;
   stats: UserStatsType;
   users: UserType[];
-};
-
-// Audit log entry
-export type AuditLogEntry = {
-  action: AuditAction;
-  category: AuditCategory;
-  createdAt: Date;
-  description: string;
-  id: string;
-  ipAddress: string | null;
-  metadata: Record<string, unknown> | null;
-  targetUserId: string | null;
-  userAgent: string | null;
-  userId: string | null;
-};
-
-// User audit stats
-export type UserAuditStats = {
-  failedLogins: number;
-  failedLoginsCapped: boolean;
-  successfulLogins: number;
-  successfulLoginsCapped: boolean;
-  totalActions: number;
-  totalActionsCapped: boolean;
 };

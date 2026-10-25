@@ -67,7 +67,7 @@ test('validates the signed v9 format, ordered tables and exact counts', () => {
     createBackupLines({ users: [{ id: 'user-1' }, { id: 'user-2' }] }),
   );
 
-  assert.equal(summary.manifest.formatVersion, 9);
+  assert.equal(summary.manifest.formatVersion, 10);
   assert.equal(summary.counts.users, 2);
   const tableNames: readonly string[] = DATABASE_BACKUP_TABLES.map(
     ({ tableName }) => tableName,
@@ -77,7 +77,8 @@ test('validates the signed v9 format, ordered tables and exact counts', () => {
   assert.equal(tableNames.includes('PartnerOrganization'), false);
   assert.equal(tableNames.includes('PartnerFollowUpEntry'), false);
   assert.equal(tableNames.includes('PartnerTimelineEvent'), false);
-  assert.equal(tableNames.includes('InternalAnnouncement'), true);
+  assert.equal(tableNames.includes('InternalAnnouncement'), false);
+  assert.equal(tableNames.includes('ArchivedStaffProfile'), false);
 });
 
 test('serializes bigint and bytea without loss', () => {

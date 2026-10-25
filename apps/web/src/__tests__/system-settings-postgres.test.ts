@@ -15,8 +15,8 @@ import {
 import { PUT } from '$app/api/systeme/parametres/[key]/route';
 import { GET } from '$app/api/systeme/parametres/route';
 import { PERMISSIONS } from '$constants/permissions.constants';
-import { mapUserToUserType } from '$server/auth';
 import { getSystemSettingValue } from '$server/system-settings';
+import { mapUserToUserType } from '$server/user-projection';
 
 const connection = vi.hoisted(() => ({
   client: null as PrismaClient | null,
@@ -47,8 +47,8 @@ vi.mock('next/headers', () => ({ headers: vi.fn(async () => new Headers()) }));
 vi.mock('$server/rate-limiter', () => ({
   reserveAuthenticatedApiRateLimit: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('$server/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('$server/auth')>()),
+vi.mock('$server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/session')>()),
   getAuthSession: connection.session,
 }));
 

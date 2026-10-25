@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
+import { verify as verifyArgon2 } from '@node-rs/argon2';
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcryptjs';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { createUser } from '$features/users/server/user-create.service';
@@ -105,7 +105,7 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
   });
 
   it.each(['USER', 'ADMIN'] as const)(
-    'persists a complete %s account, reservation and audit with a real bcrypt hash',
+    'persists a complete %s account, reservation and audit with a real argon2id hash',
     async (role) => {
       const input = {
         ...data(login(), role),
@@ -124,10 +124,8 @@ describe.skipIf(!target)('user creation transactions on PostgreSQL', () => {
         role,
         securityVersion: 0,
       });
-      expect(bcrypt.getRounds(user.passwordHash)).toBe(12);
-      expect(await bcrypt.compare(input.password, user.passwordHash)).toBe(
-        true,
-      );
+      expect(user.passwordHash).toMatch(/^\$argon2id\$v=19\$m=19456,t=2,p=1\$/);
+      expect(await verifyArgon2(user.passwordHash, input.password)).toBe(true);
       expect(
         await db.loginNameReservation.findUnique({
           where: { loginName: user.loginName },

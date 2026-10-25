@@ -224,6 +224,7 @@ export const MfaActionDialog: FC<MfaActionDialogProps> = ({
                     onChange={(event) => setCurrentPassword(event.target.value)}
                     placeholder="Confirmez votre identité"
                     required
+                    autoComplete="current-password"
                     type="password"
                     value={currentPassword}
                   />

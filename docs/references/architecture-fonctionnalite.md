@@ -73,8 +73,20 @@ dans les composants React.
 Chaque vue couvre les états applicables à son parcours : chargement initial,
 rafraîchissement non bloquant, résultat, état vide, erreur avec nouvelle tentative,
 permission refusée et conflit de version pour une édition concurrente. Réutiliser
-les primitives adaptées (`apiFetchJson`, `useAsyncResource`, `ResourceStateBoundary`)
-sans refonte automatique d'une page existante pour une petite retouche.
+le client typé `apiFetchJson` et son `ApiClientError`, sans refonte automatique
+d'une page existante pour une petite retouche.
+
+**Couche de données client — décision du 25 octobre 2026 (REV-20)** : TanStack
+Query (v5) devient la couche commune de lecture et de mutation des **nouveaux
+modules** : cache par clé, déduplication, annulation, reprise, données périmées
+et états de chargement, au lieu des `AbortController` et `mountedRef` recodés
+par page. Chaque module l’enveloppe dans ses hooks (`hooks/use<Objet>Query`,
+`use<Action>Mutation`) avec `apiFetchJson` comme fonction de requête ; un
+conflit de version reste une `ApiClientError` traitée par la page. La
+dépendance s’installe avec son **premier consommateur** (version exacte publiée
+depuis au moins deux semaines), jamais sans usage. Les pages livrées migrent à
+leur prochaine reprise en profondeur, pas par une campagne de réécriture
+([revue du 23 octobre 2026](../audits/2026-10-23-revue-complete.md), REV-20).
 Les mutations reçoivent un retour visible ; la confirmation d'intention dépend
 du risque et le toast est retenu lorsqu'il apporte une information utile, selon
 [politique des retours](feedback.md).

@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   listPersons: vi.fn(),
   ready: vi.fn(),
 }));
-vi.mock('$server/auth', () => ({
+vi.mock('$server/session', () => ({
   getPageAuthSession: mocks.getPageAuthSession,
 }));
 vi.mock('$features/persons/server/person.service', () => ({

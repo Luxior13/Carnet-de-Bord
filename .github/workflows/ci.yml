@@ -17,7 +17,21 @@ jobs:
   verify:
     name: Lint, types, tests and build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: carnet_ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_USER: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d carnet_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/carnet_ci
       MFA_ENCRYPTION_KEY_V1: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
@@ -43,6 +57,13 @@ jobs:
 
       - name: Run repository checks
         run: bun run check
+
+      # The SQL suites (login, MFA, accounts, persons, settings) are skipped by
+      # `bun run check`; this step runs them on disposable databases.
+      - name: Run PostgreSQL suites
+        env:
+          POSTGRES_TEST_ADMIN_URL: postgresql://ci:ci@127.0.0.1:5432/postgres
+        run: bun run test:postgres
 
   e2e:
     name: Production end-to-end smoke test

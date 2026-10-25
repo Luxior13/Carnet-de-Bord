@@ -27,12 +27,16 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('server-only', () => ({}));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
+}));
+vi.mock('$server/session', () => ({
   createSession: mocks.createSession,
   generateSessionToken: mocks.generateSessionToken,
-  isSecurityVersionMismatchError: vi.fn(() => false),
   setSessionTokenCookie: mocks.setSessionTokenCookie,
+}));
+vi.mock('$server/auth-errors', () => ({
+  isSecurityVersionMismatchError: vi.fn(() => false),
 }));
 
 vi.mock('$server/logger', () => ({

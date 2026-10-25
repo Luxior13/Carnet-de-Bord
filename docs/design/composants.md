@@ -84,7 +84,9 @@ aux états nécessitant description, erreur ou reprise.
 | Saisie de la palette de commandes | [CommandInput](../../apps/web/src/components/ui/command.tsx) | Réservée à Command ; les actions annexes ne doivent pas sélectionner un résultat par propagation de touche. |
 
 Input, Textarea et CommandInput imposent la politique commune sans
-autocomplétion ; le formulaire porte aussi `autoComplete="off"`. Les indications
+autocomplétion ; seul Input accepte, sur un champ d'authentification, l'un des
+quatre jetons de la [règle d'autocomplétion](comportements.md#autocomplétion).
+Le formulaire porte aussi `autoComplete="off"`. Les indications
 d’exclusion des gestionnaires ne garantissent pas qu’une extension les respecte.
 Les choix métier d’un Select restent disponibles.
 

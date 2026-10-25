@@ -5,6 +5,7 @@ import { PERMISSIONS } from '$constants/permissions.constants';
 
 const mocks = vi.hoisted(() => ({
   clearMfaChallengeCookie: vi.fn(),
+  clearRateLimit: vi.fn(),
   consumeVerifiedMfaProof: vi.fn(),
   createAuditLogWithHeaders: vi.fn(),
   createSession: vi.fn(),
@@ -26,7 +27,6 @@ const mocks = vi.hoisted(() => ({
     },
     user: { findUnique: vi.fn() },
   },
-  recordLoginAttempt: vi.fn(),
   requireAuth: vi.fn(),
   requirePermission: vi.fn(),
   reserveMfaRateLimits: vi.fn(),
@@ -83,13 +83,21 @@ vi.mock('$server/api-auth', () => ({
   requirePermission: mocks.requirePermission,
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
+}));
+vi.mock('$server/session', () => ({
   createSession: mocks.createSession,
   generateSessionToken: mocks.generateSessionToken,
-  isSecurityVersionMismatchError: vi.fn(() => false),
-  mapUserToUserType: mocks.mapUserToUserType,
   setSessionTokenCookie: mocks.setSessionTokenCookie,
+}));
+vi.mock('$server/auth-errors', () => ({
+  isSecurityVersionMismatchError: vi.fn(() => false),
+}));
+vi.mock('$server/user-projection', () => ({
+  mapUserToUserType: mocks.mapUserToUserType,
+}));
+vi.mock('$server/password', () => ({
   verifyPassword: mocks.verifyPassword,
 }));
 
@@ -121,12 +129,12 @@ vi.mock('$server/prisma', () => ({
 }));
 
 vi.mock('$server/rate-limiter', () => ({
+  clearRateLimit: mocks.clearRateLimit,
   createMfaRateLimitKeys: vi.fn(() => ({
     account: 'mfa-account',
     challenge: 'mfa-challenge',
     ip: 'mfa-ip',
   })),
-  recordLoginAttempt: mocks.recordLoginAttempt,
   reserveMfaRateLimits: mocks.reserveMfaRateLimits,
   reserveSensitiveActionRateLimit: mocks.reserveSensitiveActionRateLimit,
 }));
@@ -271,7 +279,7 @@ describe('/api/auth/mfa/setup invariants', () => {
       remainingAttempts: 4,
     });
     mocks.verifyPassword.mockResolvedValue(true);
-    mocks.recordLoginAttempt.mockResolvedValue(undefined);
+    mocks.clearRateLimit.mockResolvedValue(undefined);
     mocks.consumeVerifiedMfaProof.mockResolvedValue(undefined);
     mocks.createAuditLogWithHeaders.mockResolvedValue(undefined);
     mocks.generateMfaChallengeToken.mockReturnValue('new-challenge');

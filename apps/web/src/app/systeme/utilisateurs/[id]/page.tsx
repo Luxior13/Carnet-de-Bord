@@ -5,7 +5,7 @@ import { UserDetailPage } from '$components/users/UserDetailPage';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { getUserForActor } from '$features/users/server/user-detail.service';
 import { getUserDetailScope } from '$features/users/user-detail-scope';
-import { getPageAuthSession } from '$server/auth';
+import { getPageAuthSession } from '$server/session';
 import type { UserType } from '$types/auth.types';
 
 type AdministrationUserDetailPageProps = {

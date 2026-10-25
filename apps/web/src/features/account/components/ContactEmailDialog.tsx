@@ -488,6 +488,7 @@ export const ContactEmailDialog: FC<ContactEmailDialogProps> = ({
                   onChange={(event) => setCurrentPassword(event.target.value)}
                   placeholder="Confirmez votre identité"
                   required
+                  autoComplete="current-password"
                   type="password"
                   value={currentPassword}
                 />

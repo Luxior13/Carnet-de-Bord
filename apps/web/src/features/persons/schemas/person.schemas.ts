@@ -150,7 +150,7 @@ const withMinimumIdentity = <T extends z.ZodRawShape>(shape: T) =>
       }
     });
 
-export const personEmailInputSchema = z
+const personEmailInputSchema = z
   .object({
     email: z
       .string()
@@ -207,7 +207,7 @@ const buildPersonPhoneSchema = <T extends z.ZodRawShape>(extraShape: T) =>
       return { ...phoneValue, normalizedPhone: parsed.number };
     });
 
-export const personPhoneInputSchema = buildPersonPhoneSchema({});
+const personPhoneInputSchema = buildPersonPhoneSchema({});
 
 const optionalUrl = z
   .string()

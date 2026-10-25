@@ -8,13 +8,15 @@ import {
   getAccessPermissionKeys,
   getAccountPermissionKeys,
   normalizePermissionOverrides,
-  preserveRetiringPermissionOverrides,
 } from '$constants/permissions.constants';
 import {
   getChangedPermissionKeys,
   type UserUpdateInput,
 } from '$features/users/user-update.schema';
-import { type AuditLogInput, createAuditLogWithHeaders } from '$server/auth';
+import {
+  type AuditLogInput,
+  createAuditLogWithHeaders,
+} from '$server/audit-log';
 import { prisma } from '$server/prisma';
 import {
   assertUserActionProof,
@@ -119,11 +121,7 @@ export const prepareUserUpdate = (
     ) {
       beforeValues.permissions = existingPermissionOverrides;
       afterValues.permissions = permissions;
-      updateData.permissions =
-        preserveRetiringPermissionOverrides(
-          existingUser.permissions as Record<string, boolean> | null,
-          permissions,
-        ) ?? Prisma.DbNull;
+      updateData.permissions = permissions ?? Prisma.DbNull;
     }
   }
   const changedKeys = Object.keys(afterValues);

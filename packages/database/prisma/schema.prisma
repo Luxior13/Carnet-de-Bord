@@ -54,8 +54,6 @@ model User {
   /// to remain active, undeleted and administrative.
   isProtected            Boolean   @default(false)
   mustChangePassword     Boolean   @default(false)
-  failedLoginAttempts    Int       @default(0)
-  lockedUntil            DateTime?
   lastLoginAt            DateTime?
   passwordChangedAt      DateTime?
   mfaEnabledAt           DateTime?
@@ -69,13 +67,11 @@ model User {
   sessions              Session[]
   auditLogs             AuditLog[]             @relation("AuditActor")
   targetedAuditLogs     AuditLog[]             @relation("AuditTarget")
-  archivedStaffProfile  ArchivedStaffProfile?
   loginNameReservations LoginNameReservation[]
   totpCredential        TotpCredential?
   totpEnrollment        TotpEnrollment?
   mfaRecoveryCodes      MfaRecoveryCode[]
   mfaLoginChallenge     MfaLoginChallenge?
-  internalAnnouncements InternalAnnouncement[] @relation("InternalAnnouncementAuthor")
   updatedSystemSettings SystemSetting[]        @relation("SystemSettingUpdater")
 
   @@index([contactEmail])
@@ -84,7 +80,6 @@ model User {
   @@index([deletedAt, createdAt])
   @@index([deletedAt, isActive])
   @@index([deletedAt, lastLoginAt])
-  @@index([deletedAt, lockedUntil])
   @@index([deletedAt, mustChangePassword])
   @@index([deletedAt, role])
   @@index([mfaEnabledAt])
@@ -195,7 +190,6 @@ model MfaLoginChallenge {
   securityVersion     Int
   credentialUpdatedAt DateTime?
   rememberMe          Boolean             @default(false)
-  attempts            Int                 @default(0)
   expiresAt           DateTime
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
@@ -486,31 +480,6 @@ model PersonDeletionTombstone {
   deletedAt           DateTime @default(now())
 }
 
-/// Read-only archive of the legacy StaffProfile table.
-/// The application no longer writes these fields, but keeping the historical
-/// values prevents the migration baseline from destroying existing data.
-model ArchivedStaffProfile {
-  id           String    @id
-  userId       String?   @unique
-  displayName  String?
-  jobTitle     String?
-  department   String?
-  discordId    String?
-  phone        String?
-  timezone     String?
-  joinedAt     DateTime?
-  internalNote String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([department])
-  @@index([discordId])
-  @@index([jobTitle])
-  @@index([joinedAt])
-}
-
 model RateLimit {
   id           String    @id @default(cuid())
   key          String    @unique
@@ -521,27 +490,6 @@ model RateLimit {
   updatedAt    DateTime  @updatedAt
 
   @@index([blockedUntil])
-}
-
-/// Editorial information shared with authenticated members. Author snapshots
-/// remain readable if the originating account is later removed.
-model InternalAnnouncement {
-  id                        String    @id @default(cuid())
-  title                     String    @db.VarChar(160)
-  body                      String    @db.VarChar(2000)
-  publishedAt               DateTime  @default(now())
-  pinnedAt                  DateTime?
-  createdById               String?
-  authorDisplayNameSnapshot String    @db.VarChar(200)
-  authorLoginNameSnapshot   String    @db.VarChar(64)
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
-
-  createdBy User? @relation("InternalAnnouncementAuthor", fields: [createdById], references: [id], onDelete: SetNull)
-
-  @@index([publishedAt, id])
-  @@index([pinnedAt, publishedAt, id])
-  @@index([createdById])
 }
 
 /// Non-secret runtime configuration. Credentials and encryption material must

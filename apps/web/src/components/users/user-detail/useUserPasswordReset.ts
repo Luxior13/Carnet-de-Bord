@@ -13,7 +13,7 @@ import { ApiClientError, apiFetchJson } from '$utils/api.utils';
 
 import type { useAdminStepUpController } from './useAdminStepUpController';
 
-export const TEMPORARY_PASSWORD_DISPLAY_MS = 2 * 60 * 1000;
+const TEMPORARY_PASSWORD_DISPLAY_MS = 2 * 60 * 1000;
 type PasswordResetController = {
   acknowledged: boolean;
   announcementRef: RefObject<HTMLDivElement | null>;

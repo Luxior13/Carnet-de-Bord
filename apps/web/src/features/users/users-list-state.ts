@@ -14,13 +14,13 @@ export type UsersListRequest = {
   status: FilterStatus;
 };
 
-export const FILTER_STATUS_OPTIONS: readonly FilterStatus[] = [
+const FILTER_STATUS_OPTIONS: readonly FilterStatus[] = [
   'all',
   'active',
   'inactive',
   'pending',
 ];
-export const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
+const FILTER_ROLE_OPTIONS: readonly FilterRole[] = [
   'all',
   'SUPERADMIN',
   UserRole.ADMIN,

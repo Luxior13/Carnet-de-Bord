@@ -13,7 +13,6 @@ import {
 } from 'vitest';
 
 import { POST } from '$app/api/users/route';
-import { PERMISSIONS } from '$constants/permissions.constants';
 
 const connection = vi.hoisted(() => ({
   afterHash: null as (() => Promise<void>) | null,
@@ -45,12 +44,15 @@ vi.mock('next/headers', () => ({
 vi.mock('$server/rate-limiter', () => ({
   reserveAuthenticatedApiRateLimit: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('$server/auth', async (importOriginal) => {
-  const original = await importOriginal<typeof import('$server/auth')>();
+vi.mock('$server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/session')>()),
+  getAuthSession: connection.session,
+}));
+vi.mock('$server/password', async (importOriginal) => {
+  const original = await importOriginal<typeof import('$server/password')>();
 
   return {
     ...original,
-    getAuthSession: connection.session,
     hashPassword: async (password: string): Promise<string> => {
       const hash = await original.hashPassword(password);
       await connection.afterHash?.();
@@ -192,9 +194,12 @@ describe.skipIf(!target)(
               data: { securityVersion: { increment: 1 } },
               where: { id: actor.id },
             });
+          // An ADMIN keeps every administrative access whatever its
+          // overrides (rule of 18 October 2026): losing the right means
+          // losing the role.
           if (condition === 'permission removed')
             await db.user.update({
-              data: { permissions: { [PERMISSIONS.USERS.CREATE]: false } },
+              data: { role: 'USER' },
               where: { id: actor.id },
             });
           if (condition === 'actor disabled')

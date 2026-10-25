@@ -132,6 +132,46 @@ describe('middleware security', () => {
     expect(response.headers.get('Cache-Control')).toContain('no-store');
   });
 
+  it.each(['cross-site', 'same-site', 'none'])(
+    'refuses a mutation the browser labels %s, even with matching tokens',
+    (fetchSite) => {
+      const response = middleware(
+        new NextRequest('http://localhost/api/auth/login', {
+          headers: {
+            cookie: `csrf-token=${VALID_CSRF_TOKEN}`,
+            'sec-fetch-site': fetchSite,
+            'x-csrf-token': VALID_CSRF_TOKEN,
+          },
+          method: 'POST',
+        }),
+      );
+
+      expect(response.status).toBe(403);
+    },
+  );
+
+  it('accepts a same-origin mutation with matching tokens', () => {
+    const response = middleware(
+      new NextRequest('http://localhost/api/auth/login', {
+        headers: {
+          cookie: `csrf-token=${VALID_CSRF_TOKEN}`,
+          'sec-fetch-site': 'same-origin',
+          'x-csrf-token': VALID_CSRF_TOKEN,
+        },
+        method: 'POST',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+  });
+
+  it('no longer sends the obsolete X-XSS-Protection header', () => {
+    const response = middleware(new NextRequest('http://localhost/login'));
+
+    expect(response.headers.get('x-xss-protection')).toBeNull();
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff');
+  });
+
   it('uses the closest valid proxy hop instead of a forged forwarded prefix', () => {
     middleware(
       new NextRequest('http://localhost/api/dashboard', {

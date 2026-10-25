@@ -24,7 +24,7 @@ import {
   Wallet,
 } from 'lucide-react';
 
-export const NAVIGATION_ICONS = {
+const NAVIGATION_ICONS = {
   Activity,
   Archive,
   Bell,

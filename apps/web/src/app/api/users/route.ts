@@ -1,24 +1,21 @@
 import { UserRole } from '@repo/database';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGINATION } from '$constants/pagination.constants';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { createUserSchema } from '$features/users/create-user.schema';
-import { createUser } from '$features/users/server/user-create.service';
+import { createUserForActor } from '$features/users/server/user-admin.service';
 import { listUsers } from '$features/users/server/users-list.service';
 import { requireAuth, requirePermission } from '$server/api-auth';
 import {
   apiError,
   apiErrors,
-  isPrismaUniqueConstraintError,
+  apiSuccess,
   parseJsonBody,
   parsePagination,
 } from '$server/api-response';
-import { generateTemporaryPassword, mapUserToUserType } from '$server/auth';
-import { prisma } from '$server/prisma';
-import { requireRecentSensitiveActionProof } from '$server/sensitive-action';
-import { UserActionAuthorizationError } from '$server/user-action-authorization';
+import { serviceErrorResponse } from '$server/service-error';
+import { mapUserToUserType } from '$server/user-projection';
 import { protectUserIdentityForActor } from '$server/user-visibility';
 import {
   type ApiErrorResponse,
@@ -33,7 +30,6 @@ type UserSortOption = (typeof USER_SORT_OPTIONS)[number];
 const USER_STATUS_OPTIONS = ['active', 'inactive', 'pending'] as const;
 type UserStatusOption = (typeof USER_STATUS_OPTIONS)[number];
 const USER_SEARCH_MAX_LENGTH = 100;
-const USERS_PAGE_AUDIT_LOCATION = FEATURES.users.audit;
 
 function normalizeUserSort(value: string | null): UserSortOption {
   return USER_SORT_OPTIONS.includes(value as UserSortOption)
@@ -102,16 +98,10 @@ export async function GET(
     const status = normalizeUserStatus(searchParams.get('status'));
 
     if (status === 'pending' && !canViewSecurity) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message:
-              'La permission de voir la sécurité des comptes est requise pour ce filtre',
-          },
-          success: false,
-        },
-        { status: 403 },
+      return apiError(
+        ErrorCode.FORBIDDEN,
+        'La permission de voir la sécurité des comptes est requise pour ce filtre',
+        403,
       );
     }
 
@@ -121,18 +111,8 @@ export async function GET(
       const exactLogin = loginNameSchema.safeParse(
         searchParams.get('loginName'),
       );
-      if (!exactLogin.success) {
-        return NextResponse.json(
-          {
-            error: {
-              code: ErrorCode.VALIDATION_ERROR,
-              message: 'Identifiant invalide',
-            },
-            success: false,
-          },
-          { status: 400 },
-        );
-      }
+      if (!exactLogin.success)
+        return apiErrors.validation('Identifiant invalide');
       loginName = exactLogin.data;
     }
 
@@ -141,47 +121,42 @@ export async function GET(
       { canViewContact, canViewSecurity, isProtected: auth.user.isProtected },
     );
 
-    return NextResponse.json({
-      data: {
-        pagination: {
-          limit,
-          page,
-          total,
-          totalPages: Math.ceil(total / limit),
-        },
-        securityDetailsVisible: canViewSecurity,
-        stats,
-        users: users.map((user) => {
-          const mappedUser = mapUserToUserType({
-            ...user,
-            permissions: null,
-          });
-
-          return protectUserIdentityForActor(
-            {
-              ...mappedUser,
-              ...(canViewContact
-                ? {}
-                : { contactEmail: null, contactEmailVerifiedAt: null }),
-              ...(canViewSecurity
-                ? { securityDetailsVisible: true }
-                : {
-                    failedLoginAttempts: 0,
-                    lockedUntil: null,
-                    mfaEnabledAt: null,
-                    mustChangePassword: false,
-                    passwordChangedAt: null,
-                    securityDetailsVisible: false,
-                  }),
-            },
-            auth.user,
-          );
-        }),
+    return apiSuccess({
+      pagination: {
+        limit,
+        page,
+        total,
+        totalPages: Math.ceil(total / limit),
       },
-      success: true,
+      securityDetailsVisible: canViewSecurity,
+      stats,
+      users: users.map((user) => {
+        const mappedUser = mapUserToUserType({
+          ...user,
+          permissions: null,
+        });
+
+        return protectUserIdentityForActor(
+          {
+            ...mappedUser,
+            ...(canViewContact
+              ? {}
+              : { contactEmail: null, contactEmailVerifiedAt: null }),
+            ...(canViewSecurity
+              ? { securityDetailsVisible: true }
+              : {
+                  mfaEnabledAt: null,
+                  mustChangePassword: false,
+                  passwordChangedAt: null,
+                  securityDetailsVisible: false,
+                }),
+          },
+          auth.user,
+        );
+      }),
     });
   } catch (error) {
-    return apiErrors.internal('USERS_LIST', error);
+    return apiErrors.internal('USERS_LIST', error, request);
   }
 }
 
@@ -203,115 +178,20 @@ export async function POST(
     const parsedBody = await parseJsonBody(request);
     if (!parsedBody.success) return parsedBody.response;
     const validation = createUserSchema.safeParse(parsedBody.data);
-
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.VALIDATION_ERROR,
-            details: validation.error.flatten().fieldErrors,
-            message: 'Données invalides',
-          },
-          success: false,
-        },
-        { status: 400 },
+      return apiErrors.validation(
+        'Données invalides',
+        validation.error.flatten().fieldErrors,
       );
     }
 
-    const { contactEmail, firstName, lastName, loginName, role } =
-      validation.data;
-
-    if (role === 'ADMIN' && !auth.user.isProtected) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message:
-              "Vous n'êtes pas autorisé à créer des comptes administrateurs",
-          },
-          success: false,
-        },
-        { status: 403 },
-      );
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      select: { id: true },
-      where: { loginName },
-    });
-
-    if (existingUser) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.VALIDATION_ERROR,
-            details: { loginName: ['Cet identifiant est déjà utilisé'] },
-            message: 'Cet identifiant est déjà utilisé',
-          },
-          success: false,
-        },
-        { status: 400 },
-      );
-    }
-
-    if (role === 'ADMIN') {
-      const proofCheck = requireRecentSensitiveActionProof(auth.session);
-      if (!proofCheck.success) return proofCheck.response;
-    }
-
-    const temporaryPassword = generateTemporaryPassword();
-    const newUser = await createUser(
-      {
-        contactEmail: contactEmail ?? null,
-        firstName,
-        lastName,
-        loginName,
-        password: temporaryPassword,
-        role,
-      },
-      { actorId: auth.user.id, session: auth.session },
-      (createdUser) => ({
-        action: 'USER_CREATE',
-        category: 'USER',
-        description: `Utilisateur créé: ${createdUser.loginName}`,
-        metadata: {
-          createdUserId: createdUser.id,
-          loginName: createdUser.loginName,
-          ...USERS_PAGE_AUDIT_LOCATION,
-          role: createdUser.role,
-          tabKey: 'creation',
-          tabLabel: 'Création',
-        },
-        targetUserId: createdUser.id,
-        userId: auth.user.id,
-      }),
+    return apiSuccess(
+      await createUserForActor(
+        { actor: auth.user, session: auth.session },
+        validation.data,
+      ),
     );
-
-    return NextResponse.json({
-      data: {
-        temporaryPassword,
-        user: mapUserToUserType(newUser),
-      },
-      success: true,
-    });
   } catch (error) {
-    if (error instanceof UserActionAuthorizationError) {
-      return apiError(error.code, error.message, error.status);
-    }
-    if (isPrismaUniqueConstraintError(error)) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.VALIDATION_ERROR,
-            details: { loginName: ['Cet identifiant est déjà utilisé'] },
-            message: 'Cet identifiant est déjà utilisé',
-          },
-          success: false,
-        },
-        { status: 409 },
-      );
-    }
-
-    return apiErrors.internal('USER_CREATE', error);
+    return serviceErrorResponse(error, { action: 'USER_CREATE', request });
   }
 }

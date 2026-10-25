@@ -66,6 +66,8 @@ type UserSecurityTabProps = {
   onRevokeSession: (sessionId: string) => Promise<void> | void;
   onRevokeSessions: () => void;
   onSaveStatus: () => void;
+  /** Reset result shown in the Password card in place of its reset action. */
+  passwordResetFeedback?: React.ReactNode;
   sessions: UserSessionInfo[];
   sessionsError: string | null;
   sessionsNotice?: string | null;
@@ -308,6 +310,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   onRevokeSession,
   onRevokeSessions,
   onSaveStatus,
+  passwordResetFeedback,
   sessions,
   sessionsError,
   sessionsNotice,
@@ -378,8 +381,6 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
     if (intent === focusIntentRef.current) focusSessions();
   };
   const isSelf = currentUserId === user.id;
-  const lockedUntil = toValidDate(user.lockedUntil);
-  const isLocked = !!lockedUntil && lockedUntil > new Date();
   const passwordChangedLabel = user.passwordChangedAt
     ? formatDate(user.passwordChangedAt)
     : 'Jamais';
@@ -475,13 +476,13 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 id="user-security-password-heading"
                 icon={<KeyRound className="size-3.5" />}
               >
-                Mot de passe & verrouillage
+                Mot de passe
               </SectionTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4">
-              <dl className="grid gap-4 sm:grid-cols-2">
+              <dl>
                 <SecurityInfoBlock
-                  label="État du mot de passe"
+                  label="État"
                   value={
                     user.mustChangePassword ? (
                       <StatusBadge tone="warning">À changer</StatusBadge>
@@ -492,53 +493,33 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 >
                   Dernier changement : {passwordChangedLabel}
                 </SecurityInfoBlock>
-                <SecurityInfoBlock
-                  label="Verrouillage"
-                  value={
-                    isLocked ? (
-                      <StatusBadge tone="danger">Verrouillé</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="muted">Aucun</StatusBadge>
-                    )
-                  }
-                >
-                  {(isLocked || user.failedLoginAttempts > 0) && (
-                    <>
-                      {isLocked && <p>Jusqu'au {formatDate(lockedUntil)}</p>}
-                      {user.failedLoginAttempts > 0 && (
-                        <p className="text-warning">
-                          Tentatives échouées : {user.failedLoginAttempts}
-                        </p>
-                      )}
-                    </>
-                  )}
-                </SecurityInfoBlock>
               </dl>
             </CardContent>
-            {canResetPassword && (
-              <CardFooter className="flex-col items-stretch gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-                <p
-                  id="user-reset-password-description"
-                  className="text-muted-foreground min-w-0 flex-1 text-xs"
-                >
-                  Génère un mot de passe temporaire et ferme toutes les
-                  sessions.
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={onResetPassword}
-                  id="user-reset-password"
-                  aria-describedby="user-reset-password-description"
-                  disabled={isSaving}
-                  className="h-auto min-h-10 w-full shrink-0 gap-2 whitespace-normal sm:w-auto"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                  Réinitialiser le mot de passe
-                </Button>
-              </CardFooter>
-            )}
+            {passwordResetFeedback ??
+              (canResetPassword && (
+                <CardFooter className="flex-col items-stretch gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                  <p
+                    id="user-reset-password-description"
+                    className="text-muted-foreground min-w-0 flex-1 text-xs"
+                  >
+                    Génère un mot de passe temporaire et ferme toutes les
+                    sessions.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={onResetPassword}
+                    id="user-reset-password"
+                    aria-describedby="user-reset-password-description"
+                    disabled={isSaving}
+                    className="h-auto min-h-10 w-full shrink-0 gap-2 whitespace-normal sm:w-auto"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Réinitialiser le mot de passe
+                  </Button>
+                </CardFooter>
+              ))}
           </Card>
           <Card aria-labelledby="user-security-mfa-heading">
             <CardHeader className="p-3.5 sm:p-4">
@@ -575,9 +556,9 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   id="user-reset-mfa-description"
                   className="text-muted-foreground min-w-0 flex-1 text-xs"
                 >
-                  Récupération superadmin : réservée au compte racine en cas de
-                  perte de l&apos;appareil d&apos;authentification et de tous
-                  les codes de secours.
+                  À utiliser seulement si l&apos;utilisateur a perdu son
+                  application d&apos;authentification et tous ses codes de
+                  secours : il la reconfigurera à sa prochaine connexion.
                 </p>
                 {canResetMfa && (
                   <Button

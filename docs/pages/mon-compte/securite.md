@@ -30,6 +30,21 @@ ou globale) ; fenêtres de confirmation communes ; attentes bornées à 30 secon
 ## Décisions retenues
 
 - Attente et reprise des sessions sans rejeu : voir la revue du 12 octobre 2026 ci-dessous.
+- 24 octobre 2026 : la rubrique Mot de passe se limite à l’état et au dernier
+  changement ; la ligne « Connexions refusées » disparaît avec le verrou par
+  compte ([revue complète, REV-01](../../audits/2026-10-23-revue-complete.md)).
+  Elle n’affichait d’ailleurs presque jamais rien : le compteur était remis à
+  zéro dès que le mot de passe était validé, donc avant l’ouverture de la page.
+- 25 octobre 2026 : la fenêtre « Changer le mot de passe » remplace la jauge de
+  force (score fondé sur la composition) par trois règles cochées en direct :
+  12 caractères au moins, ni suite ni répétition simple, ni identifiant, nom ou
+  « Noctambule ». Le serveur refuse en plus les mots de passe courants et
+  l'explique dans l'alerte. Les gestionnaires de mots de passe peuvent remplir
+  ses champs ([règle](../../design/comportements.md#autocomplétion)). La carte
+  Sessions devient `AccountSessionsCard` (état, révocations et confirmations) ;
+  `SecuritySection` passe de 838 à 443 lignes et sort des exceptions du budget
+  d'architecture. Banc client de Mon compte : 25/25, dont deux captures des
+  règles à 390 et 1 440 px.
 
 ## Points ouverts
 

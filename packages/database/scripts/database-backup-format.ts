@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 
-export const DATABASE_BACKUP_FORMAT_VERSION = 9;
+export const DATABASE_BACKUP_FORMAT_VERSION = 10;
 export const DATABASE_BACKUP_BATCH_SIZE = 500;
 export const MAX_DATABASE_BACKUP_BYTES = 2 * 1024 * 1024 * 1024;
 export const MAX_BACKUP_LINE_BYTES = 16 * 1024 * 1024;
@@ -11,7 +11,6 @@ export type BackupCursorKind = 'integer' | 'text';
 export type BackupTableDefinition = {
   cursorColumn: string;
   cursorKind: BackupCursorKind;
-  legacySourceTableName?: string;
   property: string;
   tableName: string;
 };
@@ -60,12 +59,6 @@ export const DATABASE_BACKUP_TABLES = [
     cursorKind: 'text',
     property: 'mfaLoginChallenges',
     tableName: 'MfaLoginChallenge',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    property: 'internalAnnouncements',
-    tableName: 'InternalAnnouncement',
   },
   {
     cursorColumn: 'key',
@@ -126,13 +119,6 @@ export const DATABASE_BACKUP_TABLES = [
     cursorKind: 'text',
     property: 'rateLimits',
     tableName: 'RateLimit',
-  },
-  {
-    cursorColumn: 'id',
-    cursorKind: 'text',
-    legacySourceTableName: 'StaffProfile',
-    property: 'staffProfiles',
-    tableName: 'ArchivedStaffProfile',
   },
 ] as const satisfies readonly BackupTableDefinition[];
 

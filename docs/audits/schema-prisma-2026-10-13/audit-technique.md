@@ -521,8 +521,8 @@ Les références des tableaux pointent vers les propriétaires concrets.
 
 [S00]: ../../../packages/database/prisma/schema.prisma
 [S01]: ../../../apps/web/src/shared/server/audit-event.ts
-[S02]: ../../../apps/web/src/shared/server/auth.ts
-[S03]: ../../../apps/web/src/app/api/users/[id]/audit/route.ts
+[S02]: ../../systeme/architecture.md "auth.ts, réparti par responsabilité le 25 octobre 2026"
+[S03]: ../2026-10-23-revue-complete.md#suivi--lot-3-du-25-octobre-2026 "app/api/users/[id]/audit/route.ts, retirée le 25 octobre 2026"
 [S04]: ../../../packages/database/prisma/migrations/20260721120000_person_identity_foundation/migration.sql
 [S05]: ../../../packages/database/prisma/migrations/20260715120000_durable_audit_events/migration.sql
 [S06]: ../../../packages/database/prisma/migrations/20260716120000_scale_audit_journal/migration.sql
@@ -542,7 +542,7 @@ Les références des tableaux pointent vers les propriétaires concrets.
 [S20]: ../../../apps/web/src/shared/constants/system-settings.constants.ts
 [S21]: ../../exploitation/operations.md
 [S22]: ../../../packages/database/prisma/README.md
-[S23]: ../../../apps/web/src/shared/server/audit-visibility.ts
+[S23]: ../2026-10-23-revue-complete.md#suivi--lot-2-du-24-octobre-2026 "audit-visibility.ts, sans consommateur, retiré le 24 octobre 2026"
 [S24]: ../../../packages/database/prisma/migrations/20261013120000_system_setting_positive_version/migration.sql
 [S25]: ../../../packages/database/prisma/migrations/20260722144500_normalize_person_index_names/migration.sql
 [S26]: ../../../packages/database/prisma/migrations/20260921180000_drop_redundant_unique_column_indexes/migration.sql

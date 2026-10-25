@@ -1,294 +1,71 @@
 import { NextResponse } from 'next/server';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  type AccountSessionInfo,
+  listAccountSessions,
+  revokeAccountSessions,
+} from '$features/auth/server/account-sessions.service';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiError, apiErrors } from '$server/api-response';
-import { createAuditLogWithHeaders } from '$server/auth';
-import { prisma } from '$server/prisma';
+import { apiError, apiSuccess } from '$server/api-response';
+import { serviceErrorResponse } from '$server/service-error';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   ErrorCode,
 } from '$types/api.types';
 
-type SessionInfo = {
-  createdAt: Date;
-  expiresAt: Date;
-  id: string;
-  idleExpiresAt: Date;
-  ipAddress: string | null;
-  isCurrent: boolean;
-  lastSeenAt: Date;
-  rememberMe: boolean;
-  userAgent: string | null;
-};
+const missingCurrentSession = (): NextResponse<ApiErrorResponse> =>
+  apiError(ErrorCode.UNAUTHORIZED, 'Session actuelle introuvable', 401);
 
-class SessionNotFoundError extends Error {}
-
-export async function GET(): Promise<
+/** Live sessions of the signed-in account. */
+export async function GET(
+  request: Request,
+): Promise<
   NextResponse<
-    ApiSuccessResponse<{ sessions: SessionInfo[] }> | ApiErrorResponse
+    ApiSuccessResponse<{ sessions: AccountSessionInfo[] }> | ApiErrorResponse
   >
 > {
   try {
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
-    const { session: currentSession, user } = auth;
-
     const permission = requirePermission(
-      user,
+      auth.user,
       PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
     );
     if (!permission.success) return permission.response;
+    if (!auth.session) return missingCurrentSession();
 
-    if (!currentSession) {
-      return apiError(
-        ErrorCode.UNAUTHORIZED,
-        'Session actuelle introuvable',
-        401,
-      );
-    }
-
-    const now = new Date();
-    // Bind cleanup and disclosure to the authenticated security state. If it
-    // advances meanwhile, an older request must not delete a new valid session.
-    const userScope = {
-      is: {
-        deletedAt: null,
-        id: user.id,
-        isActive: true,
-        securityVersion: currentSession.securityVersion,
-      },
-    };
-    await prisma.session.deleteMany({
-      where: {
-        OR: [
-          { expiresAt: { lte: now } },
-          { idleExpiresAt: { lte: now } },
-          { securityVersion: { not: currentSession.securityVersion } },
-        ],
-        user: userScope,
-        userId: user.id,
-      },
-    });
-
-    // Get all sessions for the user
-    const sessions = await prisma.session.findMany({
-      orderBy: { createdAt: 'desc' },
-      select: {
-        createdAt: true,
-        expiresAt: true,
-        id: true,
-        idleExpiresAt: true,
-        ipAddress: true,
-        lastSeenAt: true,
-        rememberMe: true,
-        token: true,
-        userAgent: true,
-      },
-      where: {
-        expiresAt: { gt: now },
-        idleExpiresAt: { gt: now },
-        securityVersion: currentSession.securityVersion,
-        user: userScope,
-        userId: user.id,
-      },
-    });
-
-    const sessionInfos: SessionInfo[] = sessions.map((session) => ({
-      createdAt: session.createdAt,
-      expiresAt: session.expiresAt,
-      id: session.id,
-      idleExpiresAt: session.idleExpiresAt,
-      ipAddress: session.ipAddress,
-      isCurrent: session.token === currentSession.token,
-      lastSeenAt: session.lastSeenAt,
-      rememberMe: session.rememberMe,
-      userAgent: session.userAgent,
-    }));
-
-    return NextResponse.json({
-      data: { sessions: sessionInfos },
-      success: true,
+    return apiSuccess({
+      sessions: await listAccountSessions(auth.user.id, auth.session),
     });
   } catch (error) {
-    return apiErrors.internal('SESSIONS', error);
+    return serviceErrorResponse(error, { action: 'SESSIONS', request });
   }
 }
 
+/** Revokes one other session (`?id=`) or every other session. */
 export async function DELETE(
   request: Request,
 ): Promise<NextResponse<ApiSuccessResponse<null> | ApiErrorResponse>> {
   try {
     const auth = await requireAuth();
     if (!auth.success) return auth.response;
-    const { session: currentSession, user } = auth;
-
     const permission = requirePermission(
-      user,
+      auth.user,
       PERMISSIONS.ACCOUNT.MANAGE_SESSIONS,
     );
     if (!permission.success) return permission.response;
+    if (!auth.session) return missingCurrentSession();
 
-    if (!currentSession) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.UNAUTHORIZED,
-            message: 'Session actuelle introuvable',
-          },
-          success: false,
-        },
-        { status: 401 },
-      );
-    }
+    await revokeAccountSessions(
+      auth.user.id,
+      auth.session,
+      new URL(request.url).searchParams.get('id'),
+    );
 
-    const url = new URL(request.url);
-    const sessionId = url.searchParams.get('id');
-
-    return await prisma.$transaction(async (transaction) => {
-      // Serialize with session creation, security rotations and other revocations.
-      // NO KEY UPDATE also permits the foreign-key checks used by audit inserts.
-      const authorizedUsers = await transaction.$queryRaw<{ id: string }[]>`
-        SELECT "id" FROM "User"
-        WHERE "id" = ${user.id}
-          AND "deletedAt" IS NULL
-          AND "isActive" = TRUE
-          AND "securityVersion" = ${currentSession.securityVersion}
-        FOR NO KEY UPDATE
-      `;
-      // Read deadlines after the lock: waiting must not extend authorization.
-      const revalidatedAt = new Date();
-      const sourceSession =
-        authorizedUsers.length === 1
-          ? await transaction.session.findFirst({
-              select: { id: true },
-              where: {
-                expiresAt: { gt: revalidatedAt },
-                idleExpiresAt: { gt: revalidatedAt },
-                securityVersion: currentSession.securityVersion,
-                token: currentSession.token,
-                userId: user.id,
-              },
-            })
-          : null;
-      if (!sourceSession) {
-        return apiError(
-          ErrorCode.UNAUTHORIZED,
-          'Votre session a expiré. Veuillez vous reconnecter.',
-          401,
-        );
-      }
-
-      if (sessionId) {
-        // Delete a specific session
-        const sessionToDelete = await transaction.session.findFirst({
-          select: {
-            id: true,
-            token: true,
-          },
-          where: {
-            id: sessionId,
-            userId: user.id,
-          },
-        });
-
-        if (!sessionToDelete) {
-          return NextResponse.json(
-            {
-              error: {
-                code: ErrorCode.NOT_FOUND,
-                message: 'Session non trouvée',
-              },
-              success: false,
-            },
-            { status: 404 },
-          );
-        }
-
-        // Don't allow deleting current session through this endpoint
-        if (sessionToDelete.token === currentSession?.token) {
-          return NextResponse.json(
-            {
-              error: {
-                code: ErrorCode.FORBIDDEN,
-                message:
-                  'Utilisez la déconnexion pour terminer votre session actuelle',
-              },
-              success: false,
-            },
-            { status: 403 },
-          );
-        }
-
-        const deleted = await transaction.session.deleteMany({
-          where: {
-            id: sessionId,
-            NOT: { token: currentSession.token },
-            userId: user.id,
-          },
-        });
-        if (deleted.count !== 1) throw new SessionNotFoundError();
-
-        await createAuditLogWithHeaders(
-          {
-            action: 'SESSION_INVALIDATE',
-            category: 'AUTH',
-            description: 'Session révoquée',
-            metadata: {
-              pageKey: 'account',
-              pageLabel: 'Mon compte',
-              poleKey: 'account',
-              poleLabel: 'Espace personnel',
-              revokedSessions: 1,
-              tabKey: 'security',
-              tabLabel: 'Sécurité',
-            },
-            targetUserId: user.id,
-            userId: user.id,
-          },
-          { client: transaction, required: true },
-        );
-      } else {
-        // Delete all other sessions (not current)
-        const deleteResult = await transaction.session.deleteMany({
-          where: {
-            NOT: { token: currentSession.token },
-            userId: user.id,
-          },
-        });
-
-        await createAuditLogWithHeaders(
-          {
-            action: 'SESSION_INVALIDATE',
-            category: 'AUTH',
-            description: 'Toutes les autres sessions révoquées',
-            metadata: {
-              pageKey: 'account',
-              pageLabel: 'Mon compte',
-              poleKey: 'account',
-              poleLabel: 'Espace personnel',
-              revokedSessions: deleteResult.count,
-              tabKey: 'security',
-              tabLabel: 'Sécurité',
-            },
-            targetUserId: user.id,
-            userId: user.id,
-          },
-          { client: transaction, required: true },
-        );
-      }
-
-      return NextResponse.json({
-        data: null,
-        success: true,
-      });
-    });
+    return apiSuccess(null);
   } catch (error) {
-    if (error instanceof SessionNotFoundError) {
-      return apiError(ErrorCode.NOT_FOUND, 'Session non trouvée', 404);
-    }
-
-    return apiErrors.internal('SESSIONS', error);
+    return serviceErrorResponse(error, { action: 'SESSIONS', request });
   }
 }

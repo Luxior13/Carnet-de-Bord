@@ -17,9 +17,12 @@ const profileSource = readSourceFile(
 const contactEmailDialogSource = readSourceFile(
   '../features/account/components/ContactEmailDialog.tsx',
 );
-const securitySource = readSourceFile(
+const securitySource = [
   '../features/account/components/SecuritySection.tsx',
-);
+  '../features/account/components/AccountSessionsCard.tsx',
+]
+  .map((path) => readSourceFile(path))
+  .join('\n');
 const sectionRailSource = readSourceFile(
   '../components/layout/PageSectionNavigation.tsx',
 );

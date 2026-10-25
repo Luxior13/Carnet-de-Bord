@@ -30,14 +30,12 @@ const buildAuthenticatedUser = (
   contactEmail: 'user@example.com',
   contactEmailVerifiedAt: new Date('2026-01-02T00:00:00.000Z'),
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
-  failedLoginAttempts: 0,
   firstName: 'Jean',
   id: 'user-1',
   isActive: true,
   isProtected: false,
   lastLoginAt: null,
   lastName: 'Dupont',
-  lockedUntil: null,
   loginName: 'user.name',
   mfaEnabledAt: null,
   mustChangePassword: false,
@@ -51,13 +49,19 @@ const buildAuthenticatedUser = (
 
 vi.mock('server-only', () => ({}));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/password', () => ({
   authenticateUser: mocks.authenticateUser,
+}));
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
+}));
+vi.mock('$server/session', () => ({
   createSession: mocks.createSession,
   generateSessionToken: mocks.generateSessionToken,
-  isSecurityVersionMismatchError: mocks.isSecurityVersionMismatchError,
   setSessionTokenCookie: mocks.setSessionTokenCookie,
+}));
+vi.mock('$server/auth-errors', () => ({
+  isSecurityVersionMismatchError: mocks.isSecurityVersionMismatchError,
 }));
 
 vi.mock('$server/logger', () => ({
@@ -249,33 +253,6 @@ describe('POST /api/auth/login', () => {
     expect(
       mocks.createAuditLogWithHeaders.mock.calls.at(-1)?.[0]?.metadata,
     ).not.toHaveProperty('email');
-  });
-
-  it('does not reveal locked accounts in the public response', async () => {
-    mocks.authenticateUser.mockResolvedValue({
-      error: 'ACCOUNT_LOCKED',
-      lockedUntil: new Date('2026-07-12T23:30:00.000Z'),
-      success: false,
-      userId: 'locked-user',
-    });
-    const { POST } = await import('$app/api/auth/login/route');
-
-    const response = await POST(
-      new NextRequest('http://localhost/api/auth/login', {
-        body: JSON.stringify({
-          loginName: 'locked.user',
-          password: 'Secret1!',
-        }),
-        method: 'POST',
-      }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(401);
-    expect(body.error).toEqual({
-      code: ErrorCode.INVALID_CREDENTIALS,
-      message: 'Identifiant ou mot de passe incorrect',
-    });
   });
 
   it('forces an ordinary account without MFA through setup and preserves device trust', async () => {

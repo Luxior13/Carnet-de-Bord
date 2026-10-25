@@ -71,7 +71,7 @@ export const isAccountFormSnapshot = (
   );
 };
 
-export const formatAccountDate = (date: Date | string | null): string => {
+const formatAccountDate = (date: Date | string | null): string => {
   if (!date) return 'Jamais';
 
   const parsedDate = new Date(date);

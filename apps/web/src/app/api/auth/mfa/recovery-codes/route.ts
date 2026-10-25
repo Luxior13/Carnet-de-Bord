@@ -2,47 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  MFA_ACCOUNT_SESSION_EXPIRED_MESSAGE,
+  type RecoveryCodesRegeneration,
+  regenerateRecoveryCodes,
+} from '$features/auth/server/mfa-account.service';
+import { mfaFlowErrorResponse } from '$features/auth/server/mfa-flow-error';
 import { requireAuth, requirePermission } from '$server/api-auth';
-import { apiError, apiErrors, parseJsonBody } from '$server/api-response';
 import {
-  createSession,
-  generateSessionToken,
-  isSecurityVersionMismatchError,
-  mapUserToUserType,
-  SecurityVersionMismatchError,
-  setSessionTokenCookie,
-  verifyPassword,
-} from '$server/auth';
-import {
-  consumeVerifiedMfaProof,
-  generateRecoveryCodes,
-  MFA_TOTP_CODE_PATTERN,
-  MfaReplayDetectedError,
-  verifyMfaProof,
-} from '$server/mfa';
-import { prisma } from '$server/prisma';
-import {
-  recordLoginAttempt,
-  reserveSensitiveActionRateLimit,
-} from '$server/rate-limiter';
-import { UserActionAuthorizationError } from '$server/user-action-authorization';
+  apiError,
+  apiErrors,
+  apiSuccess,
+  parseJsonBody,
+} from '$server/api-response';
+import { MFA_TOTP_CODE_PATTERN } from '$server/mfa';
 import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   ErrorCode,
 } from '$types/api.types';
-import type { UserType } from '$types/auth.types';
-import { isPasswordWithinBcryptLimit } from '$utils/password.utils';
+import { isPasswordWithinLengthLimit } from '$utils/password.utils';
 
 const regenerateSchema = z
   .object({
     currentPassword: z
       .string()
       .min(1, 'Mot de passe actuel requis')
-      .refine(isPasswordWithinBcryptLimit, 'Mot de passe trop long'),
-    // Regenerating the last-resort proofs must itself require the normal
-    // authenticator. Accepting one recovery code to replace every remaining
-    // recovery code can otherwise strand the user when the response is lost.
+      .refine(isPasswordWithinLengthLimit, 'Mot de passe trop long'),
     currentTotpCode: z
       .string()
       .trim()
@@ -50,44 +36,11 @@ const regenerateSchema = z
   })
   .strict();
 
-type RecoveryCodesResponse = {
-  recoveryCodes: string[];
-  user: UserType;
-};
-
-const SECURITY_AUDIT_LOCATION = {
-  pageKey: 'account',
-  pageLabel: 'Mon compte',
-  poleKey: 'account',
-  poleLabel: 'Espace personnel',
-  tabKey: 'security',
-  tabLabel: 'Sécurité',
-} as const;
-
-const rateLimitedResponse = (
-  retryAfter: number,
-): NextResponse<ApiErrorResponse> =>
-  NextResponse.json(
-    {
-      error: {
-        code: ErrorCode.RATE_LIMITED,
-        message:
-          'Trop de tentatives. Réessayez dans ' +
-          Math.ceil(retryAfter / 60) +
-          ' minutes.',
-      },
-      success: false,
-    },
-    {
-      headers: { 'Retry-After': String(retryAfter) },
-      status: 429,
-    },
-  );
-
+/** Replaces every recovery code after password and app-code proofs. */
 export async function POST(
   request: NextRequest,
 ): Promise<
-  NextResponse<ApiSuccessResponse<RecoveryCodesResponse> | ApiErrorResponse>
+  NextResponse<ApiSuccessResponse<RecoveryCodesRegeneration> | ApiErrorResponse>
 > {
   try {
     const auth = await requireAuth();
@@ -98,15 +51,10 @@ export async function POST(
     );
     if (!permission.success) return permission.response;
     if (!auth.session) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.UNAUTHORIZED,
-            message: 'Session actuelle introuvable',
-          },
-          success: false,
-        },
-        { status: 401 },
+      return apiError(
+        ErrorCode.UNAUTHORIZED,
+        'Session actuelle introuvable',
+        401,
       );
     }
 
@@ -114,172 +62,24 @@ export async function POST(
     if (!parsedBody.success) return parsedBody.response;
     const validation = regenerateSchema.safeParse(parsedBody.data);
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.VALIDATION_ERROR,
-            details: validation.error.flatten().fieldErrors,
-            message: 'Données invalides',
-          },
-          success: false,
-        },
-        { status: 400 },
+      return apiErrors.validation(
+        'Données invalides',
+        validation.error.flatten().fieldErrors,
       );
     }
 
-    const storedUser = await prisma.user.findUnique({
-      include: {
-        totpCredential: true,
-      },
-      where: { deletedAt: null, id: auth.user.id },
-    });
-    if (
-      !storedUser ||
-      storedUser.mfaEnabledAt === null ||
-      !storedUser.totpCredential
-    ) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.CONFLICT,
-            message: 'La double authentification n’est pas activée',
-          },
-          success: false,
-        },
-        { status: 409 },
-      );
-    }
-    const credential = storedUser.totpCredential;
-
-    const reauthKey = `account-reauth:${storedUser.id}`;
-    const passwordLimit = await reserveSensitiveActionRateLimit(reauthKey);
-    if (!passwordLimit.allowed) {
-      return rateLimitedResponse(passwordLimit.retryAfter ?? 1800);
-    }
-    const passwordValid = await verifyPassword(
-      validation.data.currentPassword,
-      storedUser.passwordHash,
+    return apiSuccess(
+      await regenerateRecoveryCodes({
+        ...validation.data,
+        session: auth.session,
+        userId: auth.user.id,
+      }),
     );
-    if (!passwordValid) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.INVALID_CREDENTIALS,
-            message: 'Mot de passe actuel incorrect',
-          },
-          success: false,
-        },
-        { status: 400 },
-      );
-    }
-    await recordLoginAttempt(reauthKey, true);
-
-    const mfaManageKey = `account-mfa-manage:${storedUser.id}`;
-    const mfaLimit = await reserveSensitiveActionRateLimit(mfaManageKey);
-    if (!mfaLimit.allowed) {
-      return rateLimitedResponse(mfaLimit.retryAfter ?? 1800);
-    }
-    const proof = await verifyMfaProof({
-      code: validation.data.currentTotpCode,
-      credential: storedUser.totpCredential,
-      recoveryCodes: [],
-      userId: storedUser.id,
-    });
-    if (!proof || proof.method !== 'TOTP') {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.INVALID_CREDENTIALS,
-            message: 'Code actuel incorrect ou expiré',
-          },
-          success: false,
-        },
-        { status: 400 },
-      );
-    }
-    await recordLoginAttempt(mfaManageKey, true);
-
-    const generatedCodes = generateRecoveryCodes(storedUser.id);
-    const sessionToken = generateSessionToken();
-    const session = await createSession(
-      sessionToken,
-      storedUser.id,
-      auth.session.securityVersion,
-      auth.session.rememberMe,
-      {
-        action: 'MFA_RECOVERY_CODES_REGENERATED',
-        category: 'AUTH',
-        description: 'Codes de récupération MFA régénérés',
-        metadata: {
-          ...SECURITY_AUDIT_LOCATION,
-          recoveryCodesGenerated: generatedCodes.length,
-        },
-        targetUserId: storedUser.id,
-        userId: storedUser.id,
-      },
-      {
-        advanceSecurityVersion: true,
-        mfaMethod: 'TOTP',
-        precondition: async (transaction, authenticatedAt) => {
-          await consumeVerifiedMfaProof(transaction, {
-            authenticatedAt,
-            credentialUpdatedAt: credential.updatedAt,
-            proof,
-            userId: storedUser.id,
-          });
-          await transaction.mfaRecoveryCode.deleteMany({
-            where: { userId: storedUser.id },
-          });
-          await transaction.mfaRecoveryCode.createMany({
-            data: generatedCodes.map((recoveryCode) => ({
-              codeHash: recoveryCode.codeHash,
-              salt: recoveryCode.salt,
-              userId: storedUser.id,
-            })),
-          });
-          await transaction.rateLimit.deleteMany({
-            where: { key: { in: [reauthKey, mfaManageKey] } },
-          });
-        },
-        requireMfaEnabled: true,
-        revokeExistingSessions: true,
-        sourceSessionToken: auth.session.token,
-      },
-    );
-
-    await setSessionTokenCookie(session.token, session.expiresAt);
-
-    const updatedUser = await prisma.user.findUnique({
-      where: { id: storedUser.id },
-    });
-    if (!updatedUser) throw new SecurityVersionMismatchError();
-
-    return NextResponse.json({
-      data: {
-        recoveryCodes: generatedCodes.map((code) => code.plaintext),
-        user: mapUserToUserType(updatedUser),
-      },
-      success: true,
-    });
   } catch (error) {
-    if (error instanceof UserActionAuthorizationError)
-      return apiError(error.code, error.message, error.status);
-    if (
-      isSecurityVersionMismatchError(error) ||
-      error instanceof MfaReplayDetectedError
-    ) {
-      return NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.UNAUTHORIZED,
-            message: 'Votre session a expiré. Veuillez vous reconnecter.',
-          },
-          success: false,
-        },
-        { status: 401 },
-      );
-    }
-
-    return apiErrors.internal('MFA_RECOVERY_CODES_REGENERATE', error, request);
+    return mfaFlowErrorResponse(error, {
+      action: 'MFA_RECOVERY_CODES_REGENERATE',
+      request,
+      sessionExpiredMessage: MFA_ACCOUNT_SESSION_EXPIRED_MESSAGE,
+    });
   }
 }

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
+import { verify as verifyArgon2 } from '@node-rs/argon2';
 import {
   type Prisma,
   PrismaClient,
@@ -34,7 +35,7 @@ import {
 } from '$app/api/auth/sessions/route';
 import { POST as stepUp } from '$app/api/auth/step-up/route';
 import { PERMISSIONS } from '$constants/permissions.constants';
-import { mapUserToUserType } from '$server/auth';
+import { MFA_CHALLENGE_COOKIE_NAME } from '$constants/security.constants';
 import {
   decryptTotpSecret,
   encryptTotpSecret,
@@ -42,8 +43,8 @@ import {
   type GeneratedRecoveryCode,
   generateRecoveryCodes,
   generateTotpSecret,
-  MFA_CHALLENGE_COOKIE_NAME,
 } from '$server/mfa';
+import { mapUserToUserType } from '$server/user-projection';
 
 const connection = vi.hoisted(() => ({
   client: null as PrismaClient | null,
@@ -53,10 +54,11 @@ const connection = vi.hoisted(() => ({
 vi.mock('server-only', () => ({}));
 vi.mock('$env', () => ({
   env: {
-    MFA_ENCRYPTION_KEY_V1: Buffer.alloc(32, 7).toString('base64'),
     NODE_ENV: 'test',
   },
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv('MFA_ENCRYPTION_KEY_V1', Buffer.alloc(32, 7).toString('base64'));
 vi.mock('$server/logger', () => ({ logger: { error: vi.fn() } }));
 vi.mock('$server/prisma', () => ({
   prisma: new Proxy(
@@ -91,17 +93,17 @@ vi.mock('next/headers', () => ({
   headers: vi.fn(async () => new Headers()),
 }));
 vi.mock('$server/rate-limiter', () => ({
+  clearRateLimit: vi.fn(async () => undefined),
   createMfaRateLimitKeys: vi.fn(() => ({
     account: 'test-account',
     challenge: 'test-challenge',
   })),
-  recordLoginAttempt: vi.fn(async () => undefined),
   reserveAuthenticatedApiRateLimit: vi.fn(async () => ({ allowed: true })),
   reserveMfaRateLimits: vi.fn(async () => ({ allowed: true })),
   reserveSensitiveActionRateLimit: vi.fn(async () => ({ allowed: true })),
 }));
-vi.mock('$server/auth', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('$server/auth')>()),
+vi.mock('$server/session', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('$server/session')>()),
   getAuthSession: connection.session,
 }));
 
@@ -112,7 +114,7 @@ describe.skipIf(!target)(
     let db: PrismaClient;
     let passwordHash: string;
     const password = 'FictiveCurrent1!';
-    const nextPassword = 'FictiveReplacement2!';
+    const nextPassword = 'phrase fictive de remplacement';
     const account = (
       overrides: Partial<Prisma.UserCreateInput> = {},
     ): Promise<User> =>
@@ -323,8 +325,16 @@ describe.skipIf(!target)(
 
     it('rejects anonymous reads and mutations', async () => {
       connection.session.mockResolvedValue({ session: null, user: null });
-      expect((await getMe()).status).toBe(401);
-      expect((await getSessions()).status).toBe(401);
+      expect(
+        (await getMe(new NextRequest('http://localhost/api/auth/me'))).status,
+      ).toBe(401);
+      expect(
+        (
+          await getSessions(
+            new NextRequest('http://localhost/api/auth/sessions'),
+          )
+        ).status,
+      ).toBe(401);
       expect((await change()).status).toBe(401);
       expect((await updateProfile(request('me', {}))).status).toBe(401);
       expect((await updateContact(request('contact-email', {}))).status).toBe(
@@ -333,7 +343,9 @@ describe.skipIf(!target)(
       expect((await revoke()).status).toBe(401);
     });
 
-    it('rechecks a withdrawn password proof before accepting critical MFA', async () => {
+    // The code-only proof was removed on 24 October 2026 (REV-03): it is
+    // refused before any proof is checked or consumed.
+    it('refuses the retired code-only proof without consuming the code', async () => {
       const { secret, user } = await mfaAccount();
       const source = await signIn(user);
       await db.session.update({
@@ -349,7 +361,7 @@ describe.skipIf(!target)(
           method: 'POST',
         }),
       );
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(400);
       expect(
         (await db.session.findUniqueOrThrow({ where: { id: source.id } }))
           .criticalMfaVerifiedAt,
@@ -442,7 +454,13 @@ describe.skipIf(!target)(
       });
       await signIn(user);
       expect((await profile(user, 'Forbidden')).status).toBe(403);
-      expect((await getSessions()).status).toBe(200);
+      expect(
+        (
+          await getSessions(
+            new NextRequest('http://localhost/api/auth/sessions'),
+          )
+        ).status,
+      ).toBe(200);
       expect((await change()).status).toBe(200);
       expect(
         (await db.user.findUniqueOrThrow({ where: { id: user.id } })).firstName,
@@ -453,7 +471,9 @@ describe.skipIf(!target)(
     it('returns only the public personal DTO and session deadlines', async () => {
       const user = await account();
       const current = await signIn(user);
-      const response = await getMe();
+      const response = await getMe(
+        new NextRequest('http://localhost/api/auth/me'),
+      );
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data.user).toMatchObject({
@@ -502,7 +522,9 @@ describe.skipIf(!target)(
       await session(user, { idleExpiresAt: new Date(Date.now() - 1000) });
       const foreign = await account();
       const foreignSession = await session(foreign, { securityVersion: 1 });
-      const response = await getSessions();
+      const response = await getSessions(
+        new NextRequest('http://localhost/api/auth/sessions'),
+      );
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.data.sessions.map((item: { id: string }) => item.id)).toEqual(
@@ -524,7 +546,9 @@ describe.skipIf(!target)(
         where: { id: user.id },
       });
       const newer = await session(newerUser);
-      const response = await getSessions();
+      const response = await getSessions(
+        new NextRequest('http://localhost/api/auth/sessions'),
+      );
       expect(response.status).toBe(200);
       expect((await response.json()).data.sessions).toEqual([]);
       expect(
@@ -632,7 +656,7 @@ describe.skipIf(!target)(
       });
     });
 
-    it('rejects a current password exceeding 72 bytes even when bcrypt accepts its prefix', async () => {
+    it('rejects a legacy bcrypt proof beyond 72 bytes even when bcrypt accepts its prefix', async () => {
       const maximumPassword = 'A'.repeat(70) + '1!';
       const hash = await bcrypt.hash(maximumPassword, 4);
       const user = await account({ passwordHash: hash });
@@ -657,10 +681,8 @@ describe.skipIf(!target)(
         where: { id: user.id },
       });
       expect(updated.securityVersion).toBe(3);
-      expect(await bcrypt.compare(nextPassword, updated.passwordHash)).toBe(
-        true,
-      );
-      expect(await bcrypt.compare(password, updated.passwordHash)).toBe(false);
+      expect(await verifyArgon2(updated.passwordHash, nextPassword)).toBe(true);
+      expect(await verifyArgon2(updated.passwordHash, password)).toBe(false);
       const sessions = await db.session.findMany({
         where: { userId: user.id },
       });
@@ -683,10 +705,18 @@ describe.skipIf(!target)(
     it('allows mandatory password replacement but blocks unrelated personal mutations until it completes', async () => {
       const user = await account({ mustChangePassword: true });
       await signIn(user);
-      expect((await getMe()).status).toBe(200);
+      expect(
+        (await getMe(new NextRequest('http://localhost/api/auth/me'))).status,
+      ).toBe(200);
       expect((await profile(user, 'Other')).status).toBe(403);
       expect((await contact(user, null)).status).toBe(403);
-      expect((await getSessions()).status).toBe(403);
+      expect(
+        (
+          await getSessions(
+            new NextRequest('http://localhost/api/auth/sessions'),
+          )
+        ).status,
+      ).toBe(403);
       expect(
         (
           await changePassword(

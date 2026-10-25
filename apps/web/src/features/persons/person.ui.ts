@@ -3,7 +3,6 @@ import type { ZodError } from 'zod';
 import { PAGE_PATHS } from '$constants/routes.constants';
 import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 
-import { calculateCivilAge } from './person.utils';
 import type {
   PersonAuditActor,
   PersonDetail,
@@ -26,11 +25,6 @@ export const getSafePersonReturnHref = (
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
   dateStyle: 'medium',
   timeStyle: 'short',
-});
-
-const DATE_FORMATTER = new Intl.DateTimeFormat('fr-FR', {
-  dateStyle: 'long',
-  timeZone: 'UTC',
 });
 
 export const getPersonDisplayName = (person: {
@@ -71,21 +65,6 @@ export const formatPersonActor = (actor: PersonAuditActor): string =>
   actor.loginName && actor.loginName !== actor.displayName
     ? `${actor.displayName} (${actor.loginName})`
     : actor.displayName;
-
-export const formatPersonBirthDate = (value: string): string =>
-  DATE_FORMATTER.format(new Date(`${value}T00:00:00.000Z`));
-
-export const calculatePersonAge = (
-  birthDate: string | null,
-  now = new Date(),
-): number | null => calculateCivilAge(birthDate, now);
-
-export const getAgeDescription = (birthDate: string | null): string | null => {
-  const age = calculatePersonAge(birthDate);
-  if (age === null) return null;
-
-  return `${age} ans · ${age >= 18 ? 'Majeur' : 'Mineur'}`;
-};
 
 export const getStructureStatusTone = (
   status: PersonStructureStatus,

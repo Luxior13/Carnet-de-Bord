@@ -1,4 +1,4 @@
-export type SystemSettingSection = 'retention';
+type SystemSettingSection = 'retention';
 export type SystemSettingUnit = 'days' | 'rows';
 
 export type SystemSettingCatalogItem = Readonly<{

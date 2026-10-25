@@ -50,7 +50,7 @@ const SettingsSkeleton: FC = () => (
   >
     {SYSTEM_SETTING_KEYS.map((key) => (
       <div
-        className="border-border-content overflow-hidden rounded-[10px] border"
+        className="border-border-content rounded-panel overflow-hidden border"
         key={key}
       >
         <Skeleton className="h-20 rounded-none" />
@@ -151,7 +151,7 @@ const SystemSettingsContent: FC<{
               <Button
                 aria-busy={isLoading || undefined}
                 aria-disabled={isLoading || undefined}
-                className="h-11 rounded-[8px] aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
+                className="rounded-control h-11 aria-disabled:pointer-events-none aria-disabled:opacity-50 lg:h-10"
                 disabled={
                   (!settings && !loadError) ||
                   savingKey !== null ||
@@ -274,7 +274,7 @@ const SystemSettingsContent: FC<{
       >
         <AlertDialogContent
           onCloseAutoFocus={restoreSettingFocus}
-          className="rounded-[10px] [&_button]:min-h-11 lg:[&_button]:min-h-10"
+          className="rounded-panel [&_button]:min-h-11 lg:[&_button]:min-h-10"
         >
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -325,7 +325,7 @@ const SystemSettingsContent: FC<{
             event.preventDefault();
             refreshButtonRef.current?.focus();
           }}
-          className="rounded-[10px] [&_button]:min-h-11 lg:[&_button]:min-h-10"
+          className="rounded-panel [&_button]:min-h-11 lg:[&_button]:min-h-10"
         >
           <AlertDialogHeader>
             <AlertDialogTitle>Abandonner les modifications ?</AlertDialogTitle>
@@ -357,7 +357,7 @@ const SystemSettingsContent: FC<{
       >
         <AlertDialogContent
           onCloseAutoFocus={restoreFocus}
-          className="rounded-[10px] [&_button]:min-h-11 lg:[&_button]:min-h-10"
+          className="rounded-panel [&_button]:min-h-11 lg:[&_button]:min-h-10"
         >
           <AlertDialogHeader>
             <AlertDialogTitle>Quitter sans enregistrer ?</AlertDialogTitle>

@@ -46,10 +46,11 @@ vi.mock('server-only', () => ({}));
 vi.mock('$env', () => ({
   env: {
     AUDIT_ENCRYPTION_CURRENT_VERSION: 1,
-    MFA_ENCRYPTION_KEY_V1: Buffer.alloc(32, 13).toString('base64'),
     NODE_ENV: 'test',
   },
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv('MFA_ENCRYPTION_KEY_V1', Buffer.alloc(32, 13).toString('base64'));
 vi.mock('$server/logger', () => ({
   logger: { error: vi.fn(), warn: vi.fn() },
 }));

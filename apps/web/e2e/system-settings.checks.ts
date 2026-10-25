@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
 /** Adjusting a duration edits only the draft, preserving direct entry and bounds. */
-export async function expectSystemSettingDurationControls(
+async function expectSystemSettingDurationControls(
   row: Locator,
   initial: number,
   min: number,

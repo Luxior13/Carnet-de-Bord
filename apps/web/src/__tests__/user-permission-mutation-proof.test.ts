@@ -8,7 +8,7 @@ import {
 
 vi.mock('server-only', () => ({}));
 vi.mock('$server/api-auth', () => ({
-  requirePermission: vi.fn(),
+  assertPermission: vi.fn(),
 }));
 
 const classify = (

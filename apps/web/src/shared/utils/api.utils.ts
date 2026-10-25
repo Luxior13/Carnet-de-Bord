@@ -1,11 +1,13 @@
+import {
+  CSRF_COOKIE_NAME,
+  CSRF_HEADER_NAME,
+} from '$constants/security.constants';
 import type {
   ApiErrorResponse,
   ApiSuccessResponse,
   ErrorCode,
 } from '$types/api.types';
 
-const CSRF_COOKIE = 'csrf-token';
-const CSRF_HEADER = 'x-csrf-token';
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export class ApiClientError extends Error {
@@ -43,7 +45,7 @@ export class ApiClientError extends Error {
 function getCsrfToken(): string | null {
   const match = document.cookie
     .split('; ')
-    .find((row) => row.startsWith(`${CSRF_COOKIE}=`));
+    .find((row) => row.startsWith(`${CSRF_COOKIE_NAME}=`));
 
   return match ? (match.split('=')[1] ?? null) : null;
 }
@@ -62,7 +64,7 @@ export async function apiFetch(
     const token = getCsrfToken();
     if (token) {
       const headers = new Headers(init?.headers);
-      headers.set(CSRF_HEADER, token);
+      headers.set(CSRF_HEADER_NAME, token);
 
       return fetch(input, { ...init, headers });
     }

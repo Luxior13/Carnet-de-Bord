@@ -5,7 +5,7 @@ import { Skeleton } from '$ui/skeleton';
 export const PersonsListSkeleton: FC = () => (
   <div
     aria-label="Chargement du répertoire"
-    className="border-border-content bg-surface-content overflow-hidden rounded-[10px] border"
+    className="border-border-content bg-surface-content rounded-panel overflow-hidden border"
     role="status"
   >
     <div className="bg-surface-content-header p-4">
@@ -26,7 +26,7 @@ export const PersonsListSkeleton: FC = () => (
     <div aria-hidden="true" className="divide-border-divider divide-y">
       {[...Array(6)].map((_, index) => (
         <div className="flex items-center gap-2.5 px-4 py-3" key={index}>
-          <Skeleton className="bg-surface-table-head size-9 shrink-0 rounded-[7px]" />
+          <Skeleton className="bg-surface-table-head rounded-tile size-9 shrink-0" />
           <div className="min-w-0 flex-1 space-y-2">
             <Skeleton className="bg-surface-table-head h-[13px] w-40 max-w-full rounded-sm" />
             <Skeleton className="bg-surface-table-head h-[10px] w-24 max-w-full rounded-sm" />

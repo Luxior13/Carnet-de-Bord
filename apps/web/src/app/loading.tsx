@@ -12,8 +12,8 @@ export default function Loading(): React.JSX.Element {
     >
       <span className="sr-only">Chargement de la page…</span>
       <PageCanvas contentClassName="space-y-4">
-        <Skeleton aria-hidden="true" className="h-[78px] rounded-[10px]" />
-        <Skeleton aria-hidden="true" className="h-[30rem] rounded-[10px]" />
+        <Skeleton aria-hidden="true" className="rounded-panel h-[78px]" />
+        <Skeleton aria-hidden="true" className="rounded-panel h-[30rem]" />
       </PageCanvas>
     </PageShell>
   );

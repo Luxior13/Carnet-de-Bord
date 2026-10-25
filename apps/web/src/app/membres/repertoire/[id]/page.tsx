@@ -9,7 +9,7 @@ import { getSafePersonReturnHref } from '$features/persons/person.ui';
 import { getPerson } from '$features/persons/server/person.service';
 import { assertPersonFeatureReady } from '$features/persons/server/person-deletion';
 import type { PersonDetail } from '$features/persons/types/person.types';
-import { getPageAuthSession } from '$server/auth';
+import { getPageAuthSession } from '$server/session';
 
 type PersonPageProps = {
   params: Promise<{ id: string }>;

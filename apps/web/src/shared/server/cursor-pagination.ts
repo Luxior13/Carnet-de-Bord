@@ -2,16 +2,32 @@ import 'server-only';
 
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
-import { env } from '$env';
+import type { CursorPaginationMeta } from '$types/api.types';
+
+import { getCurrentMfaKeyVersion, getMfaEncryptionKey } from './mfa-keys';
 
 const CURSOR_VERSION = 1;
 const MAX_CURSOR_LENGTH = 2_048;
 const MAX_RESOURCE_LENGTH = 80;
 const MAX_VALUE_LENGTH = 512;
-const CURSOR_SIGNATURE_KEY = createHash('sha256')
-  .update('team-control:cursor-pagination:v1:', 'utf8')
-  .update(env.MFA_ENCRYPTION_KEY_V1, 'utf8')
-  .digest();
+
+// Domain-separated from the current MFA key: a key rotation only invalidates
+// the short-lived list cursors already issued.
+let cursorSignatureKey: { key: Buffer; version: number } | null = null;
+const getCursorSignatureKey = (): Buffer => {
+  const version = getCurrentMfaKeyVersion();
+  if (cursorSignatureKey?.version !== version) {
+    cursorSignatureKey = {
+      key: createHash('sha256')
+        .update('team-control:cursor-pagination:v1:', 'utf8')
+        .update(getMfaEncryptionKey(version))
+        .digest(),
+      version,
+    };
+  }
+
+  return cursorSignatureKey.key;
+};
 
 export type KeysetCursor = Readonly<{
   filterHash: string;
@@ -25,7 +41,7 @@ export type KeysetCursor = Readonly<{
 type CursorInput = Omit<KeysetCursor, 'version'>;
 
 const signPayload = (payload: string): string =>
-  createHmac('sha256', CURSOR_SIGNATURE_KEY)
+  createHmac('sha256', getCursorSignatureKey())
     .update(payload, 'utf8')
     .digest('base64url');
 
@@ -129,7 +145,7 @@ export const buildCursorPaginationMeta = <TItem>(
   toCursor: (item: TItem) => CursorInput,
 ): {
   items: TItem[];
-  pagination: import('$types/api.types').CursorPaginationMeta;
+  pagination: CursorPaginationMeta;
 } => {
   const hasMore = items.length > limit;
   const visibleItems = items.slice(0, limit);

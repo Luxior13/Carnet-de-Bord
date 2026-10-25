@@ -205,8 +205,9 @@ Décisions courantes complémentaires :
 - La création atomique appartient au service de la feature Utilisateurs. Son
   audit est obligatoire et le contrôle préalable du doublon ne lit que `id`.
 - Le générateur partagé création/réinitialisation est testé directement et
-  utilise les tirages `crypto.randomInt`. Longueur 14, catégories de caractères,
-  hash bcrypt coût 12 et changement obligatoire restent inchangés.
+  utilise les tirages `crypto.randomInt`. Longueur 14, catégories de caractères
+  et changement obligatoire restent inchangés ; le hachage est argon2id depuis
+  le 25 octobre 2026 (bcrypt coût 12 auparavant).
 - Schéma et réservations existants suffisants : aucune migration, dépendance,
   permission, notification ou nouvelle capacité de stockage ajoutée.
 

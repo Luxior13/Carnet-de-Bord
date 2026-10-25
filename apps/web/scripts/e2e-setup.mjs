@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import bcrypt from 'bcryptjs';
+import { hash } from '@node-rs/argon2';
 import { PrismaClient, UserRole } from '@prisma/client';
 
 const TEST_DATABASE_MARKER = /(?:^|[_-])(?:e2e|test)(?:[_-]|$)/i;
@@ -200,7 +200,12 @@ const prisma = new PrismaClient({
 try {
   await assertEmptyPersonDomain(prisma);
 
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  // argon2id with the application parameters (OWASP).
+  const passwordHash = await hash(adminPassword, {
+    memoryCost: 19_456,
+    parallelism: 1,
+    timeCost: 2,
+  });
   const protectedAccounts = await prisma.user.findMany({
     select: { id: true, loginName: true },
     where: { isProtected: true },

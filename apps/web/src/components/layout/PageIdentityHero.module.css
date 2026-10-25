@@ -11,7 +11,7 @@
   gap: 14px;
   padding: 19px 20px;
   border: 1px solid var(--border-hero);
-  border-radius: 10px;
+  border-radius: var(--shape-panel);
   background: linear-gradient(
     110deg,
     var(--surface-hero-start),

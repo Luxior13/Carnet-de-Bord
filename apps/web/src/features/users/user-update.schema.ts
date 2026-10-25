@@ -5,8 +5,8 @@ import {
   getAccountPermissionKeys,
   getNonAssignablePermissionKeys,
   getUnknownPermissionKeys,
+  isKnownPermissionKey,
   normalizePermissionOverrides,
-  resolvePermissionKey,
 } from '$constants/permissions.constants';
 import {
   loginNameSchema,
@@ -152,17 +152,11 @@ export const updateUserSchema = z
     const scopePermissionKeys = getPermissionScopeKeySet(value.permissionScope);
     const outOfScopePermissionKeys = Object.keys(
       value.permissions ?? {},
-    ).filter((permissionKey) => {
-      const canonicalPermissionKeys = resolvePermissionKey(permissionKey);
-
-      return (
-        canonicalPermissionKeys.length > 0 &&
-        canonicalPermissionKeys.some(
-          (canonicalPermissionKey) =>
-            !scopePermissionKeys.has(canonicalPermissionKey),
-        )
-      );
-    });
+    ).filter(
+      (permissionKey) =>
+        isKnownPermissionKey(permissionKey) &&
+        !scopePermissionKeys.has(permissionKey),
+    );
 
     if (outOfScopePermissionKeys.length > 0) {
       context.addIssue({

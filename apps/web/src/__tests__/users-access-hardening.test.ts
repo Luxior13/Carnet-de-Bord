@@ -16,9 +16,6 @@ const mockInvalidateAllUserSessions = vi.fn();
 const mockPrisma = {
   $queryRaw: vi.fn(),
   $transaction: vi.fn(),
-  archivedStaffProfile: {
-    deleteMany: vi.fn(),
-  },
   auditLog: {
     count: vi.fn(),
     findMany: vi.fn(),
@@ -62,22 +59,38 @@ const mockPrisma = {
 vi.mock('server-only', () => ({}));
 
 vi.mock('$env', () => ({
-  env: {
-    MFA_ENCRYPTION_KEY_V1: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
-  },
+  env: {},
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv(
+  'MFA_ENCRYPTION_KEY_V1',
+  'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+);
 
-vi.mock('$server/api-auth', () => ({
-  requireAuth: mockRequireAuth,
-  requirePermission: mockRequirePermission,
-}));
+// Services check through assertPermission; route the same decision through
+// mockRequirePermission so every test controls a single permission mock.
+vi.mock('$server/api-auth', async () => {
+  const { serviceErrors } = await import('$server/service-error');
 
-vi.mock('$server/auth', () => ({
+  return {
+    assertPermission: (user: unknown, permissionKey: string): void => {
+      if (!mockRequirePermission(user, permissionKey).success)
+        throw serviceErrors.forbidden('Interdit');
+    },
+    requireAuth: mockRequireAuth,
+    requirePermission: mockRequirePermission,
+  };
+});
+
+vi.mock('$server/audit-log', () => ({
   createAuditLog: mockCreateAuditLog,
   createAuditLogWithHeaders: mockCreateAuditLogWithHeaders,
-  generateTemporaryPassword: mockGenerateTemporaryPassword,
   getAuditRequestContext: mockGetAuditRequestContext,
-  invalidateAllUserSessions: mockInvalidateAllUserSessions,
+}));
+vi.mock('$server/temporary-password', () => ({
+  generateTemporaryPassword: mockGenerateTemporaryPassword,
+}));
+vi.mock('$server/user-projection', () => ({
   mapUserToUserType: (user: unknown): unknown => user,
 }));
 
@@ -592,8 +605,6 @@ describe('users access hardening', () => {
     expect(body.data.user.role).toBe('USER');
     expect(body.data.user.isActive).toBe(true);
     expect(body.data.user).toMatchObject({
-      failedLoginAttempts: 0,
-      lockedUntil: null,
       mfaEnabledAt: null,
       mustChangePassword: false,
       passwordChangedAt: null,
@@ -617,9 +628,7 @@ describe('users access hardening', () => {
     });
     mockPrisma.user.findUnique.mockResolvedValueOnce(
       buildUser({
-        failedLoginAttempts: 4,
         id: 'target-1',
-        lockedUntil: new Date('2026-03-03T00:00:00.000Z'),
         mfaEnabledAt: new Date('2026-03-02T00:00:00.000Z'),
         mustChangePassword: true,
         passwordChangedAt: new Date('2026-03-01T12:00:00.000Z'),
@@ -635,8 +644,6 @@ describe('users access hardening', () => {
 
     expect(response.status).toBe(200);
     expect(body.data.user).toMatchObject({
-      failedLoginAttempts: 4,
-      lockedUntil: '2026-03-03T00:00:00.000Z',
       mfaEnabledAt: '2026-03-02T00:00:00.000Z',
       mustChangePassword: true,
       passwordChangedAt: '2026-03-01T12:00:00.000Z',
@@ -733,7 +740,6 @@ describe('users access hardening', () => {
     mockPrisma.user.findUnique.mockResolvedValueOnce(
       buildUser({
         contactEmail: 'root-secret@example.com',
-        failedLoginAttempts: 2,
         firstName: 'Identite',
         id: 'root-1',
         isProtected: true,
@@ -758,12 +764,10 @@ describe('users access hardening', () => {
     expect(body.data.user).toMatchObject({
       contactEmail: null,
       contactEmailVerifiedAt: null,
-      failedLoginAttempts: 0,
       firstName: 'Compte',
       identityDetailsVisible: false,
       lastLoginAt: null,
       lastName: 'racine',
-      lockedUntil: null,
       loginName: '••••••••',
       mfaEnabledAt: null,
       mustChangePassword: false,
@@ -1036,7 +1040,7 @@ describe('users access hardening', () => {
     );
   });
 
-  it('keeps rollout-A legacy overrides stored while new instances ignore them', async () => {
+  it('drops retired overrides still stored on the account at the next save', async () => {
     const existingUser = buildUser({
       id: 'target-1',
       permissions: {
@@ -1081,11 +1085,7 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
-          permissions: {
-            'audit:view_sensitive': true,
-            'members:view': false,
-            [PERMISSIONS.USERS.VIEW]: true,
-          },
+          permissions: { [PERMISSIONS.USERS.VIEW]: true },
         }),
       }),
     );
@@ -1687,8 +1687,8 @@ describe('users access hardening', () => {
     expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
   });
 
-  it.each(['users:archive', 'users:delete'])(
-    'rejects historical deletion key %s instead of upgrading it to irreversible deletion',
+  it.each(['users:archive', 'users:delete', 'system:settings'])(
+    'rejects retired key %s as unknown instead of translating it',
     async (permissionKey) => {
       const route = await import('$app/api/users/[id]/route');
       const response = await route.PATCH(
@@ -1713,11 +1713,7 @@ describe('users access hardening', () => {
     },
   );
 
-  it.each([
-    PERMISSIONS.SETTINGS.VIEW,
-    PERMISSIONS.SETTINGS.UPDATE,
-    'system:settings',
-  ])(
+  it.each([PERMISSIONS.SETTINGS.VIEW, PERMISSIONS.SETTINGS.UPDATE])(
     'rejects role-bound permission %s as an individual override',
     async (permissionKey) => {
       const route = await import('$app/api/users/[id]/route');
@@ -3655,13 +3651,11 @@ describe('users access hardening', () => {
         contactEmail: null,
         contactEmailVerifiedAt: null,
         deletedAt: expect.any(Date),
-        failedLoginAttempts: 0,
         firstName: 'Compte',
         isActive: false,
         isProtected: false,
         lastLoginAt: null,
         lastName: 'supprimé',
-        lockedUntil: null,
         loginName: expect.stringMatching(/^deleted:[a-f\d]{32}$/),
         mfaEnabledAt: null,
         mustChangePassword: false,
@@ -3685,9 +3679,6 @@ describe('users access hardening', () => {
       .data as Record<string, unknown>;
     expect(tombstoneData.passwordHash).toBe(`!${tombstoneData.loginName}`);
     expect(mockPrisma.session.deleteMany).toHaveBeenCalledWith({
-      where: { userId: 'target-1' },
-    });
-    expect(mockPrisma.archivedStaffProfile.deleteMany).toHaveBeenCalledWith({
       where: { userId: 'target-1' },
     });
     expect(mockPrisma.mfaLoginChallenge.deleteMany).toHaveBeenCalledWith({
@@ -3853,17 +3844,5 @@ describe('users access hardening', () => {
     );
     expect(mockPrisma.session.deleteMany).not.toHaveBeenCalled();
     expect(mockPrisma.totpCredential.deleteMany).not.toHaveBeenCalled();
-  });
-
-  it('closes the unused activity API including CSV without reading account data', async () => {
-    const { GET } = await import('$app/api/users/[id]/audit/route');
-    for (const query of ['', '?format=csv']) {
-      const response = await GET(
-        new Request('http://localhost/api/users/root/audit' + query) as never,
-        { params: Promise.resolve({ id: 'root' }) },
-      );
-      expect(response.status).toBe(410);
-      expect(mockPrisma.auditLog.findMany).not.toHaveBeenCalled();
-    }
   });
 });

@@ -448,13 +448,4 @@ function BreadcrumbTrail({
   );
 }
 
-export {
-  Breadcrumb,
-  BreadcrumbEllipsis,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-  BreadcrumbTrail,
-};
+export { BreadcrumbTrail };

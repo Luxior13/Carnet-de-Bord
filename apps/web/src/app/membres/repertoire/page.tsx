@@ -7,7 +7,7 @@ import type { PersonsListRequest } from '$features/persons/person-list-state';
 import { personsListQuerySchema } from '$features/persons/schemas/person.schemas';
 import { listPersons } from '$features/persons/server/person.service';
 import { assertPersonFeatureReady } from '$features/persons/server/person-deletion';
-import { getPageAuthSession } from '$server/auth';
+import { getPageAuthSession } from '$server/session';
 
 export const metadata: Metadata = { title: `Répertoire · ${SITE_CONFIG.name}` };
 

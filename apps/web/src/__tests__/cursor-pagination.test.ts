@@ -2,10 +2,13 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 vi.mock('server-only', () => ({}));
 vi.mock('$env', () => ({
-  env: {
-    MFA_ENCRYPTION_KEY_V1: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
-  },
+  env: {},
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv(
+  'MFA_ENCRYPTION_KEY_V1',
+  'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+);
 
 describe('generic cursor pagination', () => {
   beforeAll(() => {

@@ -49,10 +49,17 @@ revue répond à un changement, un défaut constaté ou une règle nouvelle.
 - Surfaces et arrondis alignés sur le design system ; le formulaire public conserve
   sa composition centrée. Focus placé sur l’identifiant à l’entrée de cette étape.
 - Aucun identifiant précédent n’est mémorisé ou réinjecté par l’application dans
-  `localStorage`. Le nettoyage des anciennes clés est facultatif : un stockage
-  bloqué ne doit pas empêcher la connexion. L'autocomplétion et les propositions
-  des gestionnaires de mots de passe sont désactivées côté site, y compris sur
-  l'identifiant, le mot de passe et le MFA ; aucune exception d'authentification.
+  `localStorage` ; le nettoyage des clés d’anciens parcours est retiré le
+  24 octobre 2026 (REV-12), sans production à rattraper. Depuis le 25 octobre 2026
+  (REV-07), l'identifiant (`username`), le mot de passe (`current-password`) et
+  le code TOTP (`one-time-code`) acceptent les gestionnaires de mots de passe ;
+  le code de secours reste exclu ([règle](../design/comportements.md#autocomplétion)).
+- Mots de passe hachés en argon2id (19 Mio, 2 passes) depuis le 25 octobre 2026 ;
+  un ancien hachage bcrypt est vérifié puis remplacé à la connexion suivante,
+  sans changer la révision du compte. Politique d'un nouveau mot de passe :
+  12 à 128 caractères, aucune règle de composition, refus des suites simples,
+  de l'identifiant, du nom, de « Noctambule » et des mots de passe courants
+  ([revue complète](../audits/2026-10-23-revue-complete.md#suivi--lot-5-mots-de-passe-25-octobre-2026)).
 - Verrou immédiat contre les doubles soumissions des identifiants et du défi MFA.
   Les dialogues partagés de configuration et de vérification MFA appliquent le
   même verrou et ignorent leurs réponses après démontage.
@@ -142,6 +149,18 @@ connexion suivi dans AUTH-01.
 [Décisions et questions communes](transverse/modales.md) ·
 [Preuves et limites de l’audit](../audits/2026-10-11-modales.md).
 Cette passe ne clôt pas les contrôles d’intégration encore ouverts de la page.
+
+## Revue complète — 23 octobre 2026
+
+Revue statique de la connexion, des sessions, du MFA et du limiteur
+([rapport](../audits/2026-10-23-revue-complete.md)). Les fondations sont solides ; restent ouverts :
+
+| ID | Point | Priorité / état |
+| --- | --- | --- |
+| AUTH-09 | Les tests PostgreSQL de connexion (concurrence, limiteur, MFA) ne s’exécutent nulle part (REV-21) | **Clos le 24 octobre** : `bun run test:postgres` et étape CI ajoutés ; 225 tests SQL réussis sur un PostgreSQL local temporaire |
+| AUTH-10 | Le verrou du compte et le seau « compte » permettent de bloquer un compte dont on connaît l’identifiant (REV-01) | P1, **corrigé à vérifier** le 24 octobre : verrou retiré (migration), seau compte à 20 échecs / 15 min bloquant 15 min, paire IP + identifiant inchangée ; Vitest réussi, migration appliquée à la base de travail le 24 octobre après sauvegarde signée ; suite SQL de connexion réussie le 24 octobre |
+| AUTH-11 | Compatibilité des anciens jetons en clair et code mort d’authentification (REV-02, REV-03, REV-12) | P1, **corrigé** le 24 octobre ; voir le [suivi du rapport](../audits/2026-10-23-revue-complete.md#suivi--lot-1-du-24-octobre-2026) |
+| AUTH-12 | Gestionnaires de mots de passe désactivés : décision du 11 octobre à reconsidérer (REV-07) | P2, décision du propriétaire |
 
 ## Autocomplétion — correction du 11 octobre 2026
 

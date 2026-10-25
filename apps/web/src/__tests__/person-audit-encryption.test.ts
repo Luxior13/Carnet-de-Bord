@@ -23,7 +23,7 @@ vi.mock('$env', () => ({
   },
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/audit-log', () => ({
   getAuditRequestContext: mocks.getAuditRequestContext,
 }));
 

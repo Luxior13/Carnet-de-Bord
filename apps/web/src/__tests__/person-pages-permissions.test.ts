@@ -3,7 +3,10 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { FEATURES } from '$constants/feature-registry.constants';
-import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  PERMISSIONS,
+  ROADMAP_PERMISSIONS,
+} from '$constants/permissions.constants';
 import { getPersonCapabilities } from '$features/persons/person.permissions';
 
 const mocks = vi.hoisted(() => ({
@@ -36,7 +39,7 @@ vi.mock('$features/persons/components/PersonCreateForm', () => ({
   PersonCreateForm: mocks.createForm,
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/session', () => ({
   getPageAuthSession: mocks.getPageAuthSession,
 }));
 
@@ -85,7 +88,7 @@ describe('direct Person page permission boundaries', () => {
     expect(
       getPersonCapabilities(
         user({
-          [PERMISSIONS.AUDIT.VIEW]: true,
+          [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
           [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
           [PERMISSIONS.PERSONS.CREATE]: true,
           [PERMISSIONS.PERSONS.DELETE]: true,

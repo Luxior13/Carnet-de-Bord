@@ -57,6 +57,8 @@ export const MfaCodeInput: FC<MfaCodeInputProps> = ({
         aria-describedby={error ? `${descriptionId} ${errorId}` : descriptionId}
         aria-invalid={!!error}
         autoCapitalize="none"
+        // A recovery code is single-use and never saved by a manager.
+        autoComplete={isRecoveryCode ? 'off' : 'one-time-code'}
         autoCorrect="off"
         autoFocus={autoFocus}
         className={`font-mono text-base lg:text-base ${isRecoveryCode ? 'tracking-normal' : 'tracking-[0.25em]'}`}

@@ -66,7 +66,8 @@ async function readApiData<T>(
 
 async function getMutationHeaders(page: Page): Promise<Record<string, string>> {
   const csrfCookie = (await page.context().cookies()).find(
-    (cookie) => cookie.name === 'csrf-token',
+    // The E2E suite runs the production build, whose cookies are prefixed.
+    (cookie) => cookie.name === '__Host-csrf-token',
   );
   if (!csrfCookie?.value) {
     throw new Error('The authenticated E2E context has no CSRF token.');

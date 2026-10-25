@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    clearRateLimit: vi.fn(),
     consumeVerifiedMfaProof: vi.fn(),
     createAuditLogWithHeaders: vi.fn(),
     MfaReplayDetectedError,
@@ -24,7 +25,6 @@ const mocks = vi.hoisted(() => {
       session: { updateMany: vi.fn() },
       user: { findUnique: vi.fn() },
     },
-    recordLoginAttempt: vi.fn(),
     requireAuth: vi.fn(),
     reserveSensitiveActionRateLimit: vi.fn(),
     transaction,
@@ -51,8 +51,10 @@ vi.mock('$server/api-auth', () => ({
   requireAuth: mocks.requireAuth,
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
+}));
+vi.mock('$server/password', () => ({
   verifyPassword: mocks.verifyPassword,
 }));
 
@@ -72,7 +74,7 @@ vi.mock('$server/prisma', () => ({
 }));
 
 vi.mock('$server/rate-limiter', () => ({
-  recordLoginAttempt: mocks.recordLoginAttempt,
+  clearRateLimit: mocks.clearRateLimit,
   reserveSensitiveActionRateLimit: mocks.reserveSensitiveActionRateLimit,
 }));
 
@@ -132,16 +134,17 @@ const createRequest = (body: Record<string, unknown>): NextRequest =>
   });
 
 describe('step-up proof freshness', () => {
-  it('accepts the exact password and critical-MFA boundaries', async () => {
+  it('accepts the exact password and sensitive-proof boundaries', async () => {
     const {
-      ELEVATED_MFA_PROOF_MAX_AGE_MS,
-      hasRecentElevatedMfaProof,
+      getSensitiveActionProofExpiration,
       hasRecentPasswordReauthentication,
+      hasRecentSensitiveActionProof,
       PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
+      SENSITIVE_ACTION_PROOF_MAX_AGE_MS,
     } = await import('$server/sensitive-action');
     const session = buildSession({
       criticalMfaVerifiedAt: new Date(
-        NOW.getTime() - ELEVATED_MFA_PROOF_MAX_AGE_MS,
+        NOW.getTime() - SENSITIVE_ACTION_PROOF_MAX_AGE_MS,
       ),
       passwordReauthenticatedAt: new Date(
         NOW.getTime() - PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
@@ -149,15 +152,18 @@ describe('step-up proof freshness', () => {
     });
 
     expect(hasRecentPasswordReauthentication(session, NOW)).toBe(true);
-    expect(hasRecentElevatedMfaProof(session, NOW)).toBe(true);
+    expect(hasRecentSensitiveActionProof(session, NOW)).toBe(true);
+    // Both proofs end now: the sensitive proof ends with the first of them.
+    expect(getSensitiveActionProofExpiration(session, NOW)).toEqual(NOW);
   });
 
   it('rejects old, absent, and future-dated step-up proofs', async () => {
     const {
-      ELEVATED_MFA_PROOF_MAX_AGE_MS,
-      hasRecentElevatedMfaProof,
+      getSensitiveActionProofExpiration,
       hasRecentPasswordReauthentication,
+      hasRecentSensitiveActionProof,
       PASSWORD_REAUTHENTICATION_MAX_AGE_MS,
+      SENSITIVE_ACTION_PROOF_MAX_AGE_MS,
     } = await import('$server/sensitive-action');
 
     expect(hasRecentPasswordReauthentication(buildSession(), NOW)).toBe(false);
@@ -171,19 +177,16 @@ describe('step-up proof freshness', () => {
         NOW,
       ),
     ).toBe(false);
-    expect(
-      hasRecentElevatedMfaProof(
-        buildSession({
-          criticalMfaVerifiedAt: new Date(
-            NOW.getTime() - ELEVATED_MFA_PROOF_MAX_AGE_MS - 1,
-          ),
-          passwordReauthenticatedAt: NOW,
-        }),
-        NOW,
+    const staleCode = buildSession({
+      criticalMfaVerifiedAt: new Date(
+        NOW.getTime() - SENSITIVE_ACTION_PROOF_MAX_AGE_MS - 1,
       ),
-    ).toBe(false);
+      passwordReauthenticatedAt: NOW,
+    });
+    expect(hasRecentSensitiveActionProof(staleCode, NOW)).toBe(false);
+    expect(getSensitiveActionProofExpiration(staleCode, NOW)).toBeNull();
     expect(
-      hasRecentElevatedMfaProof(
+      hasRecentSensitiveActionProof(
         buildSession({
           criticalMfaVerifiedAt: new Date(NOW.getTime() + 1),
           passwordReauthenticatedAt: NOW,
@@ -228,11 +231,9 @@ describe('/api/auth/step-up', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.data).toMatchObject({
-      criticalMfaExpiresAt: null,
+    expect(body.data).toEqual({
       expiresAt: '2026-07-15T12:30:00.000Z',
       kind: 'password',
-      passwordExpiresAt: '2026-07-15T12:30:00.000Z',
     });
     expect(mocks.verifyPassword).toHaveBeenCalledTimes(1);
     expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
@@ -274,60 +275,18 @@ describe('/api/auth/step-up', () => {
     );
   });
 
-  it('requires an active password proof before critical MFA', async () => {
-    mocks.requireAuth.mockResolvedValueOnce(buildAuth(buildSession()));
+  it('rejects the retired code-only proof kind', async () => {
     const { POST } = await import('$app/api/auth/step-up/route');
     const response = await POST(
       createRequest({ currentTotpCode: '123456', kind: 'critical-mfa' }),
     );
-    const body = await response.json();
 
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe(ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED);
+    expect(response.status).toBe(400);
     expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
     expect(mocks.verifyMfaProof).not.toHaveBeenCalled();
   });
 
-  it('confirms critical MFA without asking for the password again', async () => {
-    mocks.requireAuth.mockResolvedValueOnce(
-      buildAuth(buildSession({ passwordReauthenticatedAt: NOW })),
-    );
-    const proof = { method: 'TOTP' as const, timeStep: 123n };
-    mocks.verifyMfaProof.mockResolvedValueOnce(proof);
-    const { POST } = await import('$app/api/auth/step-up/route');
-    const response = await POST(
-      createRequest({ currentTotpCode: '123456', kind: 'critical-mfa' }),
-    );
-    const body = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(body.data).toMatchObject({
-      criticalMfaExpiresAt: '2026-07-15T12:15:00.000Z',
-      expiresAt: '2026-07-15T12:15:00.000Z',
-      kind: 'critical-mfa',
-      passwordExpiresAt: '2026-07-15T12:30:00.000Z',
-    });
-    expect(mocks.verifyPassword).not.toHaveBeenCalled();
-    expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: {
-          criticalMfaVerifiedAt: NOW,
-          lastSeenAt: NOW,
-        },
-      }),
-    );
-    expect(mocks.consumeVerifiedMfaProof).toHaveBeenCalledWith(
-      mocks.transaction,
-      {
-        authenticatedAt: NOW,
-        credentialUpdatedAt: TOTP_CREDENTIAL_UPDATED_AT,
-        proof,
-        userId: 'admin-user',
-      },
-    );
-  });
-
-  it('keeps the login MFA timestamp immutable for a legacy full proof', async () => {
+  it('reports the five-minute sensitive proof the server actually enforces', async () => {
     const { POST } = await import('$app/api/auth/step-up/route');
     const response = await POST(
       createRequest({
@@ -337,6 +296,10 @@ describe('/api/auth/step-up', () => {
     );
 
     expect(response.status).toBe(200);
+    expect((await response.json()).data).toEqual({
+      expiresAt: '2026-07-15T12:05:00.000Z',
+      kind: 'full',
+    });
     expect(mocks.transaction.session.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: {
@@ -351,40 +314,9 @@ describe('/api/auth/step-up', () => {
     ).not.toHaveProperty('mfaVerifiedAt');
   });
 
-  it('returns status and clears both step-up proofs on explicit lock', async () => {
-    const activeSession = buildSession({
-      criticalMfaVerifiedAt: NOW,
-      passwordReauthenticatedAt: NOW,
-    });
-    mocks.requireAuth.mockResolvedValue(buildAuth(activeSession));
-    const { DELETE, GET } = await import('$app/api/auth/step-up/route');
+  it('exposes no status or lock endpoint since the admin mode was removed', async () => {
+    const route = await import('$app/api/auth/step-up/route');
 
-    const statusResponse = await GET();
-    const statusBody = await statusResponse.json();
-    expect(statusBody.data).toEqual({
-      criticalMfaExpiresAt: '2026-07-15T12:15:00.000Z',
-      passwordExpiresAt: '2026-07-15T12:30:00.000Z',
-    });
-
-    const lockResponse = await DELETE();
-    const lockBody = await lockResponse.json();
-    expect(lockResponse.status).toBe(200);
-    expect(lockBody.data).toEqual({
-      criticalMfaExpiresAt: null,
-      passwordExpiresAt: null,
-    });
-    expect(mocks.prisma.session.updateMany).toHaveBeenCalledWith({
-      data: {
-        criticalMfaVerifiedAt: null,
-        passwordReauthenticatedAt: null,
-      },
-      where: {
-        expiresAt: { gt: NOW },
-        idleExpiresAt: { gt: NOW },
-        securityVersion: 7,
-        token: SESSION_TOKEN,
-        userId: 'admin-user',
-      },
-    });
+    expect(Object.keys(route).sort()).toEqual(['POST']);
   });
 });

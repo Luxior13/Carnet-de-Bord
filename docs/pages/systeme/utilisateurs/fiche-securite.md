@@ -12,7 +12,7 @@
 | Gabarit visé | [B. Fiche à sections](../../../design/gabarits.md#b-fiche-à-sections) |
 | État d’harmonisation | Aligné ; allègement validé le 14 octobre 2026 — voir [Harmonisation](../../../design/harmonisation.md#état-par-page) |
 | Point d’entrée | [UserSecurityTab](../../../../apps/web/src/components/users/user-detail/UserSecurityTab.tsx) |
-| Contrôle d’accès | `users:view_security`, réinitialisations (`users:reset_password`, MFA), sessions (`users:view_sessions`, `users:revoke_sessions`), statut, suppression ; preuves récentes côté serveur |
+| Contrôle d’accès | `users:view_security`, réinitialisations (`users:reset_password`, `users:reset_mfa`), sessions (`users:view_sessions`, `users:revoke_sessions`), statut, suppression ; preuves récentes côté serveur |
 | Chargement / erreur dédiés | section chargée à la demande / commune à la fiche |
 
 ## Rôle et tâches principales
@@ -24,12 +24,39 @@ révoquer des sessions, supprimer le compte.
 ## Composition actuelle
 
 Cinq rubriques : état du compte (badge `UserStatusBadge` à gauche de
-l’interrupteur), mot de passe et verrouillage, double authentification,
+l’interrupteur), mot de passe (état et dernier changement), double authentification,
 sessions (appareil, activité, IP, détails repliables, révocation), suppression
 (`UserDeletionCard`). Barre commune seulement quand l’état du compte diffère
 de la valeur enregistrée.
 
 ## Décisions retenues
+
+- **25 octobre 2026 — mot de passe temporaire dans sa carte** (retour du
+  propriétaire : « le visuel ici n’est pas parfait »). Le panneau était posé
+  au-dessus de « État du compte », collé à cette carte, sans bandeau de titre,
+  avec un champ sur toute la largeur et la case à cocher empilée sur le bouton.
+  Le résultat s’affiche désormais dans la carte « Mot de passe », à la place du
+  pied « Réinitialiser le mot de passe » : encart d’alerte « Mot de passe
+  temporaire à transmettre », champ de 448 px au plus, bouton « Copier » puis
+  « Copié » (l’annonce reste pour les lecteurs d’écran), pied de carte avec la
+  case « J’ai conservé ce mot de passe » et « Terminer et masquer ». Les états
+  expiré et réponse incertaine suivent la même structure. Banc client de la
+  fiche : 50/50, dont deux captures de cet état relues à 390 et 1 440 px.
+
+- **25 octobre 2026 — réinitialisation MFA délégable** ([revue complète](../../../audits/2026-10-23-revue-complete.md#suivi--lot-5-mots-de-passe-25-octobre-2026),
+  REV-11) : le bouton « Réinitialiser la double authentification » apparaît pour
+  tout détenteur de `users:reset_mfa` (racine comprise), sur un compte non
+  protégé dont la double authentification est active et, hors racine, non
+  administrateur. L'aide décrit le cas d'usage (application et codes de secours
+  perdus) au lieu d'une « récupération superadmin ». Banc client de la fiche
+  rejoué : 48/48, capture de la rubrique relue à 1 440 px.
+
+- **24 octobre 2026 — verrou de compte retiré** ([revue complète](../../../audits/2026-10-23-revue-complete.md),
+  REV-01) : le verrou par compte et son compteur de tentatives disparaissent du
+  modèle, de l’API et de la rubrique, désormais intitulée « Mot de passe » et
+  limitée à l’état du mot de passe et à son dernier changement. Les échecs
+  restent inscrits dans le journal d’audit (`LOGIN_FAILED`) ; la limitation
+  des essais relève du limiteur de connexion.
 
 - 14 octobre 2026 : listes de descriptions sans sous-cartes, aides près des
   actions, compteur de tentatives affiché une fois ([préférences](../../../design/preferences.md)).

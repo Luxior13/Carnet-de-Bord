@@ -41,7 +41,7 @@ fonctionnelle, une ligne ici et une mention dans la fiche de la page, avant le c
 | --- | --- | --- |
 | Police | Geist (`--font-sans`) pour le texte | Police système `--font-form-controls` (`font-form`) pour les champs, labels et menus de formulaire ; Geist Mono pour identifiants techniques et codes MFA ; la recherche de liste reste en Geist |
 | Hauteur de contrôle | Champ de formulaire 40 px, 44 px sous 640 px | 38 px pour la recherche et les filtres compacts d’une liste ; 30 px pour un filtre rapide d’une liste, 44 px sous 640 px ; 48 px minimum pour un lien de barre de sections ; recherche du header 40 px (44 px sur mobile) ; flèches de pagination 30 px sur grand écran, 44 px sous 640 px |
-| Rayon | 8 px pour un champ, un panneau de sélecteur ou une carte de réglage ; 10 px (`rounded-lg`) pour un bouton, une carte, une section, un bandeau, une liste ou une fenêtre | 5 px pour un badge de statut et un bouton de page de la pagination ; 6 px pour un contrôle compact de liste et les angles supérieurs d’un lien de section ; 7 px pour une infobulle, un menu ou un panneau de sélecteur compact ; 4 px pour une option de menu ou une case à cocher ; 8 px pour `rounded-lg` dans la portée indigo ; pastille circulaire |
+| Rayon | 8 px (`rounded-control`) pour un champ, un panneau de sélecteur ou une carte de réglage ; 10 px (`rounded-lg`, ou `rounded-panel` fixe) pour un bouton, une carte, une section, un bandeau, une liste ou une fenêtre | 5 px (`rounded-badge`) pour un badge de statut et un bouton de page de la pagination ; 6 px (`rounded-compact`) pour un contrôle compact de liste et les angles supérieurs d’un lien de section ; 7 px (`rounded-tile`) pour un avatar, une infobulle, un menu ou un panneau de sélecteur compact ; 4 px (`rounded-option`) pour une option de menu ou une case à cocher ; 8 px pour `rounded-lg` dans la portée indigo ; pastille circulaire ; flèche d’infobulle 2 px |
 | Badge | Badge de statut à point coloré `StatusBadge` (`$ui/status-badge`) : bordure et fond teintés, rayon 5 px, texte 11 px (`text-xs`), graisse 500 ; tons `success`, `info`, `warning`, `danger` et `muted` pour une catégorie neutre. `PersonStatusBadge`, `UserStatusBadge` et `UserAccessBadge` le composent ; primitive `Badge` sinon | Badge neutre pour une métadonnée descriptive ; aucun badge qui répète l’état déjà exprimé par une commande |
 | Tons d’état | `success`, `info`, `warning`, `destructive` | Tons d’accès `access-privileged`, `access-admin`, `access-member` pour un niveau de droit ; couleurs `nav-*` pour les pôles |
 | Taille de texte | Échelle de [Typographie](#typographie) | Champs à 16 px sous 1024 px puis 13 px ; titre de bandeau 23 px (18 px compact) ; rien sous 10 px |
@@ -275,6 +275,24 @@ historiques ; cette ancienne échelle ne remplace pas les règles courantes.
   forcées gardent le focus système. Ces vérifications ne certifient pas
   l’accessibilité globale. `--border-control` reste distinct pour les autres
   contrôles, notamment les filtres compacts et les cases à cocher.
+- **Rayons nommés (25 octobre 2026, HARMO-02)** : chaque rôle a son jeton,
+  défini une fois dans `globals.css` (`--shape-*`) et exposé en utilitaire
+  `rounded-*` ; les modules CSS lisent `var(--shape-*)`. Valeurs fixes, identiques
+  dans toutes les portées. `cn()` connaît ces noms, donc un `rounded-*` passé
+  par l’appelant remplace bien celui de la primitive.
+
+  | Jeton | Valeur | Rôle |
+  | --- | --- | --- |
+  | `panel` | 10 px | Carte, fenêtre, bandeau, barre d’enregistrement |
+  | `control` | 8 px | Champ, bouton d’action d’un réglage, encart d’avertissement |
+  | `tile` | 7 px | Avatar, menu, panneau de sélecteur compact, infobulle |
+  | `compact` | 6 px | Filtre compact, pas-à-pas, onglet, tuile imbriquée |
+  | `badge` | 5 px | Badge de statut, bouton de page |
+  | `option` | 4 px | Option de liste ou de menu, case à cocher |
+
+  `rounded-lg` (`--radius`) reste le rayon des primitives qui suivent la
+  portée indigo. Aucune valeur arbitraire `rounded-[Npx]` ne subsiste, hors
+  la flèche d’infobulle (2 px). Une nouvelle valeur demande une ligne ici.
 - `Button` et `Card` utilisent `rounded-lg` par défaut. Les variantes de
   menus et de fenêtres restent définies dans leurs primitives respectives.
 - Le panneau `SelectContent` par défaut reprend le rayon de **8 px** des
@@ -371,6 +389,7 @@ des styles globaux réellement indépendants, pas pour déplacer la duplication.
 Le test `shadcn-boundaries.test.ts` analyse les TSX et interdit les contrôles
 HTML hors de `components/ui`, sans exception pour un champ invisible
 d'autocomplétion. `autofill-contracts.test.ts` contrôle les attributs rendus par
-les primitives, l'absence d'opt-in dans les pages et la protection des formulaires.
+les primitives, la limitation des jetons aux fichiers d'authentification et la
+protection des formulaires.
 Les éléments de structure (`main`, `nav`, `form`, listes, titres) restent du HTML
 sémantique : shadcn ne remplace pas la structure d'une page.

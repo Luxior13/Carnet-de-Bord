@@ -95,15 +95,7 @@ const resolveSourceTable = (
   tables: ReadonlySet<string>,
   definition: BackupTableDefinition,
 ): string | null => {
-  if (tables.has(definition.tableName)) return definition.tableName;
-  if (
-    definition.legacySourceTableName &&
-    tables.has(definition.legacySourceTableName)
-  ) {
-    return definition.legacySourceTableName;
-  }
-
-  return null;
+  return tables.has(definition.tableName) ? definition.tableName : null;
 };
 
 const getTableSnapshot = async (

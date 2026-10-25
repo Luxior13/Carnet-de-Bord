@@ -10,7 +10,6 @@ import {
   type ApiErrorResponse,
   type ApiSuccessResponse,
   ErrorCode,
-  type PaginationMeta,
 } from '$types/api.types';
 import {
   getRequestId,
@@ -18,12 +17,6 @@ import {
   REQUEST_METHOD_HEADER,
   REQUEST_PATH_HEADER,
 } from '$utils/request-context.utils';
-
-type ApiPaginatedSuccessResponse<T> = {
-  data: T;
-  pagination: PaginationMeta;
-  success: true;
-};
 
 type JsonBodyResult =
   | { data: unknown; success: true }
@@ -134,20 +127,6 @@ export function apiSuccess<T>(
   status = 200,
 ): NextResponse<ApiSuccessResponse<T>> {
   return NextResponse.json({ data, success: true as const }, { status });
-}
-
-/**
- * Standard success response with pagination metadata.
- */
-export function apiPaginatedSuccess<T>(
-  data: T,
-  pagination: PaginationMeta,
-  status = 200,
-): NextResponse<ApiPaginatedSuccessResponse<T>> {
-  return NextResponse.json(
-    { data, pagination, success: true as const },
-    { status },
-  );
 }
 
 /**

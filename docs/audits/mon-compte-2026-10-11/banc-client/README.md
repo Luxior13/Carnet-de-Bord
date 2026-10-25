@@ -110,3 +110,12 @@ réel. Les attributs sans autocomplétion sont constatés ; les extensions ne so
 pas pilotées. Le timeout de 30 secondes, le téléchargement des codes et les
 refus 401/403 MFA spécifiques sont inspectés dans le code mais non exécutés
 distinctement ici. Aucun budget de performance n'est déduit de ce banc.
+
+## Reprise du 25 octobre 2026
+
+Banc aligné sur la règle d’autocomplétion du 25 octobre 2026 : les champs de
+la fenêtre « Changer le mot de passe » portent `current-password` et
+`new-password`, sans attribut d’exclusion. Scénario `password-rules-feedback`
+ajouté à 390 et 1 440 px (règles cochées en direct, envoi bloqué tant qu’une
+règle manque). Passe complète : 25/25 ; non archivée, détail dans la
+[revue complète](../../2026-10-23-revue-complete.md#suivi--lot-5-mots-de-passe-25-octobre-2026).

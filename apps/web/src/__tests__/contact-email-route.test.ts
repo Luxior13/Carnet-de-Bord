@@ -5,8 +5,8 @@ import { ErrorCode } from '$types/api.types';
 
 const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
+  clearRateLimit: vi.fn(),
   mapUser: vi.fn(),
-  recordAttempt: vi.fn(),
   requireAuth: vi.fn(),
   requirePermission: vi.fn(),
   reserveRateLimit: vi.fn(),
@@ -35,14 +35,18 @@ vi.mock('$server/api-auth', () => ({
   requirePermission: mocks.requirePermission,
 }));
 
-vi.mock('$server/auth', () => ({
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mocks.audit,
+}));
+vi.mock('$server/user-projection', () => ({
   mapUserToUserType: mocks.mapUser,
+}));
+vi.mock('$server/password', () => ({
   verifyPassword: mocks.verifyPassword,
 }));
 
 vi.mock('$server/rate-limiter', () => ({
-  recordLoginAttempt: mocks.recordAttempt,
+  clearRateLimit: mocks.clearRateLimit,
   reserveSensitiveActionRateLimit: mocks.reserveRateLimit,
 }));
 
@@ -100,7 +104,7 @@ describe('PATCH /api/auth/contact-email', () => {
     });
     mocks.userFindUnique.mockResolvedValue(storedUser);
     mocks.verifyPassword.mockResolvedValue(true);
-    mocks.recordAttempt.mockResolvedValue(undefined);
+    mocks.clearRateLimit.mockResolvedValue(undefined);
     mocks.userUpdate.mockResolvedValue({
       ...storedUser,
       contactEmail: 'owner@example.com',
@@ -275,7 +279,7 @@ describe('PATCH /api/auth/contact-email', () => {
       'WrongPassword1!',
       'stored-password-hash',
     );
-    expect(mocks.recordAttempt).not.toHaveBeenCalled();
+    expect(mocks.clearRateLimit).not.toHaveBeenCalled();
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
@@ -292,7 +296,7 @@ describe('PATCH /api/auth/contact-email', () => {
 
     expect(response.status).toBe(404);
     expect(mocks.verifyPassword).not.toHaveBeenCalled();
-    expect(mocks.recordAttempt).not.toHaveBeenCalled();
+    expect(mocks.clearRateLimit).not.toHaveBeenCalled();
   });
 
   it('normalizes the address and updates it optimistically in an audited transaction', async () => {
@@ -307,10 +311,7 @@ describe('PATCH /api/auth/contact-email', () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(mocks.recordAttempt).toHaveBeenCalledWith(
-      'account-reauth:user-1',
-      true,
-    );
+    expect(mocks.clearRateLimit).toHaveBeenCalledWith('account-reauth:user-1');
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
     expect(mocks.userUpdate).toHaveBeenCalledWith({
       data: {
@@ -383,10 +384,7 @@ describe('PATCH /api/auth/contact-email', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.recordAttempt).toHaveBeenCalledWith(
-      'account-reauth:user-1',
-      true,
-    );
+    expect(mocks.clearRateLimit).toHaveBeenCalledWith('account-reauth:user-1');
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
     expect(mocks.userUpdate).not.toHaveBeenCalled();
     expect(mocks.audit).not.toHaveBeenCalled();

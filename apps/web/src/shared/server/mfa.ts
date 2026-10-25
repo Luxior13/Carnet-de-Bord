@@ -20,18 +20,18 @@ import { generateSecret, generateURI, verify } from 'otplib';
 import QRCode from 'qrcode';
 
 import { SITE_CONFIG } from '$constants/app.constants';
+import { MFA_CHALLENGE_COOKIE_NAME } from '$constants/security.constants';
 import { env } from '$env';
 
+import { getCurrentMfaKeyVersion, getMfaEncryptionKey } from './mfa-keys';
 import { prisma } from './prisma';
 
-export const MFA_CHALLENGE_COOKIE_NAME = 'mfa-challenge';
-export const MFA_CHALLENGE_DURATION_MS = 5 * 60 * 1000;
+const MFA_CHALLENGE_DURATION_MS = 5 * 60 * 1000;
 export const MFA_ENROLLMENT_DURATION_MS = 10 * 60 * 1000;
-export const MFA_TOTP_PERIOD_SECONDS = 30;
+const MFA_TOTP_PERIOD_SECONDS = 30;
 export const MFA_TOTP_CODE_PATTERN = /^\d{6}$/;
 
 const MFA_CHALLENGE_COOKIE_PATH = '/api/auth/mfa';
-const MFA_ENCRYPTION_KEY_VERSION = 1;
 const MFA_ENCRYPTION_ALGORITHM = 'aes-256-gcm';
 const MFA_SECRET_AAD_PREFIX = 'team-control:totp-secret:v1:';
 const MFA_RECOVERY_HASH_PREFIX = 'team-control:mfa-recovery:v1:';
@@ -75,19 +75,6 @@ export class MfaReplayDetectedError extends Error {
   }
 }
 
-const getEncryptionKey = (version: number): Buffer => {
-  if (version !== MFA_ENCRYPTION_KEY_VERSION) {
-    throw new Error(`Unsupported MFA encryption key version: ${version}`);
-  }
-
-  const key = Buffer.from(env.MFA_ENCRYPTION_KEY_V1, 'base64');
-  if (key.length !== 32) {
-    throw new Error('MFA encryption key must contain exactly 32 bytes');
-  }
-
-  return key;
-};
-
 const getSecretAdditionalData = (userId: string): Buffer =>
   Buffer.from(`${MFA_SECRET_AAD_PREFIX}${userId}`, 'utf8');
 
@@ -96,9 +83,10 @@ export const encryptTotpSecret = (
   userId: string,
 ): EncryptedTotpSecret => {
   const iv = randomBytes(12);
+  const keyVersion = getCurrentMfaKeyVersion();
   const cipher = createCipheriv(
     MFA_ENCRYPTION_ALGORITHM,
-    getEncryptionKey(MFA_ENCRYPTION_KEY_VERSION),
+    getMfaEncryptionKey(keyVersion),
     iv,
   );
   cipher.setAAD(getSecretAdditionalData(userId));
@@ -111,7 +99,7 @@ export const encryptTotpSecret = (
     secretAuthTag: cipher.getAuthTag().toString('base64'),
     secretCiphertext: ciphertext.toString('base64'),
     secretIv: iv.toString('base64'),
-    secretKeyVersion: MFA_ENCRYPTION_KEY_VERSION,
+    secretKeyVersion: keyVersion,
   };
 };
 
@@ -121,7 +109,7 @@ export const decryptTotpSecret = (
 ): string => {
   const decipher = createDecipheriv(
     MFA_ENCRYPTION_ALGORITHM,
-    getEncryptionKey(encryptedSecret.secretKeyVersion),
+    getMfaEncryptionKey(encryptedSecret.secretKeyVersion),
     Buffer.from(encryptedSecret.secretIv, 'base64'),
   );
   decipher.setAAD(getSecretAdditionalData(userId));
@@ -385,7 +373,6 @@ export const createMfaChallenge = async (data: {
       userId: data.userId,
     },
     update: {
-      attempts: 0,
       credentialUpdatedAt: data.credentialUpdatedAt ?? null,
       expiresAt,
       purpose: data.purpose,

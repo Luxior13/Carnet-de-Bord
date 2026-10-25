@@ -6,10 +6,7 @@ const DEFAULT_SOURCE_LIMIT = 800;
 const SERVER_ONLY_DATABASE_IMPORT_PATTERN =
   /(?:from\s+|import\s*)['"](?:@repo\/database|@prisma\/client)(?:\/[^'"]*)?['"]/u;
 const LEGACY_LIMITS = new Map([
-  ['components/ui/sidebar.tsx', 900],
-  ['features/account/components/SecuritySection.tsx', 860],
-  ['shared/constants/permissions.constants.ts', 1_310],
-  ['shared/server/auth.ts', 1_350],
+  ['components/ui/sidebar.tsx', 815],
 ]);
 
 async function collectSourceFiles(directory) {

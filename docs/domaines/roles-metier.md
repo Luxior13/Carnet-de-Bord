@@ -2,6 +2,35 @@
 
 Conception cible révisée le 22 septembre 2026. Le moteur actuellement livré est décrit dans [Permissions](permissions.md). Les portées et modèles de rôles proposés ici ne sont pas encore des fonctions actives.
 
+## Décision du 25 octobre 2026 — modèle d’autorisation retenu (REV-15)
+
+Décision prise sur délégation du propriétaire (« fait ce que tu recommande »,
+[revue complète](../audits/2026-10-23-revue-complete.md#suivi--lot-5-mots-de-passe-25-octobre-2026)).
+Le modèle actuel (deux rôles, surcharges JSON dans `User.permissions`) reste
+en place pour les pages livrées ; la cible ci-dessous est **retenue** et se
+construit avec le chantier « Accès & responsabilités métier » (étape 1 de la
+[feuille de route](../propositions/feuille-de-route.md)), **au plus tard avec le
+premier module dont les droits dépendent d’une équipe ou d’une entité**. Aucune
+table n’est créée avant ce consommateur.
+
+- **Liaison compte ↔ personne** : une ligne datée par compte (compte, fiche
+  Personne, auteur, date, fin éventuelle), créée par une action explicite et
+  auditée, jamais par rapprochement d’email ou de nom. Elle porte la portée
+  « soi ».
+- **Affectations datées** : compte, capacité ou modèle de rôle, type de portée
+  (`structure`, `entité`, `équipe`, `soi`), identifiant de portée, début, fin,
+  auteur, motif, révocation. Un modèle de rôle propose des capacités au moment de
+  l’attribution ; le faire évoluer n’étend pas les affectations existantes.
+- **Politique par module** : `features/<module>/server/policy.ts` expose
+  `can(acteur, action, ressource)`, évaluée sur les affectations actives à la
+  date de l’action, dans la transaction de la mutation, comme le garde
+  `authorizeUserAction` aujourd’hui. Listes, totaux, recherches et exports
+  filtrent par la même politique.
+- **Reprise de l’existant** : les surcharges de `User.permissions` deviennent
+  des affectations de portée `structure` ; l’éditeur actuel devient l’éditeur
+  de cette portée. Le compte racine et la règle « un ADMIN possède toutes les
+  autorisations administratives » sont conservés.
+
 ## Séparer fonction métier et administration technique
 
 Les rôles techniques actuels restent `USER` et `ADMIN`, avec le régime particulier du compte protégé. « Bureau », « président », « trésorier » ou « coach » décrivent des responsabilités métier ; ils ne doivent pas accorder automatiquement l’administration des comptes et de la sécurité.

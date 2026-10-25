@@ -40,7 +40,7 @@ Alias (`apps/web/tsconfig.json`) : `$ui` → `components/ui`, `$components`,
 
 ```text
 Navigateur
-└─ middleware.ts : CSRF (cookie + en-tête x-csrf-token sur toute mutation),
+└─ middleware.ts : CSRF (cookie + en-tête x-csrf-token, refus Sec-Fetch-Site autre que same-origin),
    CSP avec nonce, identifiant de requête, limitation de débit
    ├─ Page (composant serveur) : getPageAuthSession → droits → service → rendu
    └─ Route API : requireAuth → requirePermission(PERMISSIONS.X.Y)
@@ -49,10 +49,38 @@ Navigateur
          └─ Prisma (transaction ; version optimiste et audit dans la même transaction)
 ```
 
-La session est un cookie `session` résolu par `$server/auth`. Les actions
-sensibles demandent une preuve récente (`requireRecentPasswordReauthentication`,
-`requireRecentSensitiveActionProof`) ; la double authentification est
-obligatoire.
+La session est un cookie (`session`, `__Host-session` en production) résolu
+par `$server/session`. Depuis le 25 octobre 2026, l’ancien `auth.ts` est réparti
+par responsabilité dans `shared/server` :
+
+| Module | Responsabilité |
+| --- | --- |
+| `session.ts` | Jeton, création et validation de session, cookies, `getAuthSession` et `getPageAuthSession` |
+| `password.ts` | Hachage argon2id, vérification (y compris des anciens hachages bcrypt, remplacés à la connexion), `authenticateUser`, changement et réinitialisation du mot de passe |
+| `password-policy.ts` | Politique serveur d'un nouveau mot de passe : règles partagées de `$utils/password.utils` et liste `common-passwords.json` |
+| `audit-log.ts` | Contexte de requête et écriture du journal d’audit, communs à tous les modules |
+| `auth-errors.ts` | Erreurs de version de sécurité et de compte protégé |
+| `user-projection.ts` | Vue sûre d’un compte (`mapUserToUserType`) |
+| `mfa-keys.ts` | Clés MFA versionnées (`MFA_ENCRYPTION_CURRENT_VERSION`, `MFA_ENCRYPTION_KEY_V<n>`) lues à l’usage |
+| `service-error.ts` | `ServiceError`, `serviceErrors` et `serviceErrorResponse`, communs à tous les services |
+| `sensitive-action.ts` | Fraîcheur des preuves de mot de passe et de double authentification |
+| `user-permission-mutation-authorization.ts` | Frontières d’octroi, de retrait et de délégation des droits d’un compte |
+
+Ces primitives transverses restent dans `shared/server` ; les cas d’usage du
+module d’authentification relèvent de `features/auth/server` (connexion,
+configuration et état MFA, confirmation renforcée, sessions et mot de passe du
+compte), ceux du profil personnel de `features/account/server`, ceux de
+l’administration des comptes de `features/users/server` et ceux des paramètres
+de `features/settings/server`.
+
+Un service signale un refus en levant une `ServiceError` (`$server/service-error`,
+raccourcis `serviceErrors`) ; la route la traduit avec `serviceErrorResponse`
+(ou `mfaFlowErrorResponse` pour un flux MFA) et ne construit jamais
+d’enveloppe d’erreur à la main. Dans un service, les droits se vérifient avec
+`assertPermission` et les preuves récentes avec
+`assertRecentPasswordReauthentication` ou `assertRecentSensitiveActionProof`
+(`$server/sensitive-action`) ; la route garde `requirePermission` pour le
+droit d’entrée. La double authentification est obligatoire.
 
 ## Registre des fonctionnalités
 
@@ -93,6 +121,7 @@ registre : ils relèvent du socle personnel et de l’authentification.
 ## Dépendances principales
 
 Next.js 15.5, React 19.1, Prisma 6.19, Zod 4, cmdk, sonner, lucide-react,
-DiceBear, bcryptjs ; Vitest et Playwright pour les tests. Les versions exactes
+DiceBear, @node-rs/argon2 (hachage des mots de passe ; bcryptjs ne sert plus
+qu'à vérifier les anciens hachages) ; Vitest et Playwright pour les tests. Les versions exactes
 sont celles des manifests ; consulter Context7 pour leur documentation
 ([consignes](../../AGENTS.md#context7)).

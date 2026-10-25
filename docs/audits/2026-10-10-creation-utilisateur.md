@@ -16,7 +16,7 @@ est cohérent avec la référence, mais certains états du formulaire restent fr
   de liste, navigation, radios de création, avatars et documentation conservées.
 - Sources : [page](../../apps/web/src/app/systeme/utilisateurs/nouveau/page.tsx),
   [POST](../../apps/web/src/app/api/users/route.ts),
-  [création transactionnelle](../../apps/web/src/shared/server/auth.ts),
+  [création transactionnelle](../systeme/architecture.md "auth.ts, réparti par responsabilité le 25 octobre 2026"),
   [validation partagée](../../apps/web/src/shared/utils/zod.utils.ts), garde de
   navigation, primitives et dialogue de confirmation d'identité.
 - Suivi propriétaire : [Utilisateurs](../pages/systeme/utilisateurs/README.md).

@@ -22,7 +22,7 @@ import {
   AUDIT_EVENT_VERSION,
   getAuditEventClassification,
 } from '$server/audit-event';
-import { getAuditRequestContext } from '$server/auth';
+import { getAuditRequestContext } from '$server/audit-log';
 import type { UserType } from '$types/auth.types';
 
 import { PERSON_AUDIT_KEYS } from '../person.constants';
@@ -88,7 +88,7 @@ const decodeBase64AesKey = (rawKey: string | undefined): Buffer | null => {
 const getAuditKey = (version: number): Buffer | null =>
   decodeBase64AesKey(process.env[`AUDIT_ENCRYPTION_KEY_V${version}`]);
 
-export const getCurrentAuditEncryptionVersion = (): number | null =>
+const getCurrentAuditEncryptionVersion = (): number | null =>
   env.AUDIT_ENCRYPTION_CURRENT_VERSION ?? null;
 
 export const assertPersonAuditConfigured = (): void => {

@@ -15,7 +15,7 @@ lieu de **401/403**. Un dixième cas recevait également 200 après expiration
 de la preuve MFA durant l’attente d’un verrou sur la cible.
 
 La route utilise désormais
-[authorizeManagedSessions](../../../../apps/web/src/features/users/server/user-session-authorization.ts)
+authorizeManagedSessions (retiré le 25 octobre 2026, logique reprise dans [user-sessions.service.ts](../../../../apps/web/src/features/users/server/user-sessions.service.ts))
 dans sa transaction. Le verrou des deux comptes suit l’ordre de leurs
 identifiants ; les contrôles de permission existants utilisent l’état relu.
 Un verrou partagé sur la session source stabilise aussi sa présence face à une

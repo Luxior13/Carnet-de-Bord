@@ -51,7 +51,10 @@ import {
   UserMutationFeedback,
   useUserMutationFeedback,
 } from '$components/users/user-detail/UserMutationFeedback';
-import { UserPasswordResetFeedback } from '$components/users/user-detail/UserPasswordResetFeedback';
+import {
+  hasPasswordResetFeedback,
+  UserPasswordResetFeedback,
+} from '$components/users/user-detail/UserPasswordResetFeedback';
 import type { ProfileForm } from '$components/users/user-detail/UserProfileTab';
 import {
   UserSecurityActionDialogs,
@@ -554,17 +557,21 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
 
         return (
           <>
-            <UserPasswordResetFeedback
-              controller={passwordReset}
-              onCheck={async () => {
-                const loaded = await fetchUser({ background: true });
-                if (loaded) await fetchSecuritySessions();
-
-                return Boolean(loaded);
-              }}
-              onRequestReset={() => setShowResetConfirm(true)}
-            />
             <UserSecurityTab
+              passwordResetFeedback={
+                hasPasswordResetFeedback(passwordReset) ? (
+                  <UserPasswordResetFeedback
+                    controller={passwordReset}
+                    onCheck={async () => {
+                      const loaded = await fetchUser({ background: true });
+                      if (loaded) await fetchSecuritySessions();
+
+                      return Boolean(loaded);
+                    }}
+                    onRequestReset={() => setShowResetConfirm(true)}
+                  />
+                ) : undefined
+              }
               user={user}
               isActive={editForm.isActive}
               setIsActive={(isActive) => setEditForm({ ...editForm, isActive })}
@@ -654,7 +661,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
                 getUserLoginDisplay(user),
               )}
               icon={
-                <UserAvatar user={user} className="size-full rounded-[7px]" />
+                <UserAvatar user={user} className="rounded-tile size-full" />
               }
               meta={<UserIdentityStatus user={user} />}
               actions={<UserAccessBadge user={user} />}
@@ -753,7 +760,6 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
           event.preventDefault();
           if (mountedRef.current) focusSecuritySessionsHeading();
         }}
-        onProofKindRequired={adminStepUp.setPendingStepUpProofKind}
         open={pendingStepUpAction !== null}
         proofKind={pendingStepUpAction?.proofKind ?? 'full'}
         title={pendingStepUpAction?.title ?? 'Confirmer votre identité'}

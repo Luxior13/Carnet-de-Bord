@@ -1,5 +1,5 @@
+import { hash } from '@node-rs/argon2';
 import { PrismaClient, UserRole, type Prisma } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
 import { randomBytes } from 'node:crypto';
 
 const prisma = new PrismaClient();
@@ -51,16 +51,12 @@ function generateDevelopmentPassword(length = 18): string {
   );
 }
 
+// Same length bounds as the application policy (12 to 128 characters).
 function validateSeedPassword(password: string): void {
-  if (
-    password.length < 8 ||
-    Buffer.byteLength(password, 'utf8') > 72 ||
-    !/[A-Z]/.test(password) ||
-    !/[a-z]/.test(password) ||
-    !/\d/.test(password)
-  ) {
+  const length = Array.from(password).length;
+  if (length < 12 || length > 128) {
     throw new Error(
-      'SEED_SUPERADMIN_PASSWORD must contain 8 or more characters, including uppercase, lowercase and a digit, and must not exceed 72 UTF-8 bytes.',
+      'SEED_SUPERADMIN_PASSWORD must contain 12 to 128 characters.',
     );
   }
 }
@@ -189,7 +185,12 @@ async function seedSuperadmin() {
 
   validateSeedPassword(adminPassword);
 
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  // argon2id with the application parameters (OWASP).
+  const passwordHash = await hash(adminPassword, {
+    memoryCost: 19_456,
+    parallelism: 1,
+    timeCost: 2,
+  });
 
   const admin = await prisma.$transaction(async (transaction) => {
     const createdAdmin = await transaction.user.create({

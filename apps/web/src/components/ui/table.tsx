@@ -49,22 +49,6 @@ function TableBody({
   );
 }
 
-function TableFooter({
-  className,
-  ...props
-}: React.ComponentProps<'tfoot'>): React.JSX.Element {
-  return (
-    <tfoot
-      data-slot="table-footer"
-      className={cn(
-        'border-border-divider bg-surface-inset border-t font-medium [&>tr]:last:border-b-0',
-        className,
-      )}
-      {...props}
-    />
-  );
-}
-
 function TableRow({
   className,
   ...props
@@ -131,7 +115,6 @@ export {
   TableBody,
   TableCaption,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,

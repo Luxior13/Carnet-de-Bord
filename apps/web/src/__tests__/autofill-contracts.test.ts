@@ -9,6 +9,20 @@ import { MfaCodeInput } from '$features/auth/components/MfaCodeInput';
 import { Command, CommandInput } from '$ui/command';
 import { Input } from '$ui/input';
 import { Textarea } from '$ui/textarea';
+import { AUTHENTICATION_AUTOCOMPLETE_TOKENS } from '$utils/autofill.utils';
+
+// Owner decision of 25 October 2026 (REV-07): password managers may fill the
+// authentication fields only, and only in these files.
+const AUTHENTICATION_FIELD_FILES = new Set([
+  'app/login/page.tsx',
+  'components/ChangePasswordDialog.tsx',
+  'components/users/user-detail/AdminMfaResetDialog.tsx',
+  'components/users/user-detail/AdminStepUpDialog.tsx',
+  'features/account/components/ContactEmailDialog.tsx',
+  'features/auth/components/MfaActionDialog.tsx',
+  'features/auth/components/MfaCodeInput.tsx',
+  'features/auth/components/MfaSetupFlow.tsx',
+]);
 
 const expectAutofillDisabled = (markup: string): void => {
   expect(markup).toContain('autoComplete="off"');
@@ -22,7 +36,7 @@ const expectAutofillDisabled = (markup: string): void => {
   expect(markup).toContain('data-form-type="other"');
 };
 
-describe('site-wide autofill policy', () => {
+describe('autofill policy', () => {
   // Deliberately emulate a caller bypassing TypeScript: runtime protection must
   // still win over arbitrary props, including when spread by a parent.
   const conflictingProps = {
@@ -32,6 +46,18 @@ describe('site-wide autofill policy', () => {
     'data-form-type': 'login',
     'data-lpignore': 'false',
   };
+
+  it.each(AUTHENTICATION_AUTOCOMPLETE_TOKENS)(
+    'lets a password manager fill an authentication field marked %s',
+    (token) => {
+      const markup = renderToStaticMarkup(
+        createElement(Input, { autoComplete: token, id: 'auth-field' }),
+      );
+      expect(markup).toContain(`autoComplete="${token}"`);
+      expect(markup).not.toContain('data-bwignore');
+      expect(markup).not.toContain('data-1p-ignore');
+    },
+  );
 
   it.each(['text', 'email', 'tel', 'password', 'search'])(
     'disables autofill on %s inputs even when callers opt in',
@@ -78,10 +104,9 @@ describe('site-wide autofill policy', () => {
     expect(markup).toContain('role="combobox"');
   });
 
-  it.each(['totp', 'recovery'] as const)(
-    'protects %s authentication codes',
-    (kind) => {
-      const markup = renderToStaticMarkup(
+  it('offers the TOTP code to the browser but never a single-use recovery code', () => {
+    const render = (kind: 'recovery' | 'totp'): string =>
+      renderToStaticMarkup(
         createElement(MfaCodeInput, {
           id: 'audit-code',
           kind,
@@ -89,14 +114,13 @@ describe('site-wide autofill policy', () => {
           value: '',
         }),
       );
-      expectAutofillDisabled(markup);
-      expect(markup).toContain(
-        `inputMode="${kind === 'totp' ? 'numeric' : 'text'}"`,
-      );
-    },
-  );
+    expect(render('totp')).toContain('autoComplete="one-time-code"');
+    expect(render('totp')).toContain('inputMode="numeric"');
+    expectAutofillDisabled(render('recovery'));
+    expect(render('recovery')).toContain('inputMode="text"');
+  });
 
-  it('has no page-level opt-ins or unprotected forms, including authentication', () => {
+  it('keeps opt-ins to authentication fields and protects every form', () => {
     const sourceRoot = new URL('../', import.meta.url);
     const violations: string[] = [];
     for (const file of globSync('**/*.tsx', { cwd: sourceRoot })) {
@@ -123,7 +147,9 @@ describe('site-wide autofill policy', () => {
             const name = attribute.name.getText(ast);
             if (
               name === 'allowPasswordManager' ||
-              (name === 'autoComplete' && !isOff(attribute))
+              (name === 'autoComplete' &&
+                !isOff(attribute) &&
+                !AUTHENTICATION_FIELD_FILES.has(path))
             ) {
               violations.push(`${path}: unexpected ${attribute.getText(ast)}`);
             }

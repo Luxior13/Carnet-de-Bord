@@ -161,8 +161,8 @@ toute connexion à la cible, y compris avec `--dry-run`. Il faut conserver :
 
 - `AUDIT_ENCRYPTION_CURRENT_VERSION` et les clés `AUDIT_ENCRYPTION_KEY_V<n>`
   exigées par le manifeste et les valeurs chiffrées ;
-- `MFA_ENCRYPTION_KEY_V1` dès que la sauvegarde contient un secret TOTP actif
-  ou une inscription TOTP en cours ;
+- `MFA_ENCRYPTION_KEY_V<n>` de chaque version portée par un secret TOTP actif
+  ou une inscription TOTP en cours de la sauvegarde ;
 - la clé publique Ed25519 correspondant à la signature ; la clé privée n'est
   pas nécessaire pour restaurer.
 
@@ -172,7 +172,10 @@ son événement d'audit ; aucun clair n'est écrit dans la sortie de commande.
 Les compteurs et l'existence d'un seul compte racine valide sont contrôlés
 avant de considérer l'opération terminée. Les trois lectures bornées du fichier
 (signature, déchiffrement, insertion) comparent son empreinte ; aucune copie
-complète du contenu déchiffré n'est conservée. Le format reste v9.
+complète du contenu déchiffré n'est conservée. Le format passe en v10 le
+25 octobre 2026 avec le retrait des tables `InternalAnnouncement` et
+`ArchivedStaffProfile` ; une sauvegarde v9 se restaure avec le code et les
+migrations de son époque.
 
 ## Performance Personnes
 

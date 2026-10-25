@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
+import { ServiceError } from '$server/service-error';
 import { ErrorCode } from '$types/api.types';
 
 const mocks = vi.hoisted(() => {
@@ -17,6 +18,7 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    assertRecentPasswordReauthentication: vi.fn(),
     createAuditLogWithHeaders: vi.fn(),
     prisma: {
       $transaction: vi.fn(
@@ -30,7 +32,6 @@ const mocks = vi.hoisted(() => {
     },
     requireAuth: vi.fn(),
     requirePermission: vi.fn(),
-    requireRecentPasswordReauthentication: vi.fn(),
     transaction,
   };
 });
@@ -40,7 +41,7 @@ vi.mock('$server/api-auth', () => ({
   requireAuth: mocks.requireAuth,
   requirePermission: mocks.requirePermission,
 }));
-vi.mock('$server/auth', () => ({
+vi.mock('$server/audit-log', () => ({
   createAuditLogWithHeaders: mocks.createAuditLogWithHeaders,
 }));
 vi.mock('$server/logger', () => ({
@@ -49,8 +50,8 @@ vi.mock('$server/logger', () => ({
 vi.mock('$server/prisma', () => ({ prisma: mocks.prisma }));
 vi.mock('$server/sensitive-action', async (importOriginal) => ({
   ...(await importOriginal<typeof import('$server/sensitive-action')>()),
-  requireRecentPasswordReauthentication:
-    mocks.requireRecentPasswordReauthentication,
+  assertRecentPasswordReauthentication:
+    mocks.assertRecentPasswordReauthentication,
 }));
 
 const UPDATED_AT = new Date('2026-07-18T12:00:00.000Z');
@@ -95,9 +96,6 @@ describe('system settings routes', () => {
       async () => (await mocks.requireAuth()).session,
     );
     mocks.requirePermission.mockReturnValue({ success: true });
-    mocks.requireRecentPasswordReauthentication.mockReturnValue({
-      success: true,
-    });
     mocks.prisma.systemSetting.findMany.mockResolvedValue([]);
     mocks.prisma.systemSetting.findUnique.mockResolvedValue(null);
     mocks.transaction.systemSetting.create.mockImplementation(
@@ -241,15 +239,12 @@ describe('system settings routes', () => {
       value: 'invalid',
       version: 2,
     });
-    mocks.requireRecentPasswordReauthentication.mockReturnValueOnce({
-      response: NextResponse.json(
-        {
-          error: { code: ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED },
-          success: false,
-        },
-        { status: 403 },
-      ),
-      success: false,
+    mocks.assertRecentPasswordReauthentication.mockImplementationOnce(() => {
+      throw new ServiceError(
+        ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED,
+        'Confirmez votre mot de passe',
+        403,
+      );
     });
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
     const response = await PUT(
@@ -261,9 +256,7 @@ describe('system settings routes', () => {
     );
 
     expect(response.status).toBe(403);
-    expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
-      1,
-    );
+    expect(mocks.assertRecentPasswordReauthentication).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -288,9 +281,7 @@ describe('system settings routes', () => {
       value: 1095,
       version: 3,
     });
-    expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
-      1,
-    );
+    expect(mocks.assertRecentPasswordReauthentication).toHaveBeenCalledTimes(1);
     expect(mocks.transaction.systemSetting.updateMany).toHaveBeenCalled();
     expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -322,7 +313,7 @@ describe('system settings routes', () => {
       actor,
       PERMISSIONS.SETTINGS.UPDATE,
     );
-    expect(mocks.requireRecentPasswordReauthentication).not.toHaveBeenCalled();
+    expect(mocks.assertRecentPasswordReauthentication).not.toHaveBeenCalled();
     expect(mocks.prisma.systemSetting.findUnique).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.createAuditLogWithHeaders).not.toHaveBeenCalled();
@@ -365,7 +356,7 @@ describe('system settings routes', () => {
     expect(body.data.version).toBe(2);
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
     expect(mocks.createAuditLogWithHeaders).not.toHaveBeenCalled();
-    expect(mocks.requireRecentPasswordReauthentication).not.toHaveBeenCalled();
+    expect(mocks.assertRecentPasswordReauthentication).not.toHaveBeenCalled();
   });
 
   it('returns the permission response before validating or updating a setting', async () => {
@@ -420,7 +411,7 @@ describe('system settings routes', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.requireRecentPasswordReauthentication).not.toHaveBeenCalled();
+    expect(mocks.assertRecentPasswordReauthentication).not.toHaveBeenCalled();
   });
 
   it('requires only a recent password before reducing retention', async () => {
@@ -428,18 +419,12 @@ describe('system settings routes', () => {
       value: 1_095,
       version: 2,
     });
-    mocks.requireRecentPasswordReauthentication.mockReturnValueOnce({
-      response: NextResponse.json(
-        {
-          error: {
-            code: ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED,
-            message: 'Confirmez votre mot de passe',
-          },
-          success: false,
-        },
-        { status: 403 },
-      ),
-      success: false,
+    mocks.assertRecentPasswordReauthentication.mockImplementationOnce(() => {
+      throw new ServiceError(
+        ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED,
+        'Confirmez votre mot de passe',
+        403,
+      );
     });
     const { PUT } = await import('$app/api/systeme/parametres/[key]/route');
 
@@ -454,9 +439,7 @@ describe('system settings routes', () => {
 
     expect(response.status).toBe(403);
     expect(body.error.code).toBe(ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED);
-    expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
-      1,
-    );
+    expect(mocks.assertRecentPasswordReauthentication).toHaveBeenCalledTimes(1);
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });
 
@@ -483,9 +466,7 @@ describe('system settings routes', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
-      1,
-    );
+    expect(mocks.assertRecentPasswordReauthentication).toHaveBeenCalledTimes(1);
     expect(String(mocks.transaction.$queryRaw.mock.calls[0]?.[0])).toContain(
       'system-setting:audit.retentionDays',
     );
@@ -510,9 +491,7 @@ describe('system settings routes', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(mocks.requireRecentPasswordReauthentication).toHaveBeenCalledTimes(
-      1,
-    );
+    expect(mocks.assertRecentPasswordReauthentication).toHaveBeenCalledTimes(1);
     expect(mocks.transaction.systemSetting.create).toHaveBeenCalled();
     expect(String(mocks.transaction.$queryRaw.mock.calls[0]?.[0])).toContain(
       'system-setting:audit.retentionDays',
@@ -575,7 +554,7 @@ describe('system settings routes', () => {
     );
 
     expect(response.status).toBe(409);
-    expect(mocks.requireRecentPasswordReauthentication).not.toHaveBeenCalled();
+    expect(mocks.assertRecentPasswordReauthentication).not.toHaveBeenCalled();
     expect(mocks.prisma.$transaction).not.toHaveBeenCalled();
   });
 

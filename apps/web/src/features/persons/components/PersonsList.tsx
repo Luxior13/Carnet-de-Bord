@@ -265,7 +265,7 @@ export const PersonsList: FC<PersonsListProps> = ({
         />
       )}
       <DataTableSection
-        className="border-border-content bg-surface-content rounded-[10px]"
+        className="border-border-content bg-surface-content rounded-panel"
         contentClassName={isRefreshing ? 'opacity-55' : undefined}
         headerClassName="bg-surface-content-header"
         toolbar={toolbar}

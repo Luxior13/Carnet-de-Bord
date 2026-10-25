@@ -14,10 +14,13 @@ import {
 const mocks = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock('server-only', () => ({}));
 vi.mock('$env', () => ({
-  env: {
-    MFA_ENCRYPTION_KEY_V1: 'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
-  },
+  env: {},
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv(
+  'MFA_ENCRYPTION_KEY_V1',
+  'AQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQE=',
+);
 vi.mock('$server/prisma', () => ({
   prisma: { $queryRaw: mocks.query },
 }));

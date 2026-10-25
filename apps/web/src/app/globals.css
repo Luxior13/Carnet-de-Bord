@@ -111,6 +111,13 @@
   --text-label--line-height: 1.125rem;
   /* 12px controls, 16px overlays, 20px panels, all derived from one scale. */
   --radius-2xl: calc(var(--radius) + 8px);
+  /* Named radii by role (HARMO-02): fixed values, identical in every scope. */
+  --radius-panel: var(--shape-panel);
+  --radius-control: var(--shape-control);
+  --radius-tile: var(--shape-tile);
+  --radius-compact: var(--shape-compact);
+  --radius-badge: var(--shape-badge);
+  --radius-option: var(--shape-option);
 }
 
 /* 2. Theme values: the only owner of application colors and geometry.
@@ -123,6 +130,14 @@
   --font-form-controls:
     system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
+
+  /* Radii by role; CSS modules read them as var(--shape-*). */
+  --shape-panel: 10px; /* cards, dialogs, heroes, action bars */
+  --shape-control: 8px; /* fields, action buttons, notices */
+  --shape-tile: 7px; /* avatars, menus, compact list panels */
+  --shape-compact: 6px; /* filters, steppers, tabs, nested tiles */
+  --shape-badge: 5px; /* status badges */
+  --shape-option: 4px; /* list and menu options, checkboxes */
 
   /* Dense admin type scale matching the reference design (11 / 13 / 14px). */
   --text-xs: 0.6875rem;

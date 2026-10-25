@@ -26,7 +26,6 @@ type UseAdminStepUpControllerResult = {
     data: unknown,
     action: PendingStepUpActionInput,
   ) => boolean;
-  setPendingStepUpProofKind: (proofKind: AdminStepUpKind) => void;
 };
 
 const getResponseErrorCode = (data: unknown): string | undefined =>
@@ -43,11 +42,9 @@ export const useAdminStepUpController = (): UseAdminStepUpControllerResult => {
       const proofKind: AdminStepUpKind | null =
         errorCode === ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED
           ? 'password'
-          : errorCode === ErrorCode.CRITICAL_REAUTHENTICATION_REQUIRED
-            ? 'critical-mfa'
-            : errorCode === ErrorCode.REAUTHENTICATION_REQUIRED
-              ? 'full'
-              : null;
+          : errorCode === ErrorCode.REAUTHENTICATION_REQUIRED
+            ? 'full'
+            : null;
 
       if (!proofKind) return false;
 
@@ -85,21 +82,11 @@ export const useAdminStepUpController = (): UseAdminStepUpControllerResult => {
     setPendingStepUpAction(null);
   }, []);
 
-  const setPendingStepUpProofKind = useCallback(
-    (proofKind: AdminStepUpKind): void => {
-      setPendingStepUpAction((currentAction) =>
-        currentAction ? { ...currentAction, proofKind } : currentAction,
-      );
-    },
-    [],
-  );
-
   return {
     cancelPendingStepUpAction,
     handleStepUpComplete,
     pendingStepUpAction,
     requestPasswordReauthenticationForResponse,
     requestStepUpForResponse,
-    setPendingStepUpProofKind,
   };
 };

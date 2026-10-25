@@ -109,3 +109,13 @@ fictifs et n’est pas archivé. Lecteur d’écran, appareil physique, zoom nat
 navigation complète de l’espace privé restent hors de cette preuve. L’intégration
 authentifiée et les contrôles globaux sont consignés dans le rapport propriétaire
 de l’audit Connexion du 12 octobre.
+
+## Reprise du 25 octobre 2026
+
+Contrôle d’autocomplétion aligné sur la règle du 25 octobre 2026 : un champ
+porteur d’un jeton d’authentification (`username`, `current-password`,
+`one-time-code`) n’a plus d’attribut d’exclusion, tout autre champ, code de
+secours compris, reste exclu. Le scénario « anciens identifiants effacés » et
+l’amorçage de ses clés `localStorage` sont retirés avec le nettoyage qu’ils
+vérifiaient (REV-12, 24 octobre). Passe complète : 29/29 ; non archivée, détail
+dans la [revue complète](../../2026-10-23-revue-complete.md#suivi--lot-5-mots-de-passe-25-octobre-2026).

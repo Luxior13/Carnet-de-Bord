@@ -25,10 +25,11 @@ vi.mock('server-only', () => ({}));
 
 vi.mock('$env', () => ({
   env: {
-    MFA_ENCRYPTION_KEY_V1: Buffer.alloc(32, 7).toString('base64'),
     NODE_ENV: 'test',
   },
 }));
+// Read from the process environment at use (key rotation, REV-10).
+vi.stubEnv('MFA_ENCRYPTION_KEY_V1', Buffer.alloc(32, 7).toString('base64'));
 
 vi.mock('next/headers', () => ({
   cookies: vi.fn(async () => mocks.cookieStore),
@@ -71,6 +72,32 @@ describe('MFA server helpers', () => {
     expect(encrypted.secretCiphertext).not.toContain(secret);
     expect(decryptTotpSecret(encrypted, 'user-1')).toBe(secret);
     expect(() => decryptTotpSecret(encrypted, 'user-2')).toThrow();
+  });
+
+  it('encrypts with the current key version and still reads older ones', () => {
+    const secret = 'JBSWY3DPEHPK3PXP';
+    const before = encryptTotpSecret(secret, 'user-1');
+    expect(before.secretKeyVersion).toBe(1);
+
+    vi.stubEnv('MFA_ENCRYPTION_CURRENT_VERSION', '2');
+    vi.stubEnv('MFA_ENCRYPTION_KEY_V2', Buffer.alloc(32, 9).toString('base64'));
+    try {
+      const after = encryptTotpSecret(secret, 'user-1');
+      expect(after.secretKeyVersion).toBe(2);
+      expect(decryptTotpSecret(after, 'user-1')).toBe(secret);
+      expect(decryptTotpSecret(before, 'user-1')).toBe(secret);
+
+      vi.stubEnv('MFA_ENCRYPTION_KEY_V1', '');
+      expect(() => decryptTotpSecret(before, 'user-1')).toThrow(
+        'MFA encryption key V1 is missing or invalid',
+      );
+    } finally {
+      vi.stubEnv('MFA_ENCRYPTION_CURRENT_VERSION', '');
+      vi.stubEnv(
+        'MFA_ENCRYPTION_KEY_V1',
+        Buffer.alloc(32, 7).toString('base64'),
+      );
+    }
   });
 
   it('accepts the adjacent TOTP window and rejects replayed time steps', async () => {

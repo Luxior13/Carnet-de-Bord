@@ -61,3 +61,10 @@ scénarios sur 23 avec le nouveau bandeau.
 Identiques au banc du 11 octobre : routeur, session et API simulés ; police de
 repli ; aucun lecteur d’écran réel, Safari, Firefox ni appareil tactile. La
 reprise ne change aucun contrat serveur.
+
+## Reprise du 25 octobre 2026
+
+Scénario `temporary-password-in-card` ajouté à 390 et 1 440 px, avec capture : le
+mot de passe temporaire s’affiche dans la carte « Mot de passe » à la place de
+son action. Passe complète : 50/50 ; non archivée, détail dans la
+[fiche Sécurité](../../../pages/systeme/utilisateurs/fiche-securite.md#décisions-retenues).

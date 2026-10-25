@@ -280,8 +280,13 @@ const validateEncryptedRecord = (
     record.property === 'totpCredentials' ||
     record.property === 'totpEnrollments'
   ) {
-    if (row.secretKeyVersion !== 1) {
-      throw new Error('Unsupported TOTP encryption key version');
+    const keyVersion = row.secretKeyVersion;
+    if (
+      typeof keyVersion !== 'number' ||
+      !Number.isSafeInteger(keyVersion) ||
+      keyVersion < 1
+    ) {
+      throw new Error('Invalid TOTP encryption key version');
     }
     // Match shared/server/mfa.ts: the owner is part of the authenticated data.
     const aad = Buffer.from(
@@ -295,7 +300,10 @@ const validateEncryptedRecord = (
       authTag,
       ciphertext,
       iv,
-      key: readBase64Aes256Key(environment, 'MFA_ENCRYPTION_KEY_V1'),
+      key: readBase64Aes256Key(
+        environment,
+        `MFA_ENCRYPTION_KEY_V${String(keyVersion)}`,
+      ),
       validatePlaintext: (plaintext) => {
         if (!/^[A-Z2-7]+$/u.test(plaintext))
           throw new Error('Invalid TOTP seed');

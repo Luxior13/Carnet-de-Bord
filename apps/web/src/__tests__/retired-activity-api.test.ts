@@ -1,15 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 
-import { NextRequest } from 'next/server';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-const database = vi.hoisted(() => ({ read: vi.fn() }));
-vi.mock('server-only', () => ({}));
-vi.mock('$server/prisma', () => ({
-  prisma: { auditLog: { findMany: database.read } },
-}));
-
-import { GET } from '$app/api/users/[id]/audit/route';
 import { normalizeUserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import {
   getAllPermissionKeys,
@@ -21,19 +13,15 @@ import {
 const sourceUrl = (path: string): URL => new URL(path, import.meta.url);
 
 describe('retired activity surfaces', () => {
-  it.each(['', '?format=csv', '?page=2', '?cursor=untrusted'])(
-    'returns no account data for %s',
-    async (query) => {
-      const response = await GET(
-        new NextRequest('http://localhost/api/users/any/audit' + query),
-        { params: Promise.resolve({ id: 'any' }) },
-      );
-      expect(response.status).toBe(410);
-      expect(response.headers.get('cache-control')).toContain('no-store');
-      expect(await response.json()).not.toHaveProperty('data');
-      expect(database.read).not.toHaveBeenCalled();
-    },
-  );
+  // The 410 placeholder was removed on 25 October 2026 (REV-17): the path is
+  // now an ordinary unknown API route.
+  it('no longer ships the account activity endpoint', () => {
+    // eslint-disable-next-line security/detect-non-literal-fs-filename
+    expect(existsSync(sourceUrl('../app/api/users/[id]/audit/route.ts'))).toBe(
+      false,
+    );
+  });
+
   it.each([
     'users:view_activity',
     'users:export_activity',

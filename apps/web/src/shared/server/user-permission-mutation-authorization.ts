@@ -1,5 +1,4 @@
 import { type UserRole } from '@repo/database';
-import { NextResponse } from 'next/server';
 
 import {
   getAccessPermissionKeys,
@@ -10,22 +9,13 @@ import {
   PERMISSIONS,
   type PermissionsData,
 } from '$constants/permissions.constants';
-import { requirePermission } from '$server/api-auth';
-import { type ApiErrorResponse, ErrorCode } from '$types/api.types';
+import { assertPermission } from '$server/api-auth';
+import { serviceErrors } from '$server/service-error';
 import type { UserType } from '$types/auth.types';
 
 type PermissionScope = 'access' | 'account';
 
-type AuthorizationFailure = {
-  response: NextResponse<ApiErrorResponse>;
-  success: false;
-};
-
-type AuthorizationSuccess = {
-  success: true;
-};
-
-type PermissionMutationAuthorizationSuccess = AuthorizationSuccess & {
+type PermissionMutationAuthorization = {
   effectivelyGrantedPermissionKeys: string[];
   effectivelyRevokedPermissionKeys: string[];
   requiredProofLevel: AdminPermissionProofLevel;
@@ -54,12 +44,9 @@ const hasAccessMutationPermission = (actor: UserType): boolean =>
   ) ||
   hasPermission(actor.role, PERMISSIONS.USERS.REVOKE_ACCESS, actor.permissions);
 
-const requireAccessMutationPermission = (
-  actor: UserType,
-): AuthorizationSuccess | AuthorizationFailure => {
-  if (hasAccessMutationPermission(actor)) return { success: true };
-
-  return requirePermission(actor, PERMISSIONS.USERS.GRANT_ACCESS);
+const assertAccessMutationPermission = (actor: UserType): void => {
+  if (!hasAccessMutationPermission(actor))
+    assertPermission(actor, PERMISSIONS.USERS.GRANT_ACCESS);
 };
 
 export const classifyUserPermissionMutationProof = ({
@@ -116,31 +103,32 @@ export const classifyUserPermissionMutationProof = ({
 /**
  * Coarse authorization before loading the target. Precise grant/revoke checks
  * require the target's current effective permissions and run afterwards.
+ * Throws the refusal.
  */
 export const preauthorizeUserPermissionMutation = (
   actor: UserType,
   permissionScope?: PermissionScope,
-): AuthorizationSuccess | AuthorizationFailure => {
+): void => {
   if (permissionScope === 'account') {
-    return requirePermission(actor, PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY);
-  }
+    assertPermission(actor, PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY);
 
+    return;
+  }
   if (permissionScope === 'access') {
-    return requireAccessMutationPermission(actor);
-  }
+    assertAccessMutationPermission(actor);
 
+    return;
+  }
   if (
-    hasAccessMutationPermission(actor) ||
-    hasPermission(
+    !hasAccessMutationPermission(actor) &&
+    !hasPermission(
       actor.role,
       PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
       actor.permissions,
     )
   ) {
-    return { success: true };
+    assertPermission(actor, PERMISSIONS.USERS.GRANT_ACCESS);
   }
-
-  return requirePermission(actor, PERMISSIONS.USERS.GRANT_ACCESS);
 };
 
 type AuthorizeUserPermissionMutationInput = {
@@ -158,6 +146,7 @@ type AuthorizeUserPermissionMutationInput = {
 /**
  * Classifies permission changes by their effective result, including changes
  * induced by dependencies, then enforces grant/revoke/delegation boundaries.
+ * Throws the refusal.
  */
 export const authorizeUserPermissionMutation = ({
   actor,
@@ -169,8 +158,7 @@ export const authorizeUserPermissionMutation = ({
   requestedChangedPermissionKeys,
   resultingPermissions,
   resultingRole,
-}: AuthorizeUserPermissionMutationInput):
-  PermissionMutationAuthorizationSuccess | AuthorizationFailure => {
+}: AuthorizeUserPermissionMutationInput): PermissionMutationAuthorization => {
   const effectivelyGrantedPermissionKeys =
     isPermissionsUpdate || isRoleUpdate
       ? getAllPermissionKeys().filter(
@@ -216,85 +204,37 @@ export const authorizeUserPermissionMutation = ({
     );
 
   if (isPermissionsUpdate && changesDelegationAuthority && !actor.isProtected) {
-    return {
-      response: NextResponse.json<ApiErrorResponse>(
-        {
-          error: {
-            code: ErrorCode.FORBIDDEN,
-            message:
-              'Seul le compte racine peut déléguer la gestion des autorisations',
-          },
-          success: false,
-        },
-        { status: 403 },
-      ),
-      success: false,
-    };
-  }
-
-  if (isPermissionsUpdate && changesDelegableAccessAuthority) {
-    const delegationPermissionCheck = requirePermission(
-      actor,
-      PERMISSIONS.USERS.DELEGATE_ACCESS,
+    throw serviceErrors.forbidden(
+      'Seul le compte racine peut déléguer la gestion des autorisations',
     );
-    if (!delegationPermissionCheck.success) return delegationPermissionCheck;
   }
-
-  if (
-    isPermissionsUpdate &&
-    effectivelyGrantedAccessPermissionKeys.length > 0
-  ) {
-    const grantPermissionCheck = requirePermission(
-      actor,
-      PERMISSIONS.USERS.GRANT_ACCESS,
-    );
-    if (!grantPermissionCheck.success) return grantPermissionCheck;
-  }
-
-  if (
-    isPermissionsUpdate &&
-    effectivelyRevokedAccessPermissionKeys.length > 0
-  ) {
-    const revokePermissionCheck = requirePermission(
-      actor,
-      PERMISSIONS.USERS.REVOKE_ACCESS,
-    );
-    if (!revokePermissionCheck.success) return revokePermissionCheck;
-  }
+  if (isPermissionsUpdate && changesDelegableAccessAuthority)
+    assertPermission(actor, PERMISSIONS.USERS.DELEGATE_ACCESS);
+  if (isPermissionsUpdate && effectivelyGrantedAccessPermissionKeys.length > 0)
+    assertPermission(actor, PERMISSIONS.USERS.GRANT_ACCESS);
+  if (isPermissionsUpdate && effectivelyRevokedAccessPermissionKeys.length > 0)
+    assertPermission(actor, PERMISSIONS.USERS.REVOKE_ACCESS);
 
   const needsFallbackAccessMutationPermission =
     isPermissionsUpdate &&
     effectivelyChangedAccessPermissionKeys.size === 0 &&
     (permissionScope === 'access' || hasRequestedAccessOverrideChanges);
 
-  if (needsFallbackAccessMutationPermission) {
-    const fallbackPermissionCheck = requireAccessMutationPermission(actor);
-    if (!fallbackPermissionCheck.success) return fallbackPermissionCheck;
-  }
+  if (needsFallbackAccessMutationPermission)
+    assertAccessMutationPermission(actor);
 
   if (isPermissionsUpdate && permissionScope === undefined) {
     if (
       hasRequestedAccountOverrideChanges ||
       requestedChangedPermissionKeys.length === 0
     ) {
-      const accountPolicyPermissionCheck = requirePermission(
-        actor,
-        PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY,
-      );
-      if (!accountPolicyPermissionCheck.success) {
-        return accountPolicyPermissionCheck;
-      }
+      assertPermission(actor, PERMISSIONS.USERS.UPDATE_ACCOUNT_POLICY);
     }
 
-    // An unscoped legacy no-op has no boundary signal, so both the personal
-    // account policy and at least one access mutation capability are required.
-    if (requestedChangedPermissionKeys.length === 0) {
-      const accessMutationPermissionCheck =
-        requireAccessMutationPermission(actor);
-      if (!accessMutationPermissionCheck.success) {
-        return accessMutationPermissionCheck;
-      }
-    }
+    // An unscoped no-op has no boundary signal, so both the personal account
+    // policy and at least one access mutation capability are required.
+    if (requestedChangedPermissionKeys.length === 0)
+      assertAccessMutationPermission(actor);
   }
 
   return {
@@ -307,6 +247,5 @@ export const authorizeUserPermissionMutation = ({
       roleChanged: isRoleUpdate && existingRole !== resultingRole,
       targetRole: existingRole,
     }),
-    success: true,
   };
 };

@@ -9,7 +9,7 @@ export const UsersListRowsSkeleton: FC = () => (
   <div aria-hidden="true" className="divide-border-divider divide-y">
     {[...Array(6)].map((_, index) => (
       <div className="flex items-center gap-2.5 px-4 py-3" key={index}>
-        <Skeleton className="bg-surface-table-head size-9 shrink-0 rounded-[7px]" />
+        <Skeleton className="bg-surface-table-head rounded-tile size-9 shrink-0" />
         <div className="min-w-0 flex-1 space-y-2">
           <Skeleton className="bg-surface-table-head h-[13px] w-40 max-w-full rounded-sm" />
           <Skeleton className="bg-surface-table-head h-[10px] w-24 max-w-full rounded-sm" />
@@ -31,11 +31,11 @@ export const UsersDirectorySkeleton: FC = () => (
   <>
     <div
       aria-hidden="true"
-      className="rounded-[10px] border border-[var(--border-hero)] bg-[linear-gradient(110deg,var(--surface-hero-start),var(--surface-hero-end)_75%)] p-5"
+      className="rounded-panel border border-[var(--border-hero)] bg-[linear-gradient(110deg,var(--surface-hero-start),var(--surface-hero-end)_75%)] p-5"
     >
       <div className="flex flex-wrap items-center justify-between gap-3.5">
         <div className="flex min-w-0 items-center gap-3.5">
-          <Skeleton className="size-10 shrink-0 rounded-[10px] bg-white/15" />
+          <Skeleton className="rounded-panel size-10 shrink-0 bg-white/15" />
           <div className="min-w-0 space-y-1.5">
             <Skeleton className="h-[23px] w-36 max-w-full rounded-md bg-white/15" />
             <Skeleton className="h-[11px] w-64 max-w-full rounded-sm bg-white/10" />
@@ -46,7 +46,7 @@ export const UsersDirectorySkeleton: FC = () => (
     </div>
     <div
       aria-label="Chargement des utilisateurs"
-      className="border-border-content bg-surface-content overflow-hidden rounded-[10px] border"
+      className="border-border-content bg-surface-content rounded-panel overflow-hidden border"
       role="status"
     >
       <div className="bg-surface-content-header p-4">

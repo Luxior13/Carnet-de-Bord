@@ -5,23 +5,8 @@ import {
   getAccountPermissionKeys,
   type PermissionsData,
 } from '$constants/permissions.constants';
-import type { GuardedNavigationAction } from '$utils/guarded-navigation.utils';
 
 import type { UserDetailSectionId } from './UserDetailNavigation';
-
-export type UserDetailPendingNavigation =
-  | {
-      action?: GuardedNavigationAction;
-      href: string;
-      kind: 'href';
-    }
-  | {
-      href: string;
-      kind: 'section';
-    };
-
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/;
-export const LOGIN_NAME_PATTERN = /^[a-z0-9][a-z0-9._-]{1,30}[a-z0-9]$/;
 
 const DEFAULT_PERMISSION_PAGE_KEY = PERMISSION_EDITOR_CATEGORIES[0]?.key ?? '';
 export const ACCESS_PERMISSION_KEYS = getAccessPermissionKeys();
@@ -117,38 +102,4 @@ export const normalizePermissionPageKey = (pageKey: string | null): string => {
   )
     ? canonicalPageKey
     : DEFAULT_PERMISSION_PAGE_KEY;
-};
-
-export const isPlainLeftClick = (event: MouseEvent): boolean =>
-  event.button === 0 &&
-  !event.metaKey &&
-  !event.altKey &&
-  !event.ctrlKey &&
-  !event.shiftKey;
-
-export const findAnchorElement = (
-  target: EventTarget | null,
-): HTMLAnchorElement | null => {
-  if (!(target instanceof Element)) return null;
-
-  return target.closest('a[href]');
-};
-
-export const isInternalNavigationLink = (
-  anchor: HTMLAnchorElement,
-): boolean => {
-  const target = anchor.getAttribute('target');
-  const href = anchor.getAttribute('href');
-
-  if (!href) return false;
-  if (target && target !== '_self') return false;
-  if (
-    href.startsWith('#') ||
-    href.startsWith('mailto:') ||
-    href.startsWith('tel:')
-  ) {
-    return false;
-  }
-
-  return anchor.origin === window.location.origin;
 };

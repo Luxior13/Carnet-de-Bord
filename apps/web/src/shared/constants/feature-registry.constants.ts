@@ -1,7 +1,10 @@
-import { PERMISSIONS } from '$constants/permissions.constants';
+import {
+  PERMISSIONS,
+  ROADMAP_PERMISSIONS,
+} from '$constants/permissions.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
 
-export type FeatureAuditLocation = Readonly<{
+type FeatureAuditLocation = Readonly<{
   pageKey: string;
   pageLabel: string;
   poleKey: string;
@@ -56,7 +59,7 @@ export const FEATURES = {
     id: 'internal-news',
     label: 'Actualité interne',
     permissionMode: 'all',
-    requiredPermissions: [PERMISSIONS.INTERNAL_NEWS.VIEW],
+    requiredPermissions: [ROADMAP_PERMISSIONS.INTERNAL_NEWS.VIEW],
   }),
   persons: defineFeature({
     audit: {
@@ -104,7 +107,7 @@ export const FEATURES = {
     id: 'system-activity',
     label: "Journal d'activité",
     permissionMode: 'all',
-    requiredPermissions: [PERMISSIONS.AUDIT.VIEW],
+    requiredPermissions: [ROADMAP_PERMISSIONS.AUDIT.VIEW],
   }),
   systemSettings: defineFeature({
     audit: {
@@ -140,7 +143,7 @@ export const FEATURES = {
   }),
 } as const;
 
-export type FeatureKey = keyof typeof FEATURES;
+type FeatureKey = keyof typeof FEATURES;
 export type FeatureId = (typeof FEATURES)[FeatureKey]['id'];
 
 export const FEATURE_LIST = Object.values(FEATURES);

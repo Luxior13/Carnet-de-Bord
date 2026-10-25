@@ -100,8 +100,8 @@ function DialogContent({
               ? 'max-h-[calc(100dvh-2rem)]'
               : 'max-h-[calc(92.5dvh-1rem)]',
             fullscreenOnMobile
-              ? 'max-h-dvh sm:max-h-[calc(92.5dvh-1rem)] sm:rounded-[10px]'
-              : 'rounded-[10px]',
+              ? 'sm:rounded-panel max-h-dvh sm:max-h-[calc(92.5dvh-1rem)]'
+              : 'rounded-panel',
             className,
           )}
           {...props}
@@ -188,8 +188,6 @@ export {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogOverlay,
-  DialogPortal,
   DialogTitle,
   DialogTrigger,
 };

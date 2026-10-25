@@ -19,8 +19,8 @@ restauration d’une sauvegarde vérifiée.
 - avoir appliqué toutes les migrations avec
   `bun run db:migrate:deploy` puis contrôlé leur état avec
   `bun run --filter @repo/database db:migrate:status` ;
-- conserver `MFA_ENCRYPTION_KEY_V1` dans le gestionnaire de secrets et dans une
-  sauvegarde distincte. Le script ne la lit pas, mais elle reste indispensable
+- conserver les clés `MFA_ENCRYPTION_KEY_V<n>` en usage dans le gestionnaire de
+  secrets et dans une sauvegarde distincte. Le script ne la lit pas, mais elle reste indispensable
   au fonctionnement normal des autres comptes MFA.
 
 Depuis la racine du dépôt, remplacer `IDENTIFIANT_ACTUEL` par l’identifiant
@@ -50,7 +50,7 @@ sécurité, retire son ancien MFA et ses codes, supprime ses défis temporaires 
 révoque toutes ses sessions. Pour garantir le prochain accès, elle remet aussi
 à zéro les quotas temporaires `auth-login:*` et `auth-mfa:*` de l’application
 (pour tous les comptes), ainsi que les quotas d’actions sensibles propres au
-root et l’éventuel ancien verrouillage de ce compte. L’opération est inscrite
+root. L’opération est inscrite
 dans le journal d’audit. Toute erreur annule intégralement la transaction ; la
 sauvegarde reste alors disponible.
 

@@ -62,7 +62,7 @@ const normalizeDefault = (value: unknown): string | null => {
   );
 };
 
-export const normalizePersonSchemaCheck = (value: unknown): string => {
+const normalizePersonSchemaCheck = (value: unknown): string => {
   if (typeof value !== 'string') return '__invalid__';
 
   return (
@@ -292,7 +292,7 @@ export const validatePersonSchemaCatalogRows = (
   );
 };
 
-export const getPersonSchemaCatalogRows = async (
+const getPersonSchemaCatalogRows = async (
   client: PersonSchemaCatalogClient,
 ): Promise<PersonSchemaCatalogRow[]> => {
   const rows = await client.$queryRaw<PersonSchemaCatalogRow[]>`

@@ -9,8 +9,8 @@ Relevé du 20 octobre 2026.
 
 | Famille | Volume | Emplacement | Commande |
 | --- | --- | --- | --- |
-| Tests web (Vitest, rendu serveur `renderToStaticMarkup`) | 114 fichiers `*.test.ts` | `apps/web/src/__tests__/` et quelques modules | `bun run test` ; un fichier : `bunx vitest run src/__tests__/<nom>.test.ts` depuis `apps/web` |
-| Tests SQL sur PostgreSQL jetable | 11 fichiers `*-postgres.test.ts` (inclus ci-dessus) | `apps/web/src/__tests__/` | Ignorés (`describe.skipIf`) tant que leur variable `<MODULE>_TEST_DATABASE_URL` n’est pas définie ; variables déclarées dans [turbo.json](../../turbo.json) |
+| Tests web (Vitest, rendu serveur `renderToStaticMarkup`) | 115 fichiers `*.test.ts` | `apps/web/src/__tests__/` et quelques modules | `bun run test` ; un fichier : `bunx vitest run src/__tests__/<nom>.test.ts` depuis `apps/web` |
+| Tests SQL sur PostgreSQL jetable | 11 fichiers `*-postgres.test.ts` (inclus ci-dessus) | `apps/web/src/__tests__/` | `bun run test:postgres` avec `POSTGRES_TEST_ADMIN_URL` (rôle d’un PostgreSQL **local** autorisé à créer des bases) : recrée les neuf bases `*_test`, applique les migrations après avoir vérifié la cible, puis lance les onze suites. Exécuté par la CI depuis le 24 octobre 2026. Sans PostgreSQL configuré, un serveur jetable se démarre avec les binaires installés : `initdb -D <dossier> -U postgres --auth=trust`, `pg_ctl -D <dossier> -o "-p 5433 -c listen_addresses=127.0.0.1" start`, puis `POSTGRES_TEST_ADMIN_URL=postgresql://postgres@127.0.0.1:5433/postgres` ; l’arrêter ensuite avec `pg_ctl stop`. Sans leur variable `<MODULE>_TEST_DATABASE_URL`, ces suites sont ignorées par `bun run test` |
 | Tests de la base | 5 fichiers (`node --test`) | `packages/database/test/` : format, signature et chiffrement des sauvegardes, stockage de l’actualité interne, plan de performance | `bun --cwd packages/database run test` |
 | Parcours navigateur Playwright | `admin-smoke.spec.ts` et ses contrôles (création et fiche utilisateur, paramètres) | `apps/web/e2e/` | `bun run test:e2e` (build de production, base dont le nom contient `e2e` ou `test`) |
 | Contrats de structure | Frontières shadcn, autocomplétion, design system, contrats UX | `apps/web/src/__tests__/` | Inclus dans `bun run test` |
@@ -39,7 +39,7 @@ et le risque ; une correction documentaire ne demande pas un audit de production
 | `bun run --filter web check:performance` | Budgets des artefacts du build | Exige un build à jour ; ne mesure pas les requêtes SQL ni une session utilisateur |
 | `bun run test:e2e` | Parcours navigateur et préparation E2E | Examiner la configuration et la préparation avant exécution ; environnement et comptes dédiés requis |
 | `bun run persons:performance` | Mesures du répertoire en base | Vérifier la cible, le volume et les effets du script ; ne pas viser une base réelle par défaut |
-| `bun run check` | Chaîne générale : documentation, tests du contrôleur, lint, types, architecture, tests, build et budget de build | S’arrête au premier échec ; les étapes suivantes sont alors non exécutées ; ne comprend pas les E2E |
+| `bun run check` | Chaîne générale : documentation, tests du contrôleur, lint, code mort (knip), types, architecture, tests, build et budget de build | S’arrête au premier échec ; les étapes suivantes sont alors non exécutées ; ne comprend pas les E2E |
 
 `maintenance`, les migrations, les scripts d’initialisation et les restaurations
 ne sont pas des vérifications neutres : ils peuvent écrire, purger ou remplacer

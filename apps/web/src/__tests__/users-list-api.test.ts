@@ -17,12 +17,14 @@ vi.mock('$features/users/server/users-list.service', () => ({
   listUsers: mocks.list,
 }));
 vi.mock('$server/prisma', () => ({ prisma: {} }));
-vi.mock('$server/auth', () => ({
+vi.mock('$server/temporary-password', () => ({
   generateTemporaryPassword: vi.fn(),
+}));
+vi.mock('$server/user-projection', () => ({
   mapUserToUserType: (user: unknown): unknown => user,
 }));
 vi.mock('$server/sensitive-action', () => ({
-  requireRecentSensitiveActionProof: vi.fn(),
+  assertRecentSensitiveActionProof: vi.fn(),
 }));
 
 const account = (
@@ -31,14 +33,12 @@ const account = (
   contactEmail: 'visible@example.test',
   contactEmailVerifiedAt: null,
   createdAt: new Date('2026-03-01T00:00:00Z'),
-  failedLoginAttempts: 4,
   firstName: 'Jean',
   id: 'user-1',
   isActive: true,
   isProtected: false,
   lastLoginAt: new Date('2026-03-03T00:00:00Z'),
   lastName: 'Dupont',
-  lockedUntil: new Date('2026-03-04T00:00:00Z'),
   loginName: 'jean.dupont',
   mfaEnabledAt: new Date('2026-03-02T00:00:00Z'),
   mustChangePassword: true,
@@ -242,8 +242,6 @@ describe('users list HTTP boundary', () => {
     expect(data.users[0]).toMatchObject({
       contactEmail: null,
       contactEmailVerifiedAt: null,
-      failedLoginAttempts: 0,
-      lockedUntil: null,
       mfaEnabledAt: null,
       mustChangePassword: false,
       passwordChangedAt: null,

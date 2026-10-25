@@ -25,7 +25,7 @@ describe('E2E setup Person-domain safety', () => {
       'await assertEmptyPersonDomain(prisma);',
     );
     const rootPasswordMutationIndex = setupSource.indexOf(
-      'const passwordHash = await bcrypt.hash',
+      'const passwordHash = await hash(',
     );
     const rootTransactionIndex = setupSource.indexOf(
       'const result = await prisma.$transaction',
