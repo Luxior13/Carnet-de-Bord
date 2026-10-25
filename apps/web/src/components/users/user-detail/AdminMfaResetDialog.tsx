@@ -240,7 +240,7 @@ const AdminMfaResetDialogContent: FC<AdminMfaResetDialogProps> = ({
 
             <div className="space-y-2">
               <Label htmlFor="admin-mfa-reset-password" required>
-                Votre mot de passe superadmin
+                Votre mot de passe
               </Label>
               <Input
                 autoFocus

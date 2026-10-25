@@ -139,7 +139,7 @@ export const decideUserAccessMutation = (
       return {
         allowed: false,
         reason:
-          'Seul le compte racine peut attribuer ou retirer le droit de délégation.',
+          'Seul le superadmin peut attribuer ou retirer le droit de délégation.',
       };
     }
   } else if (

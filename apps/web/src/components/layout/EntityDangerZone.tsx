@@ -11,6 +11,7 @@ import React, {
 import { toast } from 'sonner';
 
 import { ContentState } from '$components/layout/ContentState';
+import { ErrorCode } from '$types/api.types';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -37,6 +38,11 @@ type EntityDangerZoneProps = {
   ) => Promise<void>;
   onDeleted: () => void;
   onDeletedLabel?: string;
+  /**
+   * Called when the server asks for a recent password: the caller shows its
+   * proof dialog and calls `resume` once the proof is confirmed.
+   */
+  onPasswordProofRequired?: (resume: () => void) => void;
   onReloadVersion: () => Promise<number>;
   triggerLabel?: string;
   version: number;
@@ -50,6 +56,7 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
   onDelete,
   onDeleted,
   onDeletedLabel = 'Continuer',
+  onPasswordProofRequired,
   onReloadVersion,
   triggerLabel = 'Supprimer la fiche',
   version: initialVersion,
@@ -107,6 +114,15 @@ export const EntityDangerZone: FC<EntityDangerZoneProps> = ({
       if (caught instanceof ApiClientError && caught.status === 409) {
         attemptedRef.current = false;
         setConflict(true);
+      } else if (
+        onPasswordProofRequired &&
+        caught instanceof ApiClientError &&
+        caught.code === ErrorCode.PASSWORD_REAUTHENTICATION_REQUIRED
+      ) {
+        // Nothing was deleted: the proof dialog replaces this confirmation.
+        attemptedRef.current = false;
+        setOpen(false);
+        onPasswordProofRequired(() => void handleDelete());
       } else {
         if (
           caught instanceof ApiClientError &&

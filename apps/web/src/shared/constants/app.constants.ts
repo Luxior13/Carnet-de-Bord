@@ -89,7 +89,7 @@ export const NAV_SPACES: NavigationSpace[] = [
     tone: 'internal',
   },
   {
-    description: 'Comptes, sécurité, configuration et données.',
+    description: 'Comptes, sécurité, configuration et projet.',
     href: '/systeme',
     icon: 'Settings',
     id: 'system',
@@ -102,13 +102,20 @@ export const NAV_SPACES: NavigationSpace[] = [
         items: [
           featureNavigation(FEATURES.users),
           featureNavigation(FEATURES.systemSettings),
-          featureNavigation(FEATURES.roadmap),
         ],
         label: 'Administration',
         position: 'top',
       },
+      {
+        // Open to every account (no permission of its own): it must not sit
+        // under Administration for a member (audit DRT-04, 25 October 2026).
+        id: 'project',
+        items: [featureNavigation(FEATURES.roadmap)],
+        label: 'Projet',
+        position: 'top',
+      },
     ],
-    summary: 'Comptes, sécurité, configuration',
+    summary: 'Comptes, configuration et projet',
     tone: 'system',
   },
 ];

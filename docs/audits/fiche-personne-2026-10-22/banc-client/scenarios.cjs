@@ -749,6 +749,37 @@ module.exports = async ({
     { mode: "lost" },
   );
   await run(
+    "suppression-fiche-mot-de-passe-puis-reprise",
+    390,
+    async (page, api) => {
+      await page
+        .getByRole("button", { name: "Supprimer la fiche", exact: true })
+        .click();
+      await page
+        .getByRole("alertdialog")
+        .getByRole("button", { name: "Supprimer définitivement", exact: true })
+        .click();
+      const proof = page.getByRole("dialog", {
+        name: "Confirmer la suppression",
+      });
+      await expect(proof).toBeVisible();
+      await expect(page.getByRole("alertdialog")).toHaveCount(0);
+      await page.screenshot({
+        path: path.join(work, "suppression-mot-de-passe-390.png"),
+      });
+      await proof.locator("input[type=password]").fill("Preuve-fictive!");
+      await proof.getByRole("button", { name: /^Confirmer/ }).click();
+      await expect(heading(page)).toHaveText("Destination simulée");
+      const deletions = api.requests.filter((r) => r.method === "DELETE");
+      assert.equal(deletions.length, 2);
+      assert.equal(
+        deletions[0].headers["idempotency-key"],
+        deletions[1].headers["idempotency-key"],
+      );
+    },
+    { mode: "passwordProof" },
+  );
+  await run(
     "lecture-seule-copie-coordonnees",
     320,
     async (page, api) => {

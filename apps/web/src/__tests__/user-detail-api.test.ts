@@ -206,9 +206,9 @@ describe('user detail HTTP boundary with real permissions and projection', () =>
     const body = await (await get()).json();
     expect(body.data.user).toMatchObject({
       contactEmail: null,
-      firstName: 'Compte',
+      firstName: 'Superadmin',
       identityDetailsVisible: false,
-      lastName: 'racine',
+      lastName: '',
       mfaEnabledAt: null,
       permissions: null,
     });

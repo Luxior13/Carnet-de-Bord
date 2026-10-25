@@ -266,4 +266,27 @@ module.exports = async ({ run, expect, assert, work, path, before }) => {
     await page.keyboard.press('Escape');
     await expect(page.getByRole('button',{name:'Rechercher une page',exact:true})).toBeFocused();
   });
+  // Pôle Système : Administration et Projet séparés (audit DRT-04, 25 octobre 2026).
+  for (const [label, actor] of [
+    ['membre', { isProtected: false, role: 'USER', permissions: {} }],
+    ['superadmin', {}],
+  ]) {
+    await run('pole-systeme-sections-' + label, 1440, async (page) => {
+      await page.waitForTimeout(500);
+      await page.screenshot({
+        path: path.join(work, 'pole-systeme-' + label + '-1440.png'),
+      });
+      const sidebar = page.locator('body');
+      await expect(sidebar.getByText('Projet', { exact: true })).toBeVisible();
+      await expect(
+        sidebar.getByRole('link', { name: 'Feuille de route', exact: true }),
+      ).toBeVisible();
+      await expect(sidebar.getByText('Administration', { exact: true })).toHaveCount(
+        label === 'membre' ? 0 : 1,
+      );
+      await page.screenshot({
+        path: path.join(work, 'pole-systeme-' + label + '-1440.png'),
+      });
+    }, { actor, url: '/systeme/feuille-de-route' });
+  }
 };

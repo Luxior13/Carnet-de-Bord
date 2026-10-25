@@ -49,6 +49,9 @@ Sources : [décisions produit](../../propositions/feuille-de-route.md),
 
 ## Décisions courantes et questions de revue
 
+- 25 octobre 2026 : la page reste ouverte à tout compte connecté et figure
+  dans la section « Projet » du pôle Système, plus sous « Administration »
+  ([DRT-04](../../audits/2026-10-25-coherence-des-droits.md)).
 - Une carte décrit public, socle éventuel, première version, prérequis et critère
   de livraison. « À compléter » ne rend pas son futur parcours disponible.
 - Les étapes donnent une priorité, sans calendrier promis ni tâche planifiée.

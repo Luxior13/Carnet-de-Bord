@@ -30,6 +30,10 @@ réponse perdue par recherche exacte du compte.
 ## Décisions retenues
 
 - Nom facultatif ; email validé avant l’envoi ; doublon expliqué près du champ.
+- 25 octobre 2026 : le champ « Email de contact » n’apparaît qu’avec
+  `users:update_contact` (ou au superadmin) et le serveur refuse l’adresse
+  sinon ; elle s’ajoute ensuite depuis la fiche, comme au Répertoire
+  ([DRT-03](../../../audits/2026-10-25-coherence-des-droits.md)).
 - Une seule soumission par action ; départ pendant l’envoi signalé.
 - Autorisation revérifiée au moment de l’écriture, sans rejeu automatique.
 - Détails : [Formulaire de création — revue du 10 octobre 2026](#formulaire-de-création--revue-du-10-octobre-2026) et suites.

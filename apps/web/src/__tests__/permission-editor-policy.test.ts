@@ -161,12 +161,12 @@ describe('permission editor mutation policy', () => {
         nextPermissions,
         policy: (permissionKey) => ({
           allowed: permissionKey !== PERMISSIONS.USERS.DELEGATE_ACCESS,
-          reason: 'Réservé au super-administrateur',
+          reason: 'Réservé au superadmin',
         }),
       }),
     ).toEqual({
       allowed: false,
-      reason: 'Réservé au super-administrateur',
+      reason: 'Réservé au superadmin',
     });
   });
 

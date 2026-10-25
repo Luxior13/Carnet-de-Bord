@@ -1,12 +1,14 @@
-export const PROTECTED_USER_PUBLIC_FIRST_NAME = 'Compte';
-export const PROTECTED_USER_PUBLIC_LAST_NAME = 'racine';
-export const PROTECTED_USER_PUBLIC_DISPLAY_NAME = 'Superadministrateur';
+// One visible name for the protected account (audit DRT-05, 25 October 2026).
+export const PROTECTED_USER_PUBLIC_FIRST_NAME = 'Superadmin';
+export const PROTECTED_USER_PUBLIC_LAST_NAME = '';
+export const PROTECTED_USER_PUBLIC_DISPLAY_NAME = 'Superadmin';
 export const PROTECTED_USER_MASKED_LOGIN_NAME = '••••••••';
 
 const PROTECTED_USER_PUBLIC_SEARCH_TERMS = [
   PROTECTED_USER_PUBLIC_DISPLAY_NAME,
-  `${PROTECTED_USER_PUBLIC_FIRST_NAME} ${PROTECTED_USER_PUBLIC_LAST_NAME}`,
-  'superadmin',
+  // Former names, still typed by people looking for this account.
+  'superadministrateur',
+  'compte racine',
   'compte protege',
 ] as const;
 

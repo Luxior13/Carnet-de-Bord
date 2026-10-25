@@ -41,3 +41,11 @@ et [Coordonnées 1 440 px](avant-coordonnees-1440.png).
 
 Identiques au banc du 12 octobre : routeur, session et API simulés ; police de
 repli ; aucun lecteur d’écran réel, Safari, Firefox ni appareil tactile.
+
+## Reprise du 25 octobre 2026
+
+`run.cjs` simule `/api/auth/step-up` et accepte le mode `passwordProof`.
+Nouveau scénario `suppression-fiche-mot-de-passe-puis-reprise` : sans preuve
+récente, la suppression ouvre « Confirmer la suppression », puis reprend la
+même demande. Libellés « superadmin » alignés. Passe complète : 31/31 ; non
+archivée, détail dans l’[audit](../../2026-10-25-coherence-des-droits.md).

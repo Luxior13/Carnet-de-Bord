@@ -172,7 +172,7 @@ attribuer : les limites d'attribution sont détaillées sous le tableau.
 | Clé canonique                 | Action couverte                                 | Dépend de                                   | Risque    | Step-up à l'usage |
 | ----------------------------- | ----------------------------------------------- | ------------------------------------------- | --------- | ----------------- |
 | `users:view`                  | liste, fiche et données de base                 | —                                           | `default` | Non               |
-| `users:create`                | créer un compte standard                        | `users:view`                                | sensible  | Non               |
+| `users:create`                | créer un compte standard (adresse de contact seulement avec `users:update_contact`) | `users:view`                                | sensible  | Non               |
 | `users:view_contact`          | voir les adresses de contact                    | `users:view`                                | sensible  | Non               |
 | `users:update_profile`        | modifier prénom et nom                          | `users:view`                                | sensible  | Non               |
 | `users:update_contact`        | modifier une adresse de contact                 | `users:view`, `users:view_contact`          | sensible  | Non               |
@@ -257,7 +257,7 @@ possède implicitement.
 | `persons:view_contact` | consulter et rechercher emails, téléphones et profils sociaux | `persons:view` | sensible | Non |
 | `persons:update_contact` | ajouter, modifier ou retirer ces coordonnées | `persons:view`, `persons:view_contact` | sensible | Non |
 | `audit:view_field_history` | consulter auteur, action et date du dernier changement d'un champ autorisé | `persons:view` | sensible | Non |
-| `persons:delete` | supprimer définitivement une fiche et ses coordonnées | `persons:view` | critique | Non |
+| `persons:delete` | supprimer définitivement une fiche et ses coordonnées | `persons:view` | critique | Oui (mot de passe de 30 minutes au plus) |
 
 Sans lecture des coordonnées, la fiche et les retours de mutation contiennent
 des collections vides ; leurs compteurs sont masqués, la recherche ne porte que
@@ -295,7 +295,7 @@ et nouvelles valeurs ne sont ni chargées ni déchiffrées pour cette infobulle.
 Les traces stockées restent intactes.
 
 Dans toutes les réponses Personnes (liste, fiche, provenance et retours de
-mutation), un auteur protégé est présenté comme « Superadministrateur », sans
+mutation), un auteur protégé est présenté comme « Superadmin », sans
 identifiant de connexion, sauf lorsque le lecteur est ce compte protégé.
 L'identité originale demeure dans les snapshots d'audit.
 

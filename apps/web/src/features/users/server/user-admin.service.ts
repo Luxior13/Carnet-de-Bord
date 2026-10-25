@@ -90,6 +90,9 @@ export const createUserForActor = async (
   input: CreateUserInput,
 ): Promise<{ temporaryPassword: string; user: UserType }> => {
   const { contactEmail, firstName, lastName, loginName, role } = input;
+  // Creation holds the identity; a contact address needs the right to edit
+  // contact addresses, like the Directory (audit DRT-03, 25 October 2026).
+  if (contactEmail) assertPermission(actor, PERMISSIONS.USERS.UPDATE_CONTACT);
   if (role === 'ADMIN' && !actor.isProtected) {
     throw serviceErrors.forbidden(
       "Vous n'êtes pas autorisé à créer des comptes administrateurs",
@@ -188,9 +191,7 @@ export const updateUserForActor = async (
     assertPermission(actor, PERMISSIONS.USERS.UPDATE_CONTACT);
   if (isStatusUpdate) assertPermission(actor, PERMISSIONS.USERS.UPDATE_STATUS);
   if (isRoleUpdate && !actor.isProtected)
-    throw serviceErrors.forbidden(
-      'Seul le compte racine peut modifier un rôle',
-    );
+    throw serviceErrors.forbidden('Seul le superadmin peut modifier un rôle');
   if (isPermissionsUpdate)
     preauthorizeUserPermissionMutation(actor, permissionScope);
 
@@ -204,7 +205,7 @@ export const updateUserForActor = async (
   // account, permission override or future protected role may mutate it.
   if (existingUser.isProtected && existingUser.id !== actor.id) {
     throw serviceErrors.forbidden(
-      'Le compte racine ne peut pas être modifié par un autre utilisateur',
+      'Le superadmin ne peut pas être modifié par un autre utilisateur',
     );
   }
 
@@ -220,7 +221,7 @@ export const updateUserForActor = async (
       isStatusUpdate)
   ) {
     throw serviceErrors.forbidden(
-      "Les paramètres sensibles du compte racine ne sont pas modifiables depuis l'application",
+      "Les paramètres sensibles du superadmin ne sont pas modifiables depuis l'application",
     );
   }
 
@@ -241,7 +242,7 @@ export const updateUserForActor = async (
   // target MFA or other state, so the response cannot disclose posture.
   if (existingUser.role === 'ADMIN' && !actor.isProtected) {
     throw serviceErrors.forbidden(
-      'Seul le compte racine peut modifier un administrateur',
+      'Seul le superadmin peut modifier un administrateur',
     );
   }
 
@@ -432,7 +433,7 @@ export const deleteUserForActor = async (
   }
   if (existingUser.role === 'ADMIN' && !actor.isProtected) {
     throw serviceErrors.forbidden(
-      'Seul le compte racine peut supprimer un administrateur',
+      'Seul le superadmin peut supprimer un administrateur',
     );
   }
   if (existingUser.isActive) {

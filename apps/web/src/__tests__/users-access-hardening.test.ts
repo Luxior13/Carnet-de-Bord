@@ -761,10 +761,10 @@ describe('users access hardening', () => {
     expect(body.data.user).toMatchObject({
       contactEmail: null,
       contactEmailVerifiedAt: null,
-      firstName: 'Compte',
+      firstName: 'Superadmin',
       identityDetailsVisible: false,
       lastLoginAt: null,
-      lastName: 'racine',
+      lastName: '',
       loginName: '••••••••',
       mfaEnabledAt: null,
       mustChangePassword: false,
@@ -3093,6 +3093,33 @@ describe('users access hardening', () => {
     expect(body.error.code).toBe(ErrorCode.VALIDATION_ERROR);
     expect(mockRequirePermission).not.toHaveBeenCalled();
     expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('refuses a contact address at creation without users:update_contact', async () => {
+    denyPermission(PERMISSIONS.USERS.UPDATE_CONTACT);
+    mockPrisma.user.findUnique.mockResolvedValue(null);
+    const route = await import('$app/api/users/route');
+    const request = (contactEmail: string): never =>
+      new Request('http://localhost/api/users', {
+        body: JSON.stringify({
+          contactEmail,
+          firstName: 'New',
+          lastName: 'User',
+          loginName: 'new.user',
+          role: 'USER',
+        }),
+        method: 'POST',
+      }) as never;
+
+    expect((await route.POST(request('new.user@example.com'))).status).toBe(
+      403,
+    );
+    expect(mockCreateUser).not.toHaveBeenCalled();
+
+    // Without an address, users:create alone is enough.
+    mockGenerateTemporaryPassword.mockReturnValue('TempPassword1!');
+    mockCreateUser.mockResolvedValue(buildUser({ id: 'new-user-1' }));
+    expect((await route.POST(request(''))).status).toBe(200);
   });
 
   it('creates users with a temporary password that must be changed', async () => {

@@ -38,6 +38,16 @@ export const NewUserForm: FC<{
       )
     : false;
   const canCreateAdminUsers = userData?.isProtected ?? false;
+  // Like the Directory, creation holds only the identity: a contact address
+  // needs the right to edit contact addresses (audit DRT-03, 25 October 2026).
+  const canSetContactEmail = userData
+    ? userData.isProtected ||
+      hasPermission(
+        userData.role,
+        PERMISSIONS.USERS.UPDATE_CONTACT,
+        userData.permissions,
+      )
+    : false;
 
   const controller = useCreateUser(canCreateUsers);
   const {
@@ -275,56 +285,58 @@ export const NewUserForm: FC<{
                           </p>
                         )}
                       </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="newContactAddress">
-                          Adresse de contact{' '}
-                          <span className="font-normal">(facultatif)</span>
-                        </Label>
-                        <div className="relative">
-                          <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
-                          <Input
-                            aria-describedby={
-                              errors.contactEmail
-                                ? 'newContactAddress-error'
-                                : 'newContactAddress-hint'
-                            }
-                            aria-invalid={!!errors.contactEmail}
-                            autoComplete="off"
-                            className="pl-9"
-                            data-bwignore="true"
-                            data-lpignore="true"
-                            id="newContactAddress"
-                            inputMode="email"
-                            maxLength={254}
-                            placeholder="Contact"
-                            readOnly={!isContactEmailEditable}
-                            type="text"
-                            value={form.contactEmail}
-                            onChange={(event) =>
-                              updateField('contactEmail', event.target.value)
-                            }
-                            onFocus={() => setIsContactEmailEditable(true)}
-                          />
+                      {canSetContactEmail && (
+                        <div className="space-y-1.5">
+                          <Label htmlFor="newContactAddress">
+                            Adresse de contact{' '}
+                            <span className="font-normal">(facultatif)</span>
+                          </Label>
+                          <div className="relative">
+                            <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
+                            <Input
+                              aria-describedby={
+                                errors.contactEmail
+                                  ? 'newContactAddress-error'
+                                  : 'newContactAddress-hint'
+                              }
+                              aria-invalid={!!errors.contactEmail}
+                              autoComplete="off"
+                              className="pl-9"
+                              data-bwignore="true"
+                              data-lpignore="true"
+                              id="newContactAddress"
+                              inputMode="email"
+                              maxLength={254}
+                              placeholder="Contact"
+                              readOnly={!isContactEmailEditable}
+                              type="text"
+                              value={form.contactEmail}
+                              onChange={(event) =>
+                                updateField('contactEmail', event.target.value)
+                              }
+                              onFocus={() => setIsContactEmailEditable(true)}
+                            />
+                          </div>
+                          {errors.contactEmail ? (
+                            <p
+                              className="text-destructive text-xs"
+                              id="newContactAddress-error"
+                              role="alert"
+                            >
+                              {errors.contactEmail}
+                            </p>
+                          ) : (
+                            <p
+                              className="text-muted-foreground text-xs"
+                              id="newContactAddress-hint"
+                            >
+                              Adresse de contact facultative, distincte de
+                              l&apos;identifiant et jamais utilisée pour se
+                              connecter.
+                            </p>
+                          )}
                         </div>
-                        {errors.contactEmail ? (
-                          <p
-                            className="text-destructive text-xs"
-                            id="newContactAddress-error"
-                            role="alert"
-                          >
-                            {errors.contactEmail}
-                          </p>
-                        ) : (
-                          <p
-                            className="text-muted-foreground text-xs"
-                            id="newContactAddress-hint"
-                          >
-                            Adresse de contact facultative, distincte de
-                            l&apos;identifiant et jamais utilisée pour se
-                            connecter.
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </section>
 
                     <Separator />

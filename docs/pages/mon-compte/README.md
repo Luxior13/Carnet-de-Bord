@@ -2,7 +2,7 @@
 
 [Index des pages](../../pages/README.md) · [Design](../../design/README.md) · [Guide général](../../REFERENCE_GENERALE.md)
 
-Espace personnel de chaque compte : profil et sécurité de connexion. Même
+Espace personnel de chaque compte : profil, accès et sécurité de connexion. Même
 gabarit que la fiche utilisateur, sans les actions d’administration.
 
 ## Pages et sections
@@ -10,6 +10,7 @@ gabarit que la fiche utilisateur, sans les actions d’administration.
 | Route | Section | Fiche | Gabarit | Harmonisation |
 | --- | --- | --- | --- | --- |
 | `/mon-compte` | Profil (défaut) | [Mon compte — Profil](profil.md) | [B. Fiche à sections](../../design/gabarits.md#b-fiche-à-sections) | Aligné |
+| `/mon-compte` | `?section=access` | [Mon compte — Accès](acces.md) | [B. Fiche à sections](../../design/gabarits.md#b-fiche-à-sections) | Aligné |
 | `/mon-compte` | `?section=security` | [Mon compte — Sécurité](securite.md) | [B. Fiche à sections](../../design/gabarits.md#b-fiche-à-sections) | Aligné |
 
 Les anciens paramètres `activity` et `history` affichent Profil.

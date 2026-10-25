@@ -303,11 +303,11 @@ export function useUserDetailCapabilities(
   const loginReadOnlyHint = isSelf
     ? "Votre propre identifiant ne se modifie pas depuis l'administration."
     : user?.isProtected
-      ? "L'identifiant du compte racine est protégé."
+      ? "L'identifiant du superadmin est protégé."
       : isTargetAdminAccessRestricted
-        ? "Seul le compte racine peut modifier l'identifiant d'un administrateur."
+        ? "Seul le superadmin peut modifier l'identifiant d'un administrateur."
         : !canUpdateUserLogin
-          ? 'La permission Modifier les identifiants de connexion est requise.'
+          ? "La permission Modifier l'identifiant de connexion est requise."
           : 'Cet identifiant est en lecture seule depuis cette fiche.';
   const canViewTargetSecurity =
     !!user &&

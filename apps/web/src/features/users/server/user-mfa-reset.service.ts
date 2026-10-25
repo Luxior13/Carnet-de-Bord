@@ -79,7 +79,7 @@ export const resetUserMfaForActor = async (input: {
   // Same boundary as every other delegated action on an administrator.
   if (target.role === 'ADMIN' && !actorRow.isProtected) {
     throw serviceErrors.forbidden(
-      "Seul le compte racine peut réinitialiser la double authentification d'un administrateur",
+      "Seul le superadmin peut réinitialiser la double authentification d'un administrateur",
     );
   }
   if (target.mfaEnabledAt === null || !target.totpCredential)

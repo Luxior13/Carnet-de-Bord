@@ -10,6 +10,15 @@
 | Points d’entrée | [Sidebar](../../../apps/web/src/components/Sidebar.tsx), [Header](../../../apps/web/src/components/layout/Header.tsx), [PoleNavigation](../../../apps/web/src/components/layout/PoleNavigation.tsx), [GlobalSearch](../../../apps/web/src/components/layout/GlobalSearch.tsx), [PageSectionNavigation](../../../apps/web/src/components/layout/PageSectionNavigation.tsx) |
 | Règles | [Navigation](../../domaines/navigation.md), [composants](../../design/composants.md) |
 
+## Pôle Système — 25 octobre 2026
+
+Le pôle Système compte deux sections : « Administration » (Utilisateurs,
+Paramètres, selon les droits) et « Projet » (Feuille de route, ouverte à tout
+compte connecté). Un membre sans droit d’administration ne voit plus une
+section « Administration » qui ne contient que la feuille de route. Résumé du
+pôle : « Comptes, configuration et projet »
+([DRT-04](../../audits/2026-10-25-coherence-des-droits.md)).
+
 ## État courant — clôture du socle du 13 octobre 2026
 
 La [revue finale du socle](../../audits/2026-10-12-cloture-socle.md) est

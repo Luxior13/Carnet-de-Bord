@@ -7,6 +7,8 @@ import {
   authorizeUserAction,
   type UserActionAuthority,
 } from '$server/user-action-authorization';
+
+type AuthorizedPersonMutation = Awaited<ReturnType<typeof authorizeUserAction>>;
 import type { UserType } from '$types/auth.types';
 
 export type PersonMutationActor = UserType & {
@@ -23,15 +25,16 @@ export const authorizePersonMutation = async (
     | typeof PERMISSIONS.PERSONS.UPDATE_CONTACT
     | typeof PERMISSIONS.PERSONS.UPDATE,
   personId?: string,
-): Promise<void> => {
+): Promise<AuthorizedPersonMutation> => {
   if (personId) {
     await transaction.$queryRaw`
       SELECT "id" FROM "Person" WHERE "id" = ${personId} FOR UPDATE
     `;
   }
+
   // Keep the actor and source stable until commit; expiry is evaluated only
   // after any wait on Person, User or Session has completed.
-  await authorizeUserAction(
+  return authorizeUserAction(
     transaction,
     { actorId: actor.id, authorization: actor, session: actor.session },
     permission,

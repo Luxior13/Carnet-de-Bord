@@ -90,3 +90,10 @@ Le script affiche son dossier temporaire, écrit `observations.json`, ferme le
 navigateur et le serveur et signale tout échec par son code de sortie. Les
 captures et observations sont archivées explicitement. Les dossiers temporaires
 créés pour cette passe ont été nettoyés après archivage.
+
+## Reprise du 25 octobre 2026
+
+Scénarios `pole-systeme-sections-*` : le pôle Système affiche « Projet » seul
+pour un compte sans droit d’administration, « Administration » et « Projet »
+pour un administrateur. Passe complète : 19/19 ; non archivée, détail dans
+l’[audit](../../2026-10-25-coherence-des-droits.md).

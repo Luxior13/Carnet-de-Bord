@@ -10,7 +10,6 @@ import React, {
   useState,
 } from 'react';
 
-import { ContentState } from '$components/layout/ContentState';
 import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
@@ -35,6 +34,11 @@ import { getSafeCollectionReturnHref } from '$utils/navigation.utils';
 const ProfileSection = dynamic(() =>
   import('$features/account/components/ProfileSection').then(
     (module) => module.ProfileSection,
+  ),
+);
+const AccessSection = dynamic(() =>
+  import('$features/account/components/AccessSection').then(
+    (module) => module.AccessSection,
   ),
 );
 const SecuritySection = dynamic(() =>
@@ -70,10 +74,13 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
   const canManageSessions = allowed(PERMISSIONS.ACCOUNT.MANAGE_SESSIONS);
   const showSecurity =
     canViewSecurity || canChangePassword || canManageMfa || canManageSessions;
+  // Accès is a read-only summary, always available (audit DRT-07).
   const sections = ACCOUNT_SECTIONS.filter((section) =>
     section.id === 'profile'
       ? canViewProfile
-      : section.id === 'security' && showSecurity,
+      : section.id === 'security'
+        ? showSecurity
+        : true,
   );
   const requestedSection = normalizeAccountSection(searchParams.get('section'));
   const activeSection = sections.some(
@@ -150,13 +157,6 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
             {sections.find((section) => section.id === activeSection)?.label ??
               'Compte'}
           </p>
-          {sections.length === 0 && (
-            <ContentState
-              description="Les droits de compte personnel sont désactivés pour ce compte."
-              layout="panel"
-              title="Aucun onglet personnel disponible"
-            />
-          )}
           {canViewProfile && visitedSections.has('profile') && (
             <div hidden={activeSection !== 'profile'}>
               <ProfileSection
@@ -165,6 +165,11 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
                 onUpdate={handleAccountUpdate}
                 userData={userData}
               />
+            </div>
+          )}
+          {visitedSections.has('access') && (
+            <div hidden={activeSection !== 'access'}>
+              <AccessSection userData={userData} />
             </div>
           )}
           {showSecurity && visitedSections.has('security') && (

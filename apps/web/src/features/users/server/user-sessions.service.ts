@@ -33,7 +33,7 @@ const USERS_SECURITY_AUDIT_LOCATION = {
 } as const;
 
 const PROTECTED_TARGET_MESSAGE =
-  'Les sessions du compte racine sont privées et ne peuvent être gérées que depuis Mon compte';
+  'Les sessions du superadmin sont privées et ne peuvent être gérées que depuis Mon compte';
 
 /**
  * Loads the target and refuses, in this order, a missing account, the actor

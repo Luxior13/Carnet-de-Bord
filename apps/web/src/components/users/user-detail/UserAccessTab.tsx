@@ -125,7 +125,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
             <div className="min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="text-sm font-semibold">
-                  Autorisations du super-administrateur
+                  Autorisations du superadmin
                 </h3>
                 <UserAccessBadge user={user} />
               </div>
@@ -204,7 +204,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         roleNotice={
           <>
             {!canEditRole && (
-              <span>Seul le super-administrateur peut changer le rôle.</span>
+              <span>Seul le superadmin peut changer le rôle.</span>
             )}
             {showMfaNotice && (
               <span

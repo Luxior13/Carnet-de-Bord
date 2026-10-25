@@ -579,7 +579,7 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
           PERMISSIONS.USERS.REVOKE_ACCESS,
         ],
         description:
-          "Donner ou retirer à un compte standard le droit d'accorder et de retirer des autorisations ; seul le compte racine peut modifier le droit de délégation lui-même",
+          "Donner ou retirer à un compte standard le droit d'accorder et de retirer des autorisations ; seul le superadmin peut modifier le droit de délégation lui-même",
         grantable: true,
         key: PERMISSIONS.USERS.DELEGATE_ACCESS,
         label: 'Déléguer la gestion des autorisations',

@@ -180,6 +180,7 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
   let db: PrismaClient;
   const signIn = async (
     overrides: Partial<Prisma.UserCreateInput> = {},
+    { passwordProof = true }: { passwordProof?: boolean } = {},
   ): Promise<User> => {
     const existingRoot = overrides.isProtected
       ? await db.user.findFirst({ where: { isProtected: true } })
@@ -219,8 +220,8 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
         idleExpiresAt: new Date(Date.now() + 1800_000),
         mfaMethod: 'TOTP',
         mfaVerifiedAt: new Date(),
-        // No recent password proof: persons:delete deliberately does not require one.
-        passwordReauthenticatedAt: null,
+        // Deleting a record requires a recent password (audit DRT-06).
+        passwordReauthenticatedAt: passwordProof ? new Date() : null,
         securityVersion: user.securityVersion,
         token: createHash('sha256').update(token).digest('hex'),
         userId: user.id,
@@ -352,7 +353,7 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     });
     const detail = await read(person.id);
     expect(detail.lastChange?.actor).toEqual({
-      displayName: 'Superadministrateur',
+      displayName: 'Superadmin',
       loginName: null,
     });
     expect(detail.emails).toEqual([]);
@@ -367,7 +368,7 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     expect(JSON.stringify(listed)).not.toContain(root.firstName);
     expect(listed.overview.noContacts).toBeNull();
     expect(listed.items[0].lastModifiedBy).toEqual({
-      displayName: 'Superadministrateur',
+      displayName: 'Superadmin',
       loginName: null,
     });
     const response = await history(
@@ -376,7 +377,7 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     );
     const provenance = (await response.json()).data.items[0];
     expect(provenance.actor).toEqual({
-      displayName: 'Superadministrateur',
+      displayName: 'Superadmin',
       loginName: null,
     });
     expect(provenance).not.toHaveProperty('before');
@@ -1202,6 +1203,20 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
       expect(await auditCount(person.id)).toBe(1);
     },
   );
+
+  it('refuses a deletion without a recent password and deletes nothing', async () => {
+    await signIn({}, { passwordProof: false });
+    const person = await fixture();
+    const response = await DELETE(
+      request({ version: person.version }, 'DELETE', '', randomUUID()),
+      context(person.id),
+    );
+    expect(response.status).toBe(403);
+    expect((await response.json()).error.code).toBe(
+      'PASSWORD_REAUTHENTICATION_REQUIRED',
+    );
+    expect(await read(person.id)).toEqual(person);
+  });
 
   it('deletes the person and children, purges field values, keeps a minimal audit and replays safely', async () => {
     await signIn();

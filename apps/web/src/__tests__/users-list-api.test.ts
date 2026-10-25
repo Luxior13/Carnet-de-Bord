@@ -282,10 +282,10 @@ describe('users list HTTP boundary', () => {
     const body = await response.json();
     expect(body.data.users[0]).toMatchObject({
       contactEmail: null,
-      firstName: 'Compte',
+      firstName: 'Superadmin',
       identityDetailsVisible: false,
       lastLoginAt: null,
-      lastName: 'racine',
+      lastName: '',
       loginName: '••••••••',
       securityDetailsVisible: false,
     });

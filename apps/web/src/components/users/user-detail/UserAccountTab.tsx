@@ -302,8 +302,8 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
                 </Badge>
               </div>
               <p className="text-muted-foreground mt-1 max-w-3xl text-xs leading-5">
-                Le super-administrateur dispose automatiquement de toutes les
-                actions personnelles. Son autonomie ne peut pas être restreinte.
+                Le superadmin dispose automatiquement de toutes les actions
+                personnelles. Son autonomie ne peut pas être restreinte.
               </p>
             </div>
           </div>

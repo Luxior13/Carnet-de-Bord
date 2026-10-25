@@ -409,6 +409,49 @@ async function main() {
     },
     security,
   );
+  // Rubrique « Accès » (audit DRT-07, 25 October 2026).
+  const delegated = {
+    isProtected: false,
+    role: "USER",
+    permissions: {
+      "persons:view": true,
+      "persons:view_contact": true,
+      "users:view": true,
+      "users:view_security": true,
+      "users:reset_password": true,
+    },
+  };
+  for (const [label, actor, width] of [
+    ["delegated", delegated, 390],
+    ["delegated", delegated, 1440],
+    ["superadmin", {}, 390],
+  ]) {
+    await run(
+      "access-summary-" + label,
+      width,
+      async ({ page }) => {
+        const card = page.locator('[aria-labelledby="account-access-heading"]').first();
+        await expect(
+          page.getByRole("heading", { name: "Vos accès" }),
+        ).toBeVisible();
+        if (label === "delegated") {
+          await expect(card.getByText("Consulter le répertoire")).toBeVisible();
+          await expect(
+            card.getByText("Réinitialiser le mot de passe"),
+          ).toBeVisible();
+          await expect(card.getByText("Créer des utilisateurs standards")).toHaveCount(0);
+        } else {
+          await expect(card.getByText(/En tant que superadmin/)).toBeVisible();
+        }
+        await page.screenshot({
+          path: path.join(work, "access-summary-" + label + "-" + width + ".png"),
+          fullPage: true,
+        });
+        return noOverflow(page);
+      },
+      { section: "access", actor },
+    );
+  }
   for (const width of [390, 1440]) {
     await run(
       "password-rules-feedback",

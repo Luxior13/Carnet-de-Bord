@@ -2,6 +2,7 @@ import 'server-only';
 
 import { PERMISSIONS } from '$constants/permissions.constants';
 import { prisma } from '$server/prisma';
+import { assertUserActionProof } from '$server/user-action-authorization';
 
 import { assertPersonAuditConfigured, createPersonAudit } from './person-audit';
 import { personErrors } from './person-errors';
@@ -60,12 +61,15 @@ export const deletePerson = async (input: {
   await assertPersonFeatureReady();
 
   await prisma.$transaction(async (transaction) => {
-    await authorizePersonMutation(
+    const authorized = await authorizePersonMutation(
       transaction,
       input.actor,
       PERMISSIONS.PERSONS.DELETE,
       input.personId,
     );
+    // Irreversible, like deleting an account: a password proof of at most
+    // 30 minutes, checked after the locks (audit DRT-06, 25 October 2026).
+    assertUserActionProof(authorized, 'password');
     const tombstone = await transaction.personDeletionTombstone.findUnique({
       select: { personId: true },
       where: { personId: input.personId },

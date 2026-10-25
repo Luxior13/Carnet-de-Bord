@@ -205,7 +205,7 @@ export const authorizeUserPermissionMutation = ({
 
   if (isPermissionsUpdate && changesDelegationAuthority && !actor.isProtected) {
     throw serviceErrors.forbidden(
-      'Seul le compte racine peut déléguer la gestion des autorisations',
+      'Seul le superadmin peut déléguer la gestion des autorisations',
     );
   }
   if (isPermissionsUpdate && changesDelegableAccessAuthority)

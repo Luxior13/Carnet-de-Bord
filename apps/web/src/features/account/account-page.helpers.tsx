@@ -1,4 +1,4 @@
-import { ShieldCheck, User } from 'lucide-react';
+import { Shield, ShieldCheck, User } from 'lucide-react';
 import Link from 'next/link';
 import type { FC } from 'react';
 
@@ -14,7 +14,7 @@ import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
 import { Button } from '$ui/button';
 
-export type AccountSectionId = 'activity' | 'profile' | 'security';
+export type AccountSectionId = 'access' | 'profile' | 'security';
 
 export const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
   {
@@ -27,12 +27,18 @@ export const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
     id: 'security',
     label: 'Sécurité',
   },
+  {
+    icon: <Shield className="h-4 w-4" />,
+    id: 'access',
+    label: 'Accès',
+  },
 ];
 
 export const normalizeAccountSection = (
   value: string | null,
 ): AccountSectionId => {
   if (value === 'security') return 'security';
+  if (value === 'access') return 'access';
   if (value === 'activity' || value === 'history') return 'profile';
 
   return 'profile';

@@ -255,6 +255,38 @@ async function main() {
         body,
         headers: req.headers(),
       });
+      // Since 25 October 2026 deleting a record asks for a recent password.
+      if (url.pathname === "/api/auth/step-up") {
+        await route.fulfill({
+          status: 200,
+          json: {
+            success: true,
+            data: {
+              expiresAt: new Date(Date.now() + 1_800_000).toISOString(),
+              kind: "password",
+            },
+          },
+        });
+        return;
+      }
+      if (
+        api.mode === "passwordProof" &&
+        method === "DELETE" &&
+        url.pathname.split("/").length === 4
+      ) {
+        api.mode = "success";
+        await route.fulfill({
+          status: 403,
+          json: {
+            success: false,
+            error: {
+              code: "PASSWORD_REAUTHENTICATION_REQUIRED",
+              message: "Confirmez votre mot de passe pour enregistrer cette modification importante",
+            },
+          },
+        });
+        return;
+      }
       const mode =
         method === "GET"
           ? url.pathname.endsWith("historique-champ")

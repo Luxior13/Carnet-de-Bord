@@ -22,6 +22,7 @@ restent historiques.
 
 | Rapport | Périmètre et portée |
 | --- | --- |
+| [Cohérence des droits par profil — 25 octobre 2026](2026-10-25-coherence-des-droits.md) | Audit transverse : chaque autorisation seule ou combinée, administrateur et superadmin, calculés par le code réel et confrontés aux 32 routes. Aucun accès indu ; deux libellés corrigés, cinq incohérences (DRT-03 à DRT-07) soumises au propriétaire |
 | [Revue complète avant nouvelles fonctionnalités — 23 octobre 2026](2026-10-23-revue-complete.md) | Revue statique transverse : connexion, permissions, code mort, données, CI et documentation. Connexion solide sur le fond mais non démontrable tant que les 11 suites PostgreSQL ne tournent nulle part (REV-21, P0) ; 24 constats priorisés et ordre de travail proposé, aucun code modifié |
 | [Organisation complète de la documentation — 19 octobre 2026](2026-10-19-organisation-complete.md) | Réorganisation sur le modèle du site Noctambule : référence générale en 36 points, dossiers par nature, une fiche par page et par section, système de design, cartographie du système, contrôleur étendu. Périmètre documentaire ; aucun comportement applicatif revalidé |
 | [Autorisations du site actuel — 15 octobre 2026](2026-10-15-autorisations-site.md) | Examen droit par droit, puis corrections après accord : catalogue 27/7, coordonnées séparées, provenance minimale et racine masquée ; 1 335 tests web réussis (142 ignorés), 33 database, 82 SQL inclus et cinq parcours Chromium réels. Migration appliquée après sauvegarde signée, aucune en attente |

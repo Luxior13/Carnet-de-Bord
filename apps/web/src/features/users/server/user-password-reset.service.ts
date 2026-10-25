@@ -44,7 +44,7 @@ export const resetPasswordForActor = async (
   }
   if (existingUser.isProtected) {
     throw serviceErrors.forbidden(
-      'Le mot de passe du compte racine ne peut être modifié que par son propriétaire',
+      'Le mot de passe du superadmin ne peut être modifié que par son propriétaire',
     );
   }
   if (existingUser.role === 'ADMIN' && !actor.isProtected) {

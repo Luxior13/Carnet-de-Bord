@@ -36,6 +36,10 @@ le bandeau, pas en pied de carte.
 - Champs : [décision du 17 octobre 2026](README.md#champs--décision-courante-du-17-octobre-2026).
 - 22 octobre 2026 : composition alignée sur la fiche utilisateur
   ([reprise](#reprise--22-octobre-2026)).
+- 25 octobre 2026 : la suppression exige un mot de passe de 30 minutes au
+  plus, comme celle d’un compte. Sans preuve, la zone dangereuse ouvre
+  « Confirmer la suppression » puis reprend la même demande, sans nouvelle
+  confirmation ([DRT-06](../../../audits/2026-10-25-coherence-des-droits.md)).
 
 ## Points ouverts
 

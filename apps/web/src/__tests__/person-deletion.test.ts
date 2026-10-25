@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { PersonMutationActor } from '$features/persons/server/person-mutation-authorization';
+import {
+  authorizePersonMutation,
+  type PersonMutationActor,
+} from '$features/persons/server/person-mutation-authorization';
 
 vi.mock('server-only', () => ({}));
 vi.mock('$features/persons/server/person-mutation-authorization', () => ({
@@ -51,6 +54,15 @@ const actor = {
   session: null,
 } as unknown as PersonMutationActor;
 
+// The guard result the deletion checks for a recent password proof.
+const authorizedWithProof = (
+  passwordReauthenticatedAt: Date | null = new Date(),
+): Awaited<ReturnType<typeof authorizePersonMutation>> =>
+  ({
+    checkedAt: new Date(),
+    session: { passwordReauthenticatedAt },
+  }) as unknown as Awaited<ReturnType<typeof authorizePersonMutation>>;
+
 describe('synchronous person deletion', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -75,6 +87,26 @@ describe('synchronous person deletion', () => {
       createdAt: new Date(),
       id: 'audit-1',
     });
+    vi.mocked(authorizePersonMutation).mockResolvedValue(authorizedWithProof());
+  });
+
+  it('requires a recent password before deleting anything', async () => {
+    vi.mocked(authorizePersonMutation).mockResolvedValue(
+      authorizedWithProof(null),
+    );
+
+    await expect(
+      deletePerson({
+        actor,
+        idempotencyKey: 'delete-person-1',
+        personId: 'person-1',
+        version: 3,
+      }),
+    ).rejects.toMatchObject({ code: 'PASSWORD_REAUTHENTICATION_REQUIRED' });
+    expect(mocks.transaction.person.deleteMany).not.toHaveBeenCalled();
+    expect(
+      mocks.transaction.personDeletionTombstone.create,
+    ).not.toHaveBeenCalled();
   });
 
   it('purges field values, deletes, tombstones and audits in one transaction', async () => {

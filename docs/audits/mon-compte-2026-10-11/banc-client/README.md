@@ -119,3 +119,8 @@ la fenêtre « Changer le mot de passe » portent `current-password` et
 ajouté à 390 et 1 440 px (règles cochées en direct, envoi bloqué tant qu’une
 règle manque). Passe complète : 25/25 ; non archivée, détail dans la
 [revue complète](../../2026-10-23-revue-complete.md#suivi--lot-5-mots-de-passe-25-octobre-2026).
+
+Complément du même jour, après l’audit de cohérence des droits : scénarios
+`access-summary-*` (section « Accès » pour l’administrateur, l’utilisateur sans
+délégation et l’utilisateur délégué). Passe complète : 28/28 ; non archivée,
+détail dans l’[audit](../../2026-10-25-coherence-des-droits.md).

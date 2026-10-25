@@ -71,7 +71,7 @@ identité et contacts ou mentionnant deux valeurs de provenance.
   l'exige aussi ; le formulaire actuel reste identité/statut.
 - La provenance appartient au Répertoire, dépend de sa lecture et ne renvoie
   que le dernier auteur autorisé, l'action, la date et l'id de trace, sans valeurs.
-- L'auteur racine est présenté comme « Superadministrateur », sans identifiant,
+- L'auteur racine est présenté comme « Superadmin », sans identifiant,
   aux autres lecteurs de liste, fiche, provenance et retours de mutation.
   Les snapshots d'audit originaux sont conservés.
 - Les mutations revalident l'autorité attendue et les droits courants dans

@@ -35,7 +35,7 @@ Ce relevé ne remplace pas la [référence des permissions](../domaines/permissi
 | --- | --- | --- | --- | --- |
 | `/` | Page | Session (`AuthenticatedLayout`), `dashboard:view` | commun | [Accueil — Mon travail](../pages/accueil.md) |
 | `/login` | Page | Publique | intégré | [Connexion](../pages/connexion.md) |
-| `/mon-compte` | Page | Session | commun | [Mon compte](../pages/mon-compte/README.md), [Profil](../pages/mon-compte/profil.md), [Sécurité](../pages/mon-compte/securite.md) |
+| `/mon-compte` | Page | Session | commun | [Mon compte](../pages/mon-compte/README.md), [Profil](../pages/mon-compte/profil.md), [Accès](../pages/mon-compte/acces.md), [Sécurité](../pages/mon-compte/securite.md) |
 | `/membres/repertoire` | Page | `getPageAuthSession`, `persons:view`, `assertPersonFeatureReady` | oui | [Liste du répertoire](../pages/membres/repertoire/liste.md) |
 | `/membres/repertoire/nouveau` | Page | Session, `persons:create` | commun | [Nouvelle fiche personne](../pages/membres/repertoire/creation.md) |
 | `/membres/repertoire/[id]` | Page | `getPageAuthSession`, `persons:view`, `assertPersonFeatureReady` | oui | [Identité](../pages/membres/repertoire/fiche-identite.md), [Coordonnées](../pages/membres/repertoire/fiche-coordonnees.md) |

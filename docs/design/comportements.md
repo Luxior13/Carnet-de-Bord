@@ -202,6 +202,11 @@ du 25 octobre 2026).
 - Un état acquis non modifiable (« Fourni par le rôle Administrateur ») est une
   mention avec cadenas, sans commande ni aide d’édition.
 - Une donnée masquée est distinguée d’une donnée absente (« Masquée », « Identité protégée »).
+- Le compte protégé porte un seul nom visible : « Superadmin » comme étiquette
+  ou nom affiché, « superadmin » dans une phrase (« Seul le superadmin peut… ») ;
+  « compte racine » reste un terme de documentation technique.
+- Une confirmation par mot de passe a la même exigence pour deux suppressions
+  irréversibles comparables (compte, fiche du Répertoire).
 - Le serveur refuse l’écriture dans tous les cas ; masquer un bouton ne
   remplace jamais le contrôle d’accès.
 
