@@ -121,13 +121,12 @@ export const useSystemSettings = (canUpdate: boolean) => {
     return true;
   }, []);
 
-  const focusAfterRetry = useCallback((trigger: Element | null): void => {
+  // Moves focus into the content only when the trigger disappeared with the
+  // error state (« Réessayer »); a trigger still on the page, such as
+  // « Actualiser », keeps it.
+  const focusAfterRetry = useCallback((): void => {
     requestAnimationFrame(() => {
-      if (
-        !mountedRef.current ||
-        (document.activeElement !== document.body &&
-          document.activeElement !== trigger)
-      )
+      if (!mountedRef.current || document.activeElement !== document.body)
         return;
       const target = contentRef.current?.querySelector<HTMLElement>(
         'h2, [data-settings-retry]',
@@ -199,8 +198,7 @@ export const useSystemSettings = (canUpdate: boolean) => {
 
       return;
     }
-    const trigger = document.activeElement;
-    void loadSettings().then(() => focusAfterRetry(trigger));
+    void loadSettings().then(focusAfterRetry);
   }, [
     hasUnsavedChanges,
     checkingKey,

@@ -367,7 +367,7 @@ export const updateUserForActor = async (
       ) || effectivelyGrantedPermissionKeys.some(lacksPermission);
     if (grantsUnheldPermission) {
       throw serviceErrors.forbidden(
-        'Vous ne pouvez pas accorder une permission que vous ne possedez pas',
+        'Vous ne pouvez pas accorder une permission que vous ne possédez pas',
       );
     }
   }

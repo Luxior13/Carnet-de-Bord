@@ -98,3 +98,9 @@ Le script affiche son dossier temporaire, ferme navigateur et serveur, écrit
 Les assertions sont dans [scenarios.cjs](scenarios.cjs). Les preuves sont copiées
 explicitement depuis le dossier affiché ; les quatre dossiers temporaires de
 cette passe ont été retirés après archivage.
+
+## Reprise du 25 octobre 2026
+
+Hauteur totale de référence à 390 px portée de 3 693 à 3 697 px après les
+retouches de design ; positions de la barre, du titre et du bandeau inchangées.
+Passe complète : 8/8.

@@ -14,6 +14,16 @@
 | Contrôle d’accès | `settings:view` et `settings:update`, liés au rôle ADMIN ; preuve récente pour réduire la conservation ou réparer une valeur |
 | Chargement / erreur dédiés | squelette dérivé du catalogue / commune à l’application |
 
+## Focus après actualisation — 25 octobre 2026
+
+Défaut trouvé par l’E2E lors de la [vérification avant nouvelle fonctionnalité](../../audits/2026-10-25-verification-avant-fonctionnalite.md)
+(CLO-09) : une actualisation réussie déplaçait le focus de « Actualiser »,
+toujours présent, vers le premier titre de carte. Désormais le focus ne passe
+dans le contenu que s’il a été perdu, c’est-à-dire quand « Réessayer »
+disparaît avec l’état d’erreur. Preuves : E2E réussi ; scénario
+`refresh-keeps-trigger-focus` ajouté au banc client, en échec sur l’ancien code
+et réussi sur le correctif (34/34).
+
 ## Reprise générale — 23 octobre 2026
 
 Dernière page de la reprise générale (« ok go »), relue contre les règles

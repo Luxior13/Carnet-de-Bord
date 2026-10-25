@@ -115,7 +115,9 @@ module.exports = async ({ run, expect, assert, before, path, work }) => {
       if (width === 390) {
         for (const [key, expected] of Object.entries({
           scroll: 0,
-          scrollHeight: 3693,
+          // 3 693 px on 12 October; 3 697 px since the design retouches up to
+          // 25 October 2026 (bar, title and hero positions unchanged).
+          scrollHeight: 3697,
           barTop: 218.78125,
           barBottom: 267.78125,
           titleTop: 283.78125,

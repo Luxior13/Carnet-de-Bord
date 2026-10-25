@@ -219,10 +219,15 @@ function Fixture() {
         {opener}
         <ContactEmailDialog
           contactEmail="exemple@example.test"
+          expectedUpdatedAt={actor.updatedAt}
           loginName={actor.loginName}
+          onAccessDenied={async () => {}}
+          onDirtyChange={() => {}}
           open={open}
           onCancel={() => setOpen(false)}
           onSuccess={async () => {}}
+          restoreFocus={() => {}}
+          userId={actor.id}
         />
       </>
     );

@@ -137,3 +137,11 @@ pas par une extension installée. Les timeouts, initialisation lente, expiration
 de preuve et fermeture avant callback RAF sont inspectés mais ne possèdent pas
 de scénario navigateur distinct dans cette passe. Aucune mesure de performance
 serveur n'est déduite du banc.
+
+## Reprise du 25 octobre 2026
+
+Champ de mot de passe de la preuve attendu avec `current-password` (REV-07).
+Le scénario du mode de preuve `critical-mfa`, supprimé le 24 octobre
+(REV-03), est remplacé par le mode « mot de passe seul » :
+`shared-step-up-password-refusal-focus`. Scénario `refresh-keeps-trigger-focus`
+ajouté pour CLO-09. Passe complète : 34/34.

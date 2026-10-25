@@ -125,3 +125,10 @@ DiceBear, @node-rs/argon2 (hachage des mots de passe ; bcryptjs ne sert plus
 qu'à vérifier les anciens hachages) ; Vitest et Playwright pour les tests. Les versions exactes
 sont celles des manifests ; consulter Context7 pour leur documentation
 ([consignes](../../AGENTS.md#context7)).
+
+La CI refuse toute vulnérabilité de niveau élevé (`bun audit --audit-level=high`).
+Les dépendances indirectes corrigées sans attendre leur parent sont épinglées
+dans les `overrides` du [manifest racine](../../package.json) ; en retirer une
+dès que le paquet parent embarque la version corrigée. `deepmerge-ts` 8 y est
+forcé sous la configuration du CLI Prisma 6.19 (changement majeur, vérifié par
+`prisma validate`, `generate` et `migrate status` le 25 octobre 2026).

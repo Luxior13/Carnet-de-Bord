@@ -671,7 +671,9 @@ async function main() {
       const dialog = page.getByRole("dialog");
       const password = dialog.locator("input[type=password]");
       await expect(password).toBeFocused();
-      await expect(password).toHaveAttribute("autocomplete", "off");
+      // Since 25 October 2026 (REV-07), the password field carries its
+      // autofill token.
+      await expect(password).toHaveAttribute("autocomplete", "current-password");
       api.proofMode = "invalid";
       await password.fill("FICTIF-erreur!2026");
       await password.press("Enter");
@@ -690,6 +692,28 @@ async function main() {
       );
     },
   );
+  // 25 October 2026: a plain refresh keeps focus on « Actualiser »; only a
+  // vanished « Réessayer » moves it into the content.
+  await run("refresh-keeps-trigger-focus", 390, async ({ page, api }) => {
+    await expect(field(page)).toBeVisible();
+    const before = api.requests.length;
+    await refresh(page).click();
+    await expect.poll(() => api.requests.length).toBeGreaterThan(before);
+    await expect(field(page)).toHaveValue("1095");
+    // The former code moved focus one animation frame after the reload.
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+    assert.equal(
+      await refresh(page).evaluate(
+        (element) => element === document.activeElement,
+      ),
+      true,
+    );
+  });
   await run("actor-change-during-save", 390, async ({ page, api }) => {
     await write(page, 1200);
     api.putMode = "hold";
@@ -861,7 +885,40 @@ async function main() {
       },
     },
   );
-  for (const kind of ["full", "critical-mfa"])
+  // The "critical-mfa" proof kind was removed on 24 October 2026 (REV-03);
+  // the shared dialog now has a full and a password-only mode.
+  await run(
+    "shared-step-up-password-refusal-focus",
+    390,
+    async ({ page, api }) => {
+      await page
+        .getByRole("button", {
+          name: "Confirmer une opération fictive",
+          exact: true,
+        })
+        .click();
+      const dialog = page.getByRole("dialog");
+      const password = dialog.locator("input[type=password]");
+      await expect(dialog.locator("input[inputmode=numeric]")).toHaveCount(0);
+      api.proofMode = "invalid";
+      await password.fill("FICTIF-erreur!2026");
+      await password.press("Enter");
+      await expect(dialog.getByRole("alert")).toContainText("incorrect");
+      await expect(password).toBeFocused();
+      api.proofMode = "success";
+      await password.fill("FICTIF-preuve!2026");
+      await password.press("Enter");
+      await expect(dialog).toHaveCount(0);
+      await expect(
+        page.getByRole("button", {
+          name: "Confirmer une opération fictive",
+          exact: true,
+        }),
+      ).toBeFocused();
+    },
+    { stepUpKind: "password" },
+  );
+  for (const kind of ["full"])
     await run(
       "shared-step-up-" + kind + "-refusal-focus",
       390,

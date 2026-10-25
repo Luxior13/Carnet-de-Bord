@@ -261,7 +261,19 @@ async function main() {
     const fields = dialog.locator(
       'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea',
     );
+    // Since 25 October 2026 (REV-07), authentication fields carry their
+    // autofill token and no ignore attribute; every other field stays off.
+    const tokens = [
+      "current-password",
+      "new-password",
+      "one-time-code",
+      "username",
+    ];
     for (const field of await fields.all()) {
+      if (tokens.includes(await field.getAttribute("autocomplete"))) {
+        await expect(field).not.toHaveAttribute("data-bwignore", "true");
+        continue;
+      }
       await expect(field).toHaveAttribute("autocomplete", "off");
       for (const attribute of [
         "data-bwignore",
@@ -473,7 +485,7 @@ async function main() {
           `integrated-settings-${action}`,
           "settings",
           async (page) => {
-            await page.getByRole("button", { name: /^Modifier/ }).click();
+            // Direct entry since the settings redesign of 14 October 2026.
             await page.getByRole("spinbutton").fill("730");
             const opener =
               action === "reduction"

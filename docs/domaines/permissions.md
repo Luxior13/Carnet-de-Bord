@@ -98,7 +98,9 @@ désigne son résultat effectif (page accessible ou inaccessible).
 > `planned` (REV-14), couche d’alias et de clés en retrait pour un déploiement
 > inexistant (REV-13) : **corrigés le 24 octobre 2026**. Reste ouvert : le modèle
 > global à deux rôles ne porte pas encore les portées par entité, équipe et
-> période des [rôles métier](roles-metier.md) (REV-15, décision attendue).
+> période des [rôles métier](roles-metier.md) : modèle cible retenu le
+> 25 octobre 2026 (REV-15), construit avec le chantier « Accès &
+> responsabilités métier » ([décision](roles-metier.md#décision-du-25-octobre-2026--modèle-dautorisation-retenu-rev-15)).
 
 ## Trois ensembles à ne pas confondre
 
@@ -161,6 +163,16 @@ Légende :
 
 La modification du contact propre exige en plus la confirmation du mot de
 passe. Les capacités personnelles ne donnent aucun droit sur un autre compte.
+
+L’identifiant de connexion n’a pas de capacité personnelle : Mon compte
+l’affiche en lecture seule. Il change seulement par `users:update_login`, sur
+le compte d’une autre personne (pas d’un administrateur, sauf par le
+superadmin), avec mot de passe récent, réservation de l’ancien identifiant et
+audit. L’administration refuse de modifier son propre profil, identifiant ou
+contact (« Utilisez Mon compte ») ; l’identifiant du superadmin ne change que
+par la procédure hors ligne. Motif : l’identifiant est attribué par la
+structure et sert à retrouver la personne dans les traces ; un compte dont la
+session est volée ne peut pas le changer seul. Confirmé le 25 octobre 2026.
 
 ### Page Utilisateurs
 

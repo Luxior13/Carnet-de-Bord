@@ -43,3 +43,16 @@ teste aucune extension de gestionnaire de mots de passe.
 ouverture, suppression depuis la fiche utilisateur, protection du brouillon et
 validation/soumission simulée après l'adaptation des champs d'autocomplétion.
 Cette passe ne démontre pas la disparition d'une proposition Bitwarden réelle.
+
+## Reprise du 25 octobre 2026
+
+Aligné sur la règle d’autocomplétion du 25 octobre (REV-07) : un champ
+d’authentification porte son jeton (`current-password`, `new-password`,
+`one-time-code`, `username`) sans attribut d’exclusion, les autres restent
+exclus. La fixture de contact reçoit les propriétés ajoutées depuis à
+`ContactEmailDialog`. Résultat : les 79 scénarios de disposition et de
+verrouillage passent ; les scénarios intégrés s’arrêtent à la page
+Paramètres, dont les données simulées précèdent la refonte du 14 octobre.
+Ces parcours sont couverts par les bancs à jour de chaque page ; reprendre ou
+retirer les scénarios intégrés à la prochaine modification d’une fenêtre
+([CLO-06](../../2026-10-25-verification-avant-fonctionnalite.md)).

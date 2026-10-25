@@ -347,12 +347,12 @@ async function expectPersonsListFilteringAndPagination(
   await previousPageButton.click();
   await expect(pagination.locator('p')).toHaveText('Page 1 sur 2');
 
-  const statusFilter = page.getByRole('combobox', {
+  // Quick filters replace the status menu since 20 October 2026.
+  const statusFilters = page.getByRole('group', {
     name: 'Filtrer par statut',
   });
-  await statusFilter.click();
-  await page
-    .getByRole('option', { exact: true, name: 'Dans la structure' })
+  await statusFilters
+    .getByRole('button', { name: /^Dans la structure/ })
     .click();
   await expect(page.locator('table tbody tr')).toHaveCount(13);
   const filteredResponse = await browserApi(
@@ -375,10 +375,7 @@ async function expectPersonsListFilteringAndPagination(
   await expect(pagination.locator('p')).toHaveText('Page 1');
   await expect(nextPageButton).toBeDisabled();
 
-  await statusFilter.click();
-  await page
-    .getByRole('option', { exact: true, name: 'Tous les statuts' })
-    .click();
+  await statusFilters.getByRole('button', { name: /^Tous/ }).click();
   await expect(pagination.locator('p')).toHaveText('Page 1 sur 2');
   await expect(page.locator('table tbody tr')).toHaveCount(25);
   const resetResponse = await browserApi(

@@ -16,8 +16,8 @@ const USERS_SECURITY_AUDIT_LOCATION = {
 
 /**
  * Gives another account a temporary password shown once. The root's password
- * and any ADMIN's are out of reach of a delegated actor. Password, lock reset,
- * session revocation and audit are atomic. Throws `ServiceError` refusals.
+ * and any ADMIN's are out of reach of a delegated actor. Password, session
+ * revocation and audit are atomic. Throws `ServiceError` refusals.
  */
 export const resetPasswordForActor = async (
   { actor, session }: { actor: UserType; session: SessionType | null },

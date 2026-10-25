@@ -243,10 +243,8 @@ try {
   const accountData = {
     contactEmail: adminContactEmail,
     contactEmailVerifiedAt: null,
-    failedLoginAttempts: 0,
     isActive: true,
     isProtected: true,
-    lockedUntil: null,
     loginName: adminLoginName,
     mfaEnabledAt: null,
     mustChangePassword: false,
