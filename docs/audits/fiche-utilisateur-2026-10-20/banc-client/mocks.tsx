@@ -67,10 +67,12 @@ export const useUser = () => ({
   applyUserUpdate: () => {},
 });
 export const AuthenticatedLayout = ({ children, breadcrumbs }: any) => (
-  <div className="audit-shell">
+  // Same frame as the real layout since 26 October 2026: a 56 px header and
+  // a #main-content area that scrolls inside a full-height shell.
+  <div className="audit-shell flex flex-col overflow-hidden">
     <nav
       aria-label="Fil d’Ariane simulé"
-      className="flex min-w-0 gap-3 p-4 text-sm [&>*]:min-w-0 [&>*]:break-words"
+      className="flex h-14 min-w-0 shrink-0 items-center gap-3 px-4 text-sm [&>*]:min-w-0 [&>*]:break-words"
     >
       {breadcrumbs?.map((item: any, index: number) =>
         item.href ? (
@@ -88,7 +90,12 @@ export const AuthenticatedLayout = ({ children, breadcrumbs }: any) => (
         ),
       )}
     </nav>
-    <main className="private-viewport">{children}</main>
+    <main
+      className="private-viewport scrollbar-gutter-both-edges min-h-0 flex-1 overflow-y-auto"
+      id="main-content"
+    >
+      {children}
+    </main>
   </div>
 );
 export const Link = ({

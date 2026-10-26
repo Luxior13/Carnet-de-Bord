@@ -481,6 +481,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
             isSaving={isSavingPermissions || mutation.isRefreshing}
             isRefreshing={mutation.isRefreshing}
             permissionPageKey={permissionPageKey}
+            permissionPageRequested={searchParams.has('permissionPage')}
             onPermissionPageChange={handlePermissionPageChange}
             onSave={handleSaveAccess}
             onCancel={() => restoreSavedSection('access')}

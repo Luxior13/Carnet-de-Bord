@@ -68,3 +68,34 @@ Scénario `temporary-password-in-card` ajouté à 390 et 1 440 px, avec capture 
 mot de passe temporaire s’affiche dans la carte « Mot de passe » à la place de
 son action. Passe complète : 50/50 ; non archivée, détail dans la
 [fiche Sécurité](../../../pages/systeme/utilisateurs/fiche-securite.md#décisions-retenues).
+
+## Reprise du 26 octobre 2026
+
+Nouvel éditeur d’autorisations. Le scénario
+`permissions-configured-blocked-and-scopes` suit le parcours téléphone : liste
+des pages, ouverture du Répertoire (focus sur son titre), interrupteurs, action
+estompée sans l’accès à sa page puis rétablie, retour « Toutes les pages » (focus
+sur la page), compteur « 2 sur 7 utilisables », recherche « supprimer » et filtre
+« Accordées ». Captures `access-*.png` remplacées à cinq largeurs, ajout de
+[permissions-search-390.png](permissions-search-390.png). Scénario
+`permissions-navigation-stays-in-view` (1 440 px) : après défilement jusqu’à la
+dernière autorisation de la page Utilisateurs, la navigation et sa recherche
+restent visibles ([capture](permissions-sticky-navigation-1440.png)) ; un clic
+sur une autre page l’affiche depuis son début, le focus restant dans la liste.
+Volets repris le même jour : bascule dans l’en-tête de la carte, captures
+`access-*` et `account-*` remplacées à cinq largeurs. Puis carte en pleine
+hauteur sur ordinateur : `permissions-workspace-columns-scroll` (1 440 × 1 000 :
+page sans défilement, navigation immobile pendant le défilement de la page,
+barre ancrée, ligne actionnée visible, [capture](permissions-workspace-1440.png))
+et `permissions-low-screen-keeps-page-scroll` (1 440 × 650 : repli, navigation
+collante). Finitions du même jour : en-tête sur une ligne (compteur attendu
+seul, « X sur Y utilisables »), menu « Pôle » dans les scénarios (choix du pôle
+Système, retour à Membres, recherche « utilisateur » depuis un autre pôle).
+Puis, après le signalement du propriétaire (défilement sur portable) :
+cadre simulé aligné sur le vrai (en-tête de 56 px, `#main-content` qui défile
+dans une fenêtre de hauteur fixe) et scénario `permissions-workspace-laptop-screen`
+à 1 366 × 650 ([capture](permissions-workspace-1366x650.png)) ; le repli est
+joué à 480 px de haut. Scénario `permissions-granted-filter` : avec « Accordées », menu « Pôle »
+limité à Membres et Système, pages et autorisations accordées seulement
+([capture](permissions-granted-filter-1440.png)) ; une recherche affiche le
+sommaire « Pages concernées » et y saute. Passe complète : 54/54.

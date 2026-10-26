@@ -69,7 +69,7 @@ async function main() {
     }
     res.setHeader("Content-Type", "text/html");
     res.end(
-      '<!doctype html><html lang="fr" class="dark"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/bundle.css"><style>:root{--font-geist-sans:Arial,sans-serif;--font-geist-mono:monospace}.audit-shell{min-height:100vh}@media(min-width:1024px){.audit-shell{margin-left:240px}}</style></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>',
+      '<!doctype html><html lang="fr" class="dark"><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/bundle.css"><style>:root{--font-geist-sans:Arial,sans-serif;--font-geist-mono:monospace}.audit-shell{height:100vh}@media(min-width:1024px){.audit-shell{margin-left:240px}}</style></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>',
     );
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -495,7 +495,9 @@ async function main() {
           }
           if (section === "access")
             await expect(
-              page.getByText(/accordées ci-dessous : \d+ sur \d+ utilisables\./),
+              // One-line header since 26 October 2026: the count, its help
+              // in a popover.
+              page.getByText(/^\d+ sur \d+ utilisables$/),
             ).toBeVisible();
           if (section === "account") {
             const row = page.getByRole("switch").first();
@@ -859,24 +861,75 @@ async function main() {
     "permissions-configured-blocked-and-scopes",
     390,
     async ({ page, api }) => {
+      // Since 26 October 2026: on a phone the page list comes first, each
+      // permission is a switch, and an action without its page is dimmed.
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      await navigation
+        .getByRole("button", { name: /^Répertoire/ })
+        .click();
+      await expect(
+        page.getByRole("heading", { name: "Répertoire", exact: true }),
+      ).toBeFocused();
+      await expect(navigation).toBeHidden();
       const row = page.locator('[data-permission="persons:create"]');
+      await expect(row).toHaveAttribute("data-blocked", "true");
       await expect(
-        row.getByText("Page inaccessible", { exact: true }),
-      ).toBeVisible();
-      await expect(
-        row.getByRole("button", { name: /Autoriser/ }),
-      ).toHaveAttribute("aria-pressed", "true");
+        row.getByRole("switch", { name: "Ajouter des fiches au répertoire" }),
+      ).toHaveAttribute("aria-checked", "true");
       await expect(
         row.getByText(/Réglage autorisé, accès bloqué/),
       ).toBeVisible();
+      await expect(page.getByText("Sensible", { exact: true })).toHaveCount(0);
       const access = page.locator('[data-permission="persons:view"]');
-      await access.getByRole("button", { name: /Autoriser/ }).click();
+      await access.getByRole("switch").click();
       await expect(row.getByText(/Réglage autorisé, accès bloqué/)).toHaveCount(
         0,
       );
+      await expect(row).toHaveAttribute("data-blocked", "false");
       await expect(
-        row.getByRole("button", { name: /Autoriser/ }),
-      ).toHaveAttribute("aria-pressed", "true");
+        row.getByRole("switch", { name: "Ajouter des fiches au répertoire" }),
+      ).toHaveAttribute("aria-checked", "true");
+      await page
+        .getByRole("button", { name: "Toutes les pages", exact: true })
+        .click();
+      await expect(
+        navigation.getByRole("button", { name: /^Répertoire/ }),
+      ).toBeFocused();
+      await expect(
+        navigation.getByRole("button", { name: /^Répertoire/ }),
+      ).toContainText("2 sur 7 utilisables");
+      await page
+        .getByRole("searchbox", { name: "Rechercher une autorisation" })
+        .fill("supprimer");
+      await expect(
+        page.getByRole("heading", { name: "Résultats pour « supprimer »" }),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-permission="persons:delete"]'),
+      ).toBeVisible();
+      await page.screenshot({
+        path: path.join(work, "permissions-search-390.png"),
+        fullPage: true,
+      });
+      await page
+        .getByRole("searchbox", { name: "Rechercher une autorisation" })
+        .fill("");
+      // « Accordées » narrows the usual list: on a phone, the pages holding a
+      // granted permission, then the page with only those.
+      await page.getByRole("button", { name: /^Accordées/ }).click();
+      await navigation.getByRole("button", { name: /^Répertoire/ }).click();
+      await expect(
+        page.locator('[data-permission="persons:create"]'),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-permission="persons:delete"]'),
+      ).toHaveCount(0);
+      await page
+        .getByRole("button", { name: "Toutes les pages", exact: true })
+        .click();
+      await page.getByRole("button", { name: /^Toutes/ }).click();
       // Since 25 October 2026 a permission change no longer signs the user
       // out; only a role change announces it.
       await expect(page.getByText(/déconnectera/)).toHaveCount(0);
@@ -916,6 +969,200 @@ async function main() {
       section: "access",
       user: { permissions: { "persons:create": true, "persons:view": false } },
     },
+  );
+  // 26 October 2026, computer layout: the Autorisations card fills the
+  // screen, the page no longer scrolls, each column scrolls on its own and
+  // the save bar is docked at the bottom of the card.
+  await run(
+    "permissions-workspace-columns-scroll",
+    1440,
+    async ({ page }) => {
+      const card = page.locator("#user-access-panel");
+      await expect(card).toHaveAttribute("data-workspace", "true");
+      // The page scrolls in #main-content, like the real layout.
+      const pageScrolls = () =>
+        page.evaluate(() => {
+          const main = document.getElementById("main-content");
+
+          return main.scrollHeight > main.clientHeight + 1;
+        });
+      assert.equal(await pageScrolls(), false);
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      // Since 26 October 2026 a pole is chosen in the « Pôle » menu.
+      await navigation.getByRole("combobox", { name: "Pôle" }).click();
+      await page.getByRole("option", { name: /^Système/ }).click();
+      await navigation.getByRole("button", { name: /^Utilisateurs/ }).click();
+      const before = await navigation.boundingBox();
+      const lastRow = page.locator("[data-permission]").last();
+      await lastRow.scrollIntoViewIfNeeded();
+      await expect(lastRow).toBeInViewport();
+      assert.deepEqual(await navigation.boundingBox(), before);
+      await expect(page.locator("#user-role")).toBeInViewport();
+      await expect(
+        page.getByRole("button", { name: "Administration", exact: true }),
+      ).toBeInViewport();
+      const cardHeight = (await card.boundingBox()).height;
+      await lastRow.getByRole("switch").click();
+      const save = page.getByRole("button", { name: "Enregistrer", exact: true });
+      await expect(save).toBeInViewport();
+      await expect(lastRow).toBeInViewport();
+      assert.equal((await card.boundingBox()).height, cardHeight);
+      assert.equal(await pageScrolls(), false);
+      await page.screenshot({
+        path: path.join(work, "permissions-workspace-1440.png"),
+      });
+      // Another page of the same pole opens from its start, focus staying in
+      // the list; the pole menu lists only that pole's pages.
+      await expect(
+        navigation.getByRole("button", { name: /^Répertoire/ }),
+      ).toHaveCount(0);
+      await navigation
+        .getByRole("button", { name: /^Paramètres système/ })
+        .click();
+      await expect(
+        page.getByRole("heading", { name: "Paramètres système", exact: true }),
+      ).toBeInViewport();
+      await expect(
+        navigation.getByRole("button", { name: /^Paramètres système/ }),
+      ).toBeFocused();
+      // Another pole opens its first page; the search still covers every pole.
+      await navigation.getByRole("combobox", { name: "Pôle" }).click();
+      await page.getByRole("option", { name: /^Membres/ }).click();
+      await expect(
+        page.getByRole("heading", { name: "Répertoire", exact: true }),
+      ).toBeInViewport();
+      await page
+        .getByRole("searchbox", { name: "Rechercher une autorisation" })
+        .fill("utilisateur");
+      await expect(
+        page.locator('[data-permission="users:delete_account"]'),
+      ).toBeVisible();
+    },
+    { section: "access" },
+  );
+  // Owner report of 26 October 2026: a laptop screen still scrolled. The
+  // computer layout holds on a 1 366 × 650 viewport too.
+  await run(
+    "permissions-workspace-laptop-screen",
+    1366,
+    async ({ page }) => {
+      await expect(page.locator("#user-access-panel")).toHaveAttribute(
+        "data-workspace",
+        "true",
+      );
+      assert.equal(
+        await page.evaluate(() => {
+          const main = document.getElementById("main-content");
+
+          return main.scrollHeight > main.clientHeight + 1;
+        }),
+        false,
+      );
+      await page.screenshot({
+        path: path.join(work, "permissions-workspace-1366x650.png"),
+      });
+    },
+    { height: 650, section: "access" },
+  );
+  // 26 October 2026 (owner): « Accordées » keeps the pole menu and the page
+  // list, narrowed to what holds a granted permission; the page shows only
+  // its granted permissions. A search keeps its index of results.
+  await run(
+    "permissions-granted-filter",
+    1440,
+    async ({ page }) => {
+      await page.getByRole("button", { name: /^Accordées/ }).click();
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      const poleMenu = navigation.getByRole("combobox", { name: "Pôle" });
+      await expect(poleMenu).toBeVisible();
+      await expect(navigation.getByText("Pages concernées")).toHaveCount(0);
+      await expect(
+        navigation.getByRole("button", { name: /^Répertoire/ }),
+      ).toBeVisible();
+      await expect(page.locator('[data-permission="persons:view"]')).toBeVisible();
+      await expect(
+        page.locator('[data-permission="persons:update"]'),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-permission="persons:create"]'),
+      ).toHaveCount(0);
+      await page.screenshot({
+        path: path.join(work, "permissions-granted-filter-1440.png"),
+      });
+      await poleMenu.click();
+      await expect(page.getByRole("option")).toHaveCount(2);
+      await page.getByRole("option", { name: /^Système/ }).click();
+      await expect(
+        navigation.getByRole("button", { name: /^Utilisateurs/ }),
+      ).toBeVisible();
+      await expect(
+        navigation.getByRole("button", { name: /^Paramètres système/ }),
+      ).toHaveCount(0);
+      await expect(page.locator('[data-permission="users:view"]')).toBeVisible();
+      await expect(
+        page.locator('[data-permission="users:create"]'),
+      ).toHaveCount(0);
+      // A search still covers every pole, with its index of results.
+      await page
+        .getByRole("searchbox", { name: "Rechercher une autorisation" })
+        .fill("consulter");
+      await expect(navigation.getByText("Pages concernées")).toBeVisible();
+      await navigation.getByRole("button", { name: /^Répertoire/ }).click();
+      await expect(
+        page.locator('[data-result-heading="persons"]'),
+      ).toBeFocused();
+      await page
+        .getByRole("searchbox", { name: "Rechercher une autorisation" })
+        .fill("");
+      await page.getByRole("button", { name: /^Toutes/ }).click();
+      await expect(
+        page.locator('[data-permission="users:create"]'),
+      ).toBeVisible();
+    },
+    {
+      section: "access",
+      user: {
+        permissions: {
+          "persons:update": true,
+          "persons:view": true,
+          "users:view": true,
+        },
+      },
+    },
+  );
+  // A very low window keeps the page scroll and the sticky navigation.
+  await run(
+    "permissions-low-screen-keeps-page-scroll",
+    1440,
+    async ({ page }) => {
+      await expect(page.locator("#user-access-panel")).toHaveAttribute(
+        "data-workspace",
+        "false",
+      );
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      // Since 26 October 2026 a pole is chosen in the « Pôle » menu.
+      await navigation.getByRole("combobox", { name: "Pôle" }).click();
+      await page.getByRole("option", { name: /^Système/ }).click();
+      await navigation.getByRole("button", { name: /^Utilisateurs/ }).click();
+      const lastRow = page.locator("[data-permission]").last();
+      await lastRow.scrollIntoViewIfNeeded();
+      await expect(lastRow).toBeInViewport();
+      await expect(
+        page.getByRole("searchbox", { name: "Rechercher une autorisation" }),
+      ).toBeInViewport();
+      const box = await navigation.boundingBox();
+      assert.ok(box && box.y >= 0 && box.y < 200, JSON.stringify(box));
+      await page.screenshot({
+        path: path.join(work, "permissions-sticky-navigation-1440.png"),
+      });
+    },
+    { height: 480, section: "access" },
   );
   await run(
     "role-requires-target-mfa",

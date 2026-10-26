@@ -1,22 +1,18 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import { Crown, ShieldAlert } from 'lucide-react';
-import React, { type FC, useRef } from 'react';
+import { Crown, LockKeyhole, ShieldAlert } from 'lucide-react';
+import React, { type FC, useEffect, useRef } from 'react';
 
-import { Disclosure } from '$components/layout/Disclosure';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
+import { AuthorizationsHeader } from '$components/users/AuthorizationsHeader';
 import {
   type PermissionMutationPolicy,
   type PermissionMutationSummary,
 } from '$components/users/permission-editor-policy';
 import { PERMISSION_EDITOR_CATEGORIES } from '$components/users/permission-editor-view';
 import { PermissionsEditor } from '$components/users/PermissionsEditor';
-import {
-  getPermissionDisplayLabel,
-  hasPermission,
-  type PermissionsData,
-} from '$constants/permissions.constants';
+import { type PermissionsData } from '$constants/permissions.constants';
 import { UserAccessBadge } from '$features/users/user-badges';
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
@@ -29,6 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '$ui/select';
+import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
+
+import { useWorkspaceHeight } from './useWorkspaceHeight';
 
 type UserAccessTabProps = {
   canChangePermission: PermissionMutationPolicy;
@@ -44,6 +43,8 @@ type UserAccessTabProps = {
   onPermissionPageChange: (pageKey: string) => void;
   onSave: () => void;
   permissionPageKey: string;
+  /** The URL names a page: a narrow screen opens it instead of the list. */
+  permissionPageRequested?: boolean;
   permissions: PermissionsData | null;
   role: UserRole;
   saveDisabledReason?: string;
@@ -69,6 +70,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   onPermissionPageChange,
   onSave,
   permissionPageKey,
+  permissionPageRequested = false,
   permissions,
   role,
   saveDisabledReason,
@@ -77,14 +79,36 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   user,
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  // On a computer the card fills the screen and each column scrolls on its
+  // own; the save bar is docked at the bottom of the card (26 October 2026).
+  const workspaceHeight = useWorkspaceHeight(cardRef, !user.isProtected);
+  const workspace = workspaceHeight !== null;
+  // The docked save bar shortens the columns when it appears: keep the
+  // control just used in view instead of letting it slip under the bar.
+  useEffect(() => {
+    if (!workspace || !hasChanges) return;
+    const frame = requestAnimationFrame(() => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && cardRef.current?.contains(active))
+        (active.closest('[data-permission]') ?? active).scrollIntoView({
+          block: 'nearest',
+        });
+    });
+
+    return (): void => cancelAnimationFrame(frame);
+  }, [hasChanges, workspace]);
   const showMfaNotice =
     (canGrantPermissions || canEditRole) && user.criticalAccessReady !== true;
   const handleCancel = (): void => {
     onCancel();
     requestAnimationFrame(() => {
-      const field = cardRef.current?.querySelector<HTMLElement>(
-        '#user-role:not(:disabled), button[aria-pressed]:not(:disabled):not([aria-hidden="true"])',
-      );
+      // First visible control: on a narrow screen the page list or the
+      // page is hidden, and focus must not land on a hidden switch.
+      const field = Array.from(
+        cardRef.current?.querySelectorAll<HTMLElement>(
+          '#user-role:not(:disabled), button[role="switch"]:not(:disabled):not([aria-hidden="true"])',
+        ) ?? [],
+      ).find((element) => element.offsetParent !== null);
       const heading = cardRef.current?.querySelector<HTMLElement>('h3');
       if (field) field.focus();
       else if (heading) {
@@ -93,8 +117,11 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
       }
     });
   };
+  // The save bar states the change; the detailed list was removed on
+  // 26 October 2026 (owner: « ça sert à rien »).
   const mutationSummaryLabel = mutationSummary
     ? [
+        role !== user.role ? 'rôle modifié' : null,
         mutationSummary.grantedCount > 0
           ? `${mutationSummary.grantedCount} attribution${mutationSummary.grantedCount > 1 ? 's' : ''}`
           : null,
@@ -108,17 +135,11 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         .filter(Boolean)
         .join(' · ')
     : '';
-  const changedKeys = mutationSummary
-    ? [
-        ...mutationSummary.grantedPermissionKeys,
-        ...mutationSummary.revokedPermissionKeys,
-        ...mutationSummary.delegationPermissionKeys,
-      ]
-    : [];
 
   if (user.isProtected) {
     return (
       <Card id="user-access-panel">
+        <AuthorizationsHeader />
         <CardContent className="space-y-3 p-4">
           <div className="flex items-start gap-3">
             <Crown className="text-muted-foreground mt-0.5 size-5 shrink-0" />
@@ -150,10 +171,14 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
 
   return (
     <Card
-      className="overflow-visible"
+      className={
+        workspace ? 'flex flex-col overflow-hidden' : 'overflow-visible'
+      }
       aria-busy={isSaving}
+      data-workspace={workspace}
       id="user-access-panel"
       ref={cardRef}
+      style={workspace ? { height: workspaceHeight } : undefined}
     >
       <PermissionsEditor
         canChangePermission={canChangePermission}
@@ -162,6 +187,8 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         onChange={setPermissions}
         selectedPageKey={permissionPageKey}
         onSelectedPageChange={onPermissionPageChange}
+        openPageOnNarrow={permissionPageRequested}
+        workspace={workspace}
         disabled={!canManagePermissions || isSaving}
         roleControl={
           <>
@@ -174,7 +201,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
               >
                 <SelectTrigger
                   id="user-role"
-                  className="w-full min-w-0"
+                  className="w-48 max-w-full min-w-0"
                   variant="compact"
                   aria-describedby={
                     showMfaNotice ? 'user-role-mfa-requirement' : undefined
@@ -193,77 +220,77 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
                 </SelectContent>
               </Select>
             ) : (
-              <div className="flex min-h-9 items-center">
-                <Badge id="user-role" variant="outline">
+              <div className="flex min-h-9 items-center gap-1.5">
+                <Badge
+                  aria-describedby="user-role-locked-reason"
+                  id="user-role"
+                  variant="outline"
+                >
                   {roleLabel(role)}
                 </Badge>
+                {/* Reason on hover or focus, and read by screen readers. */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      aria-label="Rôle verrouillé"
+                      className="text-muted-foreground inline-flex size-7 items-center justify-center"
+                      role="img"
+                      tabIndex={0}
+                    >
+                      <LockKeyhole aria-hidden="true" className="size-3.5" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={6}>
+                    Seul le superadmin peut changer le rôle.
+                  </TooltipContent>
+                </Tooltip>
+                <span className="sr-only" id="user-role-locked-reason">
+                  Seul le superadmin peut changer le rôle.
+                </span>
               </div>
             )}
           </>
         }
         roleNotice={
-          <>
-            {!canEditRole && (
-              <span>Seul le superadmin peut changer le rôle.</span>
-            )}
-            {showMfaNotice && (
-              <span
-                className="text-warning inline-flex items-start gap-1.5"
-                id="user-role-mfa-requirement"
-                role="note"
-              >
-                <ShieldAlert
-                  aria-hidden="true"
-                  className="mt-0.5 size-3.5 shrink-0"
-                />
-                Double authentification non activée : rôle Administrateur et
-                autorisations critiques indisponibles.
-              </span>
-            )}
-          </>
+          showMfaNotice && (
+            <span
+              className="text-warning inline-flex items-start gap-1.5"
+              id="user-role-mfa-requirement"
+              role="note"
+            >
+              <ShieldAlert
+                aria-hidden="true"
+                className="mt-0.5 size-3.5 shrink-0"
+              />
+              Double authentification non activée : rôle Administrateur et
+              autorisations critiques indisponibles.
+            </span>
+          )
         }
       />
-      {hasChanges && (
-        <div className="border-border-divider space-y-2 border-t px-4 py-3">
-          <Disclosure label="Voir les modifications avant enregistrement">
-            <ul className="space-y-1 py-2 text-xs leading-5">
-              {role !== user.role && (
-                <li>
-                  Rôle : {roleLabel(user.role)} → {roleLabel(role)}
-                </li>
-              )}
-              {changedKeys.map((key) => (
-                <li key={key}>
-                  {getPermissionDisplayLabel(key)} :{' '}
-                  {hasPermission(role, key, permissions)
-                    ? 'autorisé'
-                    : 'refusé'}
-                </li>
-              ))}
-            </ul>
-          </Disclosure>
-        </div>
-      )}
       {hasChanges && (canManagePermissions || canEditRole) && (
-        <SectionActionBar
-          hasChanges={hasChanges}
-          isResolvingConflict={isRefreshing}
-          isSaving={isSaving && !isRefreshing}
-          label="Enregistrement des autorisations"
-          onCancel={handleCancel}
-          onSave={onSave}
-          saveDisabled={!canSave}
-          saveDisabledReason={!canSave ? saveDisabledReason : undefined}
-          details={
-            <>
-              {hasChanges && mutationSummaryLabel && (
-                <p className="text-foreground text-xs">
-                  {mutationSummaryLabel}
-                </p>
-              )}
-            </>
-          }
-        />
+        <div className={workspace ? 'shrink-0 p-3 pt-0' : undefined}>
+          <SectionActionBar
+            placement={workspace ? 'inline' : 'sticky'}
+            hasChanges={hasChanges}
+            isResolvingConflict={isRefreshing}
+            isSaving={isSaving && !isRefreshing}
+            label="Enregistrement des autorisations"
+            onCancel={handleCancel}
+            onSave={onSave}
+            saveDisabled={!canSave}
+            saveDisabledReason={!canSave ? saveDisabledReason : undefined}
+            details={
+              <>
+                {hasChanges && mutationSummaryLabel && (
+                  <p className="text-foreground text-xs">
+                    {mutationSummaryLabel}
+                  </p>
+                )}
+              </>
+            }
+          />
+        </div>
       )}
     </Card>
   );

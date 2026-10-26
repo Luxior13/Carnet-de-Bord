@@ -50,6 +50,11 @@ Références : [liste du Répertoire](../pages/membres/repertoire/liste.md) et
   même ligne lorsque la largeur le permet ; effacer rend le focus au champ.
 - Recherche côté serveur, bornée en longueur, accents et casse normalisés, mots
   d’identité dans n’importe quel ordre lorsque le module le prend en charge.
+- Une recherche locale dans un éditeur (autorisations) suit le même esprit :
+  chaque mot tapé doit apparaître, dans n’importe quel ordre ; petits mots
+  (« de », « la », « les »…) ignorés ; singulier et pluriel équivalents ;
+  libellé, rubrique, description, page et pôle consultés. Jamais une phrase
+  exacte (décision du 26 octobre 2026).
 - Critères dans l’URL ; un changement de critère repart au début de la liste.
   Les filtres actifs restent visibles : bouton enfoncé pour un filtre rapide,
   valeur affichée pour un menu. La réinitialisation rend le focus à la

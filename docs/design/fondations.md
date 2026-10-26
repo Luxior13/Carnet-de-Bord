@@ -310,14 +310,13 @@ historiques ; cette ancienne échelle ne remplace pas les règles courantes.
   désormais la variante par défaut, alignée sur les autres champs. Adapter
   seulement la largeur à la composition (220 px dans les filtres desktop,
   largeur du champ dans la fiche), sans recopier la présentation des primitives.
-- Dans l'onglet Autorisations des Utilisateurs, le rôle, le pôle et la page ou
-  fonction partagent la barre de filtres en variante **compacte** (décision du
-  18 octobre 2026, qui remplace le rôle à 40/44 px). Chaque autorisation est une
-  carte autonome (`surface-row-alternate`, `border-content`, rayon 8 px, 8 px
-  d’écart), sans alternance ; actions alignées lorsque la largeur du composant
-  le permet, puis empilées. Les libellés Autoriser/Refuser restent visibles sur
-  mobile. Une autorisation refusée n'impose pas un fond rouge à toute sa ligne ;
-  la couleur signale le choix, le risque ou un prérequis manquant.
+- Dans l'onglet Autorisations des Utilisateurs, le rôle a sa propre ligne en
+  variante **compacte** et le pôle et la page se choisissent dans la navigation
+  de l'éditeur (26 octobre 2026, qui remplace les menus du 18 octobre). Chaque
+  autorisation est une carte autonome sur une ligne (`surface-row-alternate`,
+  `border-content`, rayon 8 px, 8 px d’écart), sans alternance, avec un
+  interrupteur au bord droit. L'état non accordé est neutre ; le rouge est
+  réservé à la pastille « Critique », l'ambre au prérequis manquant.
 - Les compositions de référence définissent aussi des dimensions ciblées :
   bandeau et carte de liste à 10 px, contrôles du module `directory` à 6 px,
   infobulle à 7 px, case à cocher à 4 px et flèche d'infobulle à 2 px.
@@ -357,6 +356,12 @@ Les fenêtres standard plafonnent leur hauteur selon l'espace disponible et
 défilent verticalement. Ne pas leur imposer `overflow-hidden`, sauf avec un
 corps interne explicitement défilable, comme les formulaires de personne.
 Les en-têtes de dialogue réservent la place du bouton de fermeture.
+
+Toute zone qui défile à l’intérieur d’une page (barre latérale, colonnes de
+l’éditeur d’autorisations) prend la classe commune `thin-scrollbar` de
+`globals.css` : barre fine, pouce `--scrollbar-thumb` / `--scrollbar-thumb-hover`,
+couleurs du système avec `prefers-contrast`. Le défilement reste natif (clavier,
+molette, lecteurs d’écran) ; pas de barre simulée (décision du 26 octobre 2026).
 
 Depuis la revue transverse du 11 octobre 2026, `DialogContent` et
 `AlertDialogContent` utilisent `surface-panel`, `border-content` et un rayon de

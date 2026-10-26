@@ -67,6 +67,23 @@ PageShell · PageCanvas (EntityDetailLayout ou composition équivalente)
   d’écran).
 - Les réglages répétitifs (autorisations) sont des cartes compactes avec aide
   en popover ; les conséquences critiques restent visibles.
+- Les volets d’une section se choisissent dans l’en-tête de sa carte, pas dans
+  une barre isolée ; ils partagent en-tête et lignes (26 octobre 2026).
+- Exception à « pas de rail » : un éditeur dont les réglages se comptent par
+  dizaines sur plusieurs pôles (autorisations) a une **navigation** à gauche
+  (recherche sur tous les pôles, menu déroulant « Pôle », pages de ce pôle avec
+  compteur) et le détail à droite ; les filtres « Toutes / Accordées » sont dans
+  l’en-tête de la carte, tenu sur une ligne. Une colonne de navigation suit
+  toujours ce qu’affiche le détail : un filtre restreint ses menus et listes à
+  ce qu’il retient ; une recherche sur tous les pôles la transforme en
+  sommaire des résultats. Sur ordinateur (au moins 1 024 px de large et deux
+  colonnes, portables compris), la carte occupe le reste de l’écran : la page ne défile plus,
+  l’en-tête reste visible, chaque colonne défile seule et la barre
+  d’enregistrement est ancrée en bas de la carte. Si la place restante tombe
+  sous 300 px (fenêtre très basse, zoom fort), la navigation est collante et le contenu garde le défilement de la page. Sur
+  une largeur réduite, la liste puis la page, avec
+  « Toutes les pages ». Ce n’est pas une synthèse : elle ne répète aucune
+  donnée du contenu (décision du 26 octobre 2026).
 - La suppression vit dans sa section (Sécurité, Identité) avec
   `EntityDangerZone` ou une carte dédiée, toujours intitulée « Zone dangereuse »
   avec la même icône et le même en-tête teinté.

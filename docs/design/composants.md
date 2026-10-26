@@ -262,6 +262,13 @@ structure restent adaptées au contenu de chaque écran.
 
 ## Onglets et rails
 
+- **Volets d’une section** (décision du 26 octobre 2026) : quand une section a
+  deux ou trois volets sans URL propre, leur bascule est un groupe compact
+  (`aria-pressed`, fond `surface-inset`, volet actif en
+  `surface-navigation-active`) placé dans l’en-tête de la carte qu’elle
+  contrôle, avec l’état ou le réglage principal à droite. Jamais une barre
+  isolée entre la barre de sections et le contenu. Référence :
+  `AuthorizationsHeader`.
 - **Navigation entre sections** : toute barre horizontale de navigation entre
   sections disposant de leur propre URL utilise `PageSectionNavigation`,
   directement ou via `EntityDetailLayout`, sur les pages actuelles et futures

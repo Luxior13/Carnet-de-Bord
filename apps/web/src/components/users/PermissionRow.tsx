@@ -1,7 +1,6 @@
 'use client';
 
 import { type UserRole } from '@repo/shared';
-import { Info } from 'lucide-react';
 import React, { type FC } from 'react';
 
 import {
@@ -9,10 +8,7 @@ import {
   hasCompleteAccessByRole,
   type PermissionItem,
 } from '$constants/permissions.constants';
-import { Badge } from '$ui/badge';
-import { Button } from '$ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '$ui/popover';
-import { cn } from '$utils/css.utils';
+import { StatusBadge } from '$ui/status-badge';
 
 import {
   type PermissionChoiceState,
@@ -22,11 +18,13 @@ import {
   buildPermissionEditorState,
   getMissingPermissionDependencies,
 } from './permission-editor-view';
+import { PermissionInfoButton } from './PermissionInfoButton';
 import styles from './PermissionsEditor.module.css';
-import { PermissionStatePicker } from './PermissionStatePicker';
+import { PermissionSwitch } from './PermissionSwitch';
 import { RoleBoundPermissionStatus } from './RoleBoundPermissionStatus';
 
 type PermissionRowProps = {
+  /** Access permission of the row's page; its absence dims the row. */
   accessKey?: string;
   disabled: boolean;
   getDecision: (
@@ -40,6 +38,11 @@ type PermissionRowProps = {
   state: ReturnType<typeof buildPermissionEditorState>;
 };
 
+/**
+ * One permission on one line: label, details popover, « Critique » when it
+ * applies, and its switch. Only the exception carries a risk label; the page
+ * access row leads its page and explains what it unlocks.
+ */
 export const PermissionRow: FC<PermissionRowProps> = ({
   accessKey,
   disabled,
@@ -58,27 +61,18 @@ export const PermissionRow: FC<PermissionRowProps> = ({
     state.configured,
     state.effective,
   );
-  const pageBlocked = accessKey !== undefined && missing.includes(accessKey);
-  const status = usable
-    ? isPageAccess
-      ? 'Page accessible'
-      : 'Autorisé'
-    : missing.length > 0
-      ? pageBlocked
-        ? 'Page inaccessible'
-        : 'Prérequis manquant'
-      : isPageAccess
-        ? 'Page inaccessible'
-        : 'Refusé';
-  const showStatus =
-    isPageAccess || (disabled && !providedByRole) || missing.length > 0;
-  const showMeta = showStatus || permission.risk !== 'default';
+  const pageBlocked =
+    !isPageAccess &&
+    accessKey !== undefined &&
+    accessKey !== permission.key &&
+    !(state.effective.get(accessKey) ?? false);
   const dependencies = permission.dependencies ?? [];
   const Heading = isPageAccess ? 'h4' : 'h5';
 
   return (
     <div
       className={isPageAccess ? styles.pageAccess : styles.row}
+      data-blocked={pageBlocked}
       data-incomplete={missing.length > 0}
       data-permission={permission.key}
     >
@@ -87,81 +81,27 @@ export const PermissionRow: FC<PermissionRowProps> = ({
           <Heading className="text-foreground min-w-0 text-sm font-semibold">
             {permission.label}
           </Heading>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className={styles.infoTrigger}
-                aria-label={`Détails : ${permission.label}`}
-              >
-                <Info className="size-4" aria-hidden="true" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              align="start"
-              aria-label={`Détails : ${permission.label}`}
-              className="w-80 space-y-3 p-3 text-xs leading-5"
-              collisionPadding={12}
-            >
-              <p className="text-foreground text-sm font-semibold">
-                {permission.label}
-              </p>
-              <p className="text-muted-foreground">{permission.description}</p>
-              {isPageAccess && usable && (
-                <p className="text-muted-foreground">
-                  Les actions de cette page restent soumises à leurs propres
-                  autorisations.
-                </p>
-              )}
-              {dependencies.length > 0 && (
-                <p className={styles.popoverFootnote}>
+          <PermissionInfoButton
+            description={permission.description}
+            footnote={
+              dependencies.length > 0 && (
+                <>
                   <span className="text-muted-foreground">Prérequis : </span>
                   {dependencies.map(getPermissionDisplayLabel).join(', ')}
-                </p>
-              )}
-            </PopoverContent>
-          </Popover>
+                </>
+              )
+            }
+            label={permission.label}
+          />
+          {permission.risk === 'critical' && (
+            <StatusBadge tone="danger">Critique</StatusBadge>
+          )}
         </div>
-        {showMeta && (
-          <div className={styles.rowMeta}>
-            {showStatus && (
-              <Badge
-                variant="outline"
-                className={cn(
-                  'text-xs',
-                  usable
-                    ? 'border-success/35 text-success'
-                    : missing.length
-                      ? 'border-warning/40 text-warning'
-                      : 'text-muted-foreground',
-                )}
-              >
-                {status}
-              </Badge>
-            )}
-            {permission.risk !== 'default' && (
-              <span
-                className={
-                  permission.risk === 'critical'
-                    ? 'text-destructive'
-                    : undefined
-                }
-              >
-                {permission.risk === 'critical' ? 'Critique' : 'Sensible'}
-              </span>
-            )}
-          </div>
-        )}
-        {permission.risk === 'critical' && (
+        {isPageAccess && (
           <p className="text-muted-foreground text-xs leading-5">
-            {permission.description}
-          </p>
-        )}
-        {isPageAccess && !usable && (
-          <p className="text-muted-foreground text-xs leading-5">
-            Les actions de cette page restent bloquées sans cet accès.
+            {usable
+              ? 'Page accessible. Chaque action ci-dessous reste soumise à sa propre autorisation.'
+              : 'Sans cet accès, les actions de cette page restent bloquées.'}
           </p>
         )}
         {missing.length > 0 && (
@@ -175,9 +115,12 @@ export const PermissionRow: FC<PermissionRowProps> = ({
         {providedByRole ? (
           <RoleBoundPermissionStatus isEnabled={usable} role={role} />
         ) : disabled ? (
-          <span className="text-muted-foreground text-xs">Lecture seule</span>
+          // Read-only: the state stays readable without an inert control.
+          <StatusBadge tone={configured ? 'success' : 'muted'}>
+            {configured ? 'Accordée' : 'Non accordée'}
+          </StatusBadge>
         ) : (
-          <PermissionStatePicker
+          <PermissionSwitch
             allowDecision={getDecision(permission.key, 'allow')}
             denyDecision={getDecision(permission.key, 'deny')}
             permissionLabel={permission.label}

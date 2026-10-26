@@ -10,8 +10,8 @@
 | Section | `?section=access` (alias `permissions`) ; volet Compte personnel inclus |
 | Espace | Système |
 | Gabarit visé | [B. Fiche à sections](../../../design/gabarits.md#b-fiche-à-sections) |
-| État d’harmonisation | Aligné ; une carte par autorisation et popover d’aide depuis le 18 octobre 2026 — voir [Harmonisation](../../../design/harmonisation.md#état-par-page) |
-| Point d’entrée | [UserAccessTab](../../../../apps/web/src/components/users/user-detail/UserAccessTab.tsx) → [PermissionsEditor](../../../../apps/web/src/components/users/PermissionsEditor.tsx) |
+| État d’harmonisation | Aligné ; navigation par pôle et page, interrupteurs, depuis le 26 octobre 2026 — voir [Harmonisation](../../../design/harmonisation.md#état-par-page) |
+| Point d’entrée | [UserAuthorizationsSection](../../../../apps/web/src/components/users/user-detail/UserAuthorizationsSection.tsx) avec [AuthorizationsHeader](../../../../apps/web/src/components/users/AuthorizationsHeader.tsx) ; [UserAccessTab](../../../../apps/web/src/components/users/user-detail/UserAccessTab.tsx) → [PermissionsEditor](../../../../apps/web/src/components/users/PermissionsEditor.tsx), [PermissionNavigation](../../../../apps/web/src/components/users/PermissionNavigation.tsx), [PermissionRow](../../../../apps/web/src/components/users/PermissionRow.tsx), [PermissionSwitch](../../../../apps/web/src/components/users/PermissionSwitch.tsx) |
 | Contrôle d’accès | Lecture `users:view_access` ou du compte personnel ; écriture selon le rôle et les droits `users:grant_access`, `users:revoke_access`, `users:delegate_access`, contrôlée par `PATCH /api/users/[id]` |
 | Chargement / erreur dédiés | section chargée à la demande / commune à la fiche |
 
@@ -24,15 +24,94 @@ l’enregistrement et aucune autorisation incohérente n’est enregistrée.
 
 ## Composition actuelle
 
-Barre de filtres commune (Rôle, Pôle, Page ou fonction, variante compacte avec
-icônes de navigation), ligne d’aide du rôle ; rubriques en petites capitales ;
-une carte par autorisation (titre, choix Autoriser/Refuser, état hérité ou
-personnalisé) ; bouton d’information ouvrant un `Popover` (description, origine,
-valeur du rôle, accès effectif, prérequis) ; volet Compte personnel ; barre
-commune avec récapitulatif avant enregistrement.
+En-tête de la carte, sur une ligne : bascule « Administration / Compte
+personnel » (si l’acteur voit les deux, point ambre sur un volet modifié),
+« X sur Y utilisables » avec la règle des prérequis dans une aide (i), filtres
+« Toutes / Accordées », rôle à droite (à gauche en largeur étroite ; s’il est
+verrouillé, cadenas avec infobulle « Seul le superadmin peut changer le
+rôle. ») ; l’avis de double authentification forme une seconde ligne ; à gauche, navigation : recherche
+sur tous les pôles (chaque mot dans n’importe quel ordre, petits mots ignorés,
+singulier et pluriel équivalents ; libellé, rubrique, description, page et
+pôle consultés), menu déroulant « Pôle » (icône et compteur), puis les
+seules pages de ce pôle avec compteur (vert si utilisable, ambre si à
+compléter) ; choisir un pôle ouvre sa première page ; « Accordées » limite le menu et les
+pages à ceux qui ont une autorisation accordée et la page à ses autorisations
+accordées (« Tout retirer » à côté de « Retirer cette page ») ; pendant une
+recherche, la colonne devient le sommaire « Pages concernées » (pôles et pages
+ayant des résultats, avec leur nombre), un clic amenant au groupe à droite,
+titre focalisé ; colonnes à barre de
+défilement fine ; à droite, la page choisie (titre, « X/Y utilisables », « Retirer
+cette page »), sa carte d’accès en tête, puis ses rubriques en petites
+capitales et une carte par autorisation sur une ligne (titre, `Popover` de
+détails, « Critique » s’il y a lieu, interrupteur). Une action sans l’accès à
+sa page est estompée mais reste réglable. Recherche et « Accordées » listent
+les résultats par « Pôle · Page » ; « Tout retirer » vit dans « Accordées ».
+En deux colonnes, la navigation reste collante sous la barre des sections
+pendant le défilement (son propre défilement seulement si elle dépasse
+l’écran). Sous 44rem de largeur d’éditeur : la liste puis la page, avec
+« Toutes les pages », le focus suivant la vue affichée. Volet Compte personnel : même en-tête (état « Lecture seule » à droite,
+explication), rubrique « Réglable » (interrupteur, « Exception personnalisée »
+quand elle s’écarte du rôle) et rubrique « Toujours disponible » affichée,
+une ligne par droit avec un cadenas ; même ligne et même popover que
+l’éditeur. Barre commune dont le résumé dit le changement (« rôle modifié »,
+« 3 attributions », « 1 retrait », changements de délégation) ; plus de liste
+dépliable « Voir les modifications avant enregistrement » depuis le
+26 octobre 2026 (« ça sert à rien », propriétaire).
 
 ## Décisions retenues
 
+- **26 octobre 2026 — finitions demandées par le propriétaire.** Barre de
+  défilement fine commune (`thin-scrollbar`) ; en-tête tenu sur une ligne
+  pour laisser la hauteur aux listes, la règle des prérequis passant dans une
+  aide (i) ; menu déroulant des pôles et pages du seul pôle choisi, la
+  recherche couvrant toujours tous les pôles ; filtres « Toutes / Accordées »
+  dans l’en-tête ; rôle verrouillé signalé par un cadenas avec infobulle
+  (raison aussi lue par les lecteurs d’écran). Preuves : 1 246 tests web ;
+  banc client 52/52 (menu des pôles, recherche globale depuis un autre pôle) ;
+  captures relues. Non exercé au banc : le cadenas du rôle vu par un
+  administrateur non superadmin.
+- **26 octobre 2026 — carte en pleine hauteur sur ordinateur** (« ok go »).
+  À partir de 1 024 px de large et d’une carte d’au moins 44rem, si la place
+  restante atteint 300 px (seuil de 700 px de haut retiré le même jour : un
+  portable de 1 366 × 650 gardait le défilement, signalé par le propriétaire),
+  `useWorkspaceHeight` donne à la carte la hauteur restante de la zone de
+  défilement : la page ne défile plus, l’en-tête (volets, rôle) reste visible,
+  la navigation et la page défilent chacune dans leur colonne (zone « Autorisations
+  affichées » atteignable au clavier) et la barre d’enregistrement est ancrée
+  en bas de la carte ; l’autorisation actionnée reste visible quand la barre
+  apparaît, et une autre page s’ouvre en haut de sa colonne. Écran plus bas ou
+  plus étroit : navigation collante et défilement de page. Compte personnel
+  garde sa hauteur naturelle. Preuves : banc client 52/52 (scénarios
+  `permissions-workspace-columns-scroll` et
+  `permissions-low-screen-keeps-page-scroll`), captures relues. Non vérifié :
+  rendu dans la vraie mise en page connectée (zone `#main-content`).
+- **26 octobre 2026 — navigation et volets repris** (« la sensation de
+  navigation doit être réfléchie et refaite au mieux » ; « la barre seule je
+  n’aime pas, ça doit être dans l’en-tête de la section »). Analyse : cinq
+  défauts — bascule flottante entre la barre de sections et la carte ; deux
+  volets aux en-têtes et lignes différents ; droits essentiels cachés dans un
+  dépliage (contraire à la règle « aide en popover, jamais un dépliage ») ;
+  nouvelle page restée défilée au milieu ; sur téléphone, bascule sur deux
+  lignes avant le contenu. Corrections : `AuthorizationsHeader` commun
+  (contexte fourni par la section), `PermissionInfoButton` partagé, droits
+  essentiels affichés, retour au début de la page choisie en deux colonnes.
+  Preuves : 1 246 tests web ; banc client 51/51 ; captures des deux volets
+  relues de 320 à 1 920 px.
+- **26 octobre 2026 — éditeur pour beaucoup de pages et de pôles** (avis
+  demandé par le propriétaire, contrainte : bien plus de pages sur plus de
+  pôles ; maquette avant / après validée, « ok go »). Navigation par pôle et
+  page avec compteurs, recherche et filtre « Accordées » ; rôle séparé des
+  filtres d’affichage ; interrupteur au lieu de « Autoriser / Refuser » (le
+  « Refuser » rouge de l’état par défaut contredisait la règle des couleurs
+  d’alerte) ; « Sensible » retiré, « Critique » seul ; actions estompées sans
+  l’accès à leur page. En lecture seule, une pastille « Accordée » ou « Non
+  accordée » remplace l’interrupteur. Les modèles de rôle viendront avec les
+  affectations métier (REV-15). Preuves : 1 246 tests web, dont
+  `permission-editor-navigation.test.ts` ; banc client 50/50 (scénario
+  téléphone liste → page → retour, recherche, « Accordées ») ; captures
+  relues de 320 à 1 920 px. Complément du même jour, à la demande du
+  propriétaire : navigation collante plutôt que deux zones de défilement
+  (scénario `permissions-navigation-stays-in-view`, en échec sans la règle).
 - **25 octobre 2026 — enregistrer sans déconnecter** (retour du propriétaire :
   devoir recharger la fiche et faire reconnecter l'utilisateur à chaque
   changement « est très gênant », puis « ok go »). Enregistrer des autorisations
@@ -59,7 +138,24 @@ commune avec récapitulatif avant enregistrement.
 
 ## Points ouverts
 
-- **Revue du 26 octobre 2026, proposition en attente de décision.** Contrainte
+- **Section fixe avec défilement par colonne — question du propriétaire du
+  26 octobre 2026, d’abord non retenue, puis livrée pour l’ordinateur (voir
+  les décisions retenues).** Elle donnerait un ressenti d’application, mais : la bande
+  d’identité et la barre de sections ne laissent qu’environ 450 px utiles sur un
+  portable ; les sections Profil et Sécurité de la même fiche garderaient le
+  défilement de page (deux modèles dans une fiche) ; sur téléphone il faudrait
+  revenir au défilement de page ; deux zones à la molette et au clavier et une
+  barre d’enregistrement à loger. La navigation collante, qui défile seule
+  quand elle dépasse l’écran, couvre le besoin avec un seul défilement.
+  **Précision du propriétaire le même jour : sur ordinateur seulement, le
+  téléphone restant libre.** Les objections tombent alors pour l’essentiel ;
+  proposition validée (« ok go ») : sur un écran d’au moins 1 024 px de large, la carte
+  occupe le reste de l’écran, en-tête (volets, rôle) fixe, navigation et page
+  défilant chacune dans leur colonne (zones nommées et atteignables au
+  clavier), barre d’enregistrement ancrée en bas de la carte ; sinon,
+  comportement actuel. Volet Compte personnel à sa hauteur naturelle.
+- **Revue du 26 octobre 2026 — appliquée le même jour** (voir les décisions
+  retenues). Contrainte
   donnée par le propriétaire : il y aura beaucoup plus de pages, sur plus de
   pôles qu’aujourd’hui ; l’éditeur doit tenir cette échelle. Constats :
   « Refuser » allumé en rouge pour l’état par défaut (contraire à la règle des
@@ -69,7 +165,8 @@ commune avec récapitulatif avant enregistrement.
   par pôle et page avec compteurs, recherche et filtre « Accordées », rôle
   séparé, seul « Critique » affiché ; modèles de rôle avec REV-15.
 
-Aucun défaut ouvert consigné. Limites de la passe du 18 octobre : pas de requête
+Aucun défaut ouvert consigné. Non vérifié pour la refonte du 26 octobre :
+session réelle, lecteur d’écran, appareils physiques. Limites de la passe du 18 octobre : pas de requête
 HTTP avec session réelle, de suite PostgreSQL, de lecteur d’écran ni d’appareil
 physique ; 320, 768 et 1920 px non recapturés.
 

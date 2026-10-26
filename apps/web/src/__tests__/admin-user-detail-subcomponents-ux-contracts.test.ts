@@ -35,8 +35,8 @@ const roleBoundPermissionStatusSource = readSourceFile(
 const permissionDecisionButtonSource = readSourceFile(
   '../components/users/PermissionDecisionButton.tsx',
 );
-const permissionStatePickerSource = readSourceFile(
-  '../components/users/PermissionStatePicker.tsx',
+const permissionSwitchSource = readSourceFile(
+  '../components/users/PermissionSwitch.tsx',
 );
 const userAccessSource = readSourceFile(
   '../components/users/user-detail/UserAccessTab.tsx',
@@ -94,10 +94,14 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(profileSource).toContain('<SectionActionBar');
   });
 
-  it('keeps account autonomy compact, direct and progressively disclosed', () => {
-    expect(accountSource).toContain('<Disclosure');
+  it('keeps account autonomy compact, direct and in the shared header and rows', () => {
+    // 26 October 2026: the view switch lives in the card header and the
+    // essential rights are shown, not folded (help goes in popovers).
+    expect(accountSource).not.toContain('<Disclosure');
+    expect(accountSource).toContain('<AuthorizationsHeader');
+    expect(accountSource).toContain('PermissionInfoButton');
     expect(accountSource).toContain('Autonomie du compte');
-    expect(accountSource).toContain('Voir les droits essentiels');
+    expect(accountSource).toContain('Toujours disponible');
     expect(accountSource).toContain('aria-label="Options configurables"');
     expect(accountSource).not.toContain('account-autonomy-options-title');
     expect(accountSource).toContain('Valeur héritée du rôle');
@@ -124,9 +128,12 @@ describe('administrative user detail subcomponent UX contracts', () => {
       'canManagePermissions && (hasChanges || hasConfigurableOverrides)',
     );
     expect(accountSource).not.toContain('sticky bottom-3');
+    // The configurable choices come before the rights always available.
     expect(
       accountSource.indexOf('CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map'),
-    ).toBeLessThan(accountSource.indexOf('<Disclosure'));
+    ).toBeLessThan(
+      accountSource.indexOf('ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map'),
+    );
   });
 
   it('focuses security on modules and confirms individual session revocation', () => {
@@ -204,15 +211,17 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(permissionsSource).toContain('roleControl');
     expect(permissionsSource).not.toContain('pages accessibles');
     const rowSource = readSourceFile('../components/users/PermissionRow.tsx');
-    expect(rowSource).toContain('Détails : ');
-    expect(rowSource).toContain('PopoverContent');
+    const infoSource = readSourceFile(
+      '../components/users/PermissionInfoButton.tsx',
+    );
+    expect(rowSource).toContain('<PermissionInfoButton');
+    expect(infoSource).toContain('Détails : ');
+    expect(infoSource).toContain('PopoverContent');
     expect(rowSource).toContain('getMissingPermissionDependencies');
     expect(rowSource).toContain('permission.dependencies');
     expect(rowSource).toContain('hasCompleteAccessByRole(role)');
     expect(rowSource).not.toContain('Hérité du rôle');
-    expect(permissionsSource).toContain(
-      "selectedCategory.assignment === 'role-bound'",
-    );
+    expect(permissionsSource).toContain("category.assignment === 'role-bound'");
     expect(permissionsSource).toContain('isPageAccess');
     expect(rowSource).toContain('permission.grantable');
     expect(roleBoundPermissionStatusSource).toContain(
@@ -225,10 +234,9 @@ describe('administrative user detail subcomponent UX contracts', () => {
   });
 
   it('keeps denied permission controls keyboard-explainable', () => {
-    expect(permissionStatePickerSource).toContain('aria-describedby');
-    expect(permissionStatePickerSource).toContain(
-      'tabIndex={decision.allowed ? undefined : 0}',
-    );
+    expect(permissionSwitchSource).toContain('aria-describedby');
+    expect(permissionSwitchSource).toContain('aria-disabled="true"');
+    expect(permissionSwitchSource).toContain('tabIndex={0}');
     expect(permissionDecisionButtonSource).toContain(
       'tabIndex={exposeDisabledReason ? 0 : undefined}',
     );

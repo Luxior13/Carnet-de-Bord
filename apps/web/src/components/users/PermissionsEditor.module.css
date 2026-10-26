@@ -3,23 +3,209 @@
   min-width: 0;
 }
 
-.filters {
-  display: grid;
-  gap: 12px;
-  padding: 16px;
+/*
+ * Header of the Autorisations card: view switch on the left, role or state on
+ * the right, explanation below. The role changes the account, the navigation
+ * only the view, so they never share a filter bar.
+ */
+.roleBar {
+  container-type: inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 16px;
   background: var(--surface-content-header);
   border-bottom: 1px solid var(--border-divider);
 }
 
-.filtersNote {
+.headerStart {
+  flex: 0 1 20rem;
+  min-width: 0;
+}
+
+.headerSummary {
   display: flex;
+  flex: 1 1 12rem;
   flex-wrap: wrap;
-  grid-column: 1 / -1;
   align-items: center;
+  min-width: 0;
+  gap: 2px 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.viewSwitch {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--shape-control);
+  background: var(--surface-inset);
+}
+
+.viewButton {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 36px;
+  height: auto;
+  border-radius: var(--shape-compact);
+  color: var(--text-muted);
+  font-weight: 500;
+  white-space: normal;
+}
+
+.viewButton[aria-pressed='true'] {
+  color: var(--text-primary);
+  background: var(--surface-navigation-active);
+}
+
+.roleControl {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.roleNote {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  min-width: 0;
   gap: 4px 8px;
   color: var(--text-muted);
   font-size: 12px;
   line-height: 20px;
+}
+
+/* Narrow header: the role follows the switch on the left, not floating right. */
+@container (max-width: 34rem) {
+  .roleControl {
+    margin-left: 0;
+  }
+}
+
+/* Narrow: the page list and the selected page take turns. */
+.body {
+  min-width: 0;
+}
+
+.navigationPane,
+.detailPane {
+  min-width: 0;
+  padding: 16px;
+}
+
+/*
+ * Computer layout (26 October 2026): the card has a fixed height, the header
+ * stays, and the navigation and the page each scroll on their own.
+ */
+.editor[data-workspace='true'] {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.editor[data-workspace='true'] > .body {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.editor[data-workspace='true'] .navigationPane,
+.editor[data-workspace='true'] .detailPane {
+  position: static;
+  max-height: none;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.editor[data-workspace='true'] .detailPane:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+/* A page brought into view lands under the sticky section bar. */
+.detailPane {
+  scroll-margin-top: 4rem;
+}
+
+.body[data-narrow-view='list'][data-results='false'] .detailPane,
+.body[data-narrow-view='detail'][data-results='false'] .navigationPane,
+.body[data-results='true'] .tree {
+  display: none;
+}
+
+.navigation {
+  display: grid;
+  gap: 12px;
+}
+
+.pageButton {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-start;
+  height: auto;
+  border-radius: var(--shape-control);
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+}
+
+.pageButton {
+  padding-inline: 12px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.pageButton:hover {
+  background: var(--surface-row-alternate);
+}
+
+.pageButton[aria-current='page'] {
+  color: var(--text-primary);
+  font-weight: 500;
+  background: var(--surface-navigation-active);
+}
+
+.indexHeading,
+.indexPole {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 16px;
+  text-transform: uppercase;
+}
+
+.indexHeading {
+  color: var(--text-secondary);
+}
+
+/* A jump from the index lands under the sticky section bar (page scroll). */
+.resultHeading {
+  outline: none;
+  scroll-margin-top: 4rem;
+}
+
+/* In the computer layout the column scrolls itself: no bar to clear. */
+.editor[data-workspace='true'] .resultHeading {
+  scroll-margin-top: 12px;
+}
+
+.backButton {
+  margin-bottom: 12px;
 }
 
 .group {
@@ -51,11 +237,15 @@
   gap: 8px;
 }
 
+/* One permission per line; the control stays on the right edge. */
 .row,
 .pageAccess {
-  display: grid;
-  gap: 10px 16px;
-  padding: 12px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  min-height: 48px;
+  padding: 8px 14px;
   border: 1px solid var(--border-content);
   border-radius: var(--shape-control);
   background: var(--surface-row-alternate);
@@ -67,21 +257,29 @@
   box-shadow: inset 3px 0 var(--warning);
 }
 
+/* Without its page access an action stays settable but reads as blocked. */
+.row[data-blocked='true'] .rowSummary {
+  opacity: 0.6;
+}
+
 .pageAccess {
+  padding-block: 12px;
   border-color: var(--border-list);
   background: var(--surface-content-header);
 }
 
 .rowSummary {
   display: grid;
+  flex: 1 1 12rem;
   min-width: 0;
-  gap: 4px;
+  gap: 2px;
 }
 
 .rowHeading {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
+  gap: 4px 6px;
   min-width: 0;
 }
 
@@ -101,42 +299,15 @@
   background: var(--surface-navigation-active);
 }
 
-.rowMeta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  color: var(--text-secondary);
-  font-size: 12px;
-  line-height: 16px;
-}
-
 .rowControls {
   min-width: 0;
+  margin-left: auto;
 }
 
 .popoverFootnote {
   padding-top: 12px;
   border-top: 1px solid var(--border-divider);
   color: var(--text-primary);
-}
-
-.choices {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  min-width: 0;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--shape-control);
-  background: var(--surface-inset);
-}
-
-.choiceButton {
-  width: 100%;
-  height: 40px;
-  border-radius: var(--shape-compact);
-  padding-inline: 8px;
-  font-size: 12px;
 }
 
 @media (pointer: coarse) {
@@ -146,36 +317,44 @@
   }
 }
 
-@container (min-width: 36rem) {
-  .filters {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+/* Wide: navigation and page side by side, both always shown. */
+@container (min-width: 44rem) {
+  .body {
+    display: grid;
+    grid-template-columns: 17rem minmax(0, 1fr);
   }
 
-  .filters[data-with-role='true'] > :first-child {
-    grid-column: 1 / -1;
+  /*
+   * The navigation stays in view while the page scrolls (owner request of
+   * 26 October 2026): sticky under the section bar (48 px + 16 px), with its
+   * own scroll only when it outgrows the screen. The page keeps one main
+   * scroll for the content and the save bar.
+   */
+  .navigationPane {
+    position: sticky;
+    top: 4rem;
+    align-self: start;
+    max-height: calc(100dvh - 8.5rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
-  .row,
-  .pageAccess {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
+  .detailPane {
+    padding: 20px;
+    border-left: 1px solid var(--border-divider);
   }
 
-  .choices {
-    width: 200px;
+  /* Same specificity as the narrow rules above, and later: wins. */
+  .body[data-narrow-view][data-results] .navigationPane,
+  .body[data-narrow-view][data-results] .detailPane {
+    display: block;
   }
 
-  .choiceButton {
-    height: 32px;
-  }
-}
-
-@container (min-width: 48rem) {
-  .filters[data-with-role='true'] {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .body[data-results='true'] .tree {
+    display: block;
   }
 
-  .filters[data-with-role='true'] > :first-child {
-    grid-column: auto;
+  .backButton {
+    display: none;
   }
 }

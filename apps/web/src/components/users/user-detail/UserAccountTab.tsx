@@ -1,11 +1,13 @@
 'use client';
 
 import { UserRole } from '@repo/shared';
-import { Crown, LockKeyhole, RotateCcw, UserCheck } from 'lucide-react';
+import { Crown, LockKeyhole, RotateCcw } from 'lucide-react';
 import React, { type FC, useMemo, useRef } from 'react';
 
-import { Disclosure } from '$components/layout/Disclosure';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
+import { AuthorizationsHeader } from '$components/users/AuthorizationsHeader';
+import { PermissionInfoButton } from '$components/users/PermissionInfoButton';
+import styles from '$components/users/PermissionsEditor.module.css';
 import {
   ACCOUNT_PERMISSION_CATEGORIES,
   getAccessLabel,
@@ -18,7 +20,8 @@ import {
 import type { UserType } from '$types/auth.types';
 import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
-import { Card, CardContent, CardHeader } from '$ui/card';
+import { Card, CardContent } from '$ui/card';
+import { StatusBadge } from '$ui/status-badge';
 import { Switch } from '$ui/switch';
 
 type UserAccountTabProps = {
@@ -136,6 +139,8 @@ const writePermissionChoice = (
   }
 };
 
+// Same row as the administrative view: title, details popover, state,
+// switch on the right edge (26 October 2026).
 const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   canManagePermissions,
   hasCustomChoice,
@@ -145,46 +150,65 @@ const ConfigurablePermissionRow: FC<ConfigurablePermissionRowProps> = ({
   onChange,
   permission,
 }) => (
-  // The text keeps a readable measure; the switch sits on the right edge.
-  <div className="border-border-divider bg-surface-content rounded-compact flex items-start justify-between gap-4 border p-3">
-    <div className="max-w-3xl min-w-0 space-y-1">
-      <h3 className="text-foreground text-sm font-semibold">
-        {permission.label}
-      </h3>
-      <p
-        id={`account-permission-${permission.key}-description`}
-        className="text-muted-foreground max-w-3xl text-xs leading-5"
-      >
-        {permission.description}
-      </p>
-      <div
-        id={`account-permission-${permission.key}-state`}
-        className="flex min-h-5 items-center"
-      >
-        {hasCustomChoice ? (
-          <Badge variant="secondary" className="h-5 px-2 text-xs">
-            Exception personnalisée
-          </Badge>
-        ) : (
-          <span className="text-muted-foreground text-xs leading-5">
-            Valeur héritée du rôle
-          </span>
-        )}
+  <div className={styles.row} data-permission={permission.key}>
+    <div className={styles.rowSummary}>
+      <div className={styles.rowHeading}>
+        <p className="text-foreground min-w-0 text-sm font-semibold">
+          {permission.label}
+        </p>
+        <PermissionInfoButton
+          description={permission.description}
+          label={permission.label}
+        />
+        <span id={`account-permission-${permission.key}-state`}>
+          {hasCustomChoice ? (
+            <StatusBadge tone="muted">Exception personnalisée</StatusBadge>
+          ) : (
+            <span className="sr-only">Valeur héritée du rôle</span>
+          )}
+        </span>
       </div>
       {missingDependencyLabels.length > 0 && (
-        <p className="text-warning/90 text-xs leading-5">
+        <p className="text-warning text-xs leading-5">
           Prérequis : {missingDependencyLabels.join(', ')}
         </p>
       )}
     </div>
-    <Switch
-      checked={isAllowed}
-      onCheckedChange={onChange}
-      disabled={!canManagePermissions || isSaving}
-      aria-label={permission.label}
-      aria-describedby={`account-permission-${permission.key}-description account-permission-${permission.key}-state`}
-      className="mt-0.5 shrink-0"
-    />
+    <div className={styles.rowControls}>
+      <Switch
+        checked={isAllowed}
+        onCheckedChange={onChange}
+        disabled={!canManagePermissions || isSaving}
+        aria-label={permission.label}
+        aria-describedby={`account-permission-${permission.key}-state`}
+      />
+    </div>
+  </div>
+);
+
+const EssentialPermissionRow: FC<{ permission: PermissionItem }> = ({
+  permission,
+}) => (
+  <div className={styles.row} data-permission={permission.key}>
+    <div className={styles.rowSummary}>
+      <div className={styles.rowHeading}>
+        <p className="text-foreground min-w-0 text-sm font-semibold">
+          {permission.label}
+        </p>
+        <PermissionInfoButton
+          description={permission.description}
+          label={permission.label}
+        />
+      </div>
+    </div>
+    <div className={styles.rowControls}>
+      {/* The rubric already says it; the lock alone keeps rows on one line. */}
+      <LockKeyhole
+        aria-hidden="true"
+        className="text-muted-foreground size-4"
+      />
+      <span className="sr-only">Toujours disponible</span>
+    </div>
   </div>
 );
 
@@ -284,6 +308,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
   if (user.isProtected) {
     return (
       <Card>
+        <AuthorizationsHeader />
         <CardContent className="space-y-4 p-4">
           <div className="flex min-w-0 items-start gap-3">
             <span className="border-warning/35 bg-warning/10 text-warning flex size-11 shrink-0 items-center justify-center rounded-lg border">
@@ -314,36 +339,31 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
 
   return (
     <Card ref={cardRef} role="region" aria-labelledby="account-autonomy-title">
-      <CardHeader className="p-3.5 sm:p-4">
-        <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 items-start gap-3">
-            <span className="text-muted-foreground flex size-8 shrink-0 items-center justify-center">
-              <UserCheck className="size-5" />
-            </span>
-            <div className="min-w-0">
-              <h2
-                className="text-foreground text-sm font-semibold"
-                id="account-autonomy-title"
-                tabIndex={-1}
-              >
-                Autonomie du compte
-              </h2>
-              <p className="text-muted-foreground mt-1 max-w-3xl text-sm leading-6">
-                Définissez ce que cet utilisateur peut modifier lui-même depuis
-                Mon compte.
-              </p>
-            </div>
-          </div>
-          {!canManagePermissions && (
+      <AuthorizationsHeader
+        aside={
+          !canManagePermissions && (
             <Badge className="w-fit shrink-0" variant="secondary">
               Lecture seule
             </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3 p-3 sm:p-4">
-        <section aria-label="Options configurables">
-          <div className="space-y-2">
+          )
+        }
+        summary={
+          <>
+            <h2 className="sr-only" id="account-autonomy-title" tabIndex={-1}>
+              Autonomie du compte
+            </h2>
+            <span>Ce qu’il peut faire depuis Mon compte</span>
+            <PermissionInfoButton
+              description="Ce que cet utilisateur peut faire lui-même depuis Mon compte. Une exception remplace la valeur de son rôle ; « Réinitialiser au rôle » la retire."
+              label="Autonomie du compte"
+            />
+          </>
+        }
+      />
+      <CardContent className="space-y-4 p-4 sm:p-5">
+        <section aria-label="Options configurables" className={styles.group}>
+          <h3 className={styles.groupHeading}>Réglable</h3>
+          <div className={styles.rows}>
             {CONFIGURABLE_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
               <ConfigurablePermissionRow
                 key={permission.key}
@@ -369,29 +389,18 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
             ))}
           </div>
         </section>
-
-        <Disclosure
-          label="Voir les droits essentiels"
-          icon={<LockKeyhole className="size-3.5" />}
-        >
-          <div className="border-border/55 bg-surface-muted/50 mt-2 rounded-lg border p-3">
-            <p className="text-muted-foreground text-xs leading-5">
-              Ces actions restent disponibles et ne peuvent pas être retirées.
-            </p>
-            <ul className="mt-3 grid gap-x-6 gap-y-3 sm:grid-cols-2">
-              {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
-                <li key={permission.key} className="min-w-0">
-                  <p className="text-foreground text-sm font-medium">
-                    {permission.label}
-                  </p>
-                  <p className="text-muted-foreground mt-0.5 text-xs leading-5">
-                    {permission.description}
-                  </p>
-                </li>
-              ))}
-            </ul>
+        {/* Shown, not folded: help goes in popovers, never in a disclosure. */}
+        <section aria-label="Droits essentiels" className={styles.group}>
+          <h3 className={styles.groupHeading}>Toujours disponible</h3>
+          <div className={styles.rows}>
+            {ESSENTIAL_ACCOUNT_PERMISSION_ITEMS.map((permission) => (
+              <EssentialPermissionRow
+                key={permission.key}
+                permission={permission}
+              />
+            ))}
           </div>
-        </Disclosure>
+        </section>
       </CardContent>
       {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (
         <SectionActionBar
