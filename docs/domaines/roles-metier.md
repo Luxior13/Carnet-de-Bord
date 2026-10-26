@@ -75,6 +75,18 @@ La file globale rassemble les demandes accessibles, mais le module propriétaire
 
 Définir selon le risque les règles d’auto-approbation, les seuils, le second regard, les délégations temporaires, leur révocation et leur audit. Les droits de délégation eux-mêmes sont vérifiés par le serveur ; un modèle de rôle ne contourne pas les règles existantes.
 
+**Délégation de la gestion des accès — orientation proposée le 26 octobre 2026, non décidée.**
+Aujourd’hui, `users:grant_access` / `users:revoke_access`, attribués par le seul
+superadmin (`users:delegate_access`), permettent à un utilisateur de donner,
+sur toute la structure, les autorisations qu’il détient lui-même. À terme, la
+délégation devient **par portée** : un responsable attribue des **modèles de
+rôle** à l’intérieur de son équipe ou de son entité, pour une période, jamais
+au-delà de ce qu’il détient ; certains droits ne se délèguent pas
+(administrateurs, délégation elle-même, finances validées, données de
+mineurs) ; chaque délégation est datée, auditée, révocable et revue
+périodiquement. Le mécanisme global actuel reste en place, inactif tant que
+personne ne le reçoit, et se transforme avec les affectations datées (REV-15).
+
 Les sorties de structure prévoient le retrait des accès, les tâches de restitution et la conservation des traces nécessaires. Les dossiers sensibles ne deviennent pas visibles par une notification trop détaillée.
 
 ## Ouverture progressive

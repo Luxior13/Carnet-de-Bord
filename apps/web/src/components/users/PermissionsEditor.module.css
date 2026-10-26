@@ -299,6 +299,22 @@
   background: var(--surface-navigation-active);
 }
 
+.blockedReason,
+.cascadeNotice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+/* What a change also did elsewhere, shown under the switch just used. */
+.cascadeNotice {
+  color: var(--text-secondary);
+}
+
 .rowControls {
   min-width: 0;
   margin-left: auto;

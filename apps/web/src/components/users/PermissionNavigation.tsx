@@ -35,9 +35,11 @@ export type PermissionResultGroup = {
 };
 
 type PermissionNavigationProps = {
+  changedPermissionKeys?: ReadonlySet<string>;
   countCategory: (
     category: PermissionEditorCategory,
   ) => PermissionCategoryResult;
+  /** Unsaved changes: a dot on the pages and poles they belong to. */
   isPageListed?: (category: PermissionEditorCategory) => boolean;
   /** « Accordées »: only the poles and pages holding a granted permission. */
   onJumpToResult: (pageKey: string) => void;
@@ -63,6 +65,14 @@ const countClassName = (
     : result.ready > 0
       ? 'text-success'
       : 'text-muted-foreground';
+
+const ChangedDot: FC = () => (
+  <span
+    aria-label="Modifications non enregistrées"
+    className="bg-warning size-1.5 shrink-0 rounded-full"
+    role="img"
+  />
+);
 
 /** Visible « 3/7 », read as « 3 sur 7 utilisables ». */
 const UsableCount: FC<{
@@ -116,6 +126,7 @@ export const PermissionListFilters: FC<{
  * decisions of 26 October 2026).
  */
 export const PermissionNavigation: FC<PermissionNavigationProps> = ({
+  changedPermissionKeys,
   countCategory,
   isPageListed,
   onJumpToResult,
@@ -127,6 +138,9 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
   selectedPageKey,
 }) => {
   const poleSelectId = useId();
+  const isChanged = (category: PermissionEditorCategory): boolean =>
+    !!changedPermissionKeys &&
+    category.permissions.some((item) => changedPermissionKeys.has(item.key));
   // The pole follows the selected page: one source of truth, kept in the URL.
   const listedPoles = PERMISSION_EDITOR_POLES.map((pole) => ({
     ...pole,
@@ -245,6 +259,7 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
                       <SelectItem key={pole.key} value={pole.key}>
                         <PoleIcon aria-hidden="true" />
                         <span className="flex-1">{pole.label}</span>
+                        {pole.categories.some(isChanged) && <ChangedDot />}
                         <UsableCount result={countPole(pole)} />
                       </SelectItem>
                     );
@@ -272,6 +287,7 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
                       <span className="min-w-0 flex-1 truncate">
                         {category.label}
                       </span>
+                      {isChanged(category) && <ChangedDot />}
                       <UsableCount result={countCategory(category)} />
                     </Button>
                   </li>

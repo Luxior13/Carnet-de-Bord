@@ -1134,6 +1134,89 @@ async function main() {
       },
     },
   );
+  // 26 October 2026: a change that also switches other permissions says so
+  // under its row, with an undo; changed rows and pages carry a dot.
+  await run(
+    "permissions-cascade-and-changes",
+    1440,
+    async ({ page }) => {
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      const update = page.locator('[data-permission="persons:update"]');
+      const updateSwitch = update.getByRole("switch");
+      await updateSwitch.click();
+      await expect(update.getByRole("status")).toHaveText(
+        /Accordé aussi : Consulter le répertoire\./,
+      );
+      await expect(update).toHaveAttribute("data-changed", "true");
+      await expect(
+        page.locator('[data-permission="persons:view"]'),
+      ).toHaveAttribute("data-changed", "true");
+      await expect(
+        navigation
+          .getByRole("button", { name: /^Répertoire/ })
+          .getByRole("img", { name: "Modifications non enregistrées" }),
+      ).toBeVisible();
+      await page.screenshot({
+        path: path.join(work, "permissions-cascade-1440.png"),
+      });
+      await update.getByRole("button", { name: "Annuler", exact: true }).click();
+      await expect(update.getByRole("status")).toHaveCount(0);
+      await expect(updateSwitch).toHaveAttribute("aria-checked", "false");
+      await expect(updateSwitch).toBeFocused();
+      await expect(update).toHaveAttribute("data-changed", "false");
+      await expect(
+        page.getByRole("button", { name: "Enregistrer", exact: true }),
+      ).toHaveCount(0);
+      // Switching the page access off says what it also removes.
+      await updateSwitch.click();
+      const access = page.locator('[data-permission="persons:view"]');
+      await access.getByRole("switch").click();
+      await expect(access.getByRole("status")).toHaveText(
+        /Retiré aussi : Modifier les fiches du répertoire\./,
+      );
+    },
+    { section: "access", user: { permissions: {} } },
+  );
+  // A delegated actor sees why a switch is blocked, on the row itself.
+  await run(
+    "permissions-delegated-blocked-reasons",
+    1440,
+    async ({ page }) => {
+      const create = page.locator('[data-permission="persons:create"]');
+      // Shared by several rows: stated once for the page, a lock per row.
+      await expect(
+        page.getByRole("note").filter({
+          hasText: "Vous ne pouvez accorder que des autorisations que vous possédez.",
+        }),
+      ).toHaveCount(1);
+      await expect(
+        create.locator("p", { hasText: "Vous ne pouvez accorder" }),
+      ).toHaveCount(0);
+      await expect(
+        page.locator('[data-permission="persons:view"]').getByRole("switch"),
+      ).toBeEnabled();
+      await page.screenshot({
+        path: path.join(work, "permissions-delegated-1440.png"),
+      });
+    },
+    {
+      actor: {
+        isProtected: false,
+        permissions: {
+          "persons:view": true,
+          "users:grant_access": true,
+          "users:revoke_access": true,
+          "users:view": true,
+          "users:view_access": true,
+        },
+        role: "USER",
+      },
+      section: "access",
+      user: { permissions: {} },
+    },
+  );
   // A very low window keeps the page scroll and the sticky navigation.
   await run(
     "permissions-low-screen-keeps-page-scroll",

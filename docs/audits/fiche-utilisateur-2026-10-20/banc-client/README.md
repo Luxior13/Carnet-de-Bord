@@ -98,4 +98,10 @@ dans une fenêtre de hauteur fixe) et scénario `permissions-workspace-laptop-sc
 joué à 480 px de haut. Scénario `permissions-granted-filter` : avec « Accordées », menu « Pôle »
 limité à Membres et Système, pages et autorisations accordées seulement
 ([capture](permissions-granted-filter-1440.png)) ; une recherche affiche le
-sommaire « Pages concernées » et y saute. Passe complète : 54/54.
+sommaire « Pages concernées » et y saute. Scénarios
+`permissions-cascade-and-changes` (cascade accordée puis annulée, focus rendu,
+points sur la ligne et la page, cascade de retrait ;
+[capture](permissions-cascade-1440.png)) et
+`permissions-delegated-blocked-reasons` (acteur délégué : raison partagée une
+fois en haut, cadenas par ligne ; [capture](permissions-delegated-1440.png)).
+Passe complète : 56/56.

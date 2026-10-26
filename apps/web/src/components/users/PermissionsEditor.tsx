@@ -1,7 +1,7 @@
 'use client';
 
 import { type UserRole } from '@repo/shared';
-import { ArrowLeft, ShieldCheck, X } from 'lucide-react';
+import { ArrowLeft, LockKeyhole, ShieldCheck, X } from 'lucide-react';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
@@ -46,17 +46,19 @@ import styles from './PermissionsEditor.module.css';
 
 type PermissionsEditorProps = {
   canChangePermission?: PermissionMutationPolicy;
+  changedPermissionKeys?: ReadonlySet<string>;
   disabled?: boolean;
   onChange: (permissions: PermissionsData | null) => void;
-  onSelectedPageChange: (pageKey: string) => void;
   /** On a narrow screen, open the selected page instead of the page list. */
+  onSelectedPageChange: (pageKey: string) => void;
   openPageOnNarrow?: boolean;
   permissions: PermissionsData | null;
-  role: UserRole;
   /** Role field, on its own line above the pages. */
-  roleControl?: React.ReactNode;
+  role: UserRole;
   /** Extra note after the role explanation (MFA, locked role). */
+  roleControl?: React.ReactNode;
   roleNotice?: React.ReactNode;
+  /** Keys that differ from the saved account: marked on rows and pages. */
   selectedPageKey: string;
   /**
    * Computer layout: the editor fills its card, each column scrolls on its
@@ -66,6 +68,7 @@ type PermissionsEditorProps = {
 };
 
 const ACCESS_KEYS = new Set(getAccessPermissionKeys());
+const NO_CHANGES: ReadonlySet<string> = new Set();
 const ALL_PERMISSIONS = PERMISSION_EDITOR_CATEGORIES.flatMap(
   (category) => category.permissions,
 );
@@ -90,6 +93,7 @@ const groupByModule = (
  */
 export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   canChangePermission,
+  changedPermissionKeys = NO_CHANGES,
   disabled = false,
   onChange,
   onSelectedPageChange,
@@ -104,6 +108,14 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   const bodyRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<PermissionListFilter>('all');
+  // The last change that also switched other permissions, shown under its
+  // row with an undo while the draft is still the one it produced.
+  const [cascade, setCascade] = useState<{
+    after: PermissionsData | null;
+    before: PermissionsData | null;
+    key: string;
+    message: string;
+  } | null>(null);
   const [narrowView, setNarrowView] = useState<'detail' | 'list'>(
     openPageOnNarrow ? 'detail' : 'list',
   );
@@ -191,8 +203,45 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     key: string,
     choice: PermissionChoiceState,
   ): void => {
-    if (getDecision(key, choice).allowed) onChange(buildChange(key, choice));
+    if (!getDecision(key, choice).allowed) return;
+    const next = buildChange(key, choice);
+    // Prerequisites switched on, or dependents switched off, with it.
+    const nextConfigured = buildPermissionEditorState(role, next).configured;
+    const others = ALL_PERMISSIONS.filter(
+      (item) =>
+        item.key !== key &&
+        (state.configured.get(item.key) ?? false) !==
+          (nextConfigured.get(item.key) ?? false),
+    );
+    onChange(next);
+    setCascade(
+      others.length > 0
+        ? {
+            after: next,
+            before: permissions,
+            key,
+            message: `${choice === 'allow' ? 'Accordé aussi' : 'Retiré aussi'} : ${others.map((item) => item.label).join(', ')}.`,
+          }
+        : null,
+    );
   };
+  const undoCascade = (): void => {
+    if (!cascade) return;
+    const { before, key } = cascade;
+    setCascade(null);
+    onChange(before);
+    requestAnimationFrame(() =>
+      bodyRef.current
+        ?.querySelector<HTMLElement>(
+          `[data-permission="${key}"] [role="switch"]`,
+        )
+        ?.focus(),
+    );
+  };
+  // Shown only while the draft is the one the change produced: a cancel, a
+  // save or another change makes it disappear.
+  const activeCascade =
+    cascade && cascade.after === permissions ? cascade : null;
   const reset = (keys: Iterable<string>): void => {
     const next = buildReset(keys);
     if (getBatchDecision(next).allowed) onChange(next);
@@ -288,14 +337,22 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     permission: PermissionItem,
     category: PermissionEditorCategory,
     isPageAccess = false,
+    sharedBlockedReason: string | null = null,
   ): React.ReactNode => (
     <PermissionRow
       key={permission.key}
       accessKey={
         category.scope === 'page' ? category.accessPermissionKey : undefined
       }
+      cascade={
+        activeCascade?.key === permission.key
+          ? { message: activeCascade.message, onUndo: undoCascade }
+          : null
+      }
+      changed={changedPermissionKeys.has(permission.key)}
       disabled={disabled}
       getDecision={getDecision}
+      sharedBlockedReason={sharedBlockedReason}
       isPageAccess={isPageAccess}
       onChange={changePermission}
       permission={permission}
@@ -322,6 +379,29 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     const pageOverrides = category.permissions.filter((item) =>
       permissionsMap.has(item.key),
     );
+    // A reason shared by several blocked switches is said once at the top;
+    // those rows keep only a lock (26 October 2026).
+    const blockedReasons = editable
+      ? category.permissions
+          .filter((item) => item.grantable && shown(item))
+          .map((item) => {
+            const decision = getDecision(
+              item.key,
+              state.configured.get(item.key) ? 'deny' : 'allow',
+            );
+
+            return decision.allowed
+              ? null
+              : (decision.reason ?? 'Action non autorisée');
+          })
+      : [];
+    const reasonCounts = new Map<string, number>();
+    for (const reason of blockedReasons)
+      if (reason) reasonCounts.set(reason, (reasonCounts.get(reason) ?? 0) + 1);
+    const pageBlockedReason =
+      [...reasonCounts]
+        .filter(([, count]) => count > 1)
+        .sort(([, first], [, second]) => second - first)[0]?.[0] ?? null;
 
     return (
       <section
@@ -386,14 +466,22 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
             )}
           </div>
         </div>
+        {pageBlockedReason && (
+          <p className={styles.blockedReason} role="note">
+            <LockKeyhole aria-hidden="true" className="size-3.5 shrink-0" />
+            {pageBlockedReason}
+          </p>
+        )}
         {accessPermission &&
           shown(accessPermission) &&
-          renderRow(accessPermission, category, true)}
+          renderRow(accessPermission, category, true, pageBlockedReason)}
         {[...groups].map(([module, items]) => (
           <section key={module} className={styles.group} aria-label={module}>
             <h4 className={styles.groupHeading}>{module}</h4>
             <div className={styles.rows}>
-              {items.map((item) => renderRow(item, category))}
+              {items.map((item) =>
+                renderRow(item, category, false, pageBlockedReason),
+              )}
             </div>
           </section>
         ))}
@@ -502,6 +590,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
             onSelectPage={selectPage}
             onSelectPole={selectPole}
             query={query}
+            changedPermissionKeys={changedPermissionKeys}
             isPageListed={grantedOnly ? hasGranted : undefined}
             onJumpToResult={jumpToResult}
             results={resultGroups}

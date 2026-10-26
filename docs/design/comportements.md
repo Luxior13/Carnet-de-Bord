@@ -177,6 +177,12 @@ Le choix entre retour local, toast, notification, alerte et rappel suit la
 [Toasts et retours immédiats](../references/toasts-feedback.md). Un résultat
 déjà visible dans la page ne reçoit pas de toast supplémentaire.
 
+Un réglage qui en modifie d’autres (prérequis accordés, dépendants retirés)
+le dit sous le réglage touché (« Accordé aussi : … », « Retiré aussi : … »)
+avec « Annuler », tant que le brouillon est celui qu’il a produit. Les
+réglages modifiés et non enregistrés portent un point ambre, comme leur page
+dans la navigation (décision du 26 octobre 2026).
+
 Le résultat d’une action lancée depuis une carte (secret émis, échec à
 vérifier, résultat expiré) s’affiche **dans cette carte, à la place de son pied
 d’action**, jamais dans un panneau séparé en haut de la section : un encart
@@ -203,7 +209,10 @@ du 25 octobre 2026).
 ## Lecture seule et droits
 
 - Une commande refusée par les droits disparaît ou explique sa raison ; une
-  raison d’indisponibilité est visible et reliée au bouton.
+  raison d’indisponibilité est visible et reliée au bouton. Dans une liste de
+  réglages, la raison s’affiche sur la ligne, pas seulement au survol ; partagée
+  par plusieurs lignes, elle s’affiche une fois en haut et chaque ligne garde
+  un cadenas (26 octobre 2026).
 - Un état acquis non modifiable (« Fourni par le rôle Administrateur ») est une
   mention avec cadenas, sans commande ni aide d’édition.
 - Une donnée masquée est distinguée d’une donnée absente (« Masquée », « Identité protégée »).

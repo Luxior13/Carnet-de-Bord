@@ -60,6 +60,17 @@ dépliable « Voir les modifications avant enregistrement » depuis le
 
 ## Décisions retenues
 
+- **26 octobre 2026 — modifications visibles et compréhensibles** (« ok go »).
+  Un interrupteur qui accorde des prérequis ou retire des dépendants le dit
+  sous sa ligne (« Accordé aussi : … », « Retiré aussi : … ») avec « Annuler »,
+  qui rétablit le brouillon d’avant et rend le focus à l’interrupteur ; le
+  message disparaît dès que le brouillon change autrement. Les autorisations
+  modifiées et leurs pages et pôles portent un point ambre (clés du résumé
+  d’enregistrement). La raison d’un interrupteur bloqué s’affiche sur la
+  ligne ; partagée par plusieurs lignes, une fois en haut de la page avec un
+  cadenas par ligne (lue une seule fois par les lecteurs d’écran). Preuves :
+  banc client 56/56 (`permissions-cascade-and-changes`,
+  `permissions-delegated-blocked-reasons`), captures relues.
 - **26 octobre 2026 — finitions demandées par le propriétaire.** Barre de
   défilement fine commune (`thin-scrollbar`) ; en-tête tenu sur une ligne
   pour laisser la hauteur aux listes, la règle des prérequis passant dans une

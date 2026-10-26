@@ -2,7 +2,7 @@
 
 import { UserRole } from '@repo/shared';
 import { Crown, LockKeyhole, ShieldAlert } from 'lucide-react';
-import React, { type FC, useEffect, useRef } from 'react';
+import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
 import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { AuthorizationsHeader } from '$components/users/AuthorizationsHeader';
@@ -119,6 +119,20 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
   };
   // The save bar states the change; the detailed list was removed on
   // 26 October 2026 (owner: « ça sert à rien »).
+  // Keys that differ from the saved account, marked in the editor.
+  const changedPermissionKeys = useMemo(
+    () =>
+      new Set(
+        mutationSummary
+          ? [
+              ...mutationSummary.grantedPermissionKeys,
+              ...mutationSummary.revokedPermissionKeys,
+              ...mutationSummary.delegationPermissionKeys,
+            ]
+          : [],
+      ),
+    [mutationSummary],
+  );
   const mutationSummaryLabel = mutationSummary
     ? [
         role !== user.role ? 'rôle modifié' : null,
@@ -187,6 +201,7 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         onChange={setPermissions}
         selectedPageKey={permissionPageKey}
         onSelectedPageChange={onPermissionPageChange}
+        changedPermissionKeys={changedPermissionKeys}
         openPageOnNarrow={permissionPageRequested}
         workspace={workspace}
         disabled={!canManagePermissions || isSaving}
