@@ -349,7 +349,8 @@ describe.skipIf(!target)(
         expect(saved.token).not.toBe(token);
         expect(saved.rememberMe).toBe(rememberMe);
         const duration = (rememberMe ? 30 : 1) * 86_400_000;
-        const idle = rememberMe ? 7 * 86_400_000 : 30 * 60_000;
+        // A remembered session's idle limit meets its absolute limit.
+        const idle = rememberMe ? 30 * 86_400_000 : 30 * 60_000;
         expect(saved.expiresAt.getTime() - saved.lastSeenAt.getTime()).toBe(
           duration,
         );

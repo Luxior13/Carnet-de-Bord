@@ -28,7 +28,10 @@ import { mapUserToUserType } from './user-projection';
 const SESSION_SHORT_DURATION_DAYS = 1;
 const SESSION_LONG_DURATION_DAYS = 30;
 const SESSION_SHORT_IDLE_DURATION_MINUTES = 30;
-const SESSION_LONG_IDLE_DURATION_DAYS = 7;
+// A remembered session ends only at its absolute limit or a security event:
+// a member coming rarely is not asked again before thirty days (owner
+// decision of 26 October 2026).
+const SESSION_LONG_IDLE_DURATION_DAYS = 30;
 const SESSION_ACTIVITY_UPDATE_INTERVAL_MINUTES = 1;
 const textEncoder = new TextEncoder();
 

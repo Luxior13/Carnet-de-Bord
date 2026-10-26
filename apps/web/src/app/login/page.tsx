@@ -459,7 +459,7 @@ function LoginPage(): React.ReactNode {
                   className="text-muted-foreground cursor-pointer text-sm font-normal"
                   htmlFor="rememberMe"
                 >
-                  Faire confiance à cet appareil
+                  Rester connecté sur cet appareil
                 </Label>
               </div>
               <Button
@@ -479,9 +479,9 @@ function LoginPage(): React.ReactNode {
                 )}
               </Button>
               <p className="text-muted-foreground text-xs leading-5">
-                Session de 30 jours maximum, avec 7 jours d’inactivité. Cette
-                option est désactivée pour le compte superadmin et doit être
-                utilisée uniquement sur un appareil personnel.
+                Reste connecté jusqu’à 30 jours ; le code est demandé à chaque
+                nouvelle connexion. À cocher uniquement sur un appareil
+                personnel. Sans effet pour le compte superadmin.
               </p>
               <p className="text-muted-foreground text-xs leading-5">
                 Mot de passe oublié ou accès bloqué&nbsp;? La récupération est

@@ -45,11 +45,28 @@ La migration conserve les accès effectifs aux coordonnées des comptes existant
   | Utilisateur | Changement de son mot de passe | Les autres appareils |
   | Utilisateur | Configuration ou remplacement de son application d'authentification | Les autres appareils (la session courante est renouvelée) |
   | Utilisateur | « Déconnecter » un appareil, les autres sessions, ou se déconnecter | Celles visées |
-  | Durée | 30 min d'inactivité ou 24 h ; appareil de confiance : 7 j d'inactivité ou 30 j | La session expirée |
+  | Durée | 30 min d'inactivité ou 24 h ; « Rester connecté » : 30 j | La session expirée |
   | Exploitation | Procédure hors ligne du compte racine ; premier déploiement HTTPS (cookies `__Host-`) | Celles concernées |
 
   Ne déconnectent pas : rôle, autorisations, identifiant, prénom, nom, adresse
   de contact, régénération des codes de secours.
+
+  « Rester connecté sur cet appareil » maintient la session 30 jours, sans
+  limite d’inactivité plus courte ; chaque nouvelle connexion demande toujours
+  le mot de passe puis le code. Aucun « appareil reconnu » ne saute le code.
+  Le compte superadmin n’obtient jamais de session longue (la page de
+  connexion l’indique), car ce compte de récupération n’est pas prévu pour
+  l’usage quotidien. Décision du 26 octobre 2026
+  ([PREF-Q3](../design/preferences.md#questions-tranchées)).
+
+  Propositions reportées par le propriétaire le 26 octobre 2026 (« plus tard si
+  besoin »), non décidées, avec leur déclencheur : durée maximale
+  selon le niveau de droits quand les affectations métier existeront (REV-15) ;
+  clés d’accès (passkeys) comme second facteur, au prochain chantier de
+  connexion ; alerte de connexion depuis un nouvel appareil avec le module de
+  notifications. La preuve récente exigée pour chaque action sensible reste la
+  condition qui rend une session de 30 jours acceptable : tout nouveau module
+  sensible doit l’appliquer.
 - La date de dernière connexion s'écrit sans avancer `updatedAt`, révision
   optimiste du compte : une connexion n'est pas une modification et ne bloque
   pas un administrateur qui édite la fiche (« Cette fiche a été modifiée

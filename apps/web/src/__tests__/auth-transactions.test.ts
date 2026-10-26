@@ -438,10 +438,10 @@ describe('auth security transactions', () => {
     });
   });
 
-  it('creates a remembered session with a thirty-day absolute limit and a seven-day idle limit', async () => {
+  it('creates a remembered session whose thirty-day idle limit meets its absolute limit', async () => {
     const loginAt = new Date('2026-07-13T12:00:00.000Z');
     const expiresAt = new Date('2026-08-12T12:00:00.000Z');
-    const idleExpiresAt = new Date('2026-07-20T12:00:00.000Z');
+    const idleExpiresAt = expiresAt;
     vi.useFakeTimers();
     vi.setSystemTime(loginAt);
     mocks.transaction.session.create.mockResolvedValueOnce({

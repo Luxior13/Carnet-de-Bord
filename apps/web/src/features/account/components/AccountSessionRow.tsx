@@ -90,7 +90,7 @@ export const SessionRow: FC<SessionRowProps> = ({
             )}
             {session.rememberMe && (
               <Badge variant="outline" className="rounded-full">
-                Appareil de confiance
+                Connexion maintenue
               </Badge>
             )}
           </div>

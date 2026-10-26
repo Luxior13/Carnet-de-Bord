@@ -43,12 +43,10 @@ describe('global MFA UX contracts', () => {
   });
 
   it('explains trusted-device limits and the protected superadmin exception', () => {
-    expect(loginSource).toContain('Faire confiance à cet appareil');
-    expect(loginSource).toContain('Session de 30 jours maximum');
-    expect(loginSource).toContain('7 jours d’inactivité');
-    expect(loginSource).toContain(
-      'option est désactivée pour le compte superadmin',
-    );
+    expect(loginSource).toContain('Rester connecté sur cet appareil');
+    expect(loginSource).toContain('Reste connecté jusqu’à 30 jours');
+    expect(loginSource).toContain('le code est demandé à chaque');
+    expect(loginSource).toContain('Sans effet pour le compte superadmin');
     expect(loginSource).toContain('gérée par le propriétaire superadmin');
   });
 

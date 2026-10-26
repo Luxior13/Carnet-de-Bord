@@ -117,7 +117,7 @@ async function passwordStep(client, user, rememberMe = false) {
   if (rememberMe)
     await client.page
       .getByRole("checkbox", {
-        name: "Faire confiance à cet appareil",
+        name: "Rester connecté sur cet appareil",
         exact: true,
       })
       .check();

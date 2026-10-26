@@ -59,6 +59,16 @@ commune avec récapitulatif avant enregistrement.
 
 ## Points ouverts
 
+- **Revue du 26 octobre 2026, proposition en attente de décision.** Contrainte
+  donnée par le propriétaire : il y aura beaucoup plus de pages, sur plus de
+  pôles qu’aujourd’hui ; l’éditeur doit tenir cette échelle. Constats :
+  « Refuser » allumé en rouge pour l’état par défaut (contraire à la règle des
+  couleurs d’alerte), une seule page visible à la fois derrière deux menus
+  sans compteur, rôle mêlé aux filtres d’affichage, « Sensible » répété,
+  hiérarchie page → actions invisible. Proposition : interrupteur, navigation
+  par pôle et page avec compteurs, recherche et filtre « Accordées », rôle
+  séparé, seul « Critique » affiché ; modèles de rôle avec REV-15.
+
 Aucun défaut ouvert consigné. Limites de la passe du 18 octobre : pas de requête
 HTTP avec session réelle, de suite PostgreSQL, de lecteur d’écran ni d’appareil
 physique ; 320, 768 et 1920 px non recapturés.

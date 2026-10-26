@@ -46,6 +46,13 @@ revue répond à un changement, un défaut constaté ou une règle nouvelle.
 
 ## Décisions courantes — complétées le 12 octobre 2026
 
+- 26 octobre 2026 : case « Rester connecté sur cet appareil » (ancien
+  « Faire confiance à cet appareil », qui laissait croire que le code ne serait
+  plus demandé) ; session de 30 jours sans limite d’inactivité plus courte ;
+  aide sous le bouton : code à chaque nouvelle connexion, appareil personnel
+  seulement, sans effet pour le superadmin
+  ([PREF-Q3](../design/preferences.md#questions-tranchées)). Bancs client 29/29
+  et captures relues à 320 et 1 440 px ; suites SQL 228/228.
 - Surfaces et arrondis alignés sur le design system ; le formulaire public conserve
   sa composition centrée. Focus placé sur l’identifiant à l’entrée de cette étape.
 - Aucun identifiant précédent n’est mémorisé ou réinjecté par l’application dans

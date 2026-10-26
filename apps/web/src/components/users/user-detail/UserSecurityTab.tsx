@@ -237,7 +237,7 @@ const SessionRow: FC<{
           </p>
           {session.rememberMe && (
             <Badge variant="outline" className="rounded-full">
-              Longue session
+              Connexion maintenue
             </Badge>
           )}
         </div>
