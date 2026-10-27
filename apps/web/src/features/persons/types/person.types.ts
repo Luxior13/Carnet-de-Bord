@@ -117,14 +117,3 @@ export type PersonMutationResponse = {
   duplicateWarning?: PersonDuplicateWarning;
   person: PersonDetail;
 };
-
-type PersonFieldHistoryItem = {
-  action: string;
-  actor: PersonAuditActor;
-  at: string;
-  id: string;
-};
-
-export type PersonFieldHistoryResponse = {
-  items: PersonFieldHistoryItem[];
-};

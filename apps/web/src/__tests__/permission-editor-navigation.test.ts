@@ -100,7 +100,7 @@ describe('permissions editor navigation (26 October 2026)', () => {
     expect(markup).toContain('aria-label="Pages des autorisations"');
     expect(markup).toContain('Rechercher une autorisation');
     expect(markup).toContain('Accordées');
-    expect(markup).toContain('2 sur 7 utilisables');
+    expect(markup).toContain('2 sur 6 utilisables');
     expect(markup).toContain('role="switch"');
     expect(markup).toContain('Critique');
     expect(markup).not.toContain('Sensible');

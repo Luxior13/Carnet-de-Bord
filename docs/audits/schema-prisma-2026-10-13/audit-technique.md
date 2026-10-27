@@ -528,7 +528,7 @@ Les références des tableaux pointent vers les propriétaires concrets.
 [S06]: ../../../packages/database/prisma/migrations/20260716120000_scale_audit_journal/migration.sql
 [S07]: ../../../apps/web/src/features/persons/server/person-audit.ts
 [S08]: ../../../apps/web/src/features/persons/server/person-deletion.ts
-[S09]: ../../../apps/web/src/features/persons/server/person-history.service.ts
+[S09]: ../../pages/membres/repertoire/fiche-identite.md "person-history.service.ts, retiré le 27 octobre 2026 avec la provenance des champs"
 [S10]: ../../../packages/database/prisma/migrations/20260708221000_remove_staff_profiles/migration.sql
 [S11]: ../../../apps/web/src/shared/server/rate-limiter.ts
 [S12]: ../../../apps/web/src/shared/server/user-deletion.ts

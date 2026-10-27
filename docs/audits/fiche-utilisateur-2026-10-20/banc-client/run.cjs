@@ -899,7 +899,7 @@ async function main() {
       ).toBeFocused();
       await expect(
         navigation.getByRole("button", { name: /^Répertoire/ }),
-      ).toContainText("2 sur 7 utilisables");
+      ).toContainText("2 sur 6 utilisables");
       await page
         .getByRole("searchbox", { name: "Rechercher une autorisation" })
         .fill("supprimer");

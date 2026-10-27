@@ -22,8 +22,13 @@ contact principal par type, sans écraser une modification concurrente.
 
 ## Composition actuelle
 
-Trois collections (Emails, Téléphones, Réseaux sociaux) avec ajout, modification
-et suppression en fenêtre (`PersonChildDialog`), alerte de doublon, choix du
+Trois collections en une colonne (Emails, Téléphones, Réseaux sociaux), cartes
+`CollectionCard` : icône, titre, compteur et « Ajouter », sans sous-titre ;
+chaque ligne a une icône de type (enveloppe, téléphone, plateforme), le
+numéro est affiché au format international lisible (« +33 6 12 34 56 78 »,
+affichage seulement). L’onglet porte le total des coordonnées
+(« Coordonnées 4 », chiffre visuel, nom accessible inchangé). Ajout,
+modification et suppression en fenêtre (`PersonChildDialog`), alerte de doublon, choix du
 contact principal ; plafonds de dix emails et dix téléphones.
 
 ## Décisions retenues
@@ -33,9 +38,26 @@ contact principal ; plafonds de dix emails et dix téléphones.
 - Chaque écriture vérifie la version lue de la coordonnée (REP-19) ; le
   propriétaire d’un profil social est protégé (REP-20).
 
+- 27 octobre 2026 : revue de l’onglet, « ok go » sur cinq points : une
+  colonne au lieu de deux (trous selon le nombre d’adresses), sous-titres
+  retirés, numéro lisible, compteurs de l’en-tête (✉ 2 · ☎ 1 · partage 1)
+  remplacés par le total sur l’onglet, icône de type sur chaque ligne ;
+  précisions de ligne qui passent à la ligne au lieu d’être tronquées.
+- 27 octobre 2026 : sur demande du propriétaire (« retire toutes les icônes qui au survol montrent qui a renseigné la donnée », puis « aucune page ne devrait avoir ça, on mettra en place les logs plus tard »), l’historique de champ disparaît de toute l’interface : horloges d’Identité, icônes des fenêtres de coordonnées, bouton « Consulter … et son origine » des lecteurs sans droit de modification, composant `PersonFieldProvenanceHint` et appel client. Le même jour (« fais ce que tu veux » du propriétaire), l’autorisation `audit:view_field_history`, la route `/api/personnes/[id]/historique-champ` et son service sont retirés ; la migration `20261027120000_remove_field_history_permission` efface la clé des autorisations individuelles enregistrées (vérifiée sur PostgreSQL local jetable, puis appliquée par le propriétaire sur la base de travail le 27 octobre 2026). Les événements d’audit et les changements de champ sont conservés pour le futur journal d’activité.
+
+- 27 octobre 2026 : fenêtres relues une par une (captures `fenetre-*` du
+  banc, 390 et 1 440 px), puis « ok go » sur trois corrections. Sous le titre,
+  « Si cette adresse (ce numéro, ce profil) figure déjà sur une autre fiche,
+  vous en serez averti. » au lieu d’une phrase sur le système ; pour l’élément
+  principal, « C’est l’email principal. Pour en changer, choisissez d’abord un
+  autre email comme principal. » (et ses variantes) ; la confirmation nomme
+  l’élément, « Supprimer camille@example.test ? », et le choix du nouveau
+  principal affiche les numéros au format lisible ; le champ « Libellé »
+  montre le chevron des menus au lieu du triangle du navigateur.
+
 ## Points ouverts
 
-Aucun point ouvert ; REP-19 et REP-20 sont clos.
+Aucun point ouvert.
 
 ## Références
 

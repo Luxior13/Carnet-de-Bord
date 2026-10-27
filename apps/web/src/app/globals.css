@@ -429,6 +429,18 @@
     background-clip: content-box;
   }
 
+  /*
+   * Field with native suggestions (datalist): the browser triangle becomes
+   * the chevron of the site's menus (27 October 2026). Still opens the list.
+   */
+  input[list]::-webkit-calendar-picker-indicator {
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238e9baf' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+      center / 1rem no-repeat;
+    color: transparent;
+    cursor: pointer;
+    opacity: 1;
+  }
+
   /* Keep full icon targets when collapsed; scrolling remains available. */
   [data-slot='sidebar'][data-collapsible='icon'] .sidebar-scrollbar {
     scrollbar-width: none;

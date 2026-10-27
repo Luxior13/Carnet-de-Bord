@@ -1,9 +1,9 @@
 'use client';
 
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 import {
   Copy,
   ExternalLink,
-  Info,
   Mail,
   Network,
   Pencil,
@@ -64,7 +64,6 @@ type DeleteState = {
 type PersonCollectionsSectionProps = {
   available?: boolean;
   canUpdate: boolean;
-  canViewProvenance: boolean;
   onChange: (person: PersonDetail) => void;
   onReload: () => Promise<PersonDetail>;
   person: PersonDetail;
@@ -108,26 +107,11 @@ const CopyAction: FC<{ label: string; value: string }> = ({ label, value }) => {
   );
 };
 
-const ProvenanceOnlyAction: FC<{ label: string; onOpen: () => void }> = ({
-  label,
-  onOpen,
-}) => (
-  <Button
-    aria-label={`Consulter ${label} et son origine`}
-    onClick={onOpen}
-    size="icon"
-    type="button"
-    variant="ghost"
-  >
-    <Info className="size-3.5" />
-  </Button>
-);
-
 const ItemMetadata: FC<{ isPrimary: boolean; parts: string[] }> = ({
   isPrimary,
   parts,
 }) => (
-  <p className="text-muted-foreground mt-0.5 truncate text-xs">
+  <p className="text-muted-foreground mt-0.5 text-xs break-words">
     {parts.join(' · ')}
     {isPrimary && (
       <>
@@ -138,6 +122,52 @@ const ItemMetadata: FC<{ isPrimary: boolean; parts: string[] }> = ({
   </p>
 );
 
+/** One contact collection (27 October 2026): title, count and add action. */
+const CollectionCard: FC<{
+  addAction?: React.ReactNode;
+  children: React.ReactNode;
+  count: number;
+  icon: React.ReactNode;
+  title: string;
+}> = ({ addAction, children, count, icon, title }) => (
+  <Card>
+    <CardHeader className="flex-row items-center justify-between gap-3 p-3.5 sm:p-4">
+      <div className="flex min-w-0 items-center gap-2">
+        <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-7 [&_svg]:size-3.5">
+          {icon}
+        </ServiceIcon>
+        <h2 className="text-sm font-semibold">{title}</h2>
+        <Badge variant="outline">{count}</Badge>
+      </div>
+      {addAction}
+    </CardHeader>
+    <CardContent className="p-3 sm:p-4">{children}</CardContent>
+  </Card>
+);
+
+/** « +33 6 12 34 56 78 »: readable number, the stored value is unchanged. */
+const formatPhoneForDisplay = (phone: string): string =>
+  parsePhoneNumberFromString(phone)?.formatInternational() ?? phone;
+
+/** The value a person reads for an item: address, number or profile. */
+const getChildItemDisplay = (item: ChildItem): string =>
+  'email' in item
+    ? item.email
+    : 'phone' in item
+      ? formatPhoneForDisplay(item.phone)
+      : ((item as PersonSocialProfileItem).identifier ??
+        (item as PersonSocialProfileItem).profileUrl ??
+        'Profil');
+
+const RowTypeIcon: FC<{ children: React.ReactNode }> = ({ children }) => (
+  <span
+    aria-hidden="true"
+    className="text-muted-foreground shrink-0 [&_svg]:size-4"
+  >
+    {children}
+  </span>
+);
+
 const EmptyCollection: FC<{ children: React.ReactNode }> = ({ children }) => (
   <p className="text-muted-foreground border-border-divider rounded-lg border border-dashed px-3 py-4 text-center text-sm">
     {children}
@@ -146,11 +176,13 @@ const EmptyCollection: FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const EmailRow: FC<{
   canUpdate: boolean;
-  canViewProvenance: boolean;
   item: PersonEmailItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewProvenance, item, onEdit }) => (
+}> = ({ canUpdate, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
+    <RowTypeIcon>
+      <Mail />
+    </RowTypeIcon>
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <a
@@ -163,9 +195,6 @@ const EmailRow: FC<{
       <ItemMetadata isPrimary={item.isPrimary} parts={[item.label]} />
     </div>
     <div className="flex shrink-0 items-center gap-1">
-      {canViewProvenance && !canUpdate && (
-        <ProvenanceOnlyAction label="cet email" onOpen={onEdit} />
-      )}
       {canUpdate && <EditAction label="cet email" onEdit={onEdit} />}
       <CopyAction label="Email" value={item.email} />
     </div>
@@ -174,26 +203,25 @@ const EmailRow: FC<{
 
 const PhoneRow: FC<{
   canUpdate: boolean;
-  canViewProvenance: boolean;
   item: PersonPhoneItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewProvenance, item, onEdit }) => (
+}> = ({ canUpdate, item, onEdit }) => (
   <li className="border-border-divider flex min-w-0 items-center gap-2 border-b py-2.5 last:border-0">
+    <RowTypeIcon>
+      <Phone />
+    </RowTypeIcon>
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <a
-          className="hover:text-primary-emphasis max-w-full truncate text-sm font-medium hover:underline"
+          className="hover:text-primary-emphasis max-w-full truncate text-sm font-medium tabular-nums hover:underline"
           href={`tel:${item.phone}`}
         >
-          {item.phone}
+          {formatPhoneForDisplay(item.phone)}
         </a>
       </div>
       <ItemMetadata isPrimary={item.isPrimary} parts={[item.label]} />
     </div>
     <div className="flex shrink-0 items-center gap-1">
-      {canViewProvenance && !canUpdate && (
-        <ProvenanceOnlyAction label="ce téléphone" onOpen={onEdit} />
-      )}
       {canUpdate && <EditAction label="ce téléphone" onEdit={onEdit} />}
       <CopyAction label="Numéro" value={item.phone} />
     </div>
@@ -202,10 +230,9 @@ const PhoneRow: FC<{
 
 const SocialRow: FC<{
   canUpdate: boolean;
-  canViewProvenance: boolean;
   item: PersonSocialProfileItem;
   onEdit: () => void;
-}> = ({ canUpdate, canViewProvenance, item, onEdit }) => {
+}> = ({ canUpdate, item, onEdit }) => {
   const network = getPersonSocialNetwork(item.networkKey);
   const visibleValue = item.identifier ?? item.profileUrl ?? 'Profil';
   const copyValue = item.profileUrl ?? item.identifier;
@@ -238,9 +265,6 @@ const SocialRow: FC<{
         />
       </div>
       <div className="flex shrink-0 items-center gap-1">
-        {canViewProvenance && !canUpdate && (
-          <ProvenanceOnlyAction label="ce profil" onOpen={onEdit} />
-        )}
         {canUpdate && <EditAction label="ce profil" onEdit={onEdit} />}
         {copyValue && (
           <CopyAction
@@ -256,7 +280,6 @@ const SocialRow: FC<{
 const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
   available = true,
   canUpdate,
-  canViewProvenance,
   onChange,
   onReload,
   person,
@@ -432,180 +455,131 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
 
   return (
     <>
-      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]">
-        <div className="space-y-4">
-          <Card>
-            <CardHeader className="p-3.5 sm:p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
-                    <Mail className="size-4" />
-                  </ServiceIcon>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-sm font-semibold">Emails</h2>
-                      <Badge variant="outline">{person.emails.length}</Badge>
-                    </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      Adresses utiles et adresse principale.
-                    </p>
-                  </div>
-                </div>
-                {canUpdate && (
-                  <Button
-                    ref={addEmailRef}
-                    aria-label="Ajouter un email"
-                    disabled={
-                      !available || person.emails.length >= PERSON_LIMITS.emails
-                    }
-                    onClick={() => setEditor({ item: null, kind: 'email' })}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    <Plus className="size-4" />
-                    Ajouter
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              {person.emails.length === 0 ? (
-                <EmptyCollection>Aucun email renseigné.</EmptyCollection>
-              ) : (
-                <ul>
-                  {person.emails.map((item) => (
-                    <EmailRow
-                      canUpdate={canUpdate}
-                      canViewProvenance={canViewProvenance}
-                      item={item}
-                      key={item.id}
-                      onEdit={() => setEditor({ item, kind: 'email' })}
-                    />
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+      {/* One column, like the other record tabs (27 October 2026). */}
+      <div className="space-y-3">
+        <CollectionCard
+          addAction={
+            canUpdate ? (
+              <Button
+                ref={addEmailRef}
+                aria-label="Ajouter un email"
+                disabled={
+                  !available || person.emails.length >= PERSON_LIMITS.emails
+                }
+                onClick={() => setEditor({ item: null, kind: 'email' })}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <Plus className="size-4" />
+                Ajouter
+              </Button>
+            ) : undefined
+          }
+          count={person.emails.length}
+          icon={<Mail />}
+          title="Emails"
+        >
+          {person.emails.length === 0 ? (
+            <EmptyCollection>Aucun email renseigné.</EmptyCollection>
+          ) : (
+            <ul>
+              {person.emails.map((item) => (
+                <EmailRow
+                  canUpdate={canUpdate}
+                  item={item}
+                  key={item.id}
+                  onEdit={() => setEditor({ item, kind: 'email' })}
+                />
+              ))}
+            </ul>
+          )}
+        </CollectionCard>
 
-          <Card>
-            <CardHeader className="p-3.5 sm:p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
-                    <Phone className="size-4" />
-                  </ServiceIcon>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-sm font-semibold">Téléphones</h2>
-                      <Badge variant="outline">{person.phones.length}</Badge>
-                    </div>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      Numéros utiles et numéro principal.
-                    </p>
-                  </div>
-                </div>
-                {canUpdate && (
-                  <Button
-                    ref={addPhoneRef}
-                    aria-label="Ajouter un téléphone"
-                    disabled={
-                      !available || person.phones.length >= PERSON_LIMITS.phones
-                    }
-                    onClick={() => setEditor({ item: null, kind: 'phone' })}
-                    size="sm"
-                    type="button"
-                    variant="outline"
-                  >
-                    <Plus className="size-4" />
-                    Ajouter
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              {person.phones.length === 0 ? (
-                <EmptyCollection>Aucun téléphone renseigné.</EmptyCollection>
-              ) : (
-                <ul>
-                  {person.phones.map((item) => (
-                    <PhoneRow
-                      canUpdate={canUpdate}
-                      canViewProvenance={canViewProvenance}
-                      item={item}
-                      key={item.id}
-                      onEdit={() => setEditor({ item, kind: 'phone' })}
-                    />
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        <CollectionCard
+          addAction={
+            canUpdate ? (
+              <Button
+                ref={addPhoneRef}
+                aria-label="Ajouter un téléphone"
+                disabled={
+                  !available || person.phones.length >= PERSON_LIMITS.phones
+                }
+                onClick={() => setEditor({ item: null, kind: 'phone' })}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <Plus className="size-4" />
+                Ajouter
+              </Button>
+            ) : undefined
+          }
+          count={person.phones.length}
+          icon={<Phone />}
+          title="Téléphones"
+        >
+          {person.phones.length === 0 ? (
+            <EmptyCollection>Aucun téléphone renseigné.</EmptyCollection>
+          ) : (
+            <ul>
+              {person.phones.map((item) => (
+                <PhoneRow
+                  canUpdate={canUpdate}
+                  item={item}
+                  key={item.id}
+                  onEdit={() => setEditor({ item, kind: 'phone' })}
+                />
+              ))}
+            </ul>
+          )}
+        </CollectionCard>
 
-        <Card>
-          <CardHeader className="p-3.5 sm:p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-start gap-3">
-                <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
-                  <Network className="size-4" />
-                </ServiceIcon>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-sm font-semibold">Réseaux sociaux</h2>
-                    <Badge variant="outline">
-                      {person.socialProfiles.length}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground mt-1 text-xs">
-                    Profils publics utiles à la structure.
-                  </p>
-                </div>
-              </div>
-              {canUpdate && (
-                <Button
-                  ref={addSocialRef}
-                  aria-label="Ajouter un profil social"
-                  disabled={
-                    !available ||
-                    person.socialProfiles.length >= PERSON_LIMITS.socialProfiles
-                  }
-                  onClick={() => setEditor({ item: null, kind: 'social' })}
-                  size="sm"
-                  type="button"
-                  variant="outline"
-                >
-                  <Plus className="size-4" />
-                  Ajouter
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4">
-            {person.socialProfiles.length === 0 ? (
-              <EmptyCollection>Aucun profil social renseigné.</EmptyCollection>
-            ) : (
-              <ul>
-                {person.socialProfiles.map((item) => (
-                  <SocialRow
-                    canUpdate={canUpdate}
-                    canViewProvenance={canViewProvenance}
-                    item={item}
-                    key={item.id}
-                    onEdit={() => setEditor({ item, kind: 'social' })}
-                  />
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+        <CollectionCard
+          addAction={
+            canUpdate ? (
+              <Button
+                ref={addSocialRef}
+                aria-label="Ajouter un profil social"
+                disabled={
+                  !available ||
+                  person.socialProfiles.length >= PERSON_LIMITS.socialProfiles
+                }
+                onClick={() => setEditor({ item: null, kind: 'social' })}
+                size="sm"
+                type="button"
+                variant="outline"
+              >
+                <Plus className="size-4" />
+                Ajouter
+              </Button>
+            ) : undefined
+          }
+          count={person.socialProfiles.length}
+          icon={<Network />}
+          title="Réseaux sociaux"
+        >
+          {person.socialProfiles.length === 0 ? (
+            <EmptyCollection>Aucun profil social renseigné.</EmptyCollection>
+          ) : (
+            <ul>
+              {person.socialProfiles.map((item) => (
+                <SocialRow
+                  canUpdate={canUpdate}
+                  item={item}
+                  key={item.id}
+                  onEdit={() => setEditor({ item, kind: 'social' })}
+                />
+              ))}
+            </ul>
+          )}
+        </CollectionCard>
       </div>
 
       {editor && (
         <PersonChildDialog
           available={available}
           canEdit={canUpdate}
-          canViewProvenance={canViewProvenance}
           defaultPrimary={
             editor.kind === 'email'
               ? person.emails.length === 0
@@ -651,7 +625,11 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
           className={requiresReplacement ? 'sm:max-w-lg' : 'sm:max-w-md'}
         >
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette information ?</AlertDialogTitle>
+            <AlertDialogTitle className="break-words">
+              {deleteState
+                ? `Supprimer ${getChildItemDisplay(deleteState.item)} ?`
+                : 'Supprimer ?'}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Cette suppression est immédiate et sera enregistrée dans le
               journal d&apos;activité.
@@ -681,13 +659,7 @@ const PersonCollectionsContent: FC<PersonCollectionsSectionProps> = ({
                 <SelectContent>
                   {alternatives.map((item) => (
                     <SelectItem key={item.id} value={item.id}>
-                      {'email' in item
-                        ? item.email
-                        : 'phone' in item
-                          ? item.phone
-                          : ((item as PersonSocialProfileItem).identifier ??
-                            (item as PersonSocialProfileItem).profileUrl ??
-                            'Profil social')}
+                      {getChildItemDisplay(item)}
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -38,7 +38,6 @@ ce relevé n’est pas une revue de sécurité.
 | --- | --- | --- |
 | `/api/personnes` | GET, POST | `persons:view` ; POST `persons:create`. GET renvoie `overview`, compteurs à facettes des filtres rapides (20 octobre 2026) |
 | `/api/personnes/[id]` | GET, PATCH, DELETE | `persons:view`, `persons:update`, `persons:delete` |
-| `/api/personnes/[id]/historique-champ` | GET | `persons:view` et `audit:view_field_history` |
 | `/api/personnes/[id]/emails` | POST | `persons:update_contact` |
 | `/api/personnes/[id]/emails/[emailId]` | PATCH, DELETE | `persons:update_contact` |
 | `/api/personnes/[id]/telephones` | POST | `persons:update_contact` |

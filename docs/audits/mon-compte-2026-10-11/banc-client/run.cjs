@@ -432,7 +432,7 @@ async function main() {
       async ({ page }) => {
         const card = page.locator('[aria-labelledby="account-access-heading"]').first();
         await expect(
-          page.getByRole("heading", { name: "Vos accès" }),
+          page.getByRole("heading", { name: "Droits d’administration" }),
         ).toBeVisible();
         if (label === "delegated") {
           await expect(card.getByText("Consulter le répertoire")).toBeVisible();

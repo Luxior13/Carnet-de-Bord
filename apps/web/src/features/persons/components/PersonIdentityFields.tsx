@@ -16,10 +16,6 @@ import {
   PERSON_STRUCTURE_STATUSES,
 } from '../person.constants';
 import type { PersonStructureStatus } from '../types/person.types';
-import {
-  PersonFieldProvenanceHint,
-  type PersonFieldProvenanceTarget,
-} from './PersonFieldProvenanceHint';
 
 export type PersonIdentityFormValue = {
   birthDate: string;
@@ -42,9 +38,6 @@ type PersonIdentityFieldsProps = {
     value: PersonIdentityFormValue[TKey],
   ) => void;
   part?: 'all' | 'names' | 'situation';
-  provenances?: Readonly<
-    Partial<Record<keyof PersonIdentityFormValue, PersonFieldProvenanceTarget>>
-  >;
   showBirthDate?: boolean;
   value: PersonIdentityFormValue;
   variant?: 'default' | 'quiet';
@@ -53,11 +46,9 @@ type PersonIdentityFieldsProps = {
 const FieldLabel: FC<{
   htmlFor: string;
   label: string;
-  provenance?: PersonFieldProvenanceTarget;
-}> = ({ htmlFor, label, provenance }) => (
+}> = ({ htmlFor, label }) => (
   <div className="flex min-h-6 items-center gap-1.5">
     <Label htmlFor={htmlFor}>{label}</Label>
-    <PersonFieldProvenanceHint target={provenance} />
   </div>
 );
 
@@ -74,7 +65,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
   idPrefix,
   onChange,
   part = 'all',
-  provenances,
   showBirthDate = true,
   value,
   variant = 'default',
@@ -117,11 +107,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
               part === 'names' && 'lg:col-span-1',
             )}
           >
-            <FieldLabel
-              htmlFor={nickname.id}
-              label="Pseudo principal"
-              provenance={provenances?.nickname}
-            />
+            <FieldLabel htmlFor={nickname.id} label="Pseudo principal" />
             <Input
               aria-describedby={
                 nickname.describedBy ??
@@ -146,11 +132,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
             )}
           </div>
           <div className="min-w-0 space-y-1.5">
-            <FieldLabel
-              htmlFor={firstName.id}
-              label="Prénom"
-              provenance={provenances?.firstName}
-            />
+            <FieldLabel htmlFor={firstName.id} label="Prénom" />
             <Input
               aria-describedby={firstName.describedBy}
               aria-invalid={Boolean(firstName.error)}
@@ -167,11 +149,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
             />
           </div>
           <div className="min-w-0 space-y-1.5">
-            <FieldLabel
-              htmlFor={lastName.id}
-              label="Nom"
-              provenance={provenances?.lastName}
-            />
+            <FieldLabel htmlFor={lastName.id} label="Nom" />
             <Input
               aria-describedby={lastName.describedBy}
               aria-invalid={Boolean(lastName.error)}
@@ -188,11 +166,7 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
       )}
       {showSituation && showBirthDate && (
         <div className="min-w-0 space-y-1.5">
-          <FieldLabel
-            htmlFor={birthDate.id}
-            label="Date de naissance"
-            provenance={provenances?.birthDate}
-          />
+          <FieldLabel htmlFor={birthDate.id} label="Date de naissance" />
           <Input
             aria-describedby={
               birthDate.describedBy ??
@@ -226,7 +200,6 @@ export const PersonIdentityFields: FC<PersonIdentityFieldsProps> = ({
           <FieldLabel
             htmlFor={structureStatus.id}
             label="Statut dans la structure"
-            provenance={provenances?.structureStatus}
           />
           <Select
             disabled={disabled}

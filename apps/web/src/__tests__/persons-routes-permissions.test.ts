@@ -16,7 +16,6 @@ const mocks = vi.hoisted(() => ({
   deletePersonPhone: vi.fn(),
   deletePersonSocialProfile: vi.fn(),
   getPerson: vi.fn(),
-  getPersonFieldHistory: vi.fn(),
   listPersons: vi.fn(),
   requireAuth: vi.fn(),
   requirePermission: vi.fn(),
@@ -42,7 +41,6 @@ vi.mock('$features/persons/server/person.service', () => ({
   deletePersonPhone: mocks.deletePersonPhone,
   deletePersonSocialProfile: mocks.deletePersonSocialProfile,
   getPerson: mocks.getPerson,
-  getPersonFieldHistory: mocks.getPersonFieldHistory,
   listPersons: mocks.listPersons,
   updatePerson: mocks.updatePerson,
   updatePersonEmail: mocks.updatePersonEmail,
@@ -325,37 +323,6 @@ describe('person API permission boundaries', () => {
     },
   );
 
-  it('requires both field-history and person visibility for field history', async () => {
-    mocks.requirePermission
-      .mockReturnValueOnce({ success: true })
-      .mockImplementationOnce(() => ({
-        response: forbidden(),
-        success: false,
-      }));
-    const { GET } =
-      await import('$app/api/personnes/[id]/historique-champ/route');
-
-    const response = await GET(
-      request(
-        '/api/personnes/person-1/historique-champ?sectionKey=identity&fieldKey=nickname',
-      ),
-      detailContext,
-    );
-
-    expect(response.status).toBe(403);
-    expect(mocks.requirePermission).toHaveBeenNthCalledWith(
-      1,
-      actor,
-      PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
-    );
-    expect(mocks.requirePermission).toHaveBeenNthCalledWith(
-      2,
-      actor,
-      PERMISSIONS.PERSONS.VIEW,
-    );
-    expect(mocks.getPersonFieldHistory).not.toHaveBeenCalled();
-  });
-
   it('marks successful list responses private and non-cacheable', async () => {
     mocks.requirePermission.mockReturnValueOnce({ success: true });
     mocks.listPersons.mockResolvedValueOnce({
@@ -418,67 +385,5 @@ describe('person API permission boundaries', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('Cache-Control')).toBe('private, no-store');
     expect(mocks.getPerson).toHaveBeenCalledWith('person-1', actor);
-    expect(mocks.getPersonFieldHistory).not.toHaveBeenCalled();
-  });
-
-  it('keeps successful contextual history private and passes only validated filters', async () => {
-    mocks.requirePermission.mockReturnValue({ success: true });
-    mocks.getPersonFieldHistory.mockResolvedValueOnce({ items: [] });
-    const { GET } =
-      await import('$app/api/personnes/[id]/historique-champ/route');
-
-    const response = await GET(
-      request(
-        '/api/personnes/person-1/historique-champ?sectionKey=identity&fieldKey=nickname',
-      ),
-      detailContext,
-    );
-
-    expect(response.status).toBe(200);
-    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
-    expect(response.headers.get('Pragma')).toBe('no-cache');
-    expect(mocks.getPersonFieldHistory).toHaveBeenCalledWith(
-      'person-1',
-      {
-        fieldKey: 'nickname',
-        sectionKey: 'identity',
-      },
-      actor,
-    );
-    expect(mocks.requirePermission).toHaveBeenNthCalledWith(
-      1,
-      actor,
-      PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
-    );
-    expect(mocks.requirePermission).toHaveBeenNthCalledWith(
-      2,
-      actor,
-      PERMISSIONS.PERSONS.VIEW,
-    );
-  });
-
-  it('re-evaluates field-history permissions on every request after a revocation', async () => {
-    let granted = true;
-    mocks.requirePermission.mockImplementation(() =>
-      granted ? { success: true } : { response: forbidden(), success: false },
-    );
-    mocks.getPersonFieldHistory.mockResolvedValue({ items: [] });
-    const { GET } =
-      await import('$app/api/personnes/[id]/historique-champ/route');
-    const buildRequest = () =>
-      request(
-        '/api/personnes/person-1/historique-champ?sectionKey=identity&fieldKey=nickname',
-      );
-
-    const beforeRevocation = await GET(buildRequest(), detailContext);
-    granted = false;
-    const afterRevocation = await GET(buildRequest(), detailContext);
-
-    expect(beforeRevocation.status).toBe(200);
-    expect(beforeRevocation.headers.get('Cache-Control')).toBe(
-      'private, no-store',
-    );
-    expect(afterRevocation.status).toBe(403);
-    expect(mocks.getPersonFieldHistory).toHaveBeenCalledOnce();
   });
 });

@@ -10,7 +10,7 @@ gabarit que la fiche utilisateur, sans les actions d’administration.
 | Route | Section | Fiche | Gabarit | Harmonisation |
 | --- | --- | --- | --- | --- |
 | `/mon-compte` | Profil (défaut) | [Mon compte — Profil](profil.md) | [B. Fiche à sections](../../design/gabarits.md#b-fiche-à-sections) | Aligné |
-| `/mon-compte` | `?section=access` | [Mon compte — Accès](acces.md) | [B. Fiche à sections](../../design/gabarits.md#b-fiche-à-sections) | Aligné |
+| `/mon-compte` | `?section=access` | [Mon compte — Autorisations](acces.md) | [B. Fiche à sections](../../design/gabarits.md#b-fiche-à-sections) | Aligné |
 | `/mon-compte` | `?section=security` | [Mon compte — Sécurité](securite.md) | [B. Fiche à sections](../../design/gabarits.md#b-fiche-à-sections) | Aligné |
 
 Les anciens paramètres `activity` et `history` affichent Profil.

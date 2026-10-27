@@ -12,7 +12,7 @@
 | Gabarit visé | [B. Fiche à sections](../../../design/gabarits.md#b-fiche-à-sections) |
 | État d’harmonisation | Aligné ; champs adoucis du 17 octobre 2026 — voir [Harmonisation](../../../design/harmonisation.md#état-par-page) |
 | Point d’entrée | [page.tsx](../../../../apps/web/src/app/membres/repertoire/[id]/page.tsx) → [PersonIdentitySection](../../../../apps/web/src/features/persons/components/PersonIdentitySection.tsx) |
-| Contrôle d’accès | `persons:view` ; modification `persons:update` ; suppression `persons:delete` ; historique d’un champ `audit:view_field_history` |
+| Contrôle d’accès | `persons:view` ; modification `persons:update` ; suppression `persons:delete` |
 | Chargement / erreur dédiés | oui, squelette de fiche / commune à l’application |
 
 ## Rôle et tâches principales
@@ -26,8 +26,7 @@ provenance et leur dernière modification.
 Titre « Identité » réservé aux lecteurs d’écran, puis deux cartes titrées
 (`RubricCard`) : « Pseudo et nom » (pseudo, prénom, nom sur une ligne en grand
 écran) et « Naissance et statut » ; champs partagés `PersonIdentityFields`
-(option `part`), historique d’un champ par une horloge
-(`PersonFieldProvenanceHint`, « Historique : … »), historique d’un champ, `SectionActionBar` avec
+(option `part`), sans icône d’historique de champ (retirée le 27 octobre 2026), historique d’un champ, `SectionActionBar` avec
 soumission native et reprise de conflit ; puis « Zone dangereuse »
 (`PersonDangerZone` sur `EntityDangerZone`). Les dates de la fiche sont dans
 le bandeau, pas en pied de carte.
@@ -51,7 +50,7 @@ le bandeau, pas en pied de carte.
   personne rejoint son avatar dans le fil d’Ariane, comme le rôle sur la fiche
   utilisateur. Le formulaire de création garde sa grille unique. Banc client
   31/31, création 28/28 ; le fil d’Ariane n’est pas simulé dans ce banc.
-  Compteurs de coordonnées du bandeau signalés, non modifiés (à discuter).
+- 27 octobre 2026 : sur demande du propriétaire (« retire toutes les icônes qui au survol montrent qui a renseigné la donnée », puis « aucune page ne devrait avoir ça, on mettra en place les logs plus tard »), l’historique de champ disparaît de toute l’interface : horloges d’Identité, icônes des fenêtres de coordonnées, bouton « Consulter … et son origine » des lecteurs sans droit de modification, composant `PersonFieldProvenanceHint` et appel client. Le même jour (« fais ce que tu veux » du propriétaire), l’autorisation `audit:view_field_history`, la route `/api/personnes/[id]/historique-champ` et son service sont retirés ; la migration `20261027120000_remove_field_history_permission` efface la clé des autorisations individuelles enregistrées (vérifiée sur PostgreSQL local jetable, puis appliquée par le propriétaire sur la base de travail le 27 octobre 2026). Les événements d’audit et les changements de champ sont conservés pour le futur journal d’activité.
 
 ## Points ouverts
 

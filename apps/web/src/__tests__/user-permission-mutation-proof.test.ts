@@ -50,10 +50,8 @@ describe('user permission mutation proof classification', () => {
     ).toBe('none');
     expect(
       classify({
-        effectivelyGrantedPermissionKeys: [
-          PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
-        ],
-        requestedChangedPermissionKeys: [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY],
+        effectivelyGrantedPermissionKeys: [PERMISSIONS.PERSONS.VIEW],
+        requestedChangedPermissionKeys: [PERMISSIONS.PERSONS.VIEW],
       }),
     ).toBe('none');
   });

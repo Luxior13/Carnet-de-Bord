@@ -108,22 +108,15 @@ describe('permission editor configured and effective access', () => {
       )?.scope,
     ).toBeUndefined();
   });
-  it('keeps contextual provenance independent of global audit access', () => {
+  it('ignores the retired field history key and presents 27 current capabilities', () => {
+    // Field history left the catalogue on 27 October 2026.
     const state = buildPermissionEditorState(UserRole.USER, {
-      'audit:view': false,
       'audit:view_field_history': true,
       'persons:view': true,
     });
-    expect(state.effective.get('audit:view_field_history')).toBe(true);
-    expect(state.effective.has('audit:view')).toBe(false);
-  });
-  it('does not count provenance without directory access and presents 28 current capabilities', () => {
-    const state = buildPermissionEditorState(UserRole.USER, {
-      'audit:view_field_history': true,
-    });
-    expect(state.effective.get('audit:view_field_history')).toBe(false);
+    expect(state.effective.has('audit:view_field_history')).toBe(false);
     expect(
       PERMISSION_EDITOR_CATEGORIES.flatMap((category) => category.permissions),
-    ).toHaveLength(28);
+    ).toHaveLength(27);
   });
 });

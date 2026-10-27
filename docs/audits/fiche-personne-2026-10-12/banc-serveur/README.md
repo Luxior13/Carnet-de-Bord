@@ -50,7 +50,7 @@ puis provoquaient `TypeError: ...has is not a function`. Le paramètre invalide
 aboutissait à une erreur serveur au lieu du refus métier prévu.
 
 Les quatre nouvelles régressions de
-[person-field-history.test.ts](../../../../apps/web/src/__tests__/person-field-history.test.ts)
+`person-field-history.test.ts` (retiré le 27 octobre 2026)
 échouent avant la correction, puis passent avec les quatre tests existants.
 La garde `Object.hasOwn` refuse ces noms avant toute lecture de fiche ou
 d'historique. Les scénarios SQL appellent aussi la vraie route et vérifient un

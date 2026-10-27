@@ -25,7 +25,6 @@ const permission = (
 /** Keeps the growing central catalogue composable one live feature at a time. */
 export const createPersonsPermissionCategory = (
   keys: PersonPermissionKeys,
-  provenanceKey: string,
 ): PermissionCategory => ({
   accessPermissionKey: keys.VIEW,
   assignment: 'delegable',
@@ -96,19 +95,6 @@ export const createPersonsPermissionCategory = (
       module: 'Coordonnées',
       risk: 'sensitive',
       route: `${PAGE_PATHS.persons}/[id]?section=coordonnees`,
-      surface: 'page',
-    }),
-    permission({
-      action: 'view',
-      dependencies: [keys.VIEW],
-      description:
-        'Voir l’auteur, la date et l’action à l’origine des champs autorisés du répertoire',
-      grantable: true,
-      key: provenanceKey,
-      label: 'Consulter la provenance des informations',
-      module: 'Provenance',
-      risk: 'sensitive',
-      route: `${PAGE_PATHS.persons}/[id]`,
       surface: 'page',
     }),
     permission({

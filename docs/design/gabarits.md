@@ -53,6 +53,7 @@ PageShell · PageCanvas (EntityDetailLayout ou composition équivalente)
 │  ├─ PageIdentityHero compact : avatar · nom · états en pastilles · identifiant et dates · rôle à droite
 │  └─ Onglets en pied (PageSectionNavigation « embedded ») : vrais liens, section active soulignée, point de brouillon
 ├─ Fil d’Ariane : avatar · nom · accès, en permanence (avatar et nom sur téléphone)
+├─ Fiches d’un compte (Mon compte, utilisateur) : mêmes onglets, mêmes noms, même ordre, mêmes icônes — Profil · Autorisations · Sécurité ; seules les actions diffèrent
 ├─ Au défilement : barre réduite collée (mêmes onglets seuls)
 │  └─ Onglets nombreux : « Plus ▾ » sur ordinateur, sélecteur de section sur téléphone
 └─ Section active (chargée à la demande)

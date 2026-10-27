@@ -1,4 +1,4 @@
-import { Shield, ShieldCheck, User } from 'lucide-react';
+import { Key, Shield, User } from 'lucide-react';
 import Link from 'next/link';
 import type { FC, JSX } from 'react';
 
@@ -19,6 +19,10 @@ import { Button } from '$ui/button';
 
 export type AccountSectionId = 'access' | 'profile' | 'security';
 
+/**
+ * Same tabs, names, order and icons as the user record (owner decision of
+ * 27 October 2026): one account, seen by its holder or by an administrator.
+ */
 export const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
   {
     icon: <User className="h-4 w-4" />,
@@ -26,14 +30,14 @@ export const ACCOUNT_SECTIONS: Array<UserDetailSection<AccountSectionId>> = [
     label: 'Profil',
   },
   {
-    icon: <ShieldCheck className="h-4 w-4" />,
-    id: 'security',
-    label: 'Sécurité',
-  },
-  {
     icon: <Shield className="h-4 w-4" />,
     id: 'access',
-    label: 'Accès',
+    label: 'Autorisations',
+  },
+  {
+    icon: <Key className="h-4 w-4" />,
+    id: 'security',
+    label: 'Sécurité',
   },
 ];
 

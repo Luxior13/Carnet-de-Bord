@@ -57,3 +57,12 @@ attendu « Historique : … » (au lieu de « Voir l’origine : … »), captur
 `identite-*` remplacées. 31 scénarios sur 31. Le fil d’Ariane simulé de ce
 banc n’a pas les emplacements d’identité : le statut qui y apparaît n’est pas
 vérifié ici.
+
+Même jour, onglet Coordonnées en une colonne et retrait de l’historique de
+champ : le scénario de l’infobulle d’historique devient
+`aucune-icone-historique-de-champ` (aucun bouton, aucune requête
+`historique-champ`) ; le scénario de composition capture chaque fenêtre
+(`fenetre-ajout-*`, `fenetre-modification-email-*`, `fenetre-suppression-*`, à
+390 et 1 440 px). 31 scénarios sur 31 ; un échec ponctuel de focus
+(`email-ajout-double-submit-doublon`) observé une fois, réussi aux deux passes
+suivantes.

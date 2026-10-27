@@ -9,7 +9,6 @@ export {
   updatePersonPhone,
 } from './person-contact.service';
 export { createPerson, getPerson, updatePerson } from './person-core.service';
-export { getPersonFieldHistory } from './person-history.service';
 export { listPersons } from './person-list.service';
 export {
   addPersonSocialProfile,

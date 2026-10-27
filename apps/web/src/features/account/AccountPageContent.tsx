@@ -73,7 +73,7 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
   const canManageSessions = allowed(PERMISSIONS.ACCOUNT.MANAGE_SESSIONS);
   const showSecurity =
     canViewSecurity || canChangePassword || canManageMfa || canManageSessions;
-  // Accès is a read-only summary, always available (audit DRT-07).
+  // Autorisations is a read-only summary, always available (audit DRT-07).
   const sections = ACCOUNT_SECTIONS.filter((section) =>
     section.id === 'profile'
       ? canViewProfile

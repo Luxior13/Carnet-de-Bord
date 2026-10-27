@@ -1,4 +1,4 @@
-# Mon compte — Accès
+# Mon compte — Autorisations
 
 [Index des pages](../../pages/README.md) · [Mon compte](README.md) · [Design](../../design/README.md) · [Guide général](../../REFERENCE_GENERALE.md)
 
@@ -22,7 +22,9 @@ La section ne modifie rien ; le serveur reste la seule autorité.
 
 ## Composition actuelle
 
-Une carte « Vos accès » : une phrase de synthèse selon le compte, puis, pour un
+Onglet « Autorisations » (anciennement « Accès », renommé le 27 octobre 2026),
+deuxième onglet comme sur la fiche utilisateur. Une carte « Droits
+d’administration » (le titre ne répète pas l’onglet) : une phrase de synthèse selon le compte, puis, pour un
 Utilisateur délégué, ses autorisations regroupées par catégorie (mêmes
 catégories et libellés que l’onglet Autorisations de la fiche utilisateur),
 chacune précédée d’une coche. Pied « Pour obtenir un accès supplémentaire,
@@ -37,6 +39,11 @@ adressez-vous à un administrateur. », absent pour le superadmin.
 
 ## Décisions retenues
 
+- 27 octobre 2026 : « Mon compte et utilisateur/id devraient être les mêmes
+  idées de pages, donc les mêmes onglets, les mêmes noms, le même ordre » ;
+  « ok go » sur Profil · Autorisations · Sécurité. L’onglet prend le nom, la
+  place et l’icône (bouclier) de celui de la fiche ; Sécurité prend la clé.
+  L’adresse `?section=access` ne change pas.
 - 25 octobre 2026 : section créée après l’audit de cohérence des droits
   ([DRT-07](../../audits/2026-10-25-coherence-des-droits.md)), validée par le
   propriétaire (« ok go »). Pas de ligne de rôle : le badge du bandeau la porte

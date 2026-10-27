@@ -24,9 +24,6 @@ export const PERMISSIONS = {
     VIEW_PROFILE: 'account:view_profile',
     VIEW_SECURITY: 'account:view_security',
   },
-  AUDIT: {
-    VIEW_FIELD_HISTORY: 'audit:view_field_history',
-  },
   DASHBOARD: {
     VIEW: 'dashboard:view',
   },
@@ -420,10 +417,7 @@ export const ACCOUNT_PERMISSION_CATEGORIES: AccountPermissionCategory[] = [
 
 /** All live administrative pages shown in the per-user access overview. */
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
-  createPersonsPermissionCategory(
-    PERMISSIONS.PERSONS,
-    PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY,
-  ),
+  createPersonsPermissionCategory(PERMISSIONS.PERSONS),
   {
     accessPermissionKey: PERMISSIONS.USERS.VIEW,
     assignment: 'delegable',

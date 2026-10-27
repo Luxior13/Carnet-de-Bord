@@ -43,7 +43,7 @@ export const AccessSection: FC<{ userData: UserType }> = ({ userData }) => {
             icon={<Shield className="size-3.5" />}
             id="account-access-heading"
           >
-            Vos accès
+            Droits d’administration
           </SecurityCardTitle>
         </CardHeader>
         <CardContent className="space-y-4 p-4 sm:p-5">

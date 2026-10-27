@@ -86,15 +86,40 @@ export const mergeDraft = (
 export const getKindConfig = (
   kind: PersonChildKind,
 ): {
+  /** Under the dialog title: duplicates are flagged, not blocked (27 October 2026). */
+  duplicateHint: string;
   plural: 'emails' | 'reseaux-sociaux' | 'telephones';
+  /** Under the edit title of the primary item. */
+  primaryHint: string;
   title: string;
 } => {
   switch (kind) {
     case 'email':
-      return { plural: 'emails', title: 'email' };
+      return {
+        duplicateHint:
+          'Si cette adresse figure déjà sur une autre fiche, vous en serez averti.',
+        plural: 'emails',
+        primaryHint:
+          'C’est l’email principal. Pour en changer, choisissez d’abord un autre email comme principal.',
+        title: 'email',
+      };
     case 'phone':
-      return { plural: 'telephones', title: 'téléphone' };
+      return {
+        duplicateHint:
+          'Si ce numéro figure déjà sur une autre fiche, vous en serez averti.',
+        plural: 'telephones',
+        primaryHint:
+          'C’est le téléphone principal. Pour en changer, choisissez d’abord un autre numéro comme principal.',
+        title: 'téléphone',
+      };
     case 'social':
-      return { plural: 'reseaux-sociaux', title: 'profil social' };
+      return {
+        duplicateHint:
+          'Si ce profil figure déjà sur une autre fiche, vous en serez averti.',
+        plural: 'reseaux-sociaux',
+        primaryHint:
+          'C’est le profil principal pour ce réseau. Pour en changer, choisissez d’abord un autre profil comme principal.',
+        title: 'profil social',
+      };
   }
 };

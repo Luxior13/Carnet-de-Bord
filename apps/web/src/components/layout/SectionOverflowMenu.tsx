@@ -13,7 +13,7 @@ import {
 } from '$ui/dropdown-menu';
 import { cn } from '$utils/css.utils';
 
-import { type PageSection } from './PageSectionNavigation';
+import { type PageSection, SectionCount } from './PageSectionNavigation';
 
 type SectionOverflowMenuProps<SectionId extends string> = {
   activeSection: SectionId;
@@ -137,6 +137,9 @@ export const SectionOverflowMenu = <SectionId extends string>({
                   </span>
                 )}
                 <span className="min-w-0 flex-1 truncate">{section.label}</span>
+                {section.count !== undefined && (
+                  <SectionCount count={section.count} />
+                )}
                 {dirtySections.includes(section.id) && <DirtyDot />}
                 {isActive && (
                   <Check aria-hidden="true" className="size-4 shrink-0" />

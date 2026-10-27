@@ -141,7 +141,8 @@ de sécurité démontrée.
 
 - Contrôle serveur de `audit:view`, puis `audit:export` et preuve récente pour
   exporter. Le droit global donne volontairement accès au journal détaillé ; le
-  droit contextuel `audit:view_field_history` a une autre portée. Aucun nouveau
+  droit contextuel `audit:view_field_history` (provenance d’un champ) a été
+  retiré le 27 octobre 2026, en attendant ce journal. Aucun nouveau
   droit n’est justifié par la seule correction visuelle.
 - Exclusion des événements du compte protégé pour les autres lecteurs ; projection
   des métadonnées par liste autorisée, avec exclusion des clés de secrets.

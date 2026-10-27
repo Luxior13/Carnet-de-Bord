@@ -231,6 +231,18 @@ module.exports = async ({
           });
           await trigger.click();
           await expect(dialog(page)).toBeVisible();
+          // 27 October 2026: every window is captured and has no field
+          // history icon.
+          await expect(
+            dialog(page).getByRole("button", { name: /^Historique|origine/ }),
+          ).toHaveCount(0);
+          if ([390, 1440].includes(width))
+            await page.screenshot({
+              path: path.join(
+                work,
+                `fenetre-ajout-${kind.replace(" ", "-")}-${width}.png`,
+              ),
+            });
           await expect(dialog(page).locator("form")).toHaveAttribute(
             "autocomplete",
             "off",
@@ -256,6 +268,26 @@ module.exports = async ({
             .click();
           await expect(dialog(page)).toHaveCount(0);
           await expect(trigger).toBeFocused();
+        }
+        if ([390, 1440].includes(width)) {
+          await editor(page).click();
+          await expect(dialog(page)).toBeVisible();
+          await page.waitForTimeout(300);
+          await page.screenshot({
+            path: path.join(work, `fenetre-modification-email-${width}.png`),
+          });
+          await dialog(page)
+            .getByRole("button", { name: "Supprimer", exact: true })
+            .click();
+          await expect(page.getByRole("alertdialog")).toBeVisible();
+          await page.waitForTimeout(300);
+          await page.screenshot({
+            path: path.join(work, `fenetre-suppression-${width}.png`),
+          });
+          await page
+            .getByRole("alertdialog")
+            .getByRole("button", { name: "Annuler", exact: true })
+            .click();
         }
       },
     );
@@ -828,37 +860,27 @@ module.exports = async ({
     },
     { url: coords, mode: "conflict" },
   );
+  // 27 October 2026: the « who filled this field » icons are gone from every
+  // page until the activity log; nothing asks for a field history any more.
   await run(
-    "provenance-ouverte-revision-relecture-timeout",
+    "aucune-icone-historique-de-champ",
     390,
     async (page, api) => {
-      const trigger = page.getByRole("button", {
-        name: /Historique : Pseudo/,
-      });
-      await trigger.click();
-      await expect(page.getByRole("tooltip")).toContainText("Auteur fictif");
-      await page.evaluate(() => window.__auditSetInitial({ version: 2 }));
-      await expect
-        .poll(
-          () =>
-            api.requests.filter((r) => r.path.endsWith("historique-champ"))
-              .length,
-        )
-        .toBe(2);
-      await expect(page.getByRole("tooltip")).toContainText("Auteur fictif");
-      await page.keyboard.press("Escape");
-      api.historyMode = "hold";
-      await page.evaluate(() => window.__auditSetInitial({ version: 3 }));
-      await trigger.click();
-      await expect(page.getByRole("tooltip")).toContainText(
-        "Information indisponible",
+      await expect(nickname(page)).toHaveValue("CamilleAudit");
+      await expect(
+        page.getByRole("button", { name: /^Historique|origine/ }),
+      ).toHaveCount(0);
+      await page.getByRole("link", { name: "Coordonnées", exact: true }).click();
+      await editor(page).click();
+      await expect(dialog(page)).toBeVisible();
+      await expect(
+        dialog(page).getByRole("button", { name: /^Historique|origine/ }),
+      ).toHaveCount(0);
+      assert.equal(
+        api.requests.filter((r) => r.path.endsWith("historique-champ")).length,
+        0,
       );
-      await page.keyboard.press("Escape");
-      api.historyMode = "success";
-      await trigger.click();
-      await expect(page.getByRole("tooltip")).toContainText("Auteur fictif");
     },
-    { fastTimeout: true },
   );
   await run(
     "identite-conflit-brouillon-revenu-base",

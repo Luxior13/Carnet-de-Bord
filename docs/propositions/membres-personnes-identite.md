@@ -41,7 +41,9 @@ Statut : implémenté, validation finale en cours.
 - [x] `persons:create` — créer une fiche.
 - [x] `persons:update` — modifier identité, contacts et réseaux.
 - [x] `persons:delete` — supprimer définitivement une fiche.
-- [x] `audit:view_field_history` — consulter l’historique détaillé d’un champ.
+- [ ] `audit:view_field_history` — consulter l’historique détaillé d’un champ
+      (retiré le 27 octobre 2026 avec son écran ; à reprendre avec le journal
+      d’activité).
 - [x] Pas de permission par champ : les permissions restent stables quand le
       modèle d’identité évolue.
 - [x] Toutes les routes contrôlent l’authentification puis la permission côté

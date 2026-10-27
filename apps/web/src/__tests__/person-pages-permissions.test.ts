@@ -84,12 +84,12 @@ describe('direct Person page permission boundaries', () => {
     });
   });
 
-  it('resolves every page action independently while keeping history dependent on view', () => {
+  it('resolves every page action independently and ignores the retired field history key', () => {
     expect(
       getPersonCapabilities(
         user({
           [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
-          [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
+          'audit:view_field_history': true,
           [PERMISSIONS.PERSONS.CREATE]: true,
           [PERMISSIONS.PERSONS.DELETE]: true,
           [PERMISSIONS.PERSONS.UPDATE]: true,
@@ -103,13 +103,7 @@ describe('direct Person page permission boundaries', () => {
       canUpdateContact: false,
       canView: true,
       canViewContact: false,
-      canViewProvenance: true,
     });
-    expect(
-      getPersonCapabilities(
-        user({ [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true }) as never,
-      ).canViewProvenance,
-    ).toBe(false);
   });
 
   it('denies a direct list-page visit without persons:view before rendering data', () => {

@@ -124,3 +124,13 @@ Complément du même jour, après l’audit de cohérence des droits : scénario
 `access-summary-*` (section « Accès » pour l’administrateur, l’utilisateur sans
 délégation et l’utilisateur délégué). Passe complète : 28/28 ; non archivée,
 détail dans l’[audit](../../2026-10-25-coherence-des-droits.md).
+
+## Reprise du 27 octobre 2026
+
+Onglets alignés sur la fiche utilisateur (Profil · Autorisations · Sécurité),
+carte « Droits d’administration » : attente du titre mise à jour. Trois passes :
+28/28, 27/28, 28/28. Le scénario instable reste
+`contact-snapshot-conflict-explicit-retry` : le banc remplit le mot de passe
+pendant que la fenêtre de contact place son focus d’ouverture sur l’email, et
+le texte part dans l’email (capture d’échec relue). Course propre au banc,
+sans lien avec les onglets ; non corrigée.

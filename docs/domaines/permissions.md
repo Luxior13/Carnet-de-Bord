@@ -10,7 +10,7 @@ examine uniquement les pages utilisables et les capacités encore présentées d
 leur éditeur. Après accord de l'utilisateur, les corrections du 15 octobre sont
 appliquées : retrait des quatre droits d'activité sans écran actuel, provenance
 rattachée au Répertoire et séparation des coordonnées. L'éditeur présente
-**28 capacités administratives** (26 délégables et deux liées au rôle) et
+**27 capacités administratives** (25 délégables et deux liées au rôle) et
 **sept capacités personnelles** (une configurable et six garanties de base).
 La migration conserve les accès effectifs aux coordonnées des comptes existants.
 
@@ -99,7 +99,10 @@ Autorisation**.
 - pôles `Membres` et `Système` ;
 - pages `Répertoire`, `Utilisateurs` et `Paramètres système` ;
 - provenance des informations dans la page `Répertoire`, dépendante de son
-  accès ; aucune fonction de journal global ni d'activité n'est présentée ;
+  accès ; aucune fonction de journal global ni d'activité n'est présentée.
+  La provenance des champs (`audit:view_field_history`) est retirée le
+  27 octobre 2026 avec son écran, sa route et sa clé enregistrée ; elle
+  reviendra, sous une forme à définir, avec le journal d'activité ;
 - rubriques telles que `Annuaire`, `Profil et contact`, `Sécurité` ou
   `Autorisations` ;
 - autorisations formulées avec un verbe d'action : `Consulter`, `Créer`,
@@ -285,7 +288,6 @@ possède implicitement.
 | `persons:update` | modifier identité et statut | `persons:view` | sensible | Non |
 | `persons:view_contact` | consulter et rechercher emails, téléphones et profils sociaux | `persons:view` | sensible | Non |
 | `persons:update_contact` | ajouter, modifier ou retirer ces coordonnées | `persons:view`, `persons:view_contact` | sensible | Non |
-| `audit:view_field_history` | consulter auteur, action et date du dernier changement d'un champ autorisé | `persons:view` | sensible | Non |
 | `persons:delete` | supprimer définitivement une fiche et ses coordonnées | `persons:view` | critique | Oui (mot de passe de 30 minutes au plus) |
 
 Sans lecture des coordonnées, la fiche et les retours de mutation contiennent
@@ -530,7 +532,7 @@ il n'existe rien à autoriser.
 - Un changement de libellé ou de route ne renomme pas la clé. Un changement de
   sens exige une nouvelle clé et une migration explicite.
 
-Exemples cohérents : `audit:view_field_history`, `users:grant_access`,
+Exemples cohérents : `persons:view_contact`, `users:grant_access`,
 `users:revoke_sessions`, `account:change_password`. Exemple à éviter :
 `system:manage_everything`, qui mélangerait plusieurs ressources, risques et
 responsabilités.

@@ -4,7 +4,6 @@ import { generate } from 'otplib';
 
 import type {
   PersonDetail,
-  PersonFieldHistoryResponse,
   PersonMutationResponse,
   PersonsListResponse,
 } from '../src/features/persons/types/person.types';
@@ -857,40 +856,12 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
       .last(),
   ).toBeVisible();
 
+  // No field history icon on any page since 27 October 2026: the record
+  // never asks for a field history.
+  await expect(
+    page.getByRole('button', { name: /^Historique|origine/ }),
+  ).toHaveCount(0);
   expect(contextualHistoryRequests).toBe(0);
-  const historyTrigger = page.getByRole('button', {
-    name: 'Historique : Pseudo principal',
-  });
-  // The mutation restores the first field on the next frame. Wait for that
-  // completion before starting a new keyboard gesture toward its provenance.
-  const savedNickname = page.getByRole('textbox', {
-    name: /^Pseudo principal/,
-  });
-  await expect(savedNickname).toBeFocused();
-  const historyResponsePromise = page.waitForResponse(
-    (response) =>
-      response.request().method() === 'GET' &&
-      response.url().includes(`/api/personnes/${personId}/historique-champ?`),
-  );
-  await savedNickname.press('Shift+Tab');
-  await expect(historyTrigger).toBeFocused();
-  const historyResponse = await historyResponsePromise;
-  expect(historyResponse.status()).toBe(200);
-  const history =
-    await readApiData<PersonFieldHistoryResponse>(historyResponse);
-  expect(history.items.length).toBeGreaterThan(0);
-  expect(history.items[0]).not.toHaveProperty('after');
-  expect(history.items[0]).not.toHaveProperty('before');
-  await expect.poll(() => contextualHistoryRequests).toBe(1);
-  await expect(page.getByRole('tooltip')).toContainText(
-    'Dernière modification',
-  );
-  await expect(page.getByRole('tooltip')).toContainText(
-    history.items[0]?.actor.displayName ?? '',
-  );
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('tooltip')).toBeHidden();
-  await expect(historyTrigger).toBeFocused();
   page.off('request', onHistoryRequest);
 
   await expectPersonsListFilteringAndPagination(page, uniqueSuffix);

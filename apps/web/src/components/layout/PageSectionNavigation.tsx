@@ -23,6 +23,8 @@ import {
 import { useTabsOverflow } from './useTabsOverflow';
 
 export type PageSection<SectionId extends string = string> = {
+  /** Number of items in the section, shown after its label (27 October 2026). */
+  count?: number;
   icon?: ReactNode;
   id: SectionId;
   label: string;
@@ -66,6 +68,23 @@ const revealLink = (
     viewport.scrollLeft += linkBounds.right - viewportBounds.right;
   }
 };
+
+/**
+ * Item count of a section tab, visual only: the tab keeps its plain name, and
+ * the section itself announces its counts.
+ */
+export const SectionCount = ({
+  count,
+}: {
+  count: number;
+}): React.JSX.Element => (
+  <span
+    aria-hidden="true"
+    className="bg-surface-control-hover text-muted-foreground rounded-full px-1.5 text-xs leading-5 font-medium tabular-nums"
+  >
+    {count}
+  </span>
+);
 
 /** Each section remains a real URL, with native link and keyboard behavior. */
 export const PageSectionNavigation = <SectionId extends string>({
@@ -270,6 +289,9 @@ export const PageSectionNavigation = <SectionId extends string>({
               </span>
             )}
             {section.label}
+            {section.count !== undefined && (
+              <SectionCount count={section.count} />
+            )}
             {isDirty && (
               <>
                 <span
@@ -410,6 +432,9 @@ export const PageSectionNavigation = <SectionId extends string>({
                     </span>
                   )}
                   {section.label}
+                  {section.count !== undefined && (
+                    <SectionCount count={section.count} />
+                  )}
                   {dirtySections.includes(section.id) && (
                     <span className="size-2 shrink-0" />
                   )}

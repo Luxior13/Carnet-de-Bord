@@ -65,36 +65,6 @@ export const PERSON_AUDIT_KEYS = {
   },
 } as const;
 
-const PERSON_HISTORY_FIELDS = {
-  contacts: new Set(['email', 'phone', 'label', 'isPrimary']),
-  identity: new Set(['nickname', 'firstName', 'lastName', 'birthDate']),
-  social: new Set([
-    'networkKey',
-    'identifier',
-    'profileUrl',
-    'label',
-    'isPrimary',
-  ]),
-  structure: new Set(['structureStatus']),
-} as const;
-
-export const isAllowedPersonHistoryField = (
-  sectionKey: string,
-  fieldKey: string,
-  recordId: string | null,
-): boolean => {
-  if (!Object.hasOwn(PERSON_HISTORY_FIELDS, sectionKey)) return false;
-  const section = sectionKey as keyof typeof PERSON_HISTORY_FIELDS;
-  const collectionField = section === 'contacts' || section === 'social';
-
-  return (
-    // `section` is narrowed by the own-key check above.
-    // eslint-disable-next-line security/detect-object-injection
-    PERSON_HISTORY_FIELDS[section].has(fieldKey) &&
-    (collectionField ? Boolean(recordId) : recordId === null)
-  );
-};
-
 const SOCIAL_NETWORK_BY_KEY = new Map(
   PERSON_SOCIAL_NETWORKS.map((network) => [network.key, network]),
 );

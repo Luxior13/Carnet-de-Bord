@@ -7,7 +7,6 @@ import {
 
 import type {
   PersonDetail,
-  PersonFieldHistoryResponse,
   PersonListSort,
   PersonMutationResponse,
   PersonsListResponse,
@@ -139,28 +138,6 @@ export const mutatePersonChild = async ({
       url,
       jsonRequest(method, payload, { signal }),
     ),
-  );
-};
-
-export const getPersonFieldHistory = ({
-  fieldKey,
-  personId,
-  recordId,
-  sectionKey,
-  signal,
-}: {
-  fieldKey: string;
-  personId: string;
-  recordId?: string;
-  sectionKey: string;
-  signal?: AbortSignal;
-}): Promise<PersonFieldHistoryResponse> => {
-  const params = new URLSearchParams({ fieldKey, sectionKey });
-  if (recordId) params.set('recordId', recordId);
-
-  return apiFetchJson<PersonFieldHistoryResponse>(
-    `/api/personnes/${encodeURIComponent(personId)}/historique-champ?${params}`,
-    { cache: 'no-store', signal },
   );
 };
 

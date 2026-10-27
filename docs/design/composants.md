@@ -294,6 +294,18 @@ structure restent adaptées au contenu de chaque écran.
   rangée cachée. Les règles ci-dessous sur la barre collante autonome
   (variante `bar`, flèches en cas de débordement) restent valables pour les
   autres pages.
+- **Compteur d’onglet** (27 octobre 2026) : une section peut porter `count`
+  (`PageSection`), affiché en pastille après le libellé, dans les onglets
+  comme dans « Plus ▾ » ; il est seulement visuel, le nom accessible de
+  l’onglet reste son libellé. Il remplace des compteurs isolés dans le
+  bandeau (fiche personne : « Coordonnées 4 »).
+- **Champ à suggestions** (`datalist`) : l’indicateur du navigateur prend le
+  chevron des menus (`input[list]` dans `globals.css`, 27 octobre 2026).
+- **Confirmation de suppression** : elle nomme l’élément supprimé
+  (« Supprimer camille@example.test ? »), pas « cette information ».
+- **Historique de champ** : aucune icône « qui a renseigné ce champ » sur
+  aucune page (décision du 27 octobre 2026) ; l’historique reviendra avec
+  le journal d’activité.
 - **Navigation entre sections** : toute barre horizontale de navigation entre
   sections disposant de leur propre URL utilise `PageSectionNavigation`,
   directement, via `EntityHeader` ou via `EntityDetailLayout`, sur les pages

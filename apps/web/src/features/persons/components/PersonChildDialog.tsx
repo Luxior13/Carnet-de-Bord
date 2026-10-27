@@ -20,7 +20,6 @@ import {
 import { ApiClientError } from '$utils/api.utils';
 
 import { mutatePersonChild } from '../person.api';
-import { PERSON_AUDIT_KEYS } from '../person.constants';
 import { zodErrorMap } from '../person.ui';
 import {
   type ChildDraft,
@@ -40,12 +39,7 @@ import {
   updatePersonPhoneSchema,
   updatePersonSocialProfileSchema,
 } from '../schemas/person.schemas';
-import type {
-  PersonDetail,
-  PersonEmailItem,
-  PersonPhoneItem,
-  PersonSocialProfileItem,
-} from '../types/person.types';
+import type { PersonDetail } from '../types/person.types';
 import {
   type EmailDraft,
   EmailFields,
@@ -54,12 +48,10 @@ import {
   type SocialDraft,
   SocialFields,
 } from './PersonCollectionFields';
-import type { PersonFieldProvenanceTarget } from './PersonFieldProvenanceHint';
 
 type PersonChildDialogProps = {
   available?: boolean;
   canEdit: boolean;
-  canViewProvenance: boolean;
   defaultPrimary: boolean;
   item: PersonChildItem | null;
   kind: PersonChildKind;
@@ -79,7 +71,6 @@ type ValidationResult =
 const PersonChildDialogContent: FC<PersonChildDialogProps> = ({
   available = true,
   canEdit,
-  canViewProvenance,
   defaultPrimary,
   item,
   kind,
@@ -437,104 +428,6 @@ const PersonChildDialogContent: FC<PersonChildDialogProps> = ({
   };
 
   const showPrimarySwitch = !baseItem?.isPrimary;
-  const provenanceTarget = (
-    fieldKey: string,
-    label: string,
-    sectionKey: string,
-    hasValue: boolean,
-  ): PersonFieldProvenanceTarget | undefined => {
-    return canViewProvenance && baseItem && hasValue
-      ? {
-          fieldKey,
-          label,
-          personId: person.id,
-          recordId: baseItem.id,
-          revision: childVersion ?? baseItem.version,
-          sectionKey,
-        }
-      : undefined;
-  };
-  const emailItem =
-    kind === 'email' ? (baseItem as PersonEmailItem | null) : null;
-  const phoneItem =
-    kind === 'phone' ? (baseItem as PersonPhoneItem | null) : null;
-  const socialItem =
-    kind === 'social' ? (baseItem as PersonSocialProfileItem | null) : null;
-  const provenances =
-    kind === 'email'
-      ? {
-          email: provenanceTarget(
-            'email',
-            'Adresse email',
-            PERSON_AUDIT_KEYS.sections.contacts,
-            Boolean(emailItem?.email),
-          ),
-          isPrimary: provenanceTarget(
-            'isPrimary',
-            'Statut principal',
-            PERSON_AUDIT_KEYS.sections.contacts,
-            Boolean(emailItem),
-          ),
-          label: provenanceTarget(
-            'label',
-            'Libellé',
-            PERSON_AUDIT_KEYS.sections.contacts,
-            Boolean(emailItem?.label),
-          ),
-        }
-      : kind === 'phone'
-        ? {
-            isPrimary: provenanceTarget(
-              'isPrimary',
-              'Statut principal',
-              PERSON_AUDIT_KEYS.sections.contacts,
-              Boolean(phoneItem),
-            ),
-            label: provenanceTarget(
-              'label',
-              'Libellé',
-              PERSON_AUDIT_KEYS.sections.contacts,
-              Boolean(phoneItem?.label),
-            ),
-            phone: provenanceTarget(
-              'phone',
-              'Numéro de téléphone',
-              PERSON_AUDIT_KEYS.sections.contacts,
-              Boolean(phoneItem?.phone),
-            ),
-          }
-        : {
-            identifier: provenanceTarget(
-              'identifier',
-              'Identifiant visible',
-              PERSON_AUDIT_KEYS.sections.social,
-              Boolean(socialItem?.identifier),
-            ),
-            isPrimary: provenanceTarget(
-              'isPrimary',
-              'Statut principal',
-              PERSON_AUDIT_KEYS.sections.social,
-              Boolean(socialItem),
-            ),
-            label: provenanceTarget(
-              'label',
-              'Libellé',
-              PERSON_AUDIT_KEYS.sections.social,
-              Boolean(socialItem?.label),
-            ),
-            networkKey: provenanceTarget(
-              'networkKey',
-              'Réseau',
-              PERSON_AUDIT_KEYS.sections.social,
-              Boolean(socialItem?.networkKey),
-            ),
-            profileUrl: provenanceTarget(
-              'profileUrl',
-              'URL du profil',
-              PERSON_AUDIT_KEYS.sections.social,
-              Boolean(socialItem?.profileUrl),
-            ),
-          };
 
   return (
     <>
@@ -575,8 +468,8 @@ const PersonChildDialogContent: FC<PersonChildDialogProps> = ({
                 {!canEdit
                   ? 'Consultez les informations sans modifier la fiche.'
                   : baseItem?.isPrimary
-                    ? "Cette information est principale. Pour la remplacer, définissez d'abord une autre information comme principale."
-                    : 'Les doublons sur une autre fiche sont signalés sans bloquer les cas légitimes.'}
+                    ? config.primaryHint
+                    : config.duplicateHint}
               </DialogDescription>
             </DialogHeader>
             <div className="min-h-0 space-y-4 overflow-y-auto px-4 py-4 sm:px-5">
@@ -651,7 +544,6 @@ const PersonChildDialogContent: FC<PersonChildDialogProps> = ({
                   idPrefix="person-child-email"
                   layout="stacked"
                   onChange={changeDraft}
-                  provenances={provenances}
                   showPrimarySwitch={showPrimarySwitch}
                   value={draft as EmailDraft}
                   warnings={duplicateWarnings}
@@ -664,7 +556,6 @@ const PersonChildDialogContent: FC<PersonChildDialogProps> = ({
                   idPrefix="person-child-phone"
                   layout="stacked"
                   onChange={changeDraft}
-                  provenances={provenances}
                   showPrimarySwitch={showPrimarySwitch}
                   value={draft as PhoneDraft}
                   warnings={duplicateWarnings}
@@ -677,7 +568,6 @@ const PersonChildDialogContent: FC<PersonChildDialogProps> = ({
                   idPrefix="person-child-social"
                   layout="stacked"
                   onChange={changeDraft}
-                  provenances={provenances}
                   showPrimarySwitch={showPrimarySwitch}
                   value={draft as SocialDraft}
                   warnings={duplicateWarnings}

@@ -17,7 +17,6 @@ import {
   PATCH as updateEmail,
 } from '$app/api/personnes/[id]/emails/[emailId]/route';
 import { POST as addEmail } from '$app/api/personnes/[id]/emails/route';
-import { GET as history } from '$app/api/personnes/[id]/historique-champ/route';
 import {
   DELETE as deleteSocial,
   PATCH as updateSocial,
@@ -194,7 +193,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
           mfaEnabledAt: new Date(),
           passwordHash: 'unused-password-fixture',
           permissions: {
-            [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
             [PERMISSIONS.PERSONS.CREATE]: true,
             [PERMISSIONS.PERSONS.VIEW_CONTACT]: true,
             [PERMISSIONS.PERSONS.UPDATE_CONTACT]: true,
@@ -322,22 +320,18 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     vi.unstubAllEnvs();
   });
 
-  it('denies anonymous detail, mutation, history and deletion', async () => {
+  it('denies anonymous detail, mutation and deletion', async () => {
     const responses = await Promise.all([
       GET(request(undefined, 'GET'), context('unknown')),
       PATCH(request({}), context('unknown')),
       DELETE(request({}, 'DELETE', '', randomUUID()), context('unknown')),
-      history(
-        request(undefined, 'GET', '?fieldKey=nickname&sectionKey=identity'),
-        context('unknown'),
-      ),
     ]);
     expect(responses.map((response) => response.status)).toEqual([
-      401, 401, 401, 401,
+      401, 401, 401,
     ]);
   });
 
-  it('masks the root author in detail, list and provenance while retaining the stored snapshot', async () => {
+  it('masks the root author in detail and list while retaining the stored snapshot', async () => {
     const root = await signIn({
       firstName: 'PrivateRootMarker',
       isProtected: true,
@@ -348,7 +342,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     await signIn({
       permissions: {
         [PERMISSIONS.PERSONS.VIEW]: true,
-        [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
       },
     });
     const detail = await read(person.id);
@@ -371,17 +364,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
       displayName: 'Superadmin',
       loginName: null,
     });
-    const response = await history(
-      request(undefined, 'GET', '?fieldKey=nickname&sectionKey=identity'),
-      context(person.id),
-    );
-    const provenance = (await response.json()).data.items[0];
-    expect(provenance.actor).toEqual({
-      displayName: 'Superadmin',
-      loginName: null,
-    });
-    expect(provenance).not.toHaveProperty('before');
-    expect(provenance).not.toHaveProperty('after');
     const stored = await db.auditLog.findFirstOrThrow({
       where: { entityId: person.id, entityType: 'PERSON' },
     });
@@ -389,14 +371,13 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     expect(stored.actorDisplayNameSnapshot).toContain(root.firstName);
   });
 
-  it('separates identity writes, coordinate writes and contact provenance', async () => {
+  it('separates identity writes and coordinate writes', async () => {
     await signIn();
     const person = await fixture({ emails: [families[0]?.value(9)] });
     await signIn({
       permissions: {
         [PERMISSIONS.PERSONS.VIEW]: true,
         [PERMISSIONS.PERSONS.UPDATE]: true,
-        [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
       },
     });
     const changed = (
@@ -414,19 +395,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
           request(
             { email: 'forbidden@example.test', version: changed.version },
             'POST',
-          ),
-          context(person.id),
-        )
-      ).status,
-    ).toBe(403);
-    expect(
-      (
-        await history(
-          request(
-            undefined,
-            'GET',
-            '?fieldKey=email&sectionKey=contacts&recordId=' +
-              person.emails[0]?.id,
           ),
           context(person.id),
         )
@@ -703,23 +671,14 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
         )
       ).status,
     ).toBe(403);
-    expect(
-      (
-        await history(
-          request(undefined, 'GET', '?fieldKey=nickname&sectionKey=identity'),
-          context(person.id),
-        )
-      ).status,
-    ).toBe(403);
   });
 
-  it('requires current view permission even with mutation/history overrides', async () => {
+  it('requires current view permission even with mutation overrides', async () => {
     const actor = await signIn();
     const person = await fixture();
     await db.user.update({
       data: {
         permissions: {
-          [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
           [PERMISSIONS.PERSONS.DELETE]: true,
           [PERMISSIONS.PERSONS.UPDATE]: true,
           [PERMISSIONS.PERSONS.VIEW]: false,
@@ -737,14 +696,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
       (
         await DELETE(
           request({ version: 1 }, 'DELETE', '', randomUUID()),
-          context(person.id),
-        )
-      ).status,
-    ).toBe(403);
-    expect(
-      (
-        await history(
-          request(undefined, 'GET', '?fieldKey=nickname&sectionKey=identity'),
           context(person.id),
         )
       ).status,
@@ -775,14 +726,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     ).person;
     expect(noOp).toMatchObject({ updatedAt: updated.updatedAt, version: 2 });
     expect(await auditCount(person.id)).toBe(2);
-    const response = await history(
-      request(undefined, 'GET', '?fieldKey=lastName&sectionKey=identity'),
-      context(person.id),
-    );
-    expect(response.status).toBe(200);
-    expect((await response.json()).data.items[0]).toMatchObject({
-      action: 'UPDATE',
-    });
   });
 
   it('rejects missing, stale and future identity versions plus unknown payload keys', async () => {
@@ -1110,27 +1053,7 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     ).toBe(true);
   });
 
-  it.each(['constructor', '__proto__', 'toString', 'unknown'])(
-    'rejects invalid history section %s as 400',
-    async (sectionKey) => {
-      await signIn();
-      const person = await fixture();
-      const response = await history(
-        request(
-          undefined,
-          'GET',
-          `?fieldKey=nickname&sectionKey=${sectionKey}`,
-        ),
-        context(person.id),
-      );
-      expect(response.status).toBe(400);
-      expect((await response.json()).error.message).toBe(
-        "Champ d'historique invalide",
-      );
-    },
-  );
-
-  it('returns only the bounded exact field history and preserves encrypted storage', async () => {
+  it('keeps changed field values encrypted in storage', async () => {
     await signIn();
     let person = await fixture();
     for (const nickname of ['Premier', 'Deuxième', 'Troisième', 'Quatrième']) {
@@ -1143,15 +1066,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
         )
       ).person;
     }
-    const response = await history(
-      request(undefined, 'GET', '?fieldKey=nickname&sectionKey=identity'),
-      context(person.id),
-    );
-    expect(response.status).toBe(200);
-    const items = (await response.json()).data.items;
-    expect(items).toHaveLength(1);
-    expect(items[0]).not.toHaveProperty('after');
-    expect(items[0]).not.toHaveProperty('before');
     const stored = await db.auditFieldChange.findMany({
       where: { entityId: person.id, fieldKey: 'nickname' },
     });
@@ -1275,14 +1189,6 @@ describe.skipIf(!target)('person detail on fully migrated PostgreSQL', () => {
     ).toMatchObject({ deletionOperationId: operation });
     expect(
       (await GET(request(undefined, 'GET'), context(person.id))).status,
-    ).toBe(404);
-    expect(
-      (
-        await history(
-          request(undefined, 'GET', '?fieldKey=nickname&sectionKey=identity'),
-          context(person.id),
-        )
-      ).status,
     ).toBe(404);
   });
 

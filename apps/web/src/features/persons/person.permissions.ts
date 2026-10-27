@@ -13,7 +13,6 @@ export type PersonCapabilities = Readonly<{
   canUpdateContact: boolean;
   canView: boolean;
   canViewContact: boolean;
-  canViewProvenance: boolean;
 }>;
 
 export const getPersonCapabilities = (
@@ -34,7 +33,5 @@ export const getPersonCapabilities = (
     canUpdateContact: permitted(PERMISSIONS.PERSONS.UPDATE_CONTACT),
     canView,
     canViewContact: permitted(PERMISSIONS.PERSONS.VIEW_CONTACT),
-    canViewProvenance:
-      canView && permitted(PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY),
   };
 };

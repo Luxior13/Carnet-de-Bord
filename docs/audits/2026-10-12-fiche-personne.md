@@ -14,7 +14,7 @@ Sources principales : [page serveur](../../apps/web/src/app/membres/repertoire/[
 [identité](../../apps/web/src/features/persons/components/PersonIdentitySection.tsx),
 [coordonnées](../../apps/web/src/features/persons/components/PersonCollectionsSection.tsx),
 [dialogue](../../apps/web/src/features/persons/components/PersonChildDialog.tsx),
-[provenance](../../apps/web/src/features/persons/components/PersonFieldProvenanceHint.tsx)
+provenance (`PersonFieldProvenanceHint`, retiré le 27 octobre 2026)
 et [suppression](../../apps/web/src/features/persons/server/person-deletion.ts).
 
 **Conforme sur le périmètre vérifié : trente parcours client, treize parcours

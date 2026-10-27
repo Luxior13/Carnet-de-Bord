@@ -17,10 +17,6 @@ import {
   PERSON_SOCIAL_LABEL_SUGGESTIONS,
   PERSON_SOCIAL_NETWORKS,
 } from '../person.constants';
-import {
-  PersonFieldProvenanceHint,
-  type PersonFieldProvenanceTarget,
-} from './PersonFieldProvenanceHint';
 import { PersonSocialNetworkIcon } from './PersonSocialNetworkIcon';
 
 export type EmailDraft = {
@@ -45,9 +41,6 @@ export type SocialDraft = {
 };
 
 type FieldErrors = Record<string, string>;
-type FieldProvenances = Readonly<
-  Partial<Record<string, PersonFieldProvenanceTarget>>
->;
 type FieldsLayout = 'grid' | 'stacked';
 
 const FieldError: FC<{ id: string; message?: string }> = ({ id, message }) =>
@@ -83,7 +76,6 @@ const LabelField: FC<{
   keyPrefix?: string;
   listId: string;
   onChange: (value: string) => void;
-  provenance?: PersonFieldProvenanceTarget;
   suggestions: readonly string[];
   value: string;
 }> = ({
@@ -93,7 +85,6 @@ const LabelField: FC<{
   keyPrefix = '',
   listId,
   onChange,
-  provenance,
   suggestions,
   value,
 }) => {
@@ -105,7 +96,6 @@ const LabelField: FC<{
         <Label htmlFor={`${idPrefix}-label`} required>
           Libellé
         </Label>
-        <PersonFieldProvenanceHint target={provenance} />
       </div>
       <Input
         aria-describedby={error ? `${idPrefix}-label-error` : undefined}
@@ -134,14 +124,12 @@ const PrimarySwitch: FC<{
   id: string;
   label: string;
   onChange: (checked: boolean) => void;
-  provenance?: PersonFieldProvenanceTarget;
-}> = ({ checked, disabled, id, label, onChange, provenance }) => (
+}> = ({ checked, disabled, id, label, onChange }) => (
   <div className="border-border-default bg-surface-inset flex items-center justify-between gap-4 rounded-lg border px-3 py-2.5">
     <Label className="leading-5" htmlFor={id}>
       {label}
     </Label>
     <div className="flex items-center gap-1">
-      <PersonFieldProvenanceHint target={provenance} />
       <Switch
         checked={checked}
         disabled={disabled}
@@ -159,7 +147,6 @@ type EmailFieldsProps = {
   keyPrefix?: string;
   layout?: FieldsLayout;
   onChange: (value: EmailDraft) => void;
-  provenances?: FieldProvenances;
   showPrimarySwitch?: boolean;
   value: EmailDraft;
   warnings?: FieldErrors;
@@ -172,7 +159,6 @@ export const EmailFields: FC<EmailFieldsProps> = ({
   keyPrefix = '',
   layout = 'grid',
   onChange,
-  provenances,
   showPrimarySwitch = true,
   value,
   warnings = {},
@@ -191,7 +177,6 @@ export const EmailFields: FC<EmailFieldsProps> = ({
           <Label htmlFor={`${idPrefix}-email`} required>
             Email
           </Label>
-          <PersonFieldProvenanceHint target={provenances?.email} />
         </div>
         <Input
           aria-describedby={
@@ -222,18 +207,16 @@ export const EmailFields: FC<EmailFieldsProps> = ({
         keyPrefix={keyPrefix}
         listId={`${idPrefix}-contact-labels`}
         onChange={(label) => onChange({ ...value, label })}
-        provenance={provenances?.label}
         suggestions={PERSON_CONTACT_LABEL_SUGGESTIONS}
         value={value.label}
       />
-      {(showPrimarySwitch || provenances?.isPrimary) && (
+      {showPrimarySwitch && (
         <PrimarySwitch
           checked={value.isPrimary}
           disabled={disabled || !showPrimarySwitch}
           id={`${idPrefix}-primary`}
           label="Email principal"
           onChange={(isPrimary) => onChange({ ...value, isPrimary })}
-          provenance={provenances?.isPrimary}
         />
       )}
     </div>
@@ -247,7 +230,6 @@ type PhoneFieldsProps = {
   keyPrefix?: string;
   layout?: FieldsLayout;
   onChange: (value: PhoneDraft) => void;
-  provenances?: FieldProvenances;
   showPrimarySwitch?: boolean;
   value: PhoneDraft;
   warnings?: FieldErrors;
@@ -260,7 +242,6 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
   keyPrefix = '',
   layout = 'grid',
   onChange,
-  provenances,
   showPrimarySwitch = true,
   value,
   warnings = {},
@@ -307,7 +288,6 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
           <Label htmlFor={`${idPrefix}-phone`} required>
             Numéro
           </Label>
-          <PersonFieldProvenanceHint target={provenances?.phone} />
         </div>
         <Input
           aria-describedby={
@@ -338,18 +318,16 @@ export const PhoneFields: FC<PhoneFieldsProps> = ({
         keyPrefix={keyPrefix}
         listId={`${idPrefix}-contact-labels`}
         onChange={(label) => onChange({ ...value, label })}
-        provenance={provenances?.label}
         suggestions={PERSON_CONTACT_LABEL_SUGGESTIONS}
         value={value.label}
       />
-      {(showPrimarySwitch || provenances?.isPrimary) && (
+      {showPrimarySwitch && (
         <PrimarySwitch
           checked={value.isPrimary}
           disabled={disabled || !showPrimarySwitch}
           id={`${idPrefix}-primary`}
           label="Téléphone principal"
           onChange={(isPrimary) => onChange({ ...value, isPrimary })}
-          provenance={provenances?.isPrimary}
         />
       )}
     </div>
@@ -363,7 +341,6 @@ type SocialFieldsProps = {
   keyPrefix?: string;
   layout?: FieldsLayout;
   onChange: (value: SocialDraft) => void;
-  provenances?: FieldProvenances;
   showPrimarySwitch?: boolean;
   value: SocialDraft;
   warnings?: FieldErrors;
@@ -376,7 +353,6 @@ export const SocialFields: FC<SocialFieldsProps> = ({
   keyPrefix = '',
   layout = 'grid',
   onChange,
-  provenances,
   showPrimarySwitch = true,
   value,
   warnings = {},
@@ -396,7 +372,6 @@ export const SocialFields: FC<SocialFieldsProps> = ({
           <Label htmlFor={`${idPrefix}-network`} required>
             Réseau
           </Label>
-          <PersonFieldProvenanceHint target={provenances?.networkKey} />
         </div>
         <Select
           disabled={disabled}
@@ -444,14 +419,12 @@ export const SocialFields: FC<SocialFieldsProps> = ({
         keyPrefix={keyPrefix}
         listId={`${idPrefix}-social-labels`}
         onChange={(label) => onChange({ ...value, label })}
-        provenance={provenances?.label}
         suggestions={PERSON_SOCIAL_LABEL_SUGGESTIONS}
         value={value.label}
       />
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5">
           <Label htmlFor={`${idPrefix}-identifier`}>Identifiant visible</Label>
-          <PersonFieldProvenanceHint target={provenances?.identifier} />
         </div>
         <Input
           aria-describedby={
@@ -483,7 +456,6 @@ export const SocialFields: FC<SocialFieldsProps> = ({
       <div className="space-y-1.5">
         <div className="flex items-center gap-1.5">
           <Label htmlFor={`${idPrefix}-url`}>URL du profil</Label>
-          <PersonFieldProvenanceHint target={provenances?.profileUrl} />
         </div>
         <Input
           aria-describedby={
@@ -513,7 +485,7 @@ export const SocialFields: FC<SocialFieldsProps> = ({
       >
         Renseignez au moins un identifiant visible ou une URL de profil.
       </p>
-      {(showPrimarySwitch || provenances?.isPrimary) && (
+      {showPrimarySwitch && (
         <div className={layout === 'grid' ? 'sm:col-span-2' : undefined}>
           <PrimarySwitch
             checked={value.isPrimary}
@@ -521,7 +493,6 @@ export const SocialFields: FC<SocialFieldsProps> = ({
             id={`${idPrefix}-primary`}
             label="Profil principal pour ce réseau"
             onChange={(isPrimary) => onChange({ ...value, isPrimary })}
-            provenance={provenances?.isPrimary}
           />
         </div>
       )}

@@ -274,8 +274,8 @@ Reproduction minimale des sondes :
 - [Écriture de l'auteur Personnes](../../apps/web/src/features/persons/server/person-audit.ts),
   [lecture de la fiche](../../apps/web/src/features/persons/server/person-core.service.ts),
   [lecture de la liste](../../apps/web/src/features/persons/server/person-list.service.ts),
-  [lecture de provenance](../../apps/web/src/features/persons/server/person-history.service.ts),
-  [consommateur de provenance](../../apps/web/src/features/persons/components/PersonFieldProvenanceHint.tsx).
+  lecture de provenance (`person-history.service.ts`, retiré le 27 octobre 2026),
+  consommateur de provenance (`PersonFieldProvenanceHint`, retiré le 27 octobre 2026).
 - [Capacités du Répertoire](../../apps/web/src/features/persons/person.permissions.ts),
   [navigation des onglets utilisateur](../../apps/web/src/components/users/user-detail/UserDetailNavigation.tsx),
   API d'activité encore joignable (`app/api/users/[id]/audit/route.ts`, [retirée le 25 octobre 2026](2026-10-23-revue-complete.md#suivi--lot-3-du-25-octobre-2026)).

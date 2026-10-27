@@ -12,11 +12,9 @@ import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
 import { ApiClientError } from '$utils/api.utils';
 
 import { updatePerson } from '../person.api';
-import { PERSON_AUDIT_KEYS } from '../person.constants';
 import { isPersonIdentityEqual, zodErrorMap } from '../person.ui';
 import { updatePersonSchema } from '../schemas/person.schemas';
 import type { PersonDetail } from '../types/person.types';
-import type { PersonFieldProvenanceTarget } from './PersonFieldProvenanceHint';
 import {
   PersonIdentityFields,
   type PersonIdentityFormValue,
@@ -25,7 +23,6 @@ import {
 type PersonIdentitySectionProps = {
   available?: boolean;
   canUpdate: boolean;
-  canViewProvenance: boolean;
   onChange: (person: PersonDetail) => void;
   onDirtyChange?: (dirty: boolean) => void;
   onReload: () => Promise<PersonDetail>;
@@ -47,7 +44,6 @@ const toForm = (person: PersonDetail): PersonIdentityFormValue => ({
 export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   available = true,
   canUpdate,
-  canViewProvenance,
   onChange,
   onDirtyChange,
   onReload,
@@ -320,54 +316,6 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
     }
   };
 
-  const provenanceTarget = (
-    fieldKey: keyof PersonIdentityFormValue,
-    label: string,
-    sectionKey: string,
-    hasValue: boolean,
-  ): PersonFieldProvenanceTarget | undefined =>
-    canViewProvenance && hasValue
-      ? {
-          fieldKey,
-          label,
-          personId: person.id,
-          revision: version,
-          sectionKey,
-        }
-      : undefined;
-  const provenances = {
-    birthDate: provenanceTarget(
-      'birthDate',
-      'Date de naissance',
-      PERSON_AUDIT_KEYS.sections.identity,
-      Boolean(person.birthDate),
-    ),
-    firstName: provenanceTarget(
-      'firstName',
-      'Prénom',
-      PERSON_AUDIT_KEYS.sections.identity,
-      Boolean(person.firstName),
-    ),
-    lastName: provenanceTarget(
-      'lastName',
-      'Nom',
-      PERSON_AUDIT_KEYS.sections.identity,
-      Boolean(person.lastName),
-    ),
-    nickname: provenanceTarget(
-      'nickname',
-      'Pseudo principal',
-      PERSON_AUDIT_KEYS.sections.identity,
-      Boolean(person.nickname),
-    ),
-    structureStatus: provenanceTarget(
-      'structureStatus',
-      'Statut dans la structure',
-      PERSON_AUDIT_KEYS.sections.structure,
-      Boolean(person.structureStatus),
-    ),
-  };
-
   return (
     <>
       <section id="person-identity">
@@ -416,7 +364,6 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
               onChange={(key, nextValue) =>
                 setForm((current) => ({ ...current, [key]: nextValue }))
               }
-              provenances={provenances}
               value={form}
               variant="quiet"
               part="names"
@@ -434,7 +381,6 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
               onChange={(key, nextValue) =>
                 setForm((current) => ({ ...current, [key]: nextValue }))
               }
-              provenances={provenances}
               value={form}
               variant="quiet"
               part="situation"

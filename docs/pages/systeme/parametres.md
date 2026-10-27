@@ -489,7 +489,7 @@ Références d'implémentation examinées :
 [schéma et relations](../../../packages/database/prisma/schema.prisma),
 [procédures de purge](../../../packages/database/prisma/migrations/20260721120000_person_identity_foundation/migration.sql),
 [écriture de l'historique personne](../../../apps/web/src/features/persons/server/person-audit.ts),
-[lecture de cet historique](../../../apps/web/src/features/persons/server/person-history.service.ts).
+lecture de cet historique (`person-history.service.ts`, retiré le 27 octobre 2026).
 
 ## Vérification du 11 octobre 2026
 

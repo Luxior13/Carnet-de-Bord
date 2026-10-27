@@ -1,14 +1,6 @@
 'use client';
 
-import {
-  AtSign,
-  Clock3,
-  Mail,
-  Phone,
-  RefreshCw,
-  Share2,
-  UserRound,
-} from 'lucide-react';
+import { AtSign, Clock3, RefreshCw, UserRound } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import React, {
   type FC,
@@ -107,42 +99,6 @@ const PersonRecordDates: FC<{ person: PersonDetail }> = ({ person }) => {
   );
 };
 
-const PersonContactSummary: FC<{ person: PersonDetail }> = ({ person }) => {
-  const items = [
-    {
-      count: person.emails.length,
-      icon: <Mail aria-hidden="true" className="size-3.5" />,
-      label: 'email(s)',
-    },
-    {
-      count: person.phones.length,
-      icon: <Phone aria-hidden="true" className="size-3.5" />,
-      label: 'téléphone(s)',
-    },
-    {
-      count: person.socialProfiles.length,
-      icon: <Share2 aria-hidden="true" className="size-3.5" />,
-      label: 'profil(s) social(aux)',
-    },
-  ];
-
-  return (
-    <div className="text-muted-foreground flex items-center gap-3 text-xs tabular-nums">
-      {items.map((item) => (
-        <span
-          aria-label={`${item.count} ${item.label}`}
-          className="inline-flex items-center gap-1"
-          key={item.label}
-          title={`${item.count} ${item.label}`}
-        >
-          {item.icon}
-          {item.count}
-        </span>
-      ))}
-    </div>
-  );
-};
-
 const PersonDetailContent: FC<PersonDetailPageProps> = ({
   activeSection: requestedSection,
   initialPerson,
@@ -161,14 +117,8 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
     initialPerson ?? null,
   );
   const [identityDirty, setIdentityDirty] = useState(false);
-  const {
-    canDelete,
-    canUpdate,
-    canUpdateContact,
-    canView,
-    canViewContact,
-    canViewProvenance,
-  } = getPersonCapabilities(userData);
+  const { canDelete, canUpdate, canUpdateContact, canView, canViewContact } =
+    getPersonCapabilities(userData);
   const activeSection = canViewContact ? requestedSection : 'identite';
   const featureOperational = operationalFeatureIds.has(FEATURES.persons.id);
   const available = !featureAvailabilityLoaded || featureOperational;
@@ -366,9 +316,6 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
         condensedAside={<PersonStatusBadge status={person.structureStatus} />}
         dirtySections={identityDirty ? ['identite'] : []}
         ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
-        heroActions={
-          canViewContact ? <PersonContactSummary person={person} /> : undefined
-        }
         heroDescription={<PersonRecordDates person={person} />}
         heroIcon={
           <PersonAvatar className="size-full rounded-md" person={person} />
@@ -379,6 +326,17 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
         sectionHref={sectionHref}
         sections={PERSON_DETAIL_SECTIONS.filter(
           (section) => section.id !== 'coordonnees' || canViewContact,
+        ).map((section) =>
+          // The tab says how many contacts there are (27 October 2026).
+          section.id === 'coordonnees'
+            ? {
+                ...section,
+                count:
+                  person.emails.length +
+                  person.phones.length +
+                  person.socialProfiles.length,
+              }
+            : section,
         )}
       >
         {activeSection === 'identite' ? (
@@ -387,7 +345,6 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
               key={person.id}
               available={available}
               canUpdate={canUpdate}
-              canViewProvenance={canViewProvenance}
               onChange={acceptPerson}
               onDirtyChange={setIdentityDirty}
               onReload={load}
@@ -407,7 +364,6 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
             <PersonCollectionsSection
               available={available}
               canUpdate={canUpdateContact}
-              canViewProvenance={canViewProvenance}
               onChange={acceptPerson}
               onReload={load}
               person={person}
@@ -451,7 +407,6 @@ export const PersonDetailPage: FC<PersonDetailPageProps> = (props) => {
     capabilities.canViewContact,
     capabilities.canUpdateContact,
     capabilities.canDelete,
-    capabilities.canViewProvenance,
   ].join(':');
   const initialScopeRef = useRef(scope);
   const initialSnapshotAllowedRef = useRef(true);

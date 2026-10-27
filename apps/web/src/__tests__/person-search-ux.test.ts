@@ -41,15 +41,6 @@ const getLastSql = (): { text: string; values: readonly unknown[] } => {
   return { text: query.strings.join('?'), values: query.values };
 };
 
-// Test-owned paths only; neither URL receives external input.
-// eslint-disable-next-line security/detect-non-literal-fs-filename
-const provenanceHintSource = readFileSync(
-  new URL(
-    '../features/persons/components/PersonFieldProvenanceHint.tsx',
-    import.meta.url,
-  ),
-  'utf8',
-);
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const collectionsSource = readFileSync(
   new URL(
@@ -492,44 +483,21 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(detailPageSource).toContain('<PersonAvatar');
   });
 
-  it('shows only field provenance in an accessible tooltip', () => {
-    expect(provenanceHintSource).toContain('void load()');
-    expect(provenanceHintSource).toContain('authorizationRevision');
-    for (const key of [
-      'fieldKey,',
-      'personId,',
-      'recordId,',
-      'revision,',
-      'sectionKey,',
+  it('shows no field provenance icon on any page (27 October 2026)', () => {
+    // The owner removed the « who filled this field » hints; field history
+    // will come back with the activity log.
+    for (const source of [
+      collectionFieldsSource,
+      collectionsSource,
+      childDialogSource,
+      identityFieldsSource,
+      identitySectionSource,
+      detailPageSource,
     ]) {
-      expect(provenanceHintSource).toContain(key);
+      expect(source).not.toContain('PersonFieldProvenanceHint');
+      expect(source).not.toContain('provenance');
+      expect(source).not.toContain('canViewProvenance');
     }
-    expect(provenanceHintSource).toContain('<Tooltip');
-    expect(provenanceHintSource).toContain('Historique :');
-    expect(provenanceHintSource).toContain('onClick={() => handleOpenChange');
-    expect(provenanceHintSource).toContain('latest.actor');
-    expect(provenanceHintSource).toContain('latest.at');
-    expect(provenanceHintSource).not.toContain('latest.before');
-    expect(provenanceHintSource).not.toContain('latest.after');
-    expect(provenanceHintSource).not.toContain('localStorage');
-    expect(provenanceHintSource).not.toContain('sessionStorage');
-    expect(provenanceHintSource).not.toContain('Voir dans le journal');
-    expect(collectionsSource).not.toContain('fieldKey="email"');
-    expect(collectionsSource).not.toContain('fieldKey="phone"');
-    expect(collectionFieldsSource).toContain('target={provenances?.email}');
-    expect(collectionFieldsSource).toContain('target={provenances?.phone}');
-    expect(identitySectionSource).not.toContain('PersonFieldHistoryPanel');
-    expect(identityFieldsSource).toContain(
-      'provenance={provenances?.nickname}',
-    );
-    expect(identityFieldsSource).toContain(
-      'provenance={provenances?.structureStatus}',
-    );
-    expect(childDialogSource).toContain("'label',");
-    expect(childDialogSource).toContain("'isPrimary',");
-    expect(childDialogSource).toContain(
-      'canViewProvenance && baseItem && hasValue',
-    );
     expect(collectionsSource).toContain('canEdit={canUpdate}');
     expect(childDialogSource).toContain('layout="stacked"');
     expect(collectionFieldsSource).toContain(
@@ -585,10 +553,15 @@ describe('person short-lived sensitive UX contracts', () => {
   });
 
   it('separates each contact collection into an independent responsive card', () => {
-    expect(collectionsSource).toContain(
-      'xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.4fr)]',
-    );
-    expect(collectionsSource).toContain('<div className="space-y-4">');
+    // One column of collection cards, without subtitles (27 October 2026).
+    expect(collectionsSource).not.toContain('xl:grid-cols-');
+    expect(collectionsSource).toContain('<div className="space-y-3">');
+    expect(collectionsSource).toContain('const CollectionCard');
+    expect(collectionsSource).not.toContain('Adresses utiles');
+    expect(collectionsSource).toContain('formatInternational()');
+    // The tab carries the contact count; the hero no longer repeats it.
+    expect(detailPageSource).not.toContain('PersonContactSummary');
+    expect(detailPageSource).toContain('person.socialProfiles.length');
     expect(collectionsSource).toContain('const CopyAction');
     expect(collectionsSource).toContain('person.emails.map');
     expect(collectionsSource).toContain('person.phones.map');

@@ -60,9 +60,8 @@ describe('hasPermission', () => {
       true,
     );
     expect(hasPermission('ADMIN', ROADMAP_PERMISSIONS.AUDIT.VIEW)).toBe(false);
-    expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY)).toBe(
-      true,
-    );
+    // Field history left the catalogue on 27 October 2026.
+    expect(hasPermission('ADMIN', 'audit:view_field_history')).toBe(false);
     expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.VIEW)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.CREATE)).toBe(true);
     expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.UPDATE)).toBe(true);
@@ -283,13 +282,13 @@ describe('hasPermission', () => {
     ).toBe(true);
   });
 
-  it('keeps contextual history independent from the journal page', () => {
+  it('ignores the retired field history key, even stored as granted', () => {
     expect(
-      hasPermission('USER', PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY, {
-        [PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY]: true,
+      hasPermission('USER', 'audit:view_field_history', {
+        'audit:view_field_history': true,
         [PERMISSIONS.PERSONS.VIEW]: true,
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       hasPermission('USER', ROADMAP_PERMISSIONS.AUDIT.VIEW, {
         [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
@@ -309,9 +308,6 @@ describe('hasPermission', () => {
         [PERMISSIONS.PERSONS.VIEW]: true,
       }),
     ).toBe(true);
-    expect(
-      getPermissionItem(PERMISSIONS.AUDIT.VIEW_FIELD_HISTORY)?.dependencies,
-    ).toEqual([PERMISSIONS.PERSONS.VIEW]);
   });
 
   it('keeps essential personal account actions enabled despite deny overrides', () => {
@@ -463,7 +459,6 @@ describe('permission catalogue', () => {
       'persons:update',
       'persons:view_contact',
       'persons:update_contact',
-      'audit:view_field_history',
       'persons:delete',
       'users:view',
       'users:create',
