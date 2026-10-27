@@ -105,27 +105,3 @@ export const formatRelativeAccountTime = (
 
   return formatAccountDate(date);
 };
-
-export const parseUserAgent = (
-  userAgent: string | null,
-): { browser: string; device: string } => {
-  if (!userAgent) return { browser: 'Inconnu', device: 'Inconnu' };
-
-  let device = 'Ordinateur';
-  let browser = 'Navigateur';
-
-  if (userAgent.includes('iPhone') || userAgent.includes('iPad'))
-    device = 'iPhone/iPad';
-  else if (userAgent.includes('Android')) device = 'Android';
-  else if (userAgent.includes('Windows')) device = 'Windows';
-  else if (userAgent.includes('Mac')) device = 'Mac';
-  else if (userAgent.includes('Linux')) device = 'Linux';
-
-  if (userAgent.includes('Edg') || userAgent.includes('Edge')) browser = 'Edge';
-  else if (userAgent.includes('Chrome')) browser = 'Chrome';
-  else if (userAgent.includes('Firefox')) browser = 'Firefox';
-  else if (userAgent.includes('Safari') && !userAgent.includes('Chrome'))
-    browser = 'Safari';
-
-  return { browser, device };
-};

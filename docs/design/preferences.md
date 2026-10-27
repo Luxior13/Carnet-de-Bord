@@ -60,6 +60,7 @@ plus ancienne. Le détail et l’origine sont dans le journal ci-dessous.
 
 | Date | Contexte | Retour du propriétaire | Décision appliquée |
 | --- | --- | --- | --- |
+| 27 octobre 2026 | Onglet Sécurité (fiche utilisateur et Mon compte) | « Onglet sécurité, tu vois quelque chose ? » ; « ok go » sur les quatre points | État de chaque rubrique dans son bandeau, fait et action sur une rangée ; ligne de session commune (`SessionRow`) avec « Dernière activité : … », « Appareil non identifié », IPv6 raccourcie et détails reformulés |
 | 27 octobre 2026 | Onglet Profil de la fiche utilisateur | « Je trouve qu’il est vraiment plat, il manque de couleur » ; « ok go » sur la proposition | Une carte titrée par rubrique (`RubricCard`, bandeau et tuile d’icône teintée `primary`) sur Profil de la fiche utilisateur et de Mon compte ; identifiant et email côte à côte sur ordinateur ; même tuile teintée pour les titres de Sécurité. Remplace les rubriques en petites capitales des fiches |
 | 27 octobre 2026 | Taille de l’avatar dans le fil d’Ariane | « Plus grand peut-être ? », puis « parfait » sur le rendu | Avatar de 20 px porté à 28 px sur ordinateur et 24 px sur téléphone ; badge d’accès à sa taille normale, plus espacé du nom |
 | 27 octobre 2026 | Identité de la fiche dans le fil d’Ariane | « Pas seulement quand je défile plus bas pour le breadcrumb, non ? » | L’avatar et l’accès restent en permanence dans l’élément courant du fil d’Ariane (avatar seul sur téléphone), et plus seulement au défilement ; le doublon avec l’en-tête en haut de page est accepté |

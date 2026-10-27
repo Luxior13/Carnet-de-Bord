@@ -195,7 +195,7 @@ module.exports = async ({ run, expect, assert, work, path, before }) => {
         page.getByRole("alert").filter({ hasText: /accès/ }),
       ).toBeVisible();
       await expect(
-        page.getByRole("button", { name: "Détails techniques" }),
+        page.getByRole("button", { name: "Détails de la session" }),
       ).toHaveCount(0);
       const requests = await counts(page);
       assert.equal(requests.del, 1);

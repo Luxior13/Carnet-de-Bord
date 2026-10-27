@@ -29,6 +29,18 @@ ou globale) ; fenêtres de confirmation communes ; attentes bornées à 30 secon
 
 ## Décisions retenues
 
+- **27 octobre 2026 — rubriques compactes et ligne de session commune** (le
+  propriétaire demande « tu vois quelque chose ? », puis « ok go » sur la
+  proposition). L’état de la rubrique (« À jour », « Activée »…) passe dans son
+  bandeau, à droite du titre ; dessous, une seule rangée : le fait (dernier
+  changement, date d’activation) et son aide à gauche, l’action à droite.
+  Environ 80 px gagnés par carte. Double authentification : date d’activation et codes de secours restants sur une ligne. Sessions : une seule ligne commune
+  (`SessionRow`, [utilitaires](../../../apps/web/src/shared/utils/session-display.utils.ts))
+  sur la fiche utilisateur et Mon compte ; « Windows · Chrome », « Appareil non
+  identifié », « Dernière activité : il y a 5 min », IPv6 raccourcie à
+  l’affichage (RFC 5952, rien ne change en base ni dans l’audit), détails
+  « Ouverte le », « Se ferme si inactive le », « Fermeture au plus tard le ».
+
 - 25 octobre 2026 : générer de nouveaux codes de secours ne déconnecte plus
   les autres appareils ni ne renouvelle la session courante ; la vérification,
   la consommation du code, le remplacement des codes et l'audit restent une

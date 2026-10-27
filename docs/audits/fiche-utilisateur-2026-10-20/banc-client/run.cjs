@@ -514,7 +514,7 @@ async function main() {
           }
           if (section === "security")
             await expect(
-              page.getByText("Windows - Chrome", { exact: true }),
+              page.getByText("Windows · Chrome", { exact: true }),
             ).toBeVisible();
           const metrics = await noOverflow(page);
           await page.screenshot({
@@ -648,14 +648,14 @@ async function main() {
         .getByRole("button", { name: "Réessayer", exact: true })
         .click();
       await expect(
-        page.getByText("Windows - Chrome", { exact: true }),
+        page.getByText("Windows · Chrome", { exact: true }),
       ).toBeVisible();
       await expect(
         page.locator("#user-security-sessions-heading"),
       ).toBeFocused();
       await page
         .getByRole("button", {
-          name: "Révoquer la session Windows Chrome",
+          name: "Révoquer la session Windows · Chrome",
           exact: true,
         })
         .click();
@@ -664,13 +664,13 @@ async function main() {
         .click();
       await expect(
         page.getByRole("button", {
-          name: "Révoquer la session Windows Chrome",
+          name: "Révoquer la session Windows · Chrome",
           exact: true,
         }),
       ).toBeFocused();
       await page
         .getByRole("button", {
-          name: "Révoquer la session Windows Chrome",
+          name: "Révoquer la session Windows · Chrome",
           exact: true,
         })
         .click();
@@ -678,7 +678,7 @@ async function main() {
         .getByRole("button", { name: "Révoquer la session", exact: true })
         .click();
       await expect(
-        page.getByText("Windows - Chrome", { exact: true }),
+        page.getByText("Windows · Chrome", { exact: true }),
       ).toHaveCount(0);
       await expect(
         page.locator("#user-security-sessions-heading"),

@@ -24,12 +24,26 @@ révoquer des sessions, supprimer le compte.
 ## Composition actuelle
 
 Cinq rubriques : état du compte (badge `UserStatusBadge` à gauche de
-l’interrupteur), mot de passe (état et dernier changement), double authentification,
-sessions (appareil, activité, IP, détails repliables, révocation), suppression
+l’interrupteur), mot de passe et double authentification (état dans le bandeau,
+puis une rangée : fait et aide à gauche, action à droite), sessions
+(`SessionRow` commune : appareil, dernière activité, IP courte, détails
+repliables, révocation), suppression
 (`UserDeletionCard`). Barre commune seulement quand l’état du compte diffère
 de la valeur enregistrée.
 
 ## Décisions retenues
+
+- **27 octobre 2026 — rubriques compactes et ligne de session commune** (le
+  propriétaire demande « tu vois quelque chose ? », puis « ok go » sur la
+  proposition). L’état de la rubrique (« À jour », « Activée »…) passe dans son
+  bandeau, à droite du titre ; dessous, une seule rangée : le fait (dernier
+  changement, date d’activation) et son aide à gauche, l’action à droite.
+  Environ 80 px gagnés par carte. La décision du 20 octobre 2026 est tenue : l’état reste dans sa rubrique. Sessions : une seule ligne commune
+  (`SessionRow`, [utilitaires](../../../../apps/web/src/shared/utils/session-display.utils.ts))
+  sur la fiche utilisateur et Mon compte ; « Windows · Chrome », « Appareil non
+  identifié », « Dernière activité : il y a 5 min », IPv6 raccourcie à
+  l’affichage (RFC 5952, rien ne change en base ni dans l’audit), détails
+  « Ouverte le », « Se ferme si inactive le », « Fermeture au plus tard le ».
 
 - **25 octobre 2026 — mot de passe temporaire dans sa carte** (retour du
   propriétaire : « le visuel ici n’est pas parfait »). Le panneau était posé

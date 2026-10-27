@@ -296,7 +296,7 @@ async function main() {
           page.getByRole("button", { name: "Déconnecter les autres sessions" }),
         ).toBeVisible();
         await page
-          .getByRole("button", { name: "Détails techniques" })
+          .getByRole("button", { name: "Détails de la session" })
           .first()
           .click();
         return noOverflow(page);

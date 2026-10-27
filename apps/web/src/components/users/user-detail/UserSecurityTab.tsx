@@ -10,13 +10,12 @@ import {
   Power,
   QrCode,
   RotateCcw,
-  Smartphone,
 } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
-import { Disclosure } from '$components/layout/Disclosure';
 import { RubricTitle } from '$components/layout/RubricCard';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
+import { SessionRow } from '$components/users/SessionRow';
 import { UserStatusBadge } from '$features/users/user-badges';
 import type { UserSessionInfo, UserType } from '$types/auth.types';
 import {
@@ -29,15 +28,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '$ui/alert-dialog';
-import { Badge } from '$ui/badge';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
 import { Label } from '$ui/label';
-import { ServiceIcon } from '$ui/service-icon';
 import { Skeleton } from '$ui/skeleton';
 import { StatusBadge } from '$ui/status-badge';
 import { Switch } from '$ui/switch';
 import { cn } from '$utils/css.utils';
+import { describeUserAgent } from '$utils/session-display.utils';
 
 import { focusUserSecurityElement } from './user-security-focus';
 import { UserDeletionCard } from './UserDeletionCard';
@@ -76,12 +74,6 @@ type UserSecurityTabProps = {
   user: UserType;
 };
 
-type ParsedUserAgent = {
-  browser: string;
-  device: string;
-  isMobile: boolean;
-};
-
 const toValidDate = (date: Date | string | null): Date | null => {
   if (!date) return null;
 
@@ -104,172 +96,11 @@ const formatDate = (date: Date | string | null): string => {
   });
 };
 
-const formatSessionDateTime = (date: Date | string | null): string => {
-  const parsedDate = toValidDate(date);
-
-  if (!parsedDate) return 'Date inconnue';
-
-  return parsedDate.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
-const formatRelativeTime = (date: Date | string | null): string => {
-  const then = toValidDate(date);
-
-  if (!then) return 'Jamais';
-
-  const now = new Date();
-  const diffMs = then.getTime() - now.getTime();
-  const isFuture = diffMs > 0;
-  const absDiffMs = Math.abs(diffMs);
-  const diffMins = Math.floor(absDiffMs / 60000);
-  const diffHours = Math.floor(absDiffMs / 3600000);
-  const diffDays = Math.floor(absDiffMs / 86400000);
-
-  if (isFuture) {
-    if (diffMins < 1) return "Dans moins d'une minute";
-    if (diffMins < 60) return `Dans ${diffMins} min`;
-    if (diffHours < 24) return `Dans ${diffHours}h`;
-    if (diffDays < 7) return `Dans ${diffDays}j`;
-  } else {
-    if (diffMins < 1) return "À l'instant";
-    if (diffMins < 60) return `Il y a ${diffMins} min`;
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    if (diffDays < 7) return `Il y a ${diffDays}j`;
-  }
-
-  return then.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
-const parseUserAgent = (userAgent: string | null): ParsedUserAgent => {
-  if (!userAgent) {
-    return {
-      browser: 'Navigateur inconnu',
-      device: 'Appareil inconnu',
-      isMobile: false,
-    };
-  }
-
-  let browser = 'Navigateur';
-  let device = 'Ordinateur';
-  let isMobile = false;
-
-  if (userAgent.includes('iPhone') || userAgent.includes('iPad')) {
-    device = 'iPhone/iPad';
-    isMobile = true;
-  } else if (userAgent.includes('Android')) {
-    device = 'Android';
-    isMobile = true;
-  } else if (userAgent.includes('Windows')) {
-    device = 'Windows';
-  } else if (userAgent.includes('Mac')) {
-    device = 'Mac';
-  } else if (userAgent.includes('Linux')) {
-    device = 'Linux';
-  }
-
-  if (userAgent.includes('Edg')) browser = 'Edge';
-  else if (userAgent.includes('Firefox')) browser = 'Firefox';
-  else if (userAgent.includes('Chrome')) browser = 'Chrome';
-  else if (userAgent.includes('Safari')) browser = 'Safari';
-
-  return { browser, device, isMobile };
-};
-
-const SecurityInfoBlock: FC<{
-  children?: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-}> = ({ children, label, value }) => (
-  <div className="min-w-0">
-    <dt className="text-muted-foreground text-xs">{label}</dt>
-    <dd className="text-foreground mt-1 text-sm font-medium">{value}</dd>
-    {children && (
-      <dd className="text-muted-foreground mt-1 space-y-1 text-xs">
-        {children}
-      </dd>
-    )}
-  </div>
-);
-
-const SessionRow: FC<{
-  disabled: boolean;
-  isRevoking: boolean;
-  onRequestRevoke: (session: UserSessionInfo) => void;
-  session: UserSessionInfo;
-  showRevokeAction: boolean;
-}> = ({ disabled, isRevoking, onRequestRevoke, session, showRevokeAction }) => {
-  const { browser, device, isMobile } = parseUserAgent(session.userAgent);
-  const DeviceIcon = isMobile ? Smartphone : Monitor;
-
-  return (
-    <div className="border-border/60 bg-surface-inset flex flex-col gap-3 rounded-md border p-3 sm:flex-row sm:items-center">
-      <ServiceIcon className="size-9">
-        <DeviceIcon className="size-4" />
-      </ServiceIcon>
-      <div className="min-w-0 flex-1">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <p className="text-foreground truncate text-sm font-medium">
-            {device} - {browser}
-          </p>
-          {session.rememberMe && (
-            <Badge variant="outline" className="rounded-full">
-              Connexion maintenue
-            </Badge>
-          )}
-        </div>
-        <div className="text-muted-foreground mt-1 flex min-w-0 flex-wrap gap-x-3 gap-y-1 text-xs">
-          <span>Active {formatRelativeTime(session.lastSeenAt)}</span>
-          <span>
-            {session.ipAddress ? `IP ${session.ipAddress}` : 'IP inconnue'}
-          </span>
-        </div>
-        <Disclosure
-          label="Détails de la session"
-          className="group/session mt-1.5 w-fit max-w-full"
-        >
-          <div className="text-muted-foreground mt-1 flex flex-col gap-1 text-xs">
-            <span>Ouverte le {formatSessionDateTime(session.createdAt)}</span>
-            <span>
-              Inactivité jusqu’au {formatSessionDateTime(session.idleExpiresAt)}
-            </span>
-            <span>
-              Limite absolue {formatSessionDateTime(session.expiresAt)}
-            </span>
-          </div>
-        </Disclosure>
-      </div>
-      {showRevokeAction && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="scroll-mt-16 self-end rounded-lg sm:self-auto"
-          onClick={() => onRequestRevoke(session)}
-          disabled={disabled}
-          aria-label={`Révoquer la session ${device} ${browser}`}
-          data-session-id={session.id}
-        >
-          {isRevoking ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <LogOut className="size-4" />
-          )}
-          {isRevoking ? 'Révocation…' : 'Révoquer'}
-        </Button>
-      )}
-    </div>
-  );
-};
+/** Rubric header with its state badge, and the row under it (27 October 2026). */
+const RUBRIC_HEADER =
+  'flex-row flex-wrap items-center justify-between gap-2 p-3.5 sm:p-4';
+const RUBRIC_ROW =
+  'flex flex-col items-stretch gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4';
 
 export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   canEditStatus,
@@ -378,7 +209,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
   const [sessionPendingRevocation, setSessionPendingRevocation] =
     useState<UserSessionInfo | null>(null);
   const pendingSessionAgent = sessionPendingRevocation
-    ? parseUserAgent(sessionPendingRevocation.userAgent)
+    ? describeUserAgent(sessionPendingRevocation.userAgent)
     : null;
 
   return (
@@ -457,112 +288,102 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       ) : (
         <>
           <Card aria-labelledby="user-security-password-heading">
-            <CardHeader className="p-3.5 sm:p-4">
+            <CardHeader className={RUBRIC_HEADER}>
               <RubricTitle
                 id="user-security-password-heading"
                 icon={<KeyRound className="size-3.5" />}
               >
                 Mot de passe
               </RubricTitle>
+              {user.mustChangePassword ? (
+                <StatusBadge tone="warning">À changer</StatusBadge>
+              ) : (
+                <StatusBadge tone="success">À jour</StatusBadge>
+              )}
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <dl>
-                <SecurityInfoBlock
-                  label="État"
-                  value={
-                    user.mustChangePassword ? (
-                      <StatusBadge tone="warning">À changer</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="success">À jour</StatusBadge>
-                    )
-                  }
-                >
+            <CardContent className={RUBRIC_ROW}>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-foreground text-sm">
                   Dernier changement : {passwordChangedLabel}
-                </SecurityInfoBlock>
-              </dl>
-            </CardContent>
-            {passwordResetFeedback ??
-              (canResetPassword && (
-                <CardFooter className="flex-col items-stretch gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+                </p>
+                {!passwordResetFeedback && canResetPassword && (
                   <p
                     id="user-reset-password-description"
-                    className="text-muted-foreground min-w-0 flex-1 text-xs"
+                    className="text-muted-foreground text-xs"
                   >
                     Génère un mot de passe temporaire et ferme toutes les
                     sessions.
                   </p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={onResetPassword}
-                    id="user-reset-password"
-                    aria-describedby="user-reset-password-description"
-                    disabled={isSaving}
-                    className="h-auto min-h-10 w-full shrink-0 gap-2 whitespace-normal sm:w-auto"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                    Réinitialiser le mot de passe
-                  </Button>
-                </CardFooter>
-              ))}
+                )}
+              </div>
+              {!passwordResetFeedback && canResetPassword && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onResetPassword}
+                  id="user-reset-password"
+                  aria-describedby="user-reset-password-description"
+                  disabled={isSaving}
+                  className="h-auto min-h-10 w-full shrink-0 gap-2 whitespace-normal sm:w-auto"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Réinitialiser le mot de passe
+                </Button>
+              )}
+            </CardContent>
+            {passwordResetFeedback}
           </Card>
           <Card aria-labelledby="user-security-mfa-heading">
-            <CardHeader className="p-3.5 sm:p-4">
+            <CardHeader className={RUBRIC_HEADER}>
               <RubricTitle
                 id="user-security-mfa-heading"
                 icon={<QrCode className="size-3.5" />}
               >
                 Double authentification
               </RubricTitle>
+              {isMfaEnabled ? (
+                <StatusBadge tone="success">Activée</StatusBadge>
+              ) : (
+                <StatusBadge tone="warning">
+                  Configuration obligatoire
+                </StatusBadge>
+              )}
             </CardHeader>
-            <CardContent className="p-3 sm:p-4">
-              <dl>
-                <SecurityInfoBlock
-                  label="État"
-                  value={
-                    isMfaEnabled ? (
-                      <StatusBadge tone="success">Activée</StatusBadge>
-                    ) : (
-                      <StatusBadge tone="warning">
-                        Configuration obligatoire
-                      </StatusBadge>
-                    )
-                  }
-                >
+            <CardContent className={RUBRIC_ROW}>
+              <div className="min-w-0 flex-1 space-y-1">
+                <p className="text-foreground text-sm">
                   {isMfaEnabled
                     ? `Activée le ${formatDate(user.mfaEnabledAt)}`
                     : 'L’accès au site reste bloqué jusqu’à la configuration d’une application d’authentification.'}
-                </SecurityInfoBlock>
-              </dl>
-            </CardContent>
-            {(isMfaEnabled || canResetMfa) && (
-              <CardFooter className="flex-col items-stretch gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-                <p
-                  id="user-reset-mfa-description"
-                  className="text-muted-foreground min-w-0 flex-1 text-xs"
-                >
-                  À utiliser seulement si l&apos;utilisateur a perdu son
-                  application d&apos;authentification et tous ses codes de
-                  secours : il la reconfigurera à sa prochaine connexion.
                 </p>
-                {canResetMfa && (
-                  <Button
-                    className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-10 w-full min-w-0 shrink-0 gap-2 whitespace-normal sm:w-auto"
-                    onClick={onResetMfa}
-                    id="user-reset-mfa"
-                    aria-describedby="user-reset-mfa-description"
-                    disabled={isSaving}
-                    size="sm"
-                    type="button"
-                    variant="outline"
+                {isMfaEnabled && (
+                  <p
+                    id="user-reset-mfa-description"
+                    className="text-muted-foreground text-xs"
                   >
-                    <RotateCcw className="size-4" />
-                    Réinitialiser la double authentification
-                  </Button>
+                    À utiliser seulement si l&apos;utilisateur a perdu son
+                    application d&apos;authentification et tous ses codes de
+                    secours : il la reconfigurera à sa prochaine connexion.
+                  </p>
                 )}
-              </CardFooter>
-            )}
+              </div>
+              {canResetMfa && (
+                <Button
+                  className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-10 w-full min-w-0 shrink-0 gap-2 whitespace-normal sm:w-auto"
+                  onClick={onResetMfa}
+                  id="user-reset-mfa"
+                  aria-describedby="user-reset-mfa-description"
+                  disabled={isSaving}
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  <RotateCcw className="size-4" />
+                  Réinitialiser la double authentification
+                </Button>
+              )}
+            </CardContent>
           </Card>
         </>
       )}
@@ -644,10 +465,20 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                 <SessionRow
                   key={session.id}
                   session={session}
-                  isRevoking={isRevokingSessionId === session.id}
-                  disabled={sessionsUnavailable}
-                  onRequestRevoke={setSessionPendingRevocation}
-                  showRevokeAction={canRevokeSessions}
+                  action={
+                    canRevokeSessions
+                      ? {
+                          ariaLabel: `Révoquer la session ${describeUserAgent(session.userAgent).label}`,
+                          disabled: sessionsUnavailable,
+                          label:
+                            isRevokingSessionId === session.id
+                              ? 'Révocation…'
+                              : 'Révoquer',
+                          onClick: () => setSessionPendingRevocation(session),
+                          pending: isRevokingSessionId === session.id,
+                        }
+                      : undefined
+                  }
                 />
               ))}
             </div>
@@ -714,7 +545,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
             <AlertDialogTitle>Révoquer cette session ?</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingSessionAgent
-                ? `${pendingSessionAgent.device} — ${pendingSessionAgent.browser}`
+                ? pendingSessionAgent.label
                 : 'Cette session'}{' '}
               sera immédiatement déconnectée. L&apos;utilisateur devra saisir de
               nouveau ses identifiants.

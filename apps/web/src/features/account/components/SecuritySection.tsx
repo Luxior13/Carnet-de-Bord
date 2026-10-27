@@ -21,15 +21,14 @@ import type {
 } from '$types/auth.types';
 import { Button } from '$ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '$ui/card';
-import { Separator } from '$ui/separator';
 import { Skeleton } from '$ui/skeleton';
 import { StatusBadge } from '$ui/status-badge';
 import { ApiClientError } from '$utils/api.utils';
 import { cn } from '$utils/css.utils';
 import { securityRequest } from '$utils/security-request.utils';
+import { formatSessionDateTime } from '$utils/session-display.utils';
 
 import { formatRelativeAccountTime } from '../account.utils';
-import { formatSessionDateTime } from './AccountSessionRow';
 import {
   AccountSessionsCard,
   type AccountSessionsHandle,
@@ -194,37 +193,24 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
         </h2>
         {canViewPasswordSecurity && (
           <Card aria-labelledby="account-password-heading" className="min-w-0">
-            <CardHeader className="p-4 sm:p-5">
+            <CardHeader className="flex-row flex-wrap items-center justify-between gap-2 p-3.5 sm:p-4">
               <SecurityCardTitle
                 icon={<KeyRound className="size-3.5" />}
                 id="account-password-heading"
               >
                 Mot de passe
               </SecurityCardTitle>
+              {userData.mustChangePassword ? (
+                <StatusBadge tone="warning">À changer</StatusBadge>
+              ) : (
+                <StatusBadge tone="success">À jour</StatusBadge>
+              )}
             </CardHeader>
-            <CardContent className="space-y-3 p-4 sm:p-5">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground text-sm">État</span>
-                  {userData.mustChangePassword ? (
-                    <StatusBadge tone="warning">À changer</StatusBadge>
-                  ) : (
-                    <StatusBadge tone="success">À jour</StatusBadge>
-                  )}
-                </div>
-                <Separator className="bg-border/60" />
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-muted-foreground text-sm">
-                    Dernier changement
-                  </span>
-                  <span className="text-foreground text-sm">
-                    {passwordChangedLabel}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-            {canChangePassword && (
-              <CardFooter className="justify-end p-4 sm:p-5">
+            <CardContent className="flex flex-col items-stretch gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
+              <p className="text-foreground min-w-0 flex-1 text-sm">
+                Dernier changement : {passwordChangedLabel}
+              </p>
+              {canChangePassword && (
                 <Button
                   type="button"
                   variant="outline"
@@ -235,8 +221,8 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                   <Shield className="size-4" />
                   Changer le mot de passe
                 </Button>
-              </CardFooter>
-            )}
+              )}
+            </CardContent>
           </Card>
         )}
         {canViewMfaSecurity && (
@@ -245,15 +231,22 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
             aria-labelledby="account-mfa-heading"
             className="min-w-0"
           >
-            <CardHeader className="p-4 sm:p-5">
+            <CardHeader className="flex-row flex-wrap items-center justify-between gap-2 p-3.5 sm:p-4">
               <SecurityCardTitle
                 icon={<QrCode className="size-3.5" />}
                 id="account-mfa-heading"
               >
                 Double authentification
               </SecurityCardTitle>
+              {!loadingMfaStatus &&
+                !mfaStatusError &&
+                (isMfaEnabled ? (
+                  <StatusBadge tone="success">Activée</StatusBadge>
+                ) : (
+                  <StatusBadge tone="warning">À configurer</StatusBadge>
+                ))}
             </CardHeader>
-            <CardContent className="space-y-3 p-4 sm:p-5">
+            <CardContent className="space-y-3 p-3 sm:p-4">
               {loadingMfaStatus ? (
                 <div aria-live="polite" role="status">
                   <span className="sr-only">
@@ -281,40 +274,19 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
                 </div>
               ) : (
                 <>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-4">
-                      <span className="text-muted-foreground text-sm">
-                        État
+                  {mfaEnabledAt && (
+                    <p className="text-foreground flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                      <span>
+                        Activée le {formatSessionDateTime(mfaEnabledAt)}
                       </span>
-                      {isMfaEnabled ? (
-                        <StatusBadge tone="success">Activée</StatusBadge>
-                      ) : (
-                        <StatusBadge tone="warning">À configurer</StatusBadge>
-                      )}
-                    </div>
-                    {mfaEnabledAt && (
-                      <>
-                        <Separator className="bg-border/60" />
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground text-sm">
-                            Activée le
-                          </span>
-                          <span className="text-foreground text-right text-sm">
-                            {formatSessionDateTime(mfaEnabledAt)}
-                          </span>
-                        </div>
-                        <Separator className="bg-border/60" />
-                        <div className="flex items-center justify-between gap-4">
-                          <span className="text-muted-foreground text-sm">
-                            Codes de secours disponibles
-                          </span>
-                          <span className="text-foreground text-sm font-semibold">
-                            {mfaStatus?.recoveryCodesRemaining ?? '—'}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                      <span>
+                        Codes de secours disponibles :{' '}
+                        <span className="font-semibold">
+                          {mfaStatus?.recoveryCodesRemaining ?? '—'}
+                        </span>
+                      </span>
+                    </p>
+                  )}
 
                   <div
                     className={cn(

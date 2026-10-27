@@ -12,6 +12,7 @@ import React, {
 } from 'react';
 import { toast } from 'sonner';
 
+import { SessionRow } from '$components/users/SessionRow';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,11 +29,7 @@ import { Skeleton } from '$ui/skeleton';
 import { ApiClientError } from '$utils/api.utils';
 import { securityRequest } from '$utils/security-request.utils';
 
-import {
-  getSessionTitle,
-  type SessionInfo,
-  SessionRow,
-} from './AccountSessionRow';
+import { getSessionTitle, type SessionInfo } from './AccountSessionRow';
 import { focusSecurityHeading, SecurityCardTitle } from './SecurityCardTitle';
 
 /** Lets the security section reload the list after a credential change. */
@@ -279,9 +276,14 @@ export const AccountSessionsCard: FC<AccountSessionsCardProps> = ({
                       <SessionRow
                         key={session.id}
                         session={session}
-                        isRevoking={revokingId === session.id}
-                        disabled={revokingAll || revokingId !== null}
-                        onRevoke={setSessionToRevoke}
+                        action={{
+                          ariaLabel: `Déconnecter ${getSessionTitle(session)}`,
+                          disabled: revokingAll || revokingId !== null,
+                          label: 'Déconnecter',
+                          onClick: () => setSessionToRevoke(session),
+                          pending: revokingId === session.id,
+                          tone: 'destructive',
+                        }}
                       />
                     ))}
                   </div>

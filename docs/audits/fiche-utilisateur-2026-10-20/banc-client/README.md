@@ -132,3 +132,8 @@ Même jour, cartes de rubrique (`RubricCard`) sur Profil et tuiles d’icône
 teintées sur Sécurité : captures `profile-*` et `security-*` remplacées.
 Passe complète 58/58 ; Mon compte 28/28, sécurité de Mon compte 8/8, sessions
 d’un utilisateur 11/11, fiche personne 31/31.
+
+Même jour, onglet Sécurité compacté et ligne de session commune : libellés
+attendus mis à jour (« Windows · Chrome », « Détails de la session » dans les
+bancs de Mon compte), captures `security-*` remplacées. Passe complète 58/58 ;
+Mon compte 28/28, sécurité de Mon compte 8/8, sessions d’un utilisateur 11/11.
