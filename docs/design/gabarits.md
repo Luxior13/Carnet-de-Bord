@@ -49,8 +49,12 @@ Pages adoptant ce gabarit : voir [Harmonisation](harmonisation.md#état-par-page
 
 ```text
 PageShell · PageCanvas (EntityDetailLayout ou composition équivalente)
-├─ PageIdentityHero compact : avatar · nom · états en pastilles · identifiant et dates · rôle à droite
-├─ PageSectionNavigation : vrais liens, section active, point de brouillon
+├─ EntityHeader : une carte
+│  ├─ PageIdentityHero compact : avatar · nom · états en pastilles · identifiant et dates · rôle à droite
+│  └─ Onglets en pied (PageSectionNavigation « embedded ») : vrais liens, section active soulignée, point de brouillon
+├─ Fil d’Ariane : avatar · nom · accès, en permanence (avatar et nom sur téléphone)
+├─ Au défilement : barre réduite collée (mêmes onglets seuls)
+│  └─ Onglets nombreux : « Plus ▾ » sur ordinateur, sélecteur de section sur téléphone
 └─ Section active (chargée à la demande)
    ├─ Carte de section : titre h2 pour les lecteurs d’écran, rubriques en petites capitales
    ├─ Champs aux primitives communes (40/44 px, rayon 8 px)

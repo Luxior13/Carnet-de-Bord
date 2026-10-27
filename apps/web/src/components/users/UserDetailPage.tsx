@@ -11,8 +11,7 @@ import React, {
 import { toast } from 'sonner';
 
 import AuthenticatedLayout from '$components/AuthenticatedLayout';
-import { PageIdentityHero } from '$components/layout/PageIdentityHero';
-import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
+import { EntityHeader } from '$components/layout/EntityHeader';
 import { AccessDeniedState } from '$components/layout/PageState';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useAdminStepUpController } from '$components/users/user-detail/useAdminStepUpController';
@@ -654,7 +653,7 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
       <PageShell className="py-0">
         <PageCanvas contentClassName="relative space-y-3">
           <div className="min-w-0 space-y-4">
-            <PageIdentityHero
+            <EntityHeader
               compact
               title={getUserDisplayName(user)}
               description={formatUserIdentityLine(
@@ -666,24 +665,23 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
               }
               meta={<UserIdentityStatus user={user} />}
               actions={<UserAccessBadge user={user} />}
-            />
-            <div className="space-y-4">
-              <PageSectionNavigation
-                activeSection={activeRailSection}
-                ariaLabel="Navigation de la fiche utilisateur"
-                dirtySections={railDirtySections}
-                getSectionHref={(sectionId) =>
+              condensedAside={<UserAccessBadge user={user} />}
+              navigation={{
+                activeSection: activeRailSection,
+                ariaLabel: 'Navigation de la fiche utilisateur',
+                dirtySections: railDirtySections,
+                getSectionHref: (sectionId) =>
                   buildUserDetailSectionHref(
                     pathname,
                     currentQueryString,
                     resolveRailSection(sectionId),
-                  )
-                }
-                onSectionChange={(_section, href) =>
-                  window.history.replaceState(null, '', href)
-                }
-                sections={visibleUserDetailSections}
-              />
+                  ),
+                onSectionChange: (_section, href) =>
+                  window.history.replaceState(null, '', href),
+                sections: visibleUserDetailSections,
+              }}
+            />
+            <div className="space-y-4">
               <UserDetailNotices
                 isSelf={isSelf}
                 isTargetIdentityMasked={isTargetIdentityMasked}

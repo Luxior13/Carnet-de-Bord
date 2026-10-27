@@ -40,6 +40,8 @@ type SectionNavigationOptions<SectionId extends string> = {
   navigationRef: RefObject<HTMLElement | null>;
   onSectionChange?: (section: SectionId, href: string) => void;
   replace: boolean;
+  /** Bottom edge under which the content starts (condensed header bar). */
+  stickyBoundaryRef?: RefObject<HTMLElement | null>;
 };
 
 /** A section change owns its scroll only after the draft guard accepted it. */
@@ -51,6 +53,7 @@ export function useSectionNavigation<SectionId extends string>({
   navigationRef,
   onSectionChange,
   replace,
+  stickyBoundaryRef,
 }: SectionNavigationOptions<SectionId>): (
   event: MouseEvent<HTMLAnchorElement>,
   section: SectionId,
@@ -95,14 +98,18 @@ export function useSectionNavigation<SectionId extends string>({
         : 0;
       const bottom =
         top + (scrollContainer?.clientHeight ?? window.innerHeight);
-      const bar = navigation.getBoundingClientRect();
+      const boundary = stickyBoundaryRef?.current;
+      const bar = (boundary ?? navigation).getBoundingClientRect();
       const contentTop = start.getBoundingClientRect().top;
       if (contentTop < bar.bottom - 1 || contentTop >= bottom) {
         const gap =
           Number.parseFloat(getComputedStyle(navigation).marginBottom) || 0;
         const stickyTop =
           Number.parseFloat(getComputedStyle(navigation).top) || 0;
-        const delta = contentTop - (top + stickyTop + bar.height + gap);
+        // A condensed header is already stuck: land just under its edge.
+        const delta = boundary
+          ? contentTop - (bar.bottom + gap)
+          : contentTop - (top + stickyTop + bar.height + gap);
         if (scrollContainer)
           scrollContainer.scrollBy({ behavior: 'instant', top: delta });
         else window.scrollBy({ behavior: 'instant', top: delta });
@@ -118,7 +125,13 @@ export function useSectionNavigation<SectionId extends string>({
     });
 
     return (): void => window.cancelAnimationFrame(frame);
-  }, [activeLinkRef, activeSection, contentStartRef, navigationRef]);
+  }, [
+    activeLinkRef,
+    activeSection,
+    contentStartRef,
+    navigationRef,
+    stickyBoundaryRef,
+  ]);
 
   return (event, section): void => {
     if (

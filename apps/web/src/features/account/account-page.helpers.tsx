@@ -1,9 +1,12 @@
 import { Shield, ShieldCheck, User } from 'lucide-react';
 import Link from 'next/link';
-import type { FC } from 'react';
+import type { FC, JSX } from 'react';
 
+import {
+  EntityHeader,
+  type EntityHeaderNavigation,
+} from '$components/layout/EntityHeader';
 import { PageDetailSkeleton } from '$components/layout/PageDetailSkeleton';
-import { PageIdentityHero } from '$components/layout/PageIdentityHero';
 import type { UserDetailSection } from '$components/users/user-detail/UserDetailNavigation';
 import { UserAvatar } from '$components/users/UserAvatar';
 import {
@@ -66,12 +69,19 @@ const getAccountDisplayName = (userData: UserType): string =>
   [userData.firstName, userData.lastName].filter(Boolean).join(' ').trim() ||
   userData.loginName;
 
-export const AccountHeader: FC<{ returnHref?: string; userData: UserType }> = ({
+export const AccountHeader = <SectionId extends string>({
+  navigation,
   returnHref,
   userData,
-}) => (
-  <PageIdentityHero
+}: {
+  navigation: EntityHeaderNavigation<SectionId>;
+  returnHref?: string;
+  userData: UserType;
+}): JSX.Element => (
+  <EntityHeader
     compact
+    condensedAside={<UserAccessBadge user={userData} />}
+    navigation={navigation}
     eyebrow="Mon compte"
     title={getAccountDisplayName(userData)}
     description={formatUserIdentityLine(userData, userData.loginName)}

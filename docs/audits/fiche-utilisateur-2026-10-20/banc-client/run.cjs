@@ -1247,6 +1247,72 @@ async function main() {
     },
     { height: 480, section: "access" },
   );
+  // 27 October 2026: once the record header scrolls away, a condensed bar
+  // keeps the name and the tabs; switching section from it keeps the focus
+  // on a visible tab.
+  for (const width of [1440, 390])
+    await run(
+      "record-header-condensed",
+      width,
+      async ({ page }) => {
+        const condensed = page.locator(
+          '[data-slot="entity-header-condensed"]',
+        );
+        await expect(condensed).toHaveCount(0);
+        const crumbIcon = page.locator(
+          '[data-slot="breadcrumb-identity-icon"] > *',
+        );
+        const crumbAside = page.locator(
+          '[data-slot="breadcrumb-identity-aside"]',
+        );
+        // Always in the breadcrumb since the owner’s reply of 27 October 2026.
+        await expect(crumbIcon).toHaveCount(1);
+        await page.evaluate(() => {
+          const main = document.getElementById("main-content");
+          main.scrollTop = main.scrollHeight;
+        });
+        await expect(condensed).toBeVisible();
+        await expect(condensed).toBeInViewport();
+        // Since 27 October 2026 the breadcrumb names the record: the bar
+        // keeps only the tabs, the breadcrumb gains avatar and access.
+        await expect(condensed).not.toContainText("Camille Exemple");
+        await expect(crumbIcon).toHaveCount(1);
+        await expect(crumbIcon).toHaveAttribute("aria-hidden", "true");
+        if (width >= 640) await expect(crumbAside).toContainText(/\S/);
+        else await expect(crumbAside).toBeHidden();
+        await page.screenshot({
+          path: path.join(work, `record-header-condensed-${width}.png`),
+        });
+        // Tabs that do not fit become one section selector (27 October 2026).
+        const selector = condensed.getByRole("button", {
+          name: /Changer de section/,
+        });
+        const usesSelector = (await selector.count()) > 0;
+        if (usesSelector) {
+          await selector.click();
+          await page.getByRole("menuitem", { name: "Profil" }).click();
+        } else {
+          await condensed
+            .getByRole("link", { name: "Profil", exact: true })
+            .click();
+        }
+        await expect(page.locator("#user-first-name")).toBeVisible();
+        await expect
+          .poll(() =>
+            page.evaluate((selectorMode) => {
+              const active = document.activeElement;
+              const named = selectorMode
+                ? active?.getAttribute("aria-label")?.includes("Profil")
+                : active?.getAttribute("aria-current") === "page" &&
+                  active.textContent?.includes("Profil");
+
+              return named && active.getBoundingClientRect().height > 0;
+            }, usesSelector),
+          )
+          .toBe(true);
+      },
+      { height: 700, section: "security" },
+    );
   await run(
     "role-requires-target-mfa",
     390,

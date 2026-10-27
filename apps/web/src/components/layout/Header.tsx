@@ -1,5 +1,6 @@
 import React, { type FC } from 'react';
 
+import { BreadcrumbIdentitySlot } from '$components/layout/BreadcrumbIdentity';
 import { QuickNavigation } from '$components/layout/GlobalSearch';
 import { type BreadcrumbEntry, BreadcrumbTrail } from '$ui/breadcrumb';
 import { SidebarTrigger } from '$ui/sidebar';
@@ -21,6 +22,8 @@ export const Header: FC<HeaderProps> = ({ breadcrumbs = [] }) => {
           <BreadcrumbTrail
             className="max-w-full"
             compactOnMobile
+            currentEnd={<BreadcrumbIdentitySlot kind="aside" />}
+            currentStart={<BreadcrumbIdentitySlot kind="icon" />}
             items={breadcrumbs}
             showHome
           />

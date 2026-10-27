@@ -65,7 +65,9 @@ describe('administrative user detail subcomponent UX contracts', () => {
     expect(userDetailSource).toContain(
       '<PageCanvas contentClassName="relative space-y-3">',
     );
-    expect(userDetailSource).toContain('<PageIdentityHero');
+    // Identity and section tabs in one record header since 2026-10-27.
+    expect(userDetailSource).toContain('<EntityHeader');
+    expect(userDetailSource).not.toContain('<PageSectionNavigation');
     expect(userDetailSource).toContain('rounded-tile size-full');
     // The former overview card lives in the hero since 2026-10-20.
     expect(userDetailSource).toContain('formatUserIdentityLine(');

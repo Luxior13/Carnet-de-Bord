@@ -17,6 +17,7 @@ import React, {
 } from 'react';
 
 import { ChangePasswordDialog } from '$components/ChangePasswordDialog';
+import { BreadcrumbIdentityProvider } from '$components/layout/BreadcrumbIdentity';
 import { Header } from '$components/layout/Header';
 import { SessionLogoutState } from '$components/layout/SessionLogoutState';
 import Sidebar from '$components/Sidebar';
@@ -219,41 +220,43 @@ export const PersistentAuthenticatedShell: FC<AuthenticatedShellProps> = ({
 
   return (
     <AuthenticatedShellContext.Provider value={shellContextValue}>
-      <SidebarProvider open>
-        {/* Skip to main content link for accessibility */}
-        <a
-          href="#main-content"
-          className="focus:bg-primary focus:text-primary-foreground focus:ring-ring/50 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:px-4 focus:py-2 focus:ring-2 focus:outline-none"
-        >
-          Aller au contenu principal
-        </a>
-        <ChangePasswordDialog
-          open={showPasswordDialog}
-          onSuccess={handlePasswordChanged}
-        />
-        <MfaSetupDialog
-          allowCancel={false}
-          mode="activate"
-          onComplete={(data) => applyUserUpdate(data.user)}
-          open={requiresMfaSetup}
-        />
-        <Sidebar />
-        <SidebarInset className="private-viewport bg-surface-canvas relative isolate h-full">
-          <Header breadcrumbs={registeredPageConfig.breadcrumbs} />
-          <main
-            id="main-content"
-            className={cn(
-              'relative z-10 min-h-0 flex-1',
-              registeredPageConfig.fullHeight
-                ? 'overflow-hidden'
-                : 'scrollbar-gutter-both-edges overflow-y-auto',
-            )}
-            tabIndex={-1}
+      <BreadcrumbIdentityProvider>
+        <SidebarProvider open>
+          {/* Skip to main content link for accessibility */}
+          <a
+            href="#main-content"
+            className="focus:bg-primary focus:text-primary-foreground focus:ring-ring/50 sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:rounded-lg focus:px-4 focus:py-2 focus:ring-2 focus:outline-none"
           >
-            {children}
-          </main>
-        </SidebarInset>
-      </SidebarProvider>
+            Aller au contenu principal
+          </a>
+          <ChangePasswordDialog
+            open={showPasswordDialog}
+            onSuccess={handlePasswordChanged}
+          />
+          <MfaSetupDialog
+            allowCancel={false}
+            mode="activate"
+            onComplete={(data) => applyUserUpdate(data.user)}
+            open={requiresMfaSetup}
+          />
+          <Sidebar />
+          <SidebarInset className="private-viewport bg-surface-canvas relative isolate h-full">
+            <Header breadcrumbs={registeredPageConfig.breadcrumbs} />
+            <main
+              id="main-content"
+              className={cn(
+                'relative z-10 min-h-0 flex-1',
+                registeredPageConfig.fullHeight
+                  ? 'overflow-hidden'
+                  : 'scrollbar-gutter-both-edges overflow-y-auto',
+              )}
+              tabIndex={-1}
+            >
+              {children}
+            </main>
+          </SidebarInset>
+        </SidebarProvider>
+      </BreadcrumbIdentityProvider>
     </AuthenticatedShellContext.Provider>
   );
 };

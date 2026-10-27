@@ -151,6 +151,10 @@ function BreadcrumbEllipsis({
 
 type BreadcrumbTrailProps = BreadcrumbProps & {
   compactOnMobile?: boolean;
+  /** Shown after the current page, e.g. a short state of the record. */
+  currentEnd?: React.ReactNode;
+  /** Shown before the current page, e.g. the record avatar. */
+  currentStart?: React.ReactNode;
   items: BreadcrumbEntry[];
   showHome?: boolean;
 };
@@ -175,6 +179,8 @@ function getDisplayItems(
 function BreadcrumbTrail({
   className,
   compactOnMobile = false,
+  currentEnd,
+  currentStart,
   items,
   showHome = true,
   ...props
@@ -419,25 +425,29 @@ function BreadcrumbTrail({
                     {item.label}
                   </span>
                 ) : (
-                  <BreadcrumbPage
-                    tabIndex={-1}
-                    className={cn(
-                      'max-w-40 sm:max-w-64 lg:max-w-80',
-                      compactOnMobile && 'font-semibold',
-                    )}
-                  >
-                    {isFirst ? (
-                      <>
-                        <Home
-                          aria-hidden="true"
-                          className="size-3.5 shrink-0"
-                        />
-                        <span className="sr-only">{item.label}</span>
-                      </>
-                    ) : (
-                      item.label
-                    )}
-                  </BreadcrumbPage>
+                  <>
+                    {!isFirst && currentStart}
+                    <BreadcrumbPage
+                      tabIndex={-1}
+                      className={cn(
+                        'max-w-40 sm:max-w-64 lg:max-w-80',
+                        compactOnMobile && 'font-semibold',
+                      )}
+                    >
+                      {isFirst ? (
+                        <>
+                          <Home
+                            aria-hidden="true"
+                            className="size-3.5 shrink-0"
+                          />
+                          <span className="sr-only">{item.label}</span>
+                        </>
+                      ) : (
+                        item.label
+                      )}
+                    </BreadcrumbPage>
+                    {!isFirst && currentEnd}
+                  </>
                 )}
               </BreadcrumbItem>
             </React.Fragment>

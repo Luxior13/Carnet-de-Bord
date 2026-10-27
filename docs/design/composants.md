@@ -37,7 +37,7 @@ commune ; le formulaire conserve la validation, les autorisations et les requêt
 | Besoin | Source | Comportement à préserver |
 | --- | --- | --- |
 | Barre de sections avec destinations propres | [PageSectionNavigation](../../apps/web/src/components/layout/PageSectionNavigation.tsx) | Vrais liens, section active, brouillon et défilement horizontal conditionnel. Ombre uniquement en position collée, hauteur stable. Consulte une seule fois les gardes du brouillon avant la navigation ; révèle le début masqué du nouveau contenu après acceptation en conservant le focus au lien. |
-| Fil d’Ariane | [Breadcrumb](../../apps/web/src/components/ui/breadcrumb.tsx) | Hiérarchie et destinations réelles ; conserver le chemin complet accessible sur petit écran. |
+| Fil d’Ariane | [Breadcrumb](../../apps/web/src/components/ui/breadcrumb.tsx) | Hiérarchie et destinations réelles ; conserver le chemin complet accessible sur petit écran. Sur une fiche, l’élément courant porte en permanence l’avatar et l’accès (`BreadcrumbIdentity`, voir « En-tête de fiche »). |
 | Navigation principale | [Sidebar](../../apps/web/src/components/Sidebar.tsx), [primitives sidebar](../../apps/web/src/components/ui/sidebar.tsx), [Header](../../apps/web/src/components/layout/Header.tsx) | Réutiliser le cadre existant, sa version mobile, son focus et ses contrôles d’ouverture. La visibilité des liens ne remplace pas les permissions serveur. |
 | Changement de pôle | [PoleNavigation](../../apps/web/src/components/layout/PoleNavigation.tsx) | Consomme le catalogue de navigation et ses permissions ; ne pas recopier ses destinations dans les pages. |
 | Recherche globale et commandes | [GlobalSearch](../../apps/web/src/components/layout/GlobalSearch.tsx) et [Command](../../apps/web/src/components/ui/command.tsx) | Command fournit les interactions ; le catalogue décide des résultats autorisés et de leur classement. Un filtrage applicatif conserve `shouldFilter={false}` pour éviter un second filtrage. |
@@ -269,10 +269,34 @@ structure restent adaptées au contenu de chaque écran.
   contrôle, avec l’état ou le réglage principal à droite. Jamais une barre
   isolée entre la barre de sections et le contenu. Référence :
   `AuthorizationsHeader`.
+- **En-tête de fiche** (décision du 27 octobre 2026) : sur une fiche à
+  sections, identité, états et onglets forment une seule carte (`EntityHeader`,
+  utilisé directement ou via `EntityDetailLayout`) : `PageIdentityHero` avec
+  ses onglets en pied, sous un filet, variante `embedded` de
+  `PageSectionNavigation`. La section active est seulement soulignée
+  (`primary`, texte au premier plan, sans fond). Quand l’en-tête sort de l’écran,
+  une barre réduite collée en haut (`entity-header-condensed`) garde seulement
+  les mêmes onglets (variante `condensed`), sur une ligne et toute la largeur.
+  Le fil d’Ariane, qui nomme déjà la fiche, porte en permanence l’avatar avant
+  le nom et l’accès après (`BreadcrumbIdentity`, emplacements fournis par le
+  header ; avatar de 28 px, 24 px et sans accès sur téléphone ; badge d’accès à
+  sa taille normale ; décoratifs pour les technologies d’assistance). Un seul jeu d’onglets est atteignable à la fois
+  (l’autre est inerte et masqué aux technologies d’assistance) ; les deux
+  partagent le même début de contenu, et le focus revient à l’onglet actif (ou
+  au sélecteur) de l’en-tête si la barre réduite disparaît en le tenant.
+  **Onglets nombreux** : les variantes `embedded` et `condensed` gardent les
+  onglets qui tiennent et regroupent les autres dans un menu « Plus ▾ »
+  (`SectionOverflowMenu`, point de brouillon reporté sur « Plus ») ; l’onglet
+  actif reste toujours visible, à sa place dans l’ordre. Sous 480 px de
+  largeur utile, un sélecteur de section (onglet actif et chevron) remplace
+  les onglets. Le calcul (`useTabsOverflow`) mesure chaque onglet dans une
+  rangée cachée. Les règles ci-dessous sur la barre collante autonome
+  (variante `bar`, flèches en cas de débordement) restent valables pour les
+  autres pages.
 - **Navigation entre sections** : toute barre horizontale de navigation entre
   sections disposant de leur propre URL utilise `PageSectionNavigation`,
-  directement ou via `EntityDetailLayout`, sur les pages actuelles et futures
-  du site. Les pages fournissent leurs libellés, icônes, destinations, état actif
+  directement, via `EntityHeader` ou via `EntityDetailLayout`, sur les pages
+  actuelles et futures du site. Les pages fournissent leurs libellés, icônes, destinations, état actif
   et gardes de navigation ; le style, le défilement et les interactions communs
   restent dans ce composant. Ne pas recopier la barre ou ses styles dans une page.
   Toute adaptation nécessaire se compose avec le composant partagé ; un besoin

@@ -1,9 +1,10 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import React, {
   type ReactNode,
+  type RefObject,
   useEffect,
   useId,
   useRef,
@@ -14,10 +15,12 @@ import { Button } from '$ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '$ui/tooltip';
 import { cn } from '$utils/css.utils';
 
+import { SectionOverflowMenu } from './SectionOverflowMenu';
 import {
   getSectionScrollContainer,
   useSectionNavigation,
 } from './useSectionNavigation';
+import { useTabsOverflow } from './useTabsOverflow';
 
 export type PageSection<SectionId extends string = string> = {
   icon?: ReactNode;
@@ -25,16 +28,27 @@ export type PageSection<SectionId extends string = string> = {
   label: string;
 };
 
-type PageSectionNavigationProps<SectionId extends string> = {
+export type PageSectionNavigationProps<SectionId extends string> = {
   activeSection: SectionId;
   ariaLabel: string;
   className?: string;
+  /** Shared content start when two bars serve the same page (EntityHeader). */
+  contentStartRef?: RefObject<HTMLSpanElement | null>;
   dirtySections?: readonly SectionId[];
   getSectionHref: (sectionId: SectionId) => string;
   /** Apply an accepted navigation; the shared component owns the draft guard. */
   onSectionChange?: (sectionId: SectionId, href: string) => void;
   replace?: boolean;
   sections: readonly PageSection<SectionId>[];
+  /** Element whose bottom edge is the stuck boundary (condensed bar). */
+  stickyBoundaryRef?: RefObject<HTMLElement | null>;
+  /**
+   * `bar`: standalone sticky bar. `embedded`: tabs along the bottom of the
+   * identity header. `condensed`: tabs of the header kept at the top while
+   * scrolling. The last two underline the active section only (owner
+   * decision of 27 October 2026).
+   */
+  variant?: 'bar' | 'condensed' | 'embedded';
 };
 
 const revealLink = (
@@ -58,18 +72,24 @@ export const PageSectionNavigation = <SectionId extends string>({
   activeSection,
   ariaLabel,
   className,
+  contentStartRef: sharedContentStartRef,
   dirtySections = [],
   getSectionHref,
   onSectionChange,
   replace = false,
   sections,
+  stickyBoundaryRef,
+  variant = 'bar',
 }: PageSectionNavigationProps<SectionId>): React.JSX.Element | null => {
   const navigationRef = useRef<HTMLElement>(null);
   const stickyMarkerRef = useRef<HTMLSpanElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLSpanElement>(null);
   const activeLinkRef = useRef<HTMLAnchorElement>(null);
-  const contentStartRef = useRef<HTMLSpanElement>(null);
+  const ownContentStartRef = useRef<HTMLSpanElement>(null);
+  const contentStartRef = sharedContentStartRef ?? ownContentStartRef;
+  const isBar = variant === 'bar';
   const navigateToSection = useSectionNavigation({
     activeLinkRef,
     activeSection,
@@ -78,6 +98,18 @@ export const PageSectionNavigation = <SectionId extends string>({
     navigationRef,
     onSectionChange,
     replace,
+    stickyBoundaryRef,
+  });
+  const tabsLayout = useTabsOverflow({
+    activeSection,
+    enabled: !isBar,
+    measureRef,
+    navigationRef,
+    sectionIds: sections.map((section) => section.id),
+    sectionKey: JSON.stringify([
+      sections.map((section) => [section.id, section.label, !!section.icon]),
+      dirtySections,
+    ]),
   });
   const viewportId = useId();
   const hasSections = sections.length > 0;
@@ -91,7 +123,12 @@ export const PageSectionNavigation = <SectionId extends string>({
   useEffect(() => {
     const navigation = navigationRef.current;
     const marker = stickyMarkerRef.current;
-    if (!navigation || !marker || !('IntersectionObserver' in window)) {
+    if (
+      !isBar ||
+      !navigation ||
+      !marker ||
+      !('IntersectionObserver' in window)
+    ) {
       setIsStuck(false);
 
       return;
@@ -118,7 +155,7 @@ export const PageSectionNavigation = <SectionId extends string>({
     observer.observe(navigation);
 
     return (): void => observer.disconnect();
-  }, [hasSections]);
+  }, [hasSections, isBar]);
 
   useEffect(() => {
     const navigation = navigationRef.current;
@@ -188,6 +225,80 @@ export const PageSectionNavigation = <SectionId extends string>({
     });
   };
 
+  const tabClassName = (isActive: boolean): string =>
+    cn(
+      'focus-visible:ring-ring rounded-t-compact relative inline-flex shrink-0 items-center gap-2 border-b-2 px-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
+      variant === 'embedded' ? 'min-h-11 py-2.5' : 'min-h-12 py-3',
+      isBar
+        ? isActive
+          ? 'border-primary bg-surface-navigation-active text-foreground'
+          : 'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground border-transparent'
+        : isActive
+          ? 'border-primary text-foreground'
+          : 'text-muted-foreground hover:text-foreground border-transparent',
+    );
+
+  const renderLink = (section: PageSection<SectionId>): React.JSX.Element => {
+    const isActive = activeSection === section.id;
+    const isDirty = dirtySections.includes(section.id);
+
+    return (
+      <Tooltip key={section.id} delayDuration={350}>
+        <TooltipTrigger asChild>
+          <Link
+            aria-current={isActive ? 'page' : undefined}
+            className={tabClassName(isActive)}
+            href={getSectionHref(section.id)}
+            data-navigation-guard="explicit"
+            onClick={(event) => navigateToSection(event, section.id)}
+            onFocus={(event) => {
+              if (isBar && viewportRef.current)
+                revealLink(viewportRef.current, event.currentTarget);
+            }}
+            ref={isActive ? activeLinkRef : undefined}
+            replace={replace}
+          >
+            {section.icon && (
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'shrink-0 [&_svg]:size-4',
+                  isActive && 'text-primary-emphasis',
+                )}
+              >
+                {section.icon}
+              </span>
+            )}
+            {section.label}
+            {isDirty && (
+              <>
+                <span
+                  aria-hidden="true"
+                  className="bg-warning size-2 shrink-0 rounded-full"
+                />
+                <span className="sr-only">Modifications non enregistrées</span>
+              </>
+            )}
+          </Link>
+        </TooltipTrigger>
+        {isDirty && (
+          <TooltipContent side="bottom">
+            Modifications non enregistrées
+          </TooltipContent>
+        )}
+      </Tooltip>
+    );
+  };
+
+  const visibleSections =
+    tabsLayout.mode === 'more'
+      ? sections.filter((section) => tabsLayout.visible.includes(section.id))
+      : sections;
+  const hiddenSections =
+    tabsLayout.mode === 'more'
+      ? sections.filter((section) => !tabsLayout.visible.includes(section.id))
+      : [];
+
   if (sections.length === 0) return null;
 
   return (
@@ -195,11 +306,18 @@ export const PageSectionNavigation = <SectionId extends string>({
       <nav
         aria-label={ariaLabel}
         className={cn(
-          'border-border-divider bg-surface-canvas sticky top-0 z-20 flex min-w-0 items-start gap-1 border-b transition-shadow motion-reduce:transition-none',
+          isBar
+            ? 'border-border-divider bg-surface-canvas sticky top-0 z-20 flex min-w-0 items-start gap-1 border-b transition-shadow motion-reduce:transition-none'
+            : 'relative flex min-w-0 items-start gap-1',
           isStuck && '[box-shadow:var(--shadow-navigation-stuck)]',
           className,
         )}
-        data-slot="page-section-navigation"
+        data-slot={
+          variant === 'condensed'
+            ? 'page-section-navigation-condensed'
+            : 'page-section-navigation'
+        }
+        data-variant={variant}
         data-stuck={isStuck}
         ref={navigationRef}
       >
@@ -209,7 +327,7 @@ export const PageSectionNavigation = <SectionId extends string>({
           className="pointer-events-none absolute -top-px left-0 h-px w-px"
           ref={stickyMarkerRef}
         />
-        {scrollState.hasOverflow && (
+        {isBar && scrollState.hasOverflow && (
           <Button
             aria-controls={viewportId}
             aria-disabled={!scrollState.canScrollLeft}
@@ -223,73 +341,43 @@ export const PageSectionNavigation = <SectionId extends string>({
             <ChevronLeft aria-hidden="true" />
           </Button>
         )}
-        <div
-          ref={viewportRef}
-          id={viewportId}
-          className="min-w-0 flex-1 overflow-x-auto"
-        >
-          <div ref={contentRef} className="flex w-max min-w-full gap-1">
-            {sections.map((section) => {
-              const isActive = activeSection === section.id;
-              const isDirty = dirtySections.includes(section.id);
-
-              return (
-                <Tooltip key={section.id} delayDuration={350}>
-                  <TooltipTrigger asChild>
-                    <Link
-                      aria-current={isActive ? 'page' : undefined}
-                      className={cn(
-                        'focus-visible:ring-ring rounded-t-compact relative inline-flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset',
-                        isActive
-                          ? 'border-primary bg-surface-navigation-active text-foreground'
-                          : 'text-muted-foreground hover:bg-surface-navigation-hover hover:text-foreground border-transparent',
-                      )}
-                      href={getSectionHref(section.id)}
-                      data-navigation-guard="explicit"
-                      onClick={(event) => navigateToSection(event, section.id)}
-                      onFocus={(event) => {
-                        if (viewportRef.current)
-                          revealLink(viewportRef.current, event.currentTarget);
-                      }}
-                      ref={isActive ? activeLinkRef : undefined}
-                      replace={replace}
-                    >
-                      {section.icon && (
-                        <span
-                          aria-hidden="true"
-                          className={cn(
-                            'shrink-0 [&_svg]:size-4',
-                            isActive && 'text-primary-emphasis',
-                          )}
-                        >
-                          {section.icon}
-                        </span>
-                      )}
-                      {section.label}
-                      {isDirty && (
-                        <>
-                          <span
-                            aria-hidden="true"
-                            className="bg-warning size-2 shrink-0 rounded-full"
-                          />
-                          <span className="sr-only">
-                            Modifications non enregistrées
-                          </span>
-                        </>
-                      )}
-                    </Link>
-                  </TooltipTrigger>
-                  {isDirty && (
-                    <TooltipContent side="bottom">
-                      Modifications non enregistrées
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              );
-            })}
+        {isBar ? (
+          <div
+            ref={viewportRef}
+            id={viewportId}
+            className="min-w-0 flex-1 overflow-x-auto"
+          >
+            <div ref={contentRef} className="flex w-max min-w-full gap-1">
+              {sections.map(renderLink)}
+            </div>
           </div>
-        </div>
-        {scrollState.hasOverflow && (
+        ) : tabsLayout.mode === 'select' ? (
+          <SectionOverflowMenu
+            activeSection={activeSection}
+            dirtySections={dirtySections}
+            getSectionHref={getSectionHref}
+            mode="select"
+            onNavigate={navigateToSection}
+            replace={replace}
+            sections={sections}
+          />
+        ) : (
+          <>
+            {visibleSections.map(renderLink)}
+            {hiddenSections.length > 0 && (
+              <SectionOverflowMenu
+                activeSection={activeSection}
+                dirtySections={dirtySections}
+                getSectionHref={getSectionHref}
+                mode="more"
+                onNavigate={navigateToSection}
+                replace={replace}
+                sections={hiddenSections}
+              />
+            )}
+          </>
+        )}
+        {isBar && scrollState.hasOverflow && (
           <Button
             aria-controls={viewportId}
             aria-disabled={!scrollState.canScrollRight}
@@ -303,13 +391,50 @@ export const PageSectionNavigation = <SectionId extends string>({
             <ChevronRight aria-hidden="true" />
           </Button>
         )}
+        {!isBar && (
+          // Every tab at its natural width, to choose the ones that fit.
+          <span
+            aria-hidden="true"
+            className="pointer-events-none invisible absolute top-0 left-0 h-0 w-0 overflow-hidden"
+          >
+            <span className="flex w-max gap-1" ref={measureRef}>
+              {sections.map((section, index) => (
+                <span
+                  className={tabClassName(false)}
+                  data-measure={`tab-${index}`}
+                  key={section.id}
+                >
+                  {section.icon && (
+                    <span className="shrink-0 [&_svg]:size-4">
+                      {section.icon}
+                    </span>
+                  )}
+                  {section.label}
+                  {dirtySections.includes(section.id) && (
+                    <span className="size-2 shrink-0" />
+                  )}
+                </span>
+              ))}
+              <span
+                className="inline-flex shrink-0 items-center gap-2 px-3 text-sm font-medium whitespace-nowrap"
+                data-measure="more"
+              >
+                Plus
+                <span className="size-2 shrink-0" />
+                <ChevronDown className="size-4 shrink-0" />
+              </span>
+            </span>
+          </span>
+        )}
       </nav>
       {/* Static position after the sticky bar, with no extra space in the flow. */}
-      <span
-        aria-hidden="true"
-        className="pointer-events-none absolute block size-px"
-        ref={contentStartRef}
-      />
+      {!sharedContentStartRef && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute block size-px"
+          ref={ownContentStartRef}
+        />
+      )}
     </>
   );
 };

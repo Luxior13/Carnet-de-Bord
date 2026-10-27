@@ -96,7 +96,9 @@ describe('/mon-compte UX contracts', () => {
     expect(sectionRailSource).toContain('min-h-12');
     expect(sectionRailSource).toContain('overflow-x-auto');
     expect(sectionRailSource).not.toContain('truncate');
-    expect(accountPageSource.match(/<PageSectionNavigation/g)).toHaveLength(1);
+    // The tabs live in the record header (AccountHeader → EntityHeader).
+    expect(accountPageSource).not.toContain('<PageSectionNavigation');
+    expect(accountPageSource).toContain('navigation={{');
   });
 
   it('keeps the current user read-only in Administration and directs self-service to /mon-compte', () => {

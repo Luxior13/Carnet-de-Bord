@@ -105,3 +105,25 @@ points sur la ligne et la page, cascade de retrait ;
 `permissions-delegated-blocked-reasons` (acteur délégué : raison partagée une
 fois en haut, cadenas par ligne ; [capture](permissions-delegated-1440.png)).
 Passe complète : 56/56.
+
+## Reprise du 27 octobre 2026
+
+En-tête de fiche (`EntityHeader`) : onglets dans la carte d’identité, section
+active soulignée. Scénario `record-header-condensed` à 1 440 et 390 px : après
+défilement, la barre réduite garde le nom et les onglets
+([1 440](record-header-condensed-1440.png), [390](record-header-condensed-390.png)) ;
+un changement de section depuis elle garde le focus sur un onglet visible.
+Captures des sections remplacées. Passe complète : 58/58. Mon compte : 28/28
+(une instabilité ponctuelle de la fenêtre de contact, non liée, observée une
+fois sur trois passes).
+
+Même jour, identité dans le fil d’Ariane et onglets nombreux : la barre réduite
+ne garde que les onglets ; le fil d’Ariane simulé reçoit les emplacements du
+vrai header (dernier élément traité comme page courante, comme le vrai
+composant). Le scénario vérifie l’avatar décoratif dans le fil, l’accès sur
+ordinateur et son absence sur téléphone, et le passage par le sélecteur de
+section quand les onglets ne tiennent pas (captures remplacées). Passe
+complète : 58/58 ; Mon compte 28/28, sécurité de Mon compte 8/8, fiche
+personne 31/31, navigation par sections 8/8, sessions d’un utilisateur 11/11.
+Puis, sur retour du propriétaire, avatar et accès affichés en permanence dans
+le fil d’Ariane : le scénario les attend dès l’ouverture.

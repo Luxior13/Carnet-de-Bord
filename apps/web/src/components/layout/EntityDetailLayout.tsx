@@ -4,17 +4,16 @@ import React, { type ReactNode } from 'react';
 
 import { PageCanvas, PageShell } from '$ui/page-shell';
 
-import { PageIdentityHero } from './PageIdentityHero';
-import {
-  type PageSection,
-  PageSectionNavigation,
-} from './PageSectionNavigation';
+import { EntityHeader } from './EntityHeader';
+import { type PageSection } from './PageSectionNavigation';
 
 type EntityDetailLayoutProps<SectionId extends string> = {
   activeSection: SectionId;
   afterHero?: ReactNode;
   ariaLiveLabel?: string;
   children: ReactNode;
+  /** Short state kept in the condensed header while scrolling. */
+  condensedAside?: ReactNode;
   dirtySections?: readonly SectionId[];
   heroActions?: ReactNode;
   /** Line under the title: identifier, creation and last change. */
@@ -28,13 +27,15 @@ type EntityDetailLayoutProps<SectionId extends string> = {
 };
 
 /**
- * Structure commune des fiches : identité et navigation par sections.
+ * Structure commune des fiches : identité et navigation par sections, réunies
+ * dans un en-tête de fiche avec sa version réduite au défilement.
  */
 export const EntityDetailLayout = <SectionId extends string>({
   activeSection,
   afterHero,
   ariaLiveLabel,
   children,
+  condensedAside,
   dirtySections = [],
   heroActions,
   heroDescription,
@@ -47,22 +48,22 @@ export const EntityDetailLayout = <SectionId extends string>({
 }: EntityDetailLayoutProps<SectionId>): React.JSX.Element => (
   <PageShell className="py-0">
     <PageCanvas contentClassName="relative space-y-4">
-      <PageIdentityHero
+      <EntityHeader
         actions={heroActions}
         compact
+        condensedAside={condensedAside}
         description={heroDescription}
         icon={heroIcon}
         meta={heroMeta}
+        navigation={{
+          activeSection,
+          ariaLabel: navigationAriaLabel,
+          dirtySections,
+          getSectionHref: sectionHref,
+          replace: true,
+          sections,
+        }}
         title={heroTitle}
-      />
-
-      <PageSectionNavigation
-        activeSection={activeSection}
-        ariaLabel={navigationAriaLabel}
-        dirtySections={dirtySections}
-        getSectionHref={sectionHref}
-        replace
-        sections={sections}
       />
 
       {afterHero}

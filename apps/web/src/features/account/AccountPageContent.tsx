@@ -10,7 +10,6 @@ import React, {
   useState,
 } from 'react';
 
-import { PageSectionNavigation } from '$components/layout/PageSectionNavigation';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { hasPermission, PERMISSIONS } from '$constants/permissions.constants';
 import { PAGE_PATHS } from '$constants/routes.constants';
@@ -139,19 +138,18 @@ const AccountContent: FC<{ userData: UserType }> = ({ userData }) => {
                 )
               : undefined
           }
+          navigation={{
+            activeSection,
+            ariaLabel: 'Navigation du compte',
+            dirtySections: isProfileDirty ? ['profile'] : [],
+            getSectionHref,
+            onSectionChange: (_section, href) =>
+              window.history.replaceState(null, '', href),
+            sections,
+          }}
         />
 
         <div className="space-y-4">
-          <PageSectionNavigation
-            activeSection={activeSection}
-            ariaLabel="Navigation du compte"
-            dirtySections={isProfileDirty ? ['profile'] : []}
-            getSectionHref={getSectionHref}
-            onSectionChange={(_section, href) =>
-              window.history.replaceState(null, '', href)
-            }
-            sections={sections}
-          />
           <p className="sr-only" aria-live="polite">
             Section active :{' '}
             {sections.find((section) => section.id === activeSection)?.label ??

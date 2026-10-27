@@ -1,5 +1,10 @@
 import React, { useSyncExternalStore } from "react";
 
+import {
+  BreadcrumbIdentityProvider,
+  BreadcrumbIdentitySlot,
+} from "$components/layout/BreadcrumbIdentity";
+
 const navigationEvent = "audit-creation-navigation";
 const actorEvent = "audit-creation-actor";
 const subscribe = (callback: () => void) => {
@@ -69,13 +74,16 @@ export const useUser = () => ({
 export const AuthenticatedLayout = ({ children, breadcrumbs }: any) => (
   // Same frame as the real layout since 26 October 2026: a 56 px header and
   // a #main-content area that scrolls inside a full-height shell.
+  // The real header gives the current item the record identity slots.
+  <BreadcrumbIdentityProvider>
   <div className="audit-shell flex flex-col overflow-hidden">
     <nav
       aria-label="Fil d’Ariane simulé"
       className="flex h-14 min-w-0 shrink-0 items-center gap-3 px-4 text-sm [&>*]:min-w-0 [&>*]:break-words"
     >
       {breadcrumbs?.map((item: any, index: number) =>
-        item.href ? (
+        // Like the real trail, the last item is the current page even with a URL.
+        item.href && index < breadcrumbs.length - 1 ? (
           <Link
             key={index}
             href={item.href}
@@ -83,6 +91,18 @@ export const AuthenticatedLayout = ({ children, breadcrumbs }: any) => (
           >
             {item.label}
           </Link>
+        ) : index === breadcrumbs.length - 1 ? (
+          <span
+            data-slot="audit-breadcrumb-current"
+            key={index}
+            className="inline-flex min-w-0 items-center"
+          >
+            <BreadcrumbIdentitySlot kind="icon" />
+            <span style={{ minWidth: 0, overflowWrap: "anywhere" }}>
+              {item.label}
+            </span>
+            <BreadcrumbIdentitySlot kind="aside" />
+          </span>
         ) : (
           <span key={index} style={{ minWidth: 0, overflowWrap: "anywhere" }}>
             {item.label}
@@ -97,6 +117,7 @@ export const AuthenticatedLayout = ({ children, breadcrumbs }: any) => (
       {children}
     </main>
   </div>
+  </BreadcrumbIdentityProvider>
 );
 export const Link = ({
   children,

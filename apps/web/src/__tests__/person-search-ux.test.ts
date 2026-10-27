@@ -671,7 +671,7 @@ describe('person short-lived sensitive UX contracts', () => {
     expect(identityFieldsSource).not.toContain('autoComplete="family-name"');
     expect(identityFieldsSource).not.toContain('autoComplete="nickname"');
     expect(detailPageSource).toContain('<EntityDetailLayout');
-    expect(entityDetailLayoutSource).toContain('<PageIdentityHero');
+    expect(entityDetailLayoutSource).toContain('<EntityHeader');
     expect(entityDetailLayoutSource).toContain('compact');
     expect(detailPageSource).not.toContain('Fiche du répertoire');
     expect(detailPageSource).not.toContain(
@@ -685,9 +685,7 @@ describe('person short-lived sensitive UX contracts', () => {
     );
     expect(entityDetailLayoutSource).not.toContain('<PageBackButton');
     expect(entityDetailLayoutSource).not.toContain('private-left-rail');
-    expect(
-      entityDetailLayoutSource.match(/<PageSectionNavigation/g),
-    ).toHaveLength(1);
+    expect(entityDetailLayoutSource.match(/<EntityHeader/g)).toHaveLength(1);
     expect(detailPageSource).toContain(
       'sections={PERSON_DETAIL_SECTIONS.filter',
     );
