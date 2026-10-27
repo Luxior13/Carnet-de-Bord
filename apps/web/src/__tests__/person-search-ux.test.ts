@@ -505,7 +505,7 @@ describe('person short-lived sensitive UX contracts', () => {
       expect(provenanceHintSource).toContain(key);
     }
     expect(provenanceHintSource).toContain('<Tooltip');
-    expect(provenanceHintSource).toContain("Voir l'origine :");
+    expect(provenanceHintSource).toContain('Historique :');
     expect(provenanceHintSource).toContain('onClick={() => handleOpenChange');
     expect(provenanceHintSource).toContain('latest.actor');
     expect(provenanceHintSource).toContain('latest.at');
@@ -657,9 +657,10 @@ describe('person short-lived sensitive UX contracts', () => {
     // No visible title repeating the section link (gabarit B).
     expect(identitySectionSource).not.toContain('Informations personnelles');
     expect(identitySectionSource).not.toContain('<CardHeader');
-    expect(identitySectionSource).toContain(
-      '<CardContent className="p-4 sm:p-5">',
-    );
+    // Rubrics are named after their fields, never « Identité » (27 October 2026).
+    expect(identitySectionSource).toContain('title="Pseudo et nom"');
+    expect(identitySectionSource).toContain('title="Naissance et statut"');
+    expect(identitySectionSource).not.toContain('title="Identité"');
     expect(identitySectionSource).toContain(
       '<h2 className="sr-only" id="person-identity-title" tabIndex={-1}>',
     );

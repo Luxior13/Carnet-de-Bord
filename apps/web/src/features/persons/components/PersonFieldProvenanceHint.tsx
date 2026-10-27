@@ -1,6 +1,6 @@
 'use client';
 
-import { Info } from 'lucide-react';
+import { History } from 'lucide-react';
 import React, {
   type FC,
   useCallback,
@@ -142,12 +142,12 @@ export const PersonFieldProvenanceHint: FC<PersonFieldProvenanceHintProps> = ({
         <Button
           variant="ghost"
           size="inline"
-          aria-label={`Voir l'origine : ${target.label}`}
+          aria-label={`Historique : ${target.label}`}
           className="text-muted-foreground hover:bg-surface-control-hover hover:text-foreground focus-visible:ring-ring/40 inline-flex size-6 shrink-0 items-center justify-center rounded-md outline-none focus-visible:ring-2"
           onClick={() => handleOpenChange(!isOpen)}
           type="button"
         >
-          <Info className="size-3.5" />
+          <History className="size-3.5" />
         </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-72 space-y-0.5 px-3 py-2" side="top">

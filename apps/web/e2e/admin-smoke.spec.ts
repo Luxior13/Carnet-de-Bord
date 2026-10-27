@@ -859,7 +859,7 @@ async function expectPersonIdentityLifecycle(page: Page): Promise<void> {
 
   expect(contextualHistoryRequests).toBe(0);
   const historyTrigger = page.getByRole('button', {
-    name: "Voir l'origine : Pseudo principal",
+    name: 'Historique : Pseudo principal',
   });
   // The mutation restores the first field on the next frame. Wait for that
   // completion before starting a new keyboard gesture toward its provenance.

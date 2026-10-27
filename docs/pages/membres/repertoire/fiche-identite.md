@@ -23,9 +23,11 @@ provenance et leur dernière modification.
 
 ## Composition actuelle
 
-Carte sans en-tête (titre « Identité » réservé aux lecteurs d’écran) : champs
-partagés `PersonIdentityFields`, indications de provenance
-(`PersonFieldProvenanceHint`), historique d’un champ, `SectionActionBar` avec
+Titre « Identité » réservé aux lecteurs d’écran, puis deux cartes titrées
+(`RubricCard`) : « Pseudo et nom » (pseudo, prénom, nom sur une ligne en grand
+écran) et « Naissance et statut » ; champs partagés `PersonIdentityFields`
+(option `part`), historique d’un champ par une horloge
+(`PersonFieldProvenanceHint`, « Historique : … »), historique d’un champ, `SectionActionBar` avec
 soumission native et reprise de conflit ; puis « Zone dangereuse »
 (`PersonDangerZone` sur `EntityDangerZone`). Les dates de la fiche sont dans
 le bandeau, pas en pied de carte.
@@ -40,6 +42,16 @@ le bandeau, pas en pied de carte.
   plus, comme celle d’un compte. Sans preuve, la zone dangereuse ouvre
   « Confirmer la suppression » puis reprend la même demande, sans nouvelle
   confirmation ([DRT-06](../../../audits/2026-10-25-coherence-des-droits.md)).
+
+- 27 octobre 2026 : le propriétaire demande une revue de l’onglet, puis « ok
+  go » sur quatre points. Deux cartes titrées nommées d’après leurs champs
+  (aucune ne répète l’onglet) ; pseudo, prénom et nom sur une ligne à partir de
+  1 024 px ; l’icône « i » des champs, qui ouvrait l’historique (qui et quand),
+  devient une horloge, libellé « Historique : Prénom » ; le statut de la
+  personne rejoint son avatar dans le fil d’Ariane, comme le rôle sur la fiche
+  utilisateur. Le formulaire de création garde sa grille unique. Banc client
+  31/31, création 28/28 ; le fil d’Ariane n’est pas simulé dans ce banc.
+  Compteurs de coordonnées du bandeau signalés, non modifiés (à discuter).
 
 ## Points ouverts
 

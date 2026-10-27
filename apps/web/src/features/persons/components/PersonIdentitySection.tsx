@@ -1,13 +1,14 @@
 'use client';
 
+import { CalendarDays, UserRound } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 
+import { RubricCard } from '$components/layout/RubricCard';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { UnsavedNavigationDialog } from '$components/layout/UnsavedNavigationDialog';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
-import { CardContent } from '$ui/card';
 import { ApiClientError } from '$utils/api.utils';
 
 import { updatePerson } from '../person.api';
@@ -370,39 +371,44 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
   return (
     <>
       <section id="person-identity">
-        <CardContent className="p-4 sm:p-5">
-          {/* The section link already names the section: no visible title. */}
-          <h2 className="sr-only" id="person-identity-title" tabIndex={-1}>
-            Identité
-          </h2>
-          <form
-            aria-busy={isBusy || undefined}
-            aria-labelledby="person-identity-title"
-            autoComplete="off"
-            className="space-y-4"
-            id="person-identity-form"
-            noValidate
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleSave();
-            }}
-            ref={formRef}
+        {/* The section link already names the section: no visible title. */}
+        <h2 className="sr-only" id="person-identity-title" tabIndex={-1}>
+          Identité
+        </h2>
+        <form
+          aria-busy={isBusy || undefined}
+          aria-labelledby="person-identity-title"
+          autoComplete="off"
+          className="space-y-3"
+          id="person-identity-form"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSave();
+          }}
+          ref={formRef}
+        >
+          {submitError && (
+            <p
+              className="text-destructive text-sm"
+              ref={errorRef}
+              role="alert"
+              tabIndex={-1}
+            >
+              {submitError}
+            </p>
+          )}
+          {refreshNotice && (
+            <p className="text-muted-foreground text-sm" role="status">
+              {refreshNotice}
+            </p>
+          )}
+          {/* Two named rubrics (27 October 2026), none repeating the tab. */}
+          <RubricCard
+            icon={<UserRound />}
+            id="person-identity-names-title"
+            title="Pseudo et nom"
           >
-            {submitError && (
-              <p
-                className="text-destructive text-sm"
-                ref={errorRef}
-                role="alert"
-                tabIndex={-1}
-              >
-                {submitError}
-              </p>
-            )}
-            {refreshNotice && (
-              <p className="text-muted-foreground text-sm" role="status">
-                {refreshNotice}
-              </p>
-            )}
             <PersonIdentityFields
               disabled={!canUpdate || !available || isBusy}
               errors={errors}
@@ -413,9 +419,28 @@ export const PersonIdentitySection: FC<PersonIdentitySectionProps> = ({
               provenances={provenances}
               value={form}
               variant="quiet"
+              part="names"
             />
-          </form>
-        </CardContent>
+          </RubricCard>
+          <RubricCard
+            icon={<CalendarDays />}
+            id="person-identity-situation-title"
+            title="Naissance et statut"
+          >
+            <PersonIdentityFields
+              disabled={!canUpdate || !available || isBusy}
+              errors={errors}
+              idPrefix="person-detail"
+              onChange={(key, nextValue) =>
+                setForm((current) => ({ ...current, [key]: nextValue }))
+              }
+              provenances={provenances}
+              value={form}
+              variant="quiet"
+              part="situation"
+            />
+          </RubricCard>
+        </form>
       </section>
 
       {(isDirty || conflict) &&

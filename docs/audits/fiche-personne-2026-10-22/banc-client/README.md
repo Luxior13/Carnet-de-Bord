@@ -49,3 +49,11 @@ Nouveau scénario `suppression-fiche-mot-de-passe-puis-reprise` : sans preuve
 récente, la suppression ouvre « Confirmer la suppression », puis reprend la
 même demande. Libellés « superadmin » alignés. Passe complète : 31/31 ; non
 archivée, détail dans l’[audit](../../2026-10-25-coherence-des-droits.md).
+
+## Reprise du 27 octobre 2026
+
+Onglet Identité en deux cartes titrées et horloge d’historique : libellé
+attendu « Historique : … » (au lieu de « Voir l’origine : … »), captures
+`identite-*` remplacées. 31 scénarios sur 31. Le fil d’Ariane simulé de ce
+banc n’a pas les emplacements d’identité : le statut qui y apparaît n’est pas
+vérifié ici.

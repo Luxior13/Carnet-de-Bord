@@ -29,7 +29,6 @@ import { personDetailPath } from '$constants/routes.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
 import { Button } from '$ui/button';
-import { Card } from '$ui/card';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { ApiClientError } from '$utils/api.utils';
 
@@ -364,6 +363,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
             />
           ) : undefined
         }
+        condensedAside={<PersonStatusBadge status={person.structureStatus} />}
         dirtySections={identityDirty ? ['identite'] : []}
         ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
         heroActions={
@@ -383,18 +383,16 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
       >
         {activeSection === 'identite' ? (
           <section aria-label="Identité" className="space-y-5">
-            <Card>
-              <PersonIdentitySection
-                key={person.id}
-                available={available}
-                canUpdate={canUpdate}
-                canViewProvenance={canViewProvenance}
-                onChange={acceptPerson}
-                onDirtyChange={setIdentityDirty}
-                onReload={load}
-                person={person}
-              />
-            </Card>
+            <PersonIdentitySection
+              key={person.id}
+              available={available}
+              canUpdate={canUpdate}
+              canViewProvenance={canViewProvenance}
+              onChange={acceptPerson}
+              onDirtyChange={setIdentityDirty}
+              onReload={load}
+              person={person}
+            />
             {canDelete && (
               <PersonDangerZone
                 available={available}

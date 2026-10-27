@@ -787,7 +787,7 @@ module.exports = async ({
         page.getByRole("button", { name: /Modifier|Ajouter|Supprimer/ }),
       ).toHaveCount(0);
       await expect(
-        page.getByRole("button", { name: /Voir l'origine/ }),
+        page.getByRole("button", { name: /^Historique :/ }),
       ).toHaveCount(0);
       await page
         .getByRole("listitem")
@@ -833,7 +833,7 @@ module.exports = async ({
     390,
     async (page, api) => {
       const trigger = page.getByRole("button", {
-        name: /Voir l'origine : Pseudo/,
+        name: /Historique : Pseudo/,
       });
       await trigger.click();
       await expect(page.getByRole("tooltip")).toContainText("Auteur fictif");
