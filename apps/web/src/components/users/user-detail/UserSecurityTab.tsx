@@ -15,6 +15,7 @@ import {
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
 import { Disclosure } from '$components/layout/Disclosure';
+import { RubricTitle } from '$components/layout/RubricCard';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
 import { UserStatusBadge } from '$features/users/user-badges';
 import type { UserSessionInfo, UserType } from '$types/auth.types';
@@ -183,21 +184,6 @@ const parseUserAgent = (userAgent: string | null): ParsedUserAgent => {
 
   return { browser, device, isMobile };
 };
-
-const SectionTitle: FC<{
-  children: React.ReactNode;
-  icon: React.ReactNode;
-  id: string;
-}> = ({ children, icon, id }) => (
-  <h3
-    id={id}
-    tabIndex={-1}
-    className="text-foreground flex scroll-mt-16 items-center gap-2 text-sm font-semibold"
-  >
-    <ServiceIcon className="size-7">{icon}</ServiceIcon>
-    {children}
-  </h3>
-);
 
 const SecurityInfoBlock: FC<{
   children?: React.ReactNode;
@@ -407,12 +393,12 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       </h2>
       <Card aria-labelledby="user-security-status-heading">
         <CardHeader className="p-3.5 sm:p-4">
-          <SectionTitle
+          <RubricTitle
             id="user-security-status-heading"
             icon={<Power className="size-3.5" />}
           >
             État du compte
-          </SectionTitle>
+          </RubricTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1">
@@ -472,12 +458,12 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
         <>
           <Card aria-labelledby="user-security-password-heading">
             <CardHeader className="p-3.5 sm:p-4">
-              <SectionTitle
+              <RubricTitle
                 id="user-security-password-heading"
                 icon={<KeyRound className="size-3.5" />}
               >
                 Mot de passe
-              </SectionTitle>
+              </RubricTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4">
               <dl>
@@ -523,12 +509,12 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           </Card>
           <Card aria-labelledby="user-security-mfa-heading">
             <CardHeader className="p-3.5 sm:p-4">
-              <SectionTitle
+              <RubricTitle
                 id="user-security-mfa-heading"
                 icon={<QrCode className="size-3.5" />}
               >
                 Double authentification
-              </SectionTitle>
+              </RubricTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4">
               <dl>
@@ -582,12 +568,12 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
       )}
       <Card aria-labelledby="user-security-sessions-heading">
         <CardHeader className="p-3.5 sm:p-4">
-          <SectionTitle
+          <RubricTitle
             id="user-security-sessions-heading"
             icon={<Monitor className="size-3.5" />}
           >
             Sessions actives
-          </SectionTitle>
+          </RubricTitle>
         </CardHeader>
         <CardContent className="space-y-3 p-3 sm:p-4">
           {sessionsNotice && (

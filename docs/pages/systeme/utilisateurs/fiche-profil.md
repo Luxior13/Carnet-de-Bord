@@ -22,10 +22,10 @@ facultatif, identifiant de connexion et email de contact, sans perdre le brouill
 
 ## Composition actuelle
 
-La section commence directement par la rubrique Identité (titre « Profil »
-réservé aux lecteurs d’écran, « Lecture seule » à droite de la rubrique si
-aucun champ n’est modifiable), puis Connexion et contact (sous-titres en
-petites capitales), primitives de champ communes, `SectionActionBar` avec
+Titre « Profil » réservé aux lecteurs d’écran, puis deux cartes titrées
+(`RubricCard`) : Identité (prénom et nom ; « Lecture seule » dans le bandeau si
+aucun champ n’est modifiable) et Connexion et contact (identifiant avec icône @
+et email côte à côte sur ordinateur), primitives de champ communes, `SectionActionBar` avec
 soumission native, confirmations de changement d’identifiant et de contact.
 Sur sa propre fiche, une liste de descriptions en lecture seule renvoie à Mon
 compte.
@@ -45,6 +45,8 @@ compte.
   identifiant à sa prochaine connexion. » ; la confirmation précise que ses
   sessions restent actives et que l’ancien identifiant reste réservé à ce
   compte (bouton « Modifier l’identifiant »).
+
+- 27 octobre 2026 : le propriétaire juge l’onglet « plat », « il manque de couleur » ; « ok go » sur la proposition. Une carte titrée par rubrique (`RubricCard` : bandeau `surface-panel-header`, tuile d’icône teintée `primary`), « Identité » puis « Connexion et contact » ; identifiant et email côte à côte sur ordinateur ; icône @ dans le champ identifiant, en écho à l’enveloppe de l’email. Les rubriques nomment leur contenu sans répéter l’onglet : la règle du 20 octobre 2026 reste tenue.
 
 ## Points ouverts
 

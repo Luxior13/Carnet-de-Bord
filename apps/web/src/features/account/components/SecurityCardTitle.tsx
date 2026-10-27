@@ -1,9 +1,5 @@
 'use client';
 
-import React, { type FC, type ReactNode } from 'react';
-
-import { ServiceIcon } from '$ui/service-icon';
-
 /** Focuses a security card heading without scrolling the page. */
 export const focusSecurityHeading = (id: string): void => {
   const heading = document.getElementById(id);
@@ -16,17 +12,5 @@ export const focusSecurityHeading = (id: string): void => {
   });
 };
 
-export const SecurityCardTitle: FC<{
-  children: ReactNode;
-  icon: ReactNode;
-  id: string;
-}> = ({ children, icon, id }) => (
-  <h3
-    id={id}
-    tabIndex={-1}
-    className="text-foreground flex scroll-mt-16 items-center gap-2 text-sm font-semibold"
-  >
-    <ServiceIcon className="size-7">{icon}</ServiceIcon>
-    {children}
-  </h3>
-);
+/** Rubric title of the security cards, shared with the record sections. */
+export { RubricTitle as SecurityCardTitle } from '$components/layout/RubricCard';

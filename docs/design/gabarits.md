@@ -56,7 +56,7 @@ PageShell · PageCanvas (EntityDetailLayout ou composition équivalente)
 ├─ Au défilement : barre réduite collée (mêmes onglets seuls)
 │  └─ Onglets nombreux : « Plus ▾ » sur ordinateur, sélecteur de section sur téléphone
 └─ Section active (chargée à la demande)
-   ├─ Carte de section : titre h2 pour les lecteurs d’écran, rubriques en petites capitales
+   ├─ Titre h2 pour les lecteurs d’écran, puis une carte titrée par rubrique (RubricCard : bandeau, tuile d’icône teintée)
    ├─ Champs aux primitives communes (40/44 px, rayon 8 px)
    └─ SectionActionBar (collante avec un brouillon)
 ```

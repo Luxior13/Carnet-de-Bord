@@ -127,3 +127,8 @@ complète : 58/58 ; Mon compte 28/28, sécurité de Mon compte 8/8, fiche
 personne 31/31, navigation par sections 8/8, sessions d’un utilisateur 11/11.
 Puis, sur retour du propriétaire, avatar et accès affichés en permanence dans
 le fil d’Ariane : le scénario les attend dès l’ouverture.
+
+Même jour, cartes de rubrique (`RubricCard`) sur Profil et tuiles d’icône
+teintées sur Sécurité : captures `profile-*` et `security-*` remplacées.
+Passe complète 58/58 ; Mon compte 28/28, sécurité de Mon compte 8/8, sessions
+d’un utilisateur 11/11, fiche personne 31/31.

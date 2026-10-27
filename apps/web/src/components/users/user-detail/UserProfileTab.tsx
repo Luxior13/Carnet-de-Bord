@@ -1,10 +1,10 @@
 'use client';
 
-import { AlertTriangle, Mail } from 'lucide-react';
+import { AlertTriangle, AtSign, LogIn, Mail, UserRound } from 'lucide-react';
 import React, { type FC, useEffect, useRef, useState } from 'react';
 
+import { RubricCard } from '$components/layout/RubricCard';
 import { SectionActionBar } from '$components/layout/SectionActionBar';
-import { FormSectionTitle } from '$features/users/CreateUserParts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,10 +16,8 @@ import {
   AlertDialogTitle,
 } from '$ui/alert-dialog';
 import { Button } from '$ui/button';
-import { Card, CardContent } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
-import { Separator } from '$ui/separator';
 import { StatusBadge } from '$ui/status-badge';
 import { passwordManagerIgnoreAttributes } from '$utils/autofill.utils';
 
@@ -168,17 +166,29 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
 
   if (isSelf) {
     return (
-      <Card>
-        <CardContent className="p-4 sm:p-5">
-          {/* Reading view: a description list, no title repeating the link. */}
-          <h2 className="sr-only">Profil</h2>
-          <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
+      <div className="space-y-3">
+        {/* Reading view: description lists, no title repeating the link. */}
+        <h2 className="sr-only">Profil</h2>
+        <RubricCard
+          icon={<UserRound />}
+          id="profile-identity-title"
+          title="Identité"
+        >
+          <dl>
             <div className="min-w-0">
-              <dt className="text-muted-foreground text-xs">Identité</dt>
+              <dt className="text-muted-foreground text-xs">Nom</dt>
               <dd className="text-foreground mt-1 text-sm font-medium break-words">
                 {form.firstName} {form.lastName}
               </dd>
             </div>
+          </dl>
+        </RubricCard>
+        <RubricCard
+          icon={<LogIn />}
+          id="profile-connection-title"
+          title="Connexion et contact"
+        >
+          <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
             <div className="min-w-0">
               <dt className="text-muted-foreground text-xs">
                 Identifiant de connexion
@@ -188,7 +198,7 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </dd>
             </div>
             {canViewContact && (
-              <div className="min-w-0 sm:col-span-2">
+              <div className="min-w-0">
                 <dt className="text-muted-foreground text-xs">
                   Email de contact
                 </dt>
@@ -198,8 +208,8 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
               </div>
             )}
           </dl>
-        </CardContent>
-      </Card>
+        </RubricCard>
+      </div>
     );
   }
 
@@ -212,92 +222,92 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
       aria-busy={isSaving}
       onSubmit={handleSubmit}
     >
-      <Card>
-        <CardContent className="space-y-5 p-4 sm:p-5">
-          {/* The section link already names the section: no visible title. */}
-          <h2 className="sr-only" tabIndex={-1}>
-            Profil
-          </h2>
-          <section
-            aria-labelledby="profile-identity-title"
-            className="space-y-3"
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <FormSectionTitle id="profile-identity-title">
-                Identité
-              </FormSectionTitle>
-              {!canEdit && !canEditContact && !canEditLogin && (
-                <StatusBadge tone="muted">Lecture seule</StatusBadge>
+      {/* The section link already names the section: no visible title. */}
+      <h2 className="sr-only" tabIndex={-1}>
+        Profil
+      </h2>
+      <div className="space-y-3">
+        <RubricCard
+          aside={
+            !canEdit &&
+            !canEditContact &&
+            !canEditLogin && (
+              <StatusBadge tone="muted">Lecture seule</StatusBadge>
+            )
+          }
+          icon={<UserRound />}
+          id="profile-identity-title"
+          title="Identité"
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="user-first-name" required>
+                Prénom
+              </Label>
+              <Input
+                id="user-first-name"
+                value={form.firstName}
+                maxLength={50}
+                {...passwordManagerIgnoreAttributes}
+                placeholder="Jean"
+                onChange={(event) =>
+                  setForm({ ...form, firstName: event.target.value })
+                }
+                disabled={!canEdit || isSaving}
+                aria-invalid={!!errors.firstName}
+                aria-describedby={
+                  errors.firstName ? 'user-first-name-error' : undefined
+                }
+              />
+              {errors.firstName && (
+                <FieldError id="user-first-name-error">
+                  {errors.firstName}
+                </FieldError>
               )}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="user-first-name" required>
-                  Prénom
-                </Label>
-                <Input
-                  id="user-first-name"
-                  value={form.firstName}
-                  maxLength={50}
-                  {...passwordManagerIgnoreAttributes}
-                  placeholder="Jean"
-                  onChange={(event) =>
-                    setForm({ ...form, firstName: event.target.value })
-                  }
-                  disabled={!canEdit || isSaving}
-                  aria-invalid={!!errors.firstName}
-                  aria-describedby={
-                    errors.firstName ? 'user-first-name-error' : undefined
-                  }
-                />
-                {errors.firstName && (
-                  <FieldError id="user-first-name-error">
-                    {errors.firstName}
-                  </FieldError>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="user-last-name">
-                  Nom <span className="font-normal">(facultatif)</span>
-                </Label>
-                <Input
-                  id="user-last-name"
-                  value={form.lastName}
-                  maxLength={50}
-                  {...passwordManagerIgnoreAttributes}
-                  placeholder="Dupont"
-                  onChange={(event) =>
-                    setForm({ ...form, lastName: event.target.value })
-                  }
-                  disabled={!canEdit || isSaving}
-                  aria-invalid={!!errors.lastName}
-                  aria-describedby={
-                    errors.lastName ? 'user-last-name-error' : undefined
-                  }
-                />
-                {errors.lastName && (
-                  <FieldError id="user-last-name-error">
-                    {errors.lastName}
-                  </FieldError>
-                )}
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="user-last-name">
+                Nom <span className="font-normal">(facultatif)</span>
+              </Label>
+              <Input
+                id="user-last-name"
+                value={form.lastName}
+                maxLength={50}
+                {...passwordManagerIgnoreAttributes}
+                placeholder="Dupont"
+                onChange={(event) =>
+                  setForm({ ...form, lastName: event.target.value })
+                }
+                disabled={!canEdit || isSaving}
+                aria-invalid={!!errors.lastName}
+                aria-describedby={
+                  errors.lastName ? 'user-last-name-error' : undefined
+                }
+              />
+              {errors.lastName && (
+                <FieldError id="user-last-name-error">
+                  {errors.lastName}
+                </FieldError>
+              )}
             </div>
-          </section>
+          </div>
+        </RubricCard>
 
-          <Separator />
-
-          <section
-            aria-labelledby="profile-connection-title"
-            className="space-y-3"
-          >
-            <FormSectionTitle id="profile-connection-title">
-              Connexion et contact
-            </FormSectionTitle>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="user-login-name" required>
-                  Identifiant de connexion
-                </Label>
+        <RubricCard
+          icon={<LogIn />}
+          id="profile-connection-title"
+          title="Connexion et contact"
+        >
+          <div className="grid items-start gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="user-login-name" required>
+                Identifiant de connexion
+              </Label>
+              <div className="relative">
+                <AtSign
+                  aria-hidden="true"
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2"
+                />
                 <Input
                   aria-describedby={
                     errors.loginName
@@ -321,94 +331,98 @@ export const UserProfileTab: FC<UserProfileTabProps> = ({
                       loginName: event.target.value.toLowerCase(),
                     })
                   }
+                  className="pl-9"
                 />
-                {errors.loginName ? (
-                  <FieldError id="user-login-name-error">
-                    {errors.loginName}
+              </div>
+              {errors.loginName ? (
+                <FieldError id="user-login-name-error">
+                  {errors.loginName}
+                </FieldError>
+              ) : (
+                <p
+                  id="user-login-name-hint"
+                  className={
+                    loginChanged
+                      ? 'text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs'
+                      : 'text-muted-foreground text-xs'
+                  }
+                >
+                  {loginChanged && (
+                    <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+                  )}
+                  <span>{loginHint}</span>
+                </p>
+              )}
+            </div>
+            {canViewContact ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="user-contact-email">
+                  Email de contact{' '}
+                  <span className="font-normal">(facultatif)</span>
+                </Label>
+                <div className="relative">
+                  <Mail
+                    aria-hidden="true"
+                    className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2"
+                  />
+                  <Input
+                    aria-describedby={
+                      errors.contactEmail
+                        ? 'user-contact-email-error'
+                        : 'user-contact-email-hint'
+                    }
+                    aria-invalid={!!errors.contactEmail}
+                    disabled={!canEditContact || isSaving}
+                    id="user-contact-email"
+                    maxLength={254}
+                    {...passwordManagerIgnoreAttributes}
+                    placeholder="Non renseigné"
+                    inputMode="email"
+                    type="text"
+                    value={form.contactEmail}
+                    onChange={(event) =>
+                      setForm({ ...form, contactEmail: event.target.value })
+                    }
+                    className="pl-9"
+                  />
+                </div>
+                {errors.contactEmail ? (
+                  <FieldError id="user-contact-email-error">
+                    {errors.contactEmail}
                   </FieldError>
                 ) : (
                   <p
-                    id="user-login-name-hint"
-                    className={
-                      loginChanged
-                        ? 'text-muted-foreground border-warning/25 bg-warning/10 flex items-start gap-2 rounded-md border px-2.5 py-2 text-xs'
-                        : 'text-muted-foreground text-xs'
-                    }
+                    id="user-contact-email-hint"
+                    className="text-muted-foreground text-xs"
                   >
-                    {loginChanged && (
-                      <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
-                    )}
-                    <span>{loginHint}</span>
+                    {contactHint}
                   </p>
                 )}
+                {canEditContact && committedContactEmail.length > 0 && (
+                  <Button
+                    className="h-auto px-0 text-xs"
+                    disabled={isSaving}
+                    onClick={() => setContactRemovalIntent('stage')}
+                    type="button"
+                    variant="link"
+                  >
+                    Supprimer l&apos;adresse de contact
+                  </Button>
+                )}
               </div>
-              {canViewContact ? (
-                <div className="space-y-1.5">
-                  <Label htmlFor="user-contact-email">
-                    Email de contact{' '}
-                    <span className="font-normal">(facultatif)</span>
-                  </Label>
-                  <div className="relative">
-                    <Mail className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2" />
-                    <Input
-                      aria-describedby={
-                        errors.contactEmail
-                          ? 'user-contact-email-error'
-                          : 'user-contact-email-hint'
-                      }
-                      aria-invalid={!!errors.contactEmail}
-                      disabled={!canEditContact || isSaving}
-                      id="user-contact-email"
-                      maxLength={254}
-                      {...passwordManagerIgnoreAttributes}
-                      placeholder="Non renseigné"
-                      inputMode="email"
-                      type="text"
-                      value={form.contactEmail}
-                      onChange={(event) =>
-                        setForm({ ...form, contactEmail: event.target.value })
-                      }
-                      className="pl-9"
-                    />
-                  </div>
-                  {errors.contactEmail ? (
-                    <FieldError id="user-contact-email-error">
-                      {errors.contactEmail}
-                    </FieldError>
-                  ) : (
-                    <p
-                      id="user-contact-email-hint"
-                      className="text-muted-foreground text-xs"
-                    >
-                      {contactHint}
-                    </p>
-                  )}
-                  {canEditContact && committedContactEmail.length > 0 && (
-                    <Button
-                      className="h-auto px-0 text-xs"
-                      disabled={isSaving}
-                      onClick={() => setContactRemovalIntent('stage')}
-                      type="button"
-                      variant="link"
-                    >
-                      Supprimer l&apos;adresse de contact
-                    </Button>
-                  )}
+            ) : (
+              <div className="space-y-1.5">
+                <p className="text-muted-foreground text-xs font-medium">
+                  Email de contact
+                </p>
+                <div className="bg-muted/30 text-muted-foreground rounded-md border px-3 py-2 text-sm">
+                  Masqué — permission requise
                 </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <p className="text-muted-foreground text-xs font-medium">
-                    Email de contact
-                  </p>
-                  <div className="bg-muted/30 text-muted-foreground rounded-md border px-3 py-2 text-sm">
-                    Masqué — permission requise
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-        </CardContent>
-      </Card>
+              </div>
+            )}
+          </div>
+        </RubricCard>
+      </div>
       {hasChanges && (
         <SectionActionBar
           conflict={!canSave}

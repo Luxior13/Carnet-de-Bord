@@ -22,9 +22,9 @@ de contact sans perdre sa saisie.
 
 ## Composition actuelle
 
-Carte sans en-tête (titre « Profil » réservé aux lecteurs d’écran), rubrique
-Identité (prénom, nom) puis Connexion et contact (identifiant et email en liste
-de descriptions, bouton Gérer ou Ajouter) ; formulaire soumis par Entrée avec
+Titre « Profil » réservé aux lecteurs d’écran, puis deux cartes titrées
+(`RubricCard`) : Identité (prénom, nom) et Connexion et contact (identifiant et
+email côte à côte en liste de descriptions, bouton Gérer ou Ajouter) ; formulaire soumis par Entrée avec
 `SectionActionBar` ; adresse de contact modifiée dans une fenêtre
 (`ContactEmailDialog`) ; relecture champ par champ après conflit.
 
@@ -32,6 +32,9 @@ de descriptions, bouton Gérer ou Ajouter) ; formulaire soumis par Entrée avec
 
 - Barre commune et relecture fusionnant chaque champ : [Barre du profil](#barre-du-profil--11-octobre-2026)
   et [Concurrence et reprise](README.md#concurrence-et-reprise--complément-du-11-octobre-2026).
+
+- 27 octobre 2026 : cartes titrées par rubrique, comme le Profil de la fiche
+  utilisateur ([décision](../systeme/utilisateurs/fiche-profil.md#décisions-retenues)).
 
 ## Points ouverts
 

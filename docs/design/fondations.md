@@ -217,7 +217,8 @@ pour retrouver leur densité, sans remplacer les tokens globaux d'une page à l'
 La hiérarchie HTML reste indépendante de la taille : un `h1` par
 page, puis `h2` et `h3`. `CardTitle` rend un `h2` par défaut et accepte `as`.
 Le titre d’une section de fiche est un `h2` réservé aux lecteurs d’écran ; ses
-rubriques sont des `h3` en petites capitales.
+rubriques sont des `h3` en tête de leur carte, avec une tuile d’icône teintée
+(`RubricTitle`, 27 octobre 2026).
 Les titres de page restent neutres ; une zone dangereuse peut porter un statut.
 Les titres et descriptions essentiels reviennent à la ligne. Un libellé tronqué
 reste complet dans le DOM et dispose, si utile, d'un attribut `title`.
@@ -237,9 +238,10 @@ sélecteurs reprennent explicitement cette police dans leur portail, en
 utilitaires Tailwind : le `className` d'un appelant garde donc la priorité.
 Les formulaires de fiche réutilisent ces primitives sans remettre des labels
 réduits et atténués ou une police monospace sur une saisie ordinaire, comme un
-identifiant de connexion. Les sous-titres de groupe de champs (Identité,
-Connexion et contact) restent des repères en petites capitales atténuées,
-distincts des labels. La recherche de liste conserve Geist (`font-sans` dans
+identifiant de connexion. Dans une fiche, les groupes de champs (Identité,
+Connexion et contact) sont des cartes titrées (`RubricCard`) ; dans un
+formulaire de création, ils restent des repères en petites capitales
+atténuées, distincts des labels. La recherche de liste conserve Geist (`font-sans` dans
 `ListSearchField`) et sa taille spécifique ci-dessus, comme les notifications.
 Vérifier lisibilité, zoom et confort sur les appareils visés ; ces valeurs
 ne prouvent pas à elles seules l'accessibilité. Les contrôles spécialisés
