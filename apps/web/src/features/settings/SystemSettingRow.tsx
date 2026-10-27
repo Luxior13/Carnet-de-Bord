@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { History, Minus, Plus } from 'lucide-react';
+import { AlertTriangle, History } from 'lucide-react';
 import React, { type FC, useEffect, useRef } from 'react';
 
 import { SectionActionBar } from '$components/layout/SectionActionBar';
@@ -10,8 +10,10 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '$ui/card';
 import { Input } from '$ui/input';
 import { Label } from '$ui/label';
 import { ServiceIcon } from '$ui/service-icon';
+import { cn } from '$utils/css.utils';
 
 import {
+  formatDaysAsYears,
   formatSettingValue,
   formatUpdatedAt,
   getDraftNumber,
@@ -40,8 +42,9 @@ type SystemSettingRowProps = {
 };
 
 const actionClass = 'h-11 rounded-control px-3 lg:h-10';
-const stepButtonClass =
-  'border-border-control bg-input size-11 focus-visible:relative focus-visible:z-10 lg:size-10';
+/** Same framed warning as the other forms (27 October 2026). */
+const warningClass =
+  'text-muted-foreground border-warning/25 bg-warning/10 flex w-fit max-w-prose items-start gap-2 rounded-md border px-3 py-2 text-xs leading-5';
 
 export const SystemSettingRow: FC<SystemSettingRowProps> = ({
   canUpdate,
@@ -114,16 +117,6 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
     editing && (dirty || conflict !== 'none' || busy || !!error);
   const validation = getValidationMessage(setting.key, draft);
   const parsed = getDraftNumber(draft);
-  const canStep = !disabled && parsed !== null && !validation;
-  const stepDuration = (direction: -1 | 1): void => {
-    if (!canStep || parsed === null) return;
-    onChange(
-      String(
-        Math.min(definition.max, Math.max(definition.min, parsed + direction)),
-      ),
-    );
-    inputRef.current?.focus();
-  };
   const reducing =
     dirty &&
     parsed !== null &&
@@ -149,7 +142,7 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
       <Card>
         <CardHeader className="p-3.5 sm:p-4">
           <div className="flex min-w-0 items-start gap-3">
-            <ServiceIcon className="size-8">
+            <ServiceIcon className="border-primary/30 bg-primary/10 text-primary-emphasis size-8">
               <History aria-hidden="true" className="size-4" />
             </ServiceIcon>
             <div className="min-w-0">
@@ -162,16 +155,24 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
         </CardHeader>
         <CardContent className="space-y-4 p-4 sm:p-5">
           {setting.isStoredValueInvalid && (
-            <p className="text-warning text-sm leading-6" role="alert">
-              <strong className="font-medium">Valeur à réparer.</strong> Le
-              nettoyage du journal est bloqué. La durée proposée ci-dessous est
-              le défaut logiciel, pas une durée appliquée.
+            <p className={warningClass} role="alert">
+              <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+              <span>
+                <strong className="text-warning font-medium">
+                  Valeur à réparer.
+                </strong>{' '}
+                Le nettoyage du journal est bloqué. La durée proposée ci-dessous
+                est le défaut logiciel, pas une durée appliquée.
+              </span>
             </p>
           )}
           {unconfirmed && (
-            <p className="text-warning text-sm leading-6" role="status">
-              Le dernier enregistrement reste à vérifier. Vérifiez la valeur
-              affichée avant une nouvelle modification.
+            <p className={warningClass} role="status">
+              <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+              <span>
+                Le dernier enregistrement reste à vérifier. Vérifiez la valeur
+                affichée avant une nouvelle modification.
+              </span>
             </p>
           )}
           <div className="space-y-2">
@@ -183,70 +184,67 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                     : 'Durée de conservation'}
                   <span className="sr-only"> — {definition.label}</span>
                 </Label>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                  <div className="flex w-full max-w-80 items-center gap-2">
-                    <div className="flex min-w-0 flex-1 items-center">
+                {/* Usual durations in one click; the field keeps any value. */}
+                <div
+                  aria-label={`Durées courantes — ${definition.label}`}
+                  className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap"
+                  role="group"
+                >
+                  {presentation.presets.map((preset) => {
+                    const selected = parsed === preset;
+
+                    return (
                       <Button
-                        aria-controls={id}
-                        aria-label={`Diminuer d'un jour — ${definition.label}`}
-                        className={`${stepButtonClass} rounded-l-compact rounded-r-none`}
-                        disabled={!canStep || parsed === definition.min}
-                        onClick={() => stepDuration(-1)}
-                        size="icon"
+                        aria-pressed={selected}
+                        className={cn(
+                          'rounded-control h-11 gap-1.5 px-3 lg:h-9',
+                          selected &&
+                            'border-primary bg-primary/15 text-foreground hover:bg-primary/20',
+                        )}
+                        disabled={disabled || conflict !== 'none'}
+                        key={preset}
+                        onClick={() => onChange(String(preset))}
                         type="button"
                         variant="outline"
                       >
-                        <Minus aria-hidden="true" className="size-4" />
+                        {formatDaysAsYears(preset)}
+                        {preset === definition.defaultValue && (
+                          <span className="text-muted-foreground text-xs font-normal">
+                            (défaut)
+                          </span>
+                        )}
                       </Button>
-                      <Input
-                        aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}${error ? ` ${id}-error` : ''}${conflict !== 'none' ? ` ${id}-conflict` : ''}`}
-                        aria-invalid={validation ? true : undefined}
-                        className="h-11 min-w-0 flex-1 [appearance:textfield] rounded-none border-x-0 px-2 text-center tabular-nums focus-visible:relative focus-visible:z-10 lg:h-10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                        disabled={disabled}
-                        id={id}
-                        inputMode="numeric"
-                        max={definition.max}
-                        min={definition.min}
-                        onChange={(event) => onChange(event.target.value)}
-                        required
-                        ref={inputRef}
-                        step={1}
-                        type="number"
-                        value={draft}
-                      />
-                      <Button
-                        aria-controls={id}
-                        aria-label={`Augmenter d'un jour — ${definition.label}`}
-                        className={`${stepButtonClass} rounded-r-compact rounded-l-none`}
-                        disabled={!canStep || parsed === definition.max}
-                        onClick={() => stepDuration(1)}
-                        size="icon"
-                        type="button"
-                        variant="outline"
-                      >
-                        <Plus aria-hidden="true" className="size-4" />
-                      </Button>
-                    </div>
-                    <span className="text-muted-foreground text-sm">
-                      {definition.unit === 'days' ? 'jours' : 'lignes'}
-                    </span>
-                  </div>
-                  {conflict === 'none' &&
-                    parsed !== definition.defaultValue && (
-                      <Button
-                        aria-label={`Rétablir la valeur par défaut — ${definition.label}`}
-                        className={actionClass}
-                        disabled={disabled}
-                        onClick={() => {
-                          onChange(String(definition.defaultValue));
-                          inputRef.current?.focus();
-                        }}
-                        type="button"
-                        variant="ghost"
-                      >
-                        Rétablir le défaut
-                      </Button>
-                    )}
+                    );
+                  })}
+                </div>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <Input
+                    aria-describedby={`${id}-help ${id}-impact${validation ? ` ${id}-validation` : ''}${error ? ` ${id}-error` : ''}${conflict !== 'none' ? ` ${id}-conflict` : ''}`}
+                    aria-invalid={validation ? true : undefined}
+                    className="h-11 w-28 [appearance:textfield] text-center tabular-nums lg:h-10 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    disabled={disabled}
+                    id={id}
+                    inputMode="numeric"
+                    max={definition.max}
+                    min={definition.min}
+                    onChange={(event) => onChange(event.target.value)}
+                    required
+                    ref={inputRef}
+                    step={1}
+                    type="number"
+                    value={draft}
+                  />
+                  <span className="text-muted-foreground text-sm">
+                    {definition.unit === 'days' ? 'jours' : 'lignes'}
+                    {definition.unit === 'days' &&
+                      parsed !== null &&
+                      !validation && (
+                        <span className="text-foreground">
+                          {' '}
+                          · soit {formatDaysAsYears(parsed)}
+                        </span>
+                      )}
+                  </span>
                 </div>
               </>
             ) : (
@@ -267,10 +265,13 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
             >
               Entre {definition.min.toLocaleString('fr-FR')} et{' '}
               {formatSettingValue(definition.max, definition.unit)}.{' '}
-              <span className="inline-block">
-                Défaut :{' '}
-                {formatSettingValue(definition.defaultValue, definition.unit)}.
-              </span>
+              {!editing && (
+                <span className="inline-block">
+                  Défaut :{' '}
+                  {formatSettingValue(definition.defaultValue, definition.unit)}
+                  .
+                </span>
+              )}
             </p>
             {dirty && !setting.isStoredValueInvalid && (
               <p className="text-muted-foreground text-xs leading-5">
@@ -278,6 +279,12 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
                 {formatSettingValue(setting.value, definition.unit)}.
               </p>
             )}
+            <p
+              className="text-muted-foreground max-w-prose text-xs leading-5"
+              id={`${id}-impact`}
+            >
+              {presentation.impact}
+            </p>
             {editing && validation && (
               <p
                 className="text-destructive text-xs leading-5"
@@ -289,11 +296,14 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
             )}
           </div>
           {reducing && parsed !== null && conflict === 'none' && (
-            <p className="text-warning mt-3 text-sm leading-6" role="status">
-              {setting.isStoredValueInvalid ? 'Après réparation, les' : 'Les'}{' '}
-              données dépassant {formatSettingValue(parsed, definition.unit)}{' '}
-              pourront être supprimées à la prochaine maintenance. Une
-              confirmation sera demandée.
+            <p className={warningClass} role="status">
+              <AlertTriangle className="text-warning mt-0.5 size-3.5 shrink-0" />
+              <span>
+                {setting.isStoredValueInvalid ? 'Après réparation, les' : 'Les'}{' '}
+                données dépassant {formatSettingValue(parsed, definition.unit)}{' '}
+                pourront être supprimées au prochain nettoyage. Une confirmation
+                sera demandée.
+              </span>
             </p>
           )}
           {editing && conflict !== 'none' && (
@@ -366,19 +376,13 @@ export const SystemSettingRow: FC<SystemSettingRowProps> = ({
             </p>
           )}
         </CardContent>
-        <CardFooter className="flex-col items-start gap-2 px-4 py-3 sm:px-5 sm:py-3">
-          <p
-            className="text-muted-foreground text-xs leading-5"
-            id={`${id}-impact`}
-          >
-            {presentation.impact}
-          </p>
-          {setting.version > 0 && (
+        {setting.version > 0 && (
+          <CardFooter className="px-4 py-3 sm:px-5 sm:py-3">
             <p className="text-muted-foreground text-xs leading-5">
               Dernière modification le {formatUpdatedAt(setting.updatedAt)}.
             </p>
-          )}
-        </CardFooter>
+          </CardFooter>
+        )}
       </Card>
       {showActions && (
         <SectionActionBar

@@ -9,6 +9,8 @@ import type { SystemSettingItem } from '$types/platform.types';
 type SettingPresentation = {
   description: string;
   impact: string;
+  /** Usual values offered as quick choices (owner decision of 27 October 2026). */
+  presets: readonly number[];
   title: string;
 };
 
@@ -24,6 +26,7 @@ const SETTING_PRESENTATION = {
       'Connexions, sécurité, administration et historique des personnes.',
     impact:
       'La durée s’applique au prochain nettoyage, sans suppression immédiate. Les événements et leurs détails sont supprimés ensemble. Une durée plus longue ne restaure pas les données déjà supprimées.',
+    presets: [365, 730, 1095, 1825, 3650],
     title: 'Conservation du journal',
   },
 } as const satisfies Record<SystemSettingKey, SettingPresentation>;
@@ -48,6 +51,16 @@ export const formatSettingValue = (
   if (unit === 'rows') return `${formatted} ligne${value > 1 ? 's' : ''}`;
 
   return `${formatted} jour${value > 1 ? 's' : ''}`;
+};
+
+/** « 3 ans », « environ 2,5 ans »: a duration in days read in years. */
+export const formatDaysAsYears = (days: number): string => {
+  const years = days / 365;
+  const rounded = Math.round(years * 10) / 10;
+  const unit = rounded >= 2 ? 'ans' : 'an';
+  const label = `${rounded.toLocaleString('fr-FR')} ${unit}`;
+
+  return Number.isInteger(years) ? label : `environ ${label}`;
 };
 
 export const formatUpdatedAt = (updatedAt: string): string => {

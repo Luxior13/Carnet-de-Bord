@@ -14,6 +14,38 @@
 | Contrôle d’accès | `settings:view` et `settings:update`, liés au rôle ADMIN ; preuve récente pour réduire la conservation ou réparer une valeur |
 | Chargement / erreur dédiés | squelette dérivé du catalogue / commune à l’application |
 
+## Revue de l’interface — 27 octobre 2026
+
+Le propriétaire demande une vérification de la page, puis « ok go » sur les
+cinq points proposés.
+
+- **Choix rapides** : « 1 an · 2 ans · 3 ans (défaut) · 5 ans · 10 ans »
+  (boutons à bascule, `aria-pressed`, groupe « Durées courantes ») au lieu des
+  boutons − et + qui avançaient d’un jour (365 clics pour un an). Le champ
+  garde toute valeur entre les bornes ; les flèches du clavier restent
+  disponibles. « Rétablir le défaut » disparaît : le choix « 3 ans (défaut) »
+  le remplace, et le focus reste sur le choix pressé.
+- **Équivalence en années** : « jours · soit 3 ans », « soit environ 2,5 ans » ;
+  champ de 112 px au lieu de 320 px. En modification, l’aide ne répète plus le
+  défaut (porté par son choix).
+- **Avertissements encadrés** (bordure et fond `warning`, icône), comme
+  ailleurs : réduction, valeur à réparer, enregistrement à vérifier. Un seul
+  mot, « nettoyage » (la réduction disait « maintenance »).
+- **Note de prise d’effet** sous l’aide du champ, en largeur de lecture
+  (`max-w-prose`) ; le pied de carte ne garde que la date de dernière
+  modification.
+- **Tuile d’icône teintée**, comme les cartes de rubrique des fiches.
+- **Non retenu** : date du dernier nettoyage et plus ancien événement conservé,
+  faute de donnée enregistrée ; à reprendre avec un nettoyage planifié.
+- **Preuves** : banc client 34/34 (scénarios des choix rapides et du défaut
+  réécrits) ; E2E adapté (`e2e/system-settings.checks.ts`) mais **non rejoué** :
+  le port 3001 était occupé par le serveur de développement. Captures relues :
+  [repos bureau](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-repos-1440-2026-10-27.png),
+  [repos mobile](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-repos-390-2026-10-27.png),
+  [modification bureau](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-edition-1440-2026-10-27.png),
+  [modification à 320 px](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-edition-320-2026-10-27.png),
+  [réduction](../../audits/parametres-complet-2026-10-11/banc-client/preuves/interface-reduction-1440-2026-10-27.png).
+
 ## Focus après actualisation — 25 octobre 2026
 
 Défaut trouvé par l’E2E lors de la [vérification avant nouvelle fonctionnalité](../../audits/2026-10-25-verification-avant-fonctionnalite.md)

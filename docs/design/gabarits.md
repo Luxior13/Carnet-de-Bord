@@ -114,7 +114,9 @@ Détail : [Nouvel utilisateur](../pages/systeme/utilisateurs/creation.md),
 ## D. Page de réglages
 
 Bandeau compact, une carte par groupe de réglages (portée, champ, aide unique),
-saisie directe, valeur par défaut et bornes visibles une seule fois, barre
+choix rapides pour les valeurs courantes (défaut marqué) et saisie directe,
+valeur lisible dans l’unité courante (« soit 3 ans »), bornes visibles une
+seule fois, avertissements encadrés, barre
 commune seulement avec un brouillon, une réparation, une attente, une erreur ou
 un conflit. Une réduction risquée demande une confirmation et une preuve récente.
 

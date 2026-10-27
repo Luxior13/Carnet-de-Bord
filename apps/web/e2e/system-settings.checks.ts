@@ -8,48 +8,40 @@ async function expectSystemSettingDurationControls(
   max: number,
 ): Promise<void> {
   const input = row.getByRole('spinbutton');
-  const decrease = row.getByRole('button', { name: /^Diminuer d.un jour/ });
-  const increase = row.getByRole('button', { name: /^Augmenter d.un jour/ });
   const save = row.getByRole('button', { name: /^Enregistrer/ });
+  // Quick choices in years replace the one-day steps (27 October 2026).
+  const shortest = row.getByRole('button', { exact: true, name: '1 an' });
+  const longest = row.getByRole('button', { exact: true, name: '10 ans' });
+  const initialChoice = row.getByRole('button', { name: /\(défaut\)$/ });
   await expect(input).toHaveValue(String(initial));
-  await increase.click();
-  await expect(input).toHaveValue(String(initial + 1));
-  await expect(input).toBeFocused();
-  await decrease.focus();
-  await decrease.press('Enter');
+  await expect(initialChoice).toHaveAttribute('aria-pressed', 'true');
+  await shortest.click();
+  await expect(input).toHaveValue(String(min));
+  await expect(shortest).toHaveAttribute('aria-pressed', 'true');
+  await longest.focus();
+  await longest.press('Enter');
+  await expect(input).toHaveValue(String(max));
+  await initialChoice.click();
   await expect(input).toHaveValue(String(initial));
-  await expect(input).toBeFocused();
   await expect(save).toHaveCount(0);
   await input.press('ArrowUp');
   await expect(input).toHaveValue(String(initial + 1));
   await input.press('ArrowDown');
   await expect(input).toHaveValue(String(initial));
-  await input.fill(String(min + 1));
-  await decrease.click();
-  await expect(input).toHaveValue(String(min));
-  await expect(decrease).toBeDisabled();
-  await expect(increase).toBeEnabled();
+  await input.fill(String(min));
   await input.press('ArrowDown');
   await expect(input).toHaveValue(String(min));
-  await input.fill(String(max - 1));
-  await increase.click();
-  await expect(input).toHaveValue(String(max));
-  await expect(increase).toBeDisabled();
-  await expect(decrease).toBeEnabled();
+  await input.fill(String(max));
   await input.press('ArrowUp');
   await expect(input).toHaveValue(String(max));
   for (const value of ['', String(min - 1), String(max + 1), `${initial}.5`]) {
     await input.fill(value);
     await expect(input).toHaveValue(value);
     await expect(input).toHaveAttribute('aria-invalid', 'true');
-    await expect(decrease).toBeDisabled();
-    await expect(increase).toBeDisabled();
     await expect(save).toBeDisabled();
   }
   await input.fill(String(initial));
   await expect(input).not.toHaveAttribute('aria-invalid', 'true');
-  await expect(decrease).toBeEnabled();
-  await expect(increase).toBeEnabled();
   // A wheel over the focused number must not silently edit a retention policy.
   expect(
     await input.evaluate((element) =>
@@ -271,10 +263,10 @@ export async function expectSystemSettingsDraftSafety(
     await expect(input).toBeDisabled();
     await expect(save).toBeDisabled();
     await expect(
-      auditRow.getByRole('button', { name: /^Diminuer d.un jour/ }),
+      auditRow.getByRole('button', { exact: true, name: '1 an' }),
     ).toBeDisabled();
     await expect(
-      auditRow.getByRole('button', { name: /^Augmenter d.un jour/ }),
+      auditRow.getByRole('button', { exact: true, name: '10 ans' }),
     ).toBeDisabled();
     await expect.poll(() => writes.length).toBe(writeCount + 1);
     finishWrite();

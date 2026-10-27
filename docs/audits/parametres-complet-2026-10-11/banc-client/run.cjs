@@ -302,27 +302,29 @@ async function main() {
       assert.equal(writes(api).length, 0);
       await expect(field(page)).toHaveAttribute("autocomplete", "off");
       await expect(field(page)).toHaveAttribute("data-bwignore", "true");
-      const less = row(page).getByRole("button", { name: /^Diminuer/ }),
-        more = row(page).getByRole("button", { name: /^Augmenter/ });
-      await more.click();
-      await expect(field(page)).toHaveValue("1096");
-      await expect(field(page)).toBeFocused();
-      await less.focus();
-      await less.press("Space");
+      // 27 October 2026: quick choices in years replace the one-day steps.
+      const preset = (name) =>
+        row(page).getByRole("button", { name, exact: true });
+      await expect(preset("3 ans (défaut)")).toHaveAttribute(
+        "aria-pressed",
+        "true",
+      );
+      await expect(row(page)).toContainText("soit 3 ans");
+      await preset("5 ans").focus();
+      await preset("5 ans").press("Space");
+      await expect(field(page)).toHaveValue("1825");
+      await expect(preset("5 ans")).toHaveAttribute("aria-pressed", "true");
+      await expect(preset("5 ans")).toBeFocused();
+      await preset("3 ans (défaut)").click();
       await expect(field(page)).toHaveValue("1095");
       await field(page).press("ArrowUp");
       await expect(field(page)).toHaveValue("1096");
+      await expect(row(page)).toContainText("soit environ 3 ans");
       for (const value of ["", "364", "3651", "1095.5"]) {
         await field(page).fill(value);
         await expect(field(page)).toHaveAttribute("aria-invalid", "true");
-        await expect(less).toBeDisabled();
-        await expect(more).toBeDisabled();
         await expect(save(page)).toBeDisabled();
       }
-      await field(page).fill("365");
-      await expect(less).toBeDisabled();
-      await field(page).fill("3650");
-      await expect(more).toBeDisabled();
       await field(page).fill("1100");
       await field(page).hover();
       await page.mouse.wheel(0, 300);
@@ -379,11 +381,13 @@ async function main() {
     async ({ page, api }) => {
       await expect(field(page)).toHaveValue("1460");
       await expect(save(page)).toHaveCount(0);
-      await row(page)
-        .getByRole("button", { name: /^Rétablir la valeur par défaut/ })
-        .click();
+      const defaultChoice = row(page).getByRole("button", {
+        name: "3 ans (défaut)",
+        exact: true,
+      });
+      await defaultChoice.click();
       await expect(field(page)).toHaveValue("1095");
-      await expect(field(page)).toBeFocused();
+      await expect(defaultChoice).toBeFocused();
       await save(page).click();
       await expect(page.getByRole("alertdialog")).toBeVisible();
       assert.equal(writes(api).length, 0);
@@ -455,11 +459,13 @@ async function main() {
       await expect(page.getByRole("alertdialog")).toHaveCount(0);
       await expect(field(page)).toHaveValue("1095");
       await write(page, 1400);
-      await row(page)
-        .getByRole("button", { name: /^Rétablir la valeur par défaut/ })
-        .click();
+      const defaultChoice = row(page).getByRole("button", {
+        name: "3 ans (défaut)",
+        exact: true,
+      });
+      await defaultChoice.click();
       await expect(field(page)).toHaveValue("1095");
-      await expect(field(page)).toBeFocused();
+      await expect(defaultChoice).toBeFocused();
       await expect(save(page)).toHaveCount(0);
       await field(page).fill("900");
       await save(page).click();
