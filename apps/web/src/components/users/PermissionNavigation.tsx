@@ -1,6 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { ChevronRight, Search } from 'lucide-react';
 import React, { type FC, useId } from 'react';
 
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
@@ -236,8 +236,56 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
         </div>
       ) : (
         <>
+          {/* Phone (28 October 2026): every pole and its pages at once, like
+              the settings of a phone; each page opens on its own screen. */}
+          <div className={styles.allPoles}>
+            {listedPoles.length === 0 && (
+              <p className="text-muted-foreground text-xs">Aucune page.</p>
+            )}
+            {listedPoles.map((pole) => {
+              const PoleIcon = getNavigationIcon(pole.icon);
+
+              return (
+                <section
+                  aria-label={`Pages du pôle ${pole.label}`}
+                  className="space-y-1"
+                  key={pole.key}
+                >
+                  <h3 className={styles.indexPole}>
+                    <PoleIcon aria-hidden="true" className="size-4 shrink-0" />
+                    <span className="flex-1">{pole.label}</span>
+                    {pole.categories.some(isChanged) && <ChangedDot />}
+                    <UsableCount result={countPole(pole)} />
+                  </h3>
+                  <ul className="space-y-0.5">
+                    {pole.categories.map((category) => (
+                      <li key={category.key}>
+                        <Button
+                          className={styles.pageButton}
+                          data-page-key={category.key}
+                          onClick={() => onSelectPage(category.key)}
+                          type="button"
+                          variant="ghost"
+                        >
+                          <span className="min-w-0 flex-1 truncate">
+                            {category.label}
+                          </span>
+                          {isChanged(category) && <ChangedDot />}
+                          <UsableCount result={countCategory(category)} />
+                          <ChevronRight
+                            aria-hidden="true"
+                            className="text-muted-foreground size-4 shrink-0"
+                          />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })}
+          </div>
           {/* One pole at a time; the search above still covers every pole. */}
-          <div className={cn(styles.tree, 'space-y-2')}>
+          <div className={cn(styles.tree, styles.poleMenu, 'space-y-2')}>
             <Label htmlFor={poleSelectId}>Pôle</Label>
             {!currentPole && (
               <p className="text-muted-foreground text-xs">Aucune page.</p>

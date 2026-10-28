@@ -8,6 +8,7 @@ import type {
   PersonsListResponse,
 } from '../src/features/persons/types/person.types';
 import { browserApi } from './browser-api';
+import { expectMobileLayouts } from './mobile-layout.checks';
 import { expectSystemSettingsDraftSafety } from './system-settings.checks';
 import { expectUserCreationRecovery } from './user-creation.checks';
 import {
@@ -988,4 +989,5 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
 
   await expectSelfProfileSyncWithoutReload(page);
   await expectPersonIdentityLifecycle(page);
+  await expectMobileLayouts(page, createdUserId);
 });

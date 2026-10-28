@@ -426,14 +426,16 @@ async function main() {
         await expect(quickFilter(page, "Utilisateurs")).toHaveText(
           "Utilisateurs1",
         );
-        const before = await quickFilter(page, "Superadmin").boundingBox();
+        // Place in its row: on a phone the row slides to show the tapped
+        // filter, which moves the screen position but not the layout.
+        const before = await quickFilter(page, "Superadmin").evaluate((node) => ({ height: node.offsetHeight, left: node.offsetLeft, top: node.offsetTop, width: node.offsetWidth }));
         await quickFilter(page, "Utilisateurs").click();
         await expect(quickFilter(page, "Utilisateurs")).toHaveAttribute(
           "aria-pressed",
           "false",
         );
         await expect(results(page)).toHaveAttribute("aria-busy", "false");
-        const after = await quickFilter(page, "Superadmin").boundingBox();
+        const after = await quickFilter(page, "Superadmin").evaluate((node) => ({ height: node.offsetHeight, left: node.offsetLeft, top: node.offsetTop, width: node.offsetWidth }));
         assert.deepEqual(after, before, "quick filters moved");
         await expect
           .poll(() => new URL(page.url()).searchParams.get("role"))

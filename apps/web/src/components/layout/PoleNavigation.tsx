@@ -28,7 +28,7 @@ type PoleNavigationProps = {
 const RUBRIQUES_PANEL_CLASS =
   'border-border-default bg-surface-panel text-popover-foreground max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(15rem,calc(100vw-2rem))] space-y-1 overflow-y-auto overscroll-contain border p-1.5 shadow-[var(--shadow-panel-strong)]';
 const RUBRIQUES_ITEM_CLASS =
-  'text-foreground flex min-h-10 w-full min-w-0 cursor-pointer items-center gap-2.5 px-2.5 py-1 text-sm font-medium outline-none';
+  'text-foreground flex min-h-11 sm:min-h-10 w-full min-w-0 cursor-pointer items-center gap-2.5 px-2.5 py-1 text-sm font-medium outline-none';
 
 export const PoleNavigation: FC<PoleNavigationProps> = ({
   activeSpace,
@@ -53,7 +53,7 @@ export const PoleNavigation: FC<PoleNavigationProps> = ({
           <Button
             aria-label={`Rubriques : ${activeSpace.label}`}
             className={cn(
-              'group/rubriques text-foreground hover:bg-surface-navigation-hover data-[state=open]:bg-surface-navigation-active focus-visible:ring-sidebar-ring flex h-10 w-full min-w-0 items-center justify-start gap-2.5 rounded-sm border border-transparent bg-transparent px-2.5 text-left text-sm font-medium shadow-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset lg:h-9',
+              'group/rubriques text-foreground hover:bg-surface-navigation-hover data-[state=open]:bg-surface-navigation-active focus-visible:ring-sidebar-ring flex h-11 w-full min-w-0 items-center justify-start gap-2.5 rounded-sm border border-transparent bg-transparent px-2.5 text-left text-sm font-medium shadow-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-inset sm:h-10 lg:h-9',
               'group-data-[collapsible=icon]/sidebar:h-10 group-data-[collapsible=icon]/sidebar:w-10 group-data-[collapsible=icon]/sidebar:justify-center group-data-[collapsible=icon]/sidebar:gap-0 group-data-[collapsible=icon]/sidebar:self-center group-data-[collapsible=icon]/sidebar:px-0',
             )}
             type="button"

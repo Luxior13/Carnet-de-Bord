@@ -1104,6 +1104,10 @@ async function main() {
       await shot("5-page-bas");
       await page.locator('[data-permission="persons:update"]').getByRole("switch").click();
       await shot("6-apres-modification");
+      // The save bar stays in view on a phone once something changed.
+      await expect(
+        page.locator("[data-slot=section-action-bar]"),
+      ).toBeInViewport();
       const back = page.getByRole("button", { name: /Retour|Pages|Toutes les pages/ }).first();
       if (await back.count()) {
         await back.click();

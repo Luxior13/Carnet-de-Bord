@@ -60,6 +60,19 @@ dépliable « Voir les modifications avant enregistrement » depuis le
 
 ## Décisions retenues
 
+- **28 octobre 2026 — vue téléphone en deux écrans** (« j’ai du mal avec la
+  vue mobile », puis « ok go » sur la proposition). Sous 44 rem de carte :
+  écran 1, l’en-tête de carte puis la recherche et **toutes les pages groupées
+  par pôle** (pôle, compteur, pages avec compteur et chevron), sans menu
+  « Pôle » ; écran 2, la page choisie s’ouvre en haut, sa ligne de titre
+  « ‹ Répertoire · 2/6 » reste collée sous la barre réduite de la fiche
+  (bouton retour « Toutes les pages », 44 px), l’en-tête de carte (volet,
+  filtres, rôle) est masqué. La barre d’enregistrement est `docked` : elle
+  reste en bas de l’écran dès qu’une autorisation change (aussi pour le volet
+  Compte personnel). Boutons « i » à 44 px au toucher, pages à 44 px.
+  L’ordinateur garde ses deux colonnes ; seul « Retirer cette page » passe
+  sur la ligne de la description. Banc client : parcours
+  `permissions-mobile-parcours` (8 captures relues), 59/59.
 - **26 octobre 2026 — modifications visibles et compréhensibles** (« ok go »).
   Un interrupteur qui accorde des prérequis ou retire des dépendants le dit
   sous sa ligne (« Accordé aussi : … », « Retiré aussi : … ») avec « Annuler »,

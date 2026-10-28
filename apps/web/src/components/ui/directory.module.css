@@ -420,7 +420,46 @@
   }
 
   .directory .quickFilter {
+    flex: none;
     height: 44px;
+  }
+
+  /* 44 px controls; 16 px text so Safari iOS does not zoom on the search. */
+  .directory .searchInput {
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .directory .iconButton {
+    width: 44px;
+    height: 44px;
+  }
+
+  /*
+   * One row per filter group that slides sideways, bleeding to the card
+   * edges: the first result stays near the top (mobile audit, 28 October
+   * 2026). A cut chip at the edge shows there is more.
+   */
+  .directory .quickFilterSets {
+    display: grid;
+    gap: 8px;
+  }
+
+  .directory .quickFilters {
+    flex-wrap: nowrap;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-x: auto;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+  }
+
+  .directory .quickFilters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .directory .quickFilterLabel {
+    flex: none;
   }
 
   /* Hidden reset keeps no room on a phone: the sort menu takes the full row. */

@@ -128,7 +128,7 @@ Valeurs de `:root` (portée par défaut).
 | Seuil | Effet |
 | --- | --- |
 | 450 et 740 px de conteneur | Liste `directory` : recherche pleine largeur, puis tableau en cartes |
-| 640 px | Champs et flèches de pagination à 44 px |
+| 640 px | Boutons, champs, menus compacts, recherche, dépliants et flèches de pagination à 44 px en dessous ; filtres rapides en rangées défilantes ; actions de carte pleine largeur |
 | 768 px de large et 600 px de haut | Barre d’enregistrement collante autorisée |
 | 1024 px | Sidebar en volet mobile ; champs à 13 px au-delà |
 | 48, 52, 56, 64 rem | Seuils du tableau Utilisateurs selon les colonnes autorisées |

@@ -133,7 +133,7 @@ export const NewUserSuccess: FC<{
           </div>
         </section>
       </CardContent>
-      <CardFooter className="flex flex-wrap justify-end gap-2">
+      <CardFooter className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
         <Button type="button" variant="outline" onClick={onCreateAnother}>
           Créer un autre
         </Button>

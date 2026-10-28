@@ -294,9 +294,14 @@ export const PageSectionNavigation = <SectionId extends string>({
             )}
             {isDirty && (
               <>
+                {/* Header tabs: a badge over the label, taking no width, so a
+                    change never turns the tabs into a menu (28 October 2026). */}
                 <span
                   aria-hidden="true"
-                  className="bg-warning size-2 shrink-0 rounded-full"
+                  className={cn(
+                    'bg-warning size-2 shrink-0 rounded-full',
+                    !isBar && 'absolute top-2 right-1',
+                  )}
                 />
                 <span className="sr-only">Modifications non enregistrées</span>
               </>
@@ -434,9 +439,6 @@ export const PageSectionNavigation = <SectionId extends string>({
                   {section.label}
                   {section.count !== undefined && (
                     <SectionCount count={section.count} />
-                  )}
-                  {dirtySections.includes(section.id) && (
-                    <span className="size-2 shrink-0" />
                   )}
                 </span>
               ))}

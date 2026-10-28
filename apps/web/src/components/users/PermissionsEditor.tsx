@@ -1,7 +1,7 @@
 'use client';
 
 import { type UserRole } from '@repo/shared';
-import { ArrowLeft, LockKeyhole, ShieldCheck, X } from 'lucide-react';
+import { ChevronLeft, LockKeyhole, ShieldCheck, X } from 'lucide-react';
 import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
 
 import {
@@ -276,6 +276,15 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     heading.focus({ preventScroll: true });
   };
 
+  // The page list exists twice (pole menu on a computer, every pole on a
+  // phone); only the shown copy can take focus.
+  const findVisiblePageButton = (pageKey: string): HTMLElement | null =>
+    Array.from(
+      bodyRef.current?.querySelectorAll<HTMLElement>(
+        `[data-page-key="${pageKey}"]`,
+      ) ?? [],
+    ).find((button) => button.offsetParent !== null) ?? null;
+
   // On a narrow screen the list and the page take turns: focus follows the
   // visible one so a keyboard or screen reader user is never left behind.
   const selectPage = (pageKey: string): void => {
@@ -283,10 +292,8 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     setQuery('');
     setNarrowView('detail');
     requestAnimationFrame(() => {
-      const button = bodyRef.current?.querySelector<HTMLElement>(
-        `[data-page-key="${pageKey}"]`,
-      );
-      if (button && button.offsetParent !== null) {
+      const button = findVisiblePageButton(pageKey);
+      if (button) {
         // Side by side: keep focus in the list, but show the new page from
         // its start when the previous one had been scrolled past it.
         const detail = bodyRef.current?.querySelector<HTMLElement>(
@@ -301,9 +308,15 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
 
         return;
       }
-      bodyRef.current
-        ?.querySelector<HTMLElement>('[data-editor-heading]')
-        ?.focus();
+      // Phone (28 October 2026): the page opens from its start, under the
+      // condensed record bar, with its sticky title and back button.
+      const heading = bodyRef.current?.querySelector<HTMLElement>(
+        '[data-editor-heading]',
+      );
+      heading
+        ?.closest<HTMLElement>('[data-page-header]')
+        ?.scrollIntoView({ block: 'start' });
+      heading?.focus({ preventScroll: true });
     });
   };
   // Choosing a pole opens its first page; on a narrow screen its page list
@@ -324,13 +337,13 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   };
   const showPageList = (): void => {
     setNarrowView('list');
-    requestAnimationFrame(() =>
-      bodyRef.current
-        ?.querySelector<HTMLElement>(
-          `[data-page-key="${selectedCategory?.key ?? selectedPageKey}"]`,
-        )
-        ?.focus(),
-    );
+    requestAnimationFrame(() => {
+      const button = findVisiblePageButton(
+        selectedCategory?.key ?? selectedPageKey,
+      );
+      button?.scrollIntoView({ block: 'center' });
+      button?.focus({ preventScroll: true });
+    });
   };
 
   const renderRow = (
@@ -406,30 +419,43 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     return (
       <section
         aria-label={`Autorisations de la page ${category.label}`}
-        className="space-y-4"
+        className={styles.page}
       >
+        {/* On a phone this line sticks under the record bar, with the way
+            back to the pages; a direct child of the page so it stays stuck
+            over all its permissions (28 October 2026). */}
+        <div className={styles.pageHeader} data-page-header>
+          <Button
+            aria-label="Toutes les pages"
+            className={styles.backButton}
+            onClick={showPageList}
+            size="icon"
+            type="button"
+            variant="ghost"
+          >
+            <ChevronLeft aria-hidden="true" className="size-5" />
+          </Button>
+          <h3
+            className="text-foreground text-base font-semibold outline-none"
+            data-editor-heading
+            tabIndex={-1}
+          >
+            {category.label}
+          </h3>
+          <Badge variant="outline">
+            {result.ready}/{result.total} utilisables
+          </Badge>
+          {category.assignment === 'role-bound' && (
+            <Badge variant="outline">Géré par le rôle</Badge>
+          )}
+          {result.incomplete > 0 && (
+            <Badge variant="outline" className="text-warning">
+              {result.incomplete} à compléter
+            </Badge>
+          )}
+        </div>
         <div className="flex flex-wrap items-start justify-between gap-2">
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h3
-                className="text-foreground text-base font-semibold outline-none"
-                data-editor-heading
-                tabIndex={-1}
-              >
-                {category.label}
-              </h3>
-              <Badge variant="outline">
-                {result.ready}/{result.total} utilisables
-              </Badge>
-              {category.assignment === 'role-bound' && (
-                <Badge variant="outline">Géré par le rôle</Badge>
-              )}
-              {result.incomplete > 0 && (
-                <Badge variant="outline" className="text-warning">
-                  {result.incomplete} à compléter
-                </Badge>
-              )}
-            </div>
+          <div className="min-w-0 flex-1 space-y-1">
             <p className="text-muted-foreground text-xs leading-5">
               {category.description}
             </p>
@@ -543,7 +569,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   };
 
   return (
-    <div className={styles.editor} data-workspace={workspace}>
+    <div
+      className={styles.editor}
+      data-narrow-view={resultsActive ? 'results' : narrowView}
+      data-workspace={workspace}
+    >
       <AuthorizationsHeader
         aside={roleControl}
         note={roleNotice}
@@ -604,18 +634,6 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
           role={workspace ? 'region' : undefined}
           tabIndex={workspace ? 0 : undefined}
         >
-          {!resultsActive && (
-            <Button
-              className={styles.backButton}
-              onClick={showPageList}
-              size="sm"
-              type="button"
-              variant="ghost"
-            >
-              <ArrowLeft aria-hidden="true" className="size-4" />
-              Toutes les pages
-            </Button>
-          )}
           {resultsActive ? (
             renderResults()
           ) : grantedOnly && grantedCount === 0 ? (

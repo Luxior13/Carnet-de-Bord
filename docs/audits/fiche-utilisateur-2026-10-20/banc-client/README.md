@@ -137,3 +137,12 @@ Même jour, onglet Sécurité compacté et ligne de session commune : libellés
 attendus mis à jour (« Windows · Chrome », « Détails de la session » dans les
 bancs de Mon compte), captures `security-*` remplacées. Passe complète 58/58 ;
 Mon compte 28/28, sécurité de Mon compte 8/8, sessions d’un utilisateur 11/11.
+
+## Reprise du 28 octobre 2026
+
+Onglet Autorisations sur téléphone en deux écrans : scénario
+`permissions-mobile-parcours` (390 px, 8 captures `mobile-*` : arrivée, bas
+de liste, page ouverte, milieu, bas, après modification, retour, compte
+personnel) ; il vérifie que la barre d’enregistrement reste visible après une
+modification. Attente « 2 sur 6 » du Répertoire mise à jour après le retrait
+de la provenance. Passe complète : 59/59.

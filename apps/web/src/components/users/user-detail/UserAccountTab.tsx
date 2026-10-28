@@ -404,6 +404,7 @@ export const UserAccountTab: FC<UserAccountTabProps> = ({
       </CardContent>
       {canManagePermissions && (hasChanges || hasConfigurableOverrides) && (
         <SectionActionBar
+          placement="docked"
           hasChanges={hasChanges}
           isResolvingConflict={isRefreshing}
           isSaving={isSaving && !isRefreshing}

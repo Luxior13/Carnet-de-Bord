@@ -226,14 +226,40 @@ du 25 octobre 2026).
 
 ## Mobile et petites fenêtres
 
-- Cibles tactiles de 44 px sous 640 px ; champs de saisie à 16 px sous 1024 px.
+Règles fixées après l’[audit mobile du 28 octobre 2026](../audits/2026-10-28-vues-mobiles.md),
+à respecter par toute page, présente ou future. Elles sont portées par les
+composants partagés : une page qui les utilise est conforme sans réglage.
+
+| Règle | Où elle vit |
+| --- | --- |
+| Aucun défilement horizontal de la page, à 320, 390 et 768 px | Contrôlé par l’E2E |
+| Cibles tactiles de 44 px sous 640 px (boutons, icônes, champs, menus compacts, dépliants, liens de ligne) ; une zone invisible `::after` peut agrandir un petit contrôle (interrupteur, case). Toujours une **hauteur minimale** sous 640 px (`max-sm:min-h-11`), jamais une hauteur fixe : elle ne coupe pas un libellé sur deux lignes et ne remplace pas la taille choisie par une page au-delà de 640 px | `Button`, `Input`, `Select` compact, `Disclosure`, `Switch`, `Checkbox` |
+| Texte saisi à 16 px sous 1024 px (sinon Safari iOS zoome) | `Input`, recherche des listes |
+| Texte long tronqué avec « … », jamais coupé net ; valeur complète accessible | Fil d’Ariane, cellules et titres de ligne |
+| Actions d’une carte en pleine largeur, empilées, sous 640 px | Pieds de carte, rangée sous un bandeau de rubrique |
+| Filtres rapides : une rangée par groupe, qui glisse horizontalement sous 640 px | `QuickFilterGroup` |
+| Onglets d’une fiche : « Plus ▾ » puis sélecteur de section sur un écran étroit | `EntityHeader` |
+| Fenêtres en plein écran sur téléphone | Fenêtres partagées |
+
 - Sous 740 px de conteneur, le tableau d’une liste devient une liste de cartes
   qui garde les relations libellé/valeur.
 - La sidebar devient un volet mobile sous 1024 px.
-- Les filtres rapides d’une liste passent à la ligne et prennent 44 px de haut
-  sous 640 px ; la réinitialisation masquée n’y réserve plus de place, le tri
-  occupe toute la ligne.
-- La barre d’enregistrement reste dans le flux en faible largeur ou hauteur.
+- Sous 640 px, la réinitialisation masquée d’une liste n’y réserve plus de
+  place, le tri occupe toute la ligne.
+- **Contrôle automatique** : `e2e/mobile-layout.checks.ts`, lancé par l’E2E,
+  visite chaque page sur un téléphone émulé (tactile, barres de défilement
+  superposées) à 320, 390 et 768 px. Il échoue sur un défilement horizontal,
+  un élément hors de l’écran ou une cible sous 44 px, et si une page vivante
+  du registre des fonctionnalités n’est pas dans sa liste. **Une nouvelle page
+  s’y ajoute en même temps qu’elle est créée.** `MOBILE_TOUR_DIR` garde une
+  capture de chaque écran.
+- La barre d’enregistrement reste dans le flux en faible largeur ou hauteur,
+  sauf placement `docked` (écran d’interrupteurs sans clavier, comme
+  Autorisations) où elle reste visible en bas de l’écran (28 octobre 2026).
+- Un écran de réglages à deux niveaux (liste puis détail) suit sur téléphone
+  le modèle des réglages d’un smartphone : liste complète, détail ouvert en
+  haut avec sa ligne de titre et son retour collés (Autorisations, 28 octobre
+  2026).
 
 ## Autocomplétion
 

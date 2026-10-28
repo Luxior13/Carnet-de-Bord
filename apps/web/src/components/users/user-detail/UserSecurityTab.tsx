@@ -325,7 +325,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
                   id="user-reset-password"
                   aria-describedby="user-reset-password-description"
                   disabled={isSaving}
-                  className="h-auto min-h-10 w-full shrink-0 gap-2 whitespace-normal sm:w-auto"
+                  className="h-auto min-h-11 w-full shrink-0 gap-2 whitespace-normal sm:min-h-10 sm:w-auto"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Réinitialiser le mot de passe
@@ -370,7 +370,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
               </div>
               {canResetMfa && (
                 <Button
-                  className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-10 w-full min-w-0 shrink-0 gap-2 whitespace-normal sm:w-auto"
+                  className="border-warning/40 text-warning hover:bg-warning/10 hover:text-warning h-auto min-h-11 w-full min-w-0 shrink-0 gap-2 whitespace-normal sm:min-h-10 sm:w-auto"
                   onClick={onResetMfa}
                   id="user-reset-mfa"
                   aria-describedby="user-reset-mfa-description"
@@ -485,7 +485,7 @@ export const UserSecurityTab: FC<UserSecurityTabProps> = ({
           )}
         </CardContent>
         {canRevokeSessions && sessions.length > 0 && (
-          <CardFooter className="justify-end p-3 sm:p-4">
+          <CardFooter className="flex-col items-stretch p-3 sm:flex-row sm:justify-end sm:p-4">
             <Button
               type="button"
               variant="outline"

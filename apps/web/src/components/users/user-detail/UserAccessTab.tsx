@@ -284,9 +284,11 @@ export const UserAccessTab: FC<UserAccessTabProps> = ({
         }
       />
       {hasChanges && (canManagePermissions || canEditRole) && (
-        <div className={workspace ? 'shrink-0 p-3 pt-0' : undefined}>
+        // Outside the workspace the wrapper must not count: a docked bar can
+        // only stick within the card, its nearest real parent.
+        <div className={workspace ? 'shrink-0 p-3 pt-0' : 'contents'}>
           <SectionActionBar
-            placement={workspace ? 'inline' : 'sticky'}
+            placement={workspace ? 'inline' : 'docked'}
             hasChanges={hasChanges}
             isResolvingConflict={isRefreshing}
             isSaving={isSaving && !isRefreshing}

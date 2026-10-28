@@ -47,7 +47,7 @@
 .viewButton {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 36px;
+  min-height: 44px;
   height: auto;
   border-radius: var(--shape-compact);
   color: var(--text-muted);
@@ -204,8 +204,52 @@
   scroll-margin-top: 12px;
 }
 
+/*
+ * Phone (28 October 2026): two screens like the settings of a phone. The
+ * list shows every pole with its pages; the chosen page opens on its own,
+ * its title line stuck under the condensed record bar (48 px and its border)
+ * with the way back, and the card header (view, filters, role) is hidden.
+ */
+.allPoles {
+  display: grid;
+  gap: 16px;
+}
+
+.poleMenu {
+  display: none;
+}
+
+.page {
+  display: grid;
+  gap: 16px;
+}
+
+.pageHeader {
+  position: sticky;
+  top: calc(3rem + 1px);
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: -16px -16px 0;
+  padding: 6px 16px 6px 8px;
+  border-bottom: 1px solid var(--border-divider);
+  background: var(--surface-panel);
+}
+
 .backButton {
-  margin-bottom: 12px;
+  flex: none;
+  width: 44px;
+  height: 44px;
+}
+
+.editor[data-narrow-view='detail'] > .roleBar {
+  display: none;
+}
+
+.pageButton {
+  min-height: 44px;
 }
 
 .group {
@@ -328,8 +372,8 @@
 
 @media (pointer: coarse) {
   .infoTrigger {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
   }
 }
 
@@ -372,5 +416,36 @@
 
   .backButton {
     display: none;
+  }
+
+  /* Computer: one pole at a time in its menu, the page title in place. */
+  .allPoles {
+    display: none;
+  }
+
+  .poleMenu {
+    display: block;
+  }
+
+  .pageHeader {
+    position: static;
+    margin: 0;
+    padding: 0;
+    border-bottom: 0;
+    background: none;
+  }
+
+  .pageButton {
+    min-height: 40px;
+  }
+
+  .editor[data-narrow-view='detail'] > .roleBar {
+    display: flex;
+  }
+}
+
+@media (min-width: 640px) {
+  .viewButton {
+    min-height: 36px;
   }
 }

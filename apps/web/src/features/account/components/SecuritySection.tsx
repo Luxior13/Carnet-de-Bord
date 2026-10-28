@@ -313,7 +313,7 @@ export const SecuritySection: FC<SecuritySectionProps> = ({
               )}
             </CardContent>
             {canManageMfa && !loadingMfaStatus && !mfaStatusError && (
-              <CardFooter className="border-border/65 bg-surface-muted flex-wrap justify-end gap-2 border-t p-3 sm:p-4">
+              <CardFooter className="border-border/65 bg-surface-muted flex-col items-stretch gap-2 border-t p-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:p-4">
                 {isMfaEnabled ? (
                   <>
                     <Button

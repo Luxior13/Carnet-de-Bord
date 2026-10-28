@@ -394,7 +394,7 @@ function LoginPage(): React.ReactNode {
                     autoCapitalize="none"
                     autoComplete="username"
                     autoCorrect="off"
-                    className="h-10 pl-10"
+                    className="h-11 pl-10 sm:h-10"
                     disabled={isSubmitting || !!userData}
                     id="loginName"
                     ref={loginInputRef}
@@ -417,7 +417,7 @@ function LoginPage(): React.ReactNode {
                   <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
                     autoComplete="current-password"
-                    className="h-10 px-10"
+                    className="h-11 px-10 sm:h-10"
                     disabled={isSubmitting || !!userData}
                     id="password"
                     name="password"
@@ -433,7 +433,7 @@ function LoginPage(): React.ReactNode {
                         ? 'Masquer le mot de passe'
                         : 'Afficher le mot de passe'
                     }
-                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-1 size-8 -translate-y-1/2"
+                    className="text-muted-foreground hover:text-foreground absolute top-1/2 right-0 size-11 -translate-y-1/2 sm:right-1 sm:size-8"
                     disabled={isSubmitting || !!userData}
                     onClick={() => setShowPassword((value) => !value)}
                     size="icon"
@@ -463,7 +463,7 @@ function LoginPage(): React.ReactNode {
                 </Label>
               </div>
               <Button
-                className="h-10 w-full"
+                className="h-11 w-full sm:h-10"
                 disabled={
                   isSubmitting || !!userData || !loginName.trim() || !password
                 }

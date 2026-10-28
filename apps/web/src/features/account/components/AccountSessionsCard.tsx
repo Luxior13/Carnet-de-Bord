@@ -297,7 +297,7 @@ export const AccountSessionsCard: FC<AccountSessionsCardProps> = ({
           )}
         </CardContent>
         {!loadingSessions && !sessionsError && otherSessions.length > 0 && (
-          <CardFooter className="justify-end p-4 sm:p-5">
+          <CardFooter className="flex-col items-stretch p-4 sm:flex-row sm:justify-end sm:p-5">
             <Button
               type="button"
               variant="outline"

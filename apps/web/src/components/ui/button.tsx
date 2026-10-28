@@ -14,12 +14,15 @@ const buttonVariants = cva(
     },
     variants: {
       size: {
-        default: 'h-10 px-4 py-2 has-[>svg]:px-3 lg:h-9',
-        icon: 'size-10 lg:size-9',
+        // 44 px touch targets under 640 px as a minimum, never a fixed height,
+        // so a caller's size or a wrapped label is kept (mobile audit,
+        // 28 October 2026).
+        default: 'h-10 px-4 py-2 has-[>svg]:px-3 lg:h-9 max-sm:min-h-11',
+        icon: 'size-10 lg:size-9 max-sm:min-h-11 max-sm:min-w-11',
         inline:
           'h-auto justify-start gap-1.5 p-0 font-normal whitespace-normal has-[>svg]:px-0',
         lg: 'h-11 rounded-lg px-6 has-[>svg]:px-4 lg:h-10',
-        sm: 'h-10 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5 lg:h-8',
+        sm: 'h-10 rounded-lg gap-1.5 px-3 has-[>svg]:px-2.5 lg:h-8 max-sm:min-h-11',
       },
       variant: {
         default:

@@ -33,7 +33,7 @@ export const Disclosure: FC<DisclosureProps> = ({
         type="button"
         variant="ghost"
         size="inline"
-        className="text-muted-foreground hover:text-foreground min-h-8 gap-1.5 text-xs font-medium"
+        className="text-muted-foreground hover:text-foreground min-h-11 gap-1.5 text-xs font-medium sm:min-h-8"
       >
         {icon}
         {label}

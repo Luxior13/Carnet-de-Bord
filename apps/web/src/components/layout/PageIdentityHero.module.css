@@ -49,7 +49,8 @@
 
 .heroActions [data-slot='button'] {
   height: auto;
-  min-height: 40px;
+  /* 44 px to the touch under 640 px (mobile audit, 28 October 2026). */
+  min-height: 44px;
   max-width: 100%;
   white-space: normal;
   overflow-wrap: anywhere;
@@ -165,5 +166,11 @@
 
   .heroFooter {
     padding: 0 4px;
+  }
+}
+
+@media (min-width: 640px) {
+  .heroActions [data-slot='button'] {
+    min-height: 40px;
   }
 }

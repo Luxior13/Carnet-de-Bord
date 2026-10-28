@@ -28,6 +28,26 @@
     position: static;
     box-shadow: none;
   }
+
+  /*
+   * Docked (28 October 2026): a screen of switches, without a keyboard to
+   * cover, keeps its bar in view on a phone so a change is never forgotten
+   * below the fold. Compact: status on one line, both actions side by side.
+   */
+  .bar[data-placement='docked'][data-dirty='true'] {
+    position: sticky;
+    margin: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    box-shadow: var(--shadow-panel-strong);
+  }
+
+  .bar[data-placement='docked'] .body {
+    gap: 0.5rem;
+  }
+
+  .bar[data-placement='docked'] .actions {
+    flex-wrap: nowrap;
+  }
 }
 
 .body {

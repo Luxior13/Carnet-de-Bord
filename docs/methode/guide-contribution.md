@@ -88,6 +88,9 @@ Détails et limites : [tests et contrôles](../systeme/tests.md).
   parcourir ses 36 points et ouvrir seulement les fichiers des points concernés.
 - Utiliser Context7 (`resolve-library-id`, puis `query-docs`) pour la
   documentation des bibliothèques, en vérifiant la version installée.
+- Une nouvelle page s’ajoute à la vérification mobile
+  (`apps/web/e2e/mobile-layout.checks.ts`) ; l’E2E échoue sinon
+  ([règles mobiles](../design/comportements.md#mobile-et-petites-fenêtres)).
 - Chaque page a sa [fiche](../pages/README.md) : la créer avec une nouvelle page,
   l’actualiser à chaque reprise. Les retours visuels du propriétaire vont dans
   le [journal des préférences](../design/preferences.md).

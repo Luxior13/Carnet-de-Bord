@@ -186,7 +186,7 @@ const EmailRow: FC<{
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <a
-          className="hover:text-primary-emphasis max-w-full truncate text-sm font-medium hover:underline"
+          className="hover:text-primary-emphasis -my-[13px] max-w-full truncate py-[13px] text-sm font-medium hover:underline sm:my-0 sm:py-0"
           href={`mailto:${item.email}`}
         >
           {item.email}
@@ -213,7 +213,7 @@ const PhoneRow: FC<{
     <div className="min-w-0 flex-1">
       <div className="flex min-w-0 flex-wrap items-center gap-1.5">
         <a
-          className="hover:text-primary-emphasis max-w-full truncate text-sm font-medium tabular-nums hover:underline"
+          className="hover:text-primary-emphasis -my-[13px] max-w-full truncate py-[13px] text-sm font-medium tabular-nums hover:underline sm:my-0 sm:py-0"
           href={`tel:${item.phone}`}
         >
           {formatPhoneForDisplay(item.phone)}
@@ -247,7 +247,7 @@ const SocialRow: FC<{
         <div className="flex min-w-0 flex-wrap items-center gap-1.5">
           {item.profileUrl ? (
             <a
-              className="hover:text-primary-emphasis flex min-w-0 items-center gap-1 truncate text-sm font-medium hover:underline"
+              className="hover:text-primary-emphasis -my-[13px] flex min-w-0 items-center gap-1 truncate py-[13px] text-sm font-medium hover:underline sm:my-0 sm:py-0"
               href={item.profileUrl}
               rel="noreferrer"
               target="_blank"

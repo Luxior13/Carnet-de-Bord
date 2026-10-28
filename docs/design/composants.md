@@ -113,6 +113,7 @@ porte la composition et l’adaptation à l’espace disponible.
 
 | Situation | Contrat commun |
 | --- | --- |
+| Placement | `sticky` (défaut) : collée en bas sur ordinateur, dans le flux sur téléphone ; `inline` : dans le flux ; `docked` (28 octobre 2026) : reste aussi en bas de l’écran sur téléphone, compacte, pour un écran d’interrupteurs sans saisie au clavier (Autorisations). Une barre collée doit avoir pour parent le bloc qu’elle accompagne : une enveloppe de sa seule hauteur l’empêche de coller. |
 | Formulaire inchangé | `hasChanges={false}` : enregistrement inactif et barre dans le flux ; le module peut aussi masquer la barre. |
 | Brouillon modifié | Message de modifications non enregistrées, Annuler et Enregistrer. Une éventuelle confirmation d’abandon reste au formulaire. |
 | Formulaire de création | `status={null}` : aucun message de brouillon, trompeur sur un formulaire encore vide ; un `status` explicite reste possible pour un état à signaler. |
@@ -294,6 +295,9 @@ structure restent adaptées au contenu de chaque écran.
   rangée cachée. Les règles ci-dessous sur la barre collante autonome
   (variante `bar`, flèches en cas de débordement) restent valables pour les
   autres pages.
+- **Point de modification d’un onglet d’en-tête** (28 octobre 2026) : pastille
+  superposée au libellé, sans largeur ; une modification ne fait jamais
+  basculer les onglets en sélecteur.
 - **Compteur d’onglet** (27 octobre 2026) : une section peut porter `count`
   (`PageSection`), affiché en pastille après le libellé, dans les onglets
   comme dans « Plus ▾ » ; il est seulement visuel, le nom accessible de

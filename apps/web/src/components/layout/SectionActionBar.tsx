@@ -23,7 +23,11 @@ type SectionActionBarProps = {
   label?: string;
   onCancel?: () => void;
   onResolveConflict?: () => void;
-  placement?: 'sticky' | 'inline';
+  /**
+   * `sticky` follows the page on a computer and stays in the flow on a phone;
+   * `docked` also stays in view on a phone, for screens without typing.
+   */
+  placement?: 'docked' | 'inline' | 'sticky';
   saveAriaLabel?: string;
   saveDisabled?: boolean;
   saveDisabledReason?: string;

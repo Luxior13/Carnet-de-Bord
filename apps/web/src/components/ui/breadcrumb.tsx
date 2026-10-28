@@ -416,7 +416,7 @@ function BreadcrumbTrail({
                           <span className="sr-only">{item.label}</span>
                         </>
                       ) : (
-                        item.label
+                        <span className="min-w-0 truncate">{item.label}</span>
                       )}
                     </Link>
                   </BreadcrumbLink>
@@ -443,7 +443,7 @@ function BreadcrumbTrail({
                           <span className="sr-only">{item.label}</span>
                         </>
                       ) : (
-                        item.label
+                        <span className="min-w-0 truncate">{item.label}</span>
                       )}
                     </BreadcrumbPage>
                     {!isFirst && currentEnd}

@@ -1,6 +1,16 @@
 /* Densité des filtres et tableaux ; les formulaires utilisent la variante par défaut. */
 .compactTrigger {
   height: 38px;
+}
+
+/* 44 px au toucher sur téléphone (audit mobile du 28 octobre 2026). */
+@media (max-width: 639px) {
+  .compactTrigger {
+    height: 44px;
+  }
+}
+
+.compactTrigger {
   gap: 7px;
   padding: 8px 10px;
   color: var(--text-secondary);
