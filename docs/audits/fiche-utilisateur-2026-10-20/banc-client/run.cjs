@@ -1069,6 +1069,51 @@ async function main() {
   // 26 October 2026 (owner): « Accordées » keeps the pole menu and the page
   // list, narrowed to what holds a granted permission; the page shows only
   // its granted permissions. A search keeps its index of results.
+  // 28 October 2026: the whole permissions journey on a phone, one capture
+  // per step, to review its ergonomics.
+  await run(
+    "permissions-mobile-parcours",
+    390,
+    async ({ page }) => {
+      const shot = async (step) => {
+        await page.waitForTimeout(250);
+        await page.screenshot({
+          path: path.join(work, "mobile-" + step + ".png"),
+        });
+      };
+      await shot("1-arrivee");
+      await page.evaluate(() => {
+        const main = document.getElementById("main-content");
+        main.scrollTop = main.scrollHeight;
+      });
+      await shot("2-bas-de-liste");
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      await navigation.getByRole("button", { name: /^Répertoire/ }).click();
+      await shot("3-page-ouverte");
+      await page.evaluate(() => {
+        const main = document.getElementById("main-content");
+        main.scrollTop = main.scrollHeight / 2;
+      });
+      await shot("4-page-milieu");
+      await page.evaluate(() => {
+        const main = document.getElementById("main-content");
+        main.scrollTop = main.scrollHeight;
+      });
+      await shot("5-page-bas");
+      await page.locator('[data-permission="persons:update"]').getByRole("switch").click();
+      await shot("6-apres-modification");
+      const back = page.getByRole("button", { name: /Retour|Pages|Toutes les pages/ }).first();
+      if (await back.count()) {
+        await back.click();
+        await shot("7-retour");
+      }
+      await page.getByRole("tab", { name: /Compte personnel/ }).or(page.getByRole("button", { name: /^Compte personnel/ })).first().click();
+      await shot("8-compte-personnel");
+    },
+    { height: 780, section: "access" },
+  );
   await run(
     "permissions-granted-filter",
     1440,
