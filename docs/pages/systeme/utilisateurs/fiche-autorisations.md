@@ -60,6 +60,28 @@ dépliable « Voir les modifications avant enregistrement » depuis le
 
 ## Décisions retenues
 
+- **29 octobre 2026 — revue de code de la vue téléphone.** Une page ouverte
+  depuis le bas de la liste s’ouvre à son début (le défilement vise la page,
+  pas sa ligne de titre collée) ; la page en cours est marquée
+  (`aria-current`) dans la liste de tous les pôles ; le filtre « Afficher »
+  de l’en-tête passe à la ligne au lieu de glisser sur ses voisins ; les
+  compteurs de pages sont calculés une fois par brouillon. Banc client :
+  scénario `permissions-mobile-revue` (320 px).
+- **30 octobre 2026 — « Accordées » garde les modifications** (seconde revue
+  de code). Sous « Accordées », une autorisation que le brouillon vient de
+  retirer reste affichée, interrupteur éteint, avec sa note « Retiré aussi »
+  et son « Annuler », jusqu’à l’enregistrement ou l’annulation : la page ne se
+  vide plus sous les doigts et le focus reste sur l’interrupteur. Sans rien
+  d’accordé ni de modifié, le téléphone montre la liste (« Aucune page. »),
+  avec l’en-tête et ses filtres ; changer de filtre ramène toujours à la
+  liste, puisque les filtres n’y sont visibles que là. Vue déduite, sans état
+  corrigé pendant le rendu.
+- **30 octobre 2026 — page en cours sur téléphone** (choix laissé à l’agent :
+  « comme tu veux »). La liste de tous les pôles ne marque aucune page tant
+  qu’aucune n’a été ouverte pendant la visite : la page qu’un ordinateur
+  affiche par défaut n’a pas été choisie sur téléphone. Une fois une page
+  ouverte, le retour à la liste la marque (`aria-current`) et y place le
+  focus. Banc : `permissions-mobile-revue`, 61/61.
 - **28 octobre 2026 — vue téléphone en deux écrans** (« j’ai du mal avec la
   vue mobile », puis « ok go » sur la proposition). Sous 44 rem de carte :
   écran 1, l’en-tête de carte puis la recherche et **toutes les pages groupées

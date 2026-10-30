@@ -61,3 +61,15 @@ Identiques au banc du 11 octobre : routeur, session, disponibilité et API
 simulés ; police de repli Arial ; sidebar réelle absente ; aucun lecteur d’écran
 réel, Safari, Firefox ni appareil tactile. La reprise ne modifie aucun contrat
 serveur ; session, hydratation Next et PostgreSQL n’ont pas été rejoués.
+
+## Reprise du 29 octobre 2026
+
+Revue de code du lot mobile ([rapport](../../2026-10-28-vues-mobiles.md#revue-de-code-du-29-octobre-2026)).
+Scénario `recherche-mobile-effacer` (390 px) : croix d’effacement de 44 px
+dans le champ, texte qui s’arrête avant elle, loupe centrée, marge de
+l’anneau de focus des filtres. Passe complète : 42/42.
+
+## Reprise du 30 octobre 2026
+
+`recherche-mobile-effacer` : croix de 36 px dans la bordure du champ, zone
+tactile de 44 px par `::after`. Passe complète : 42/42.

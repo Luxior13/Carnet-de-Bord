@@ -56,6 +56,49 @@ onglet des trois fiches, le menu mobile.
 « Ok go » du propriétaire le 28 octobre 2026 sur toutes les corrections.
 Règles regroupées dans [comportements](../design/comportements.md#mobile-et-petites-fenêtres).
 
+## Revue de code du 29 octobre 2026
+
+Revue du commit `567d9af` (lot mobile) : dix constats, tous retenus et
+corrigés le jour même (« ok go » du propriétaire). Les quatre premiers étaient
+des régressions de ce lot.
+
+| Constat | Correction |
+| --- | --- |
+| Barre `docked` : actions forcées sur une ligne, « Réinitialiser au rôle » rogné à 320 px quand trois actions s’affichent (reproduit au banc) | Deux actions côte à côte, trois ou plus passent à la ligne |
+| Autorisations, « Accordées » : retirer la dernière autorisation laissait une page vide sans retour ni filtres | Retour automatique à la liste |
+| Autorisations : page ouverte depuis le bas de la liste décalée sous son début (défilement visant la ligne de titre collée) | Défilement vers la page elle-même, avec sa marge sous la barre |
+| Répertoire : croix d’effacement de la recherche portée à 44 px par `Button`, hors du champ et sur le texte ; loupe décentrée | Croix de 44 px dans le champ, texte qui s’arrête avant, loupe recentrée |
+| Filtres en rangée défilante : anneau de focus rogné en haut et en bas | 4 px de marge intérieure verticale |
+| Filtre « Afficher » des Autorisations : la rangée défilante débordait sur le bouton « i » entre 560 et 639 px | Rangée défilante limitée aux barres de liste (`.quickFilterSets`) |
+| Liste des pages sur téléphone : page en cours non marquée | `aria-current="page"` |
+| Fil d’Ariane : niveau intermédiaire sans lien coupé net | Libellé tronqué avec « … » |
+| Navigation des autorisations : catalogue recompté deux fois à chaque rendu | Un seul calcul par page et par rendu |
+| Règle des 44 px dupliquée dans Sécurité et la connexion | Doublons retirés, la règle vit dans `Button` |
+
+Le contrôle mobile de l’E2E signale désormais une cible rognée par un parent
+qui coupe son contenu ; il ne voyait pas le premier constat. Bancs : scénarios
+`permissions-mobile-revue` et `compte-mobile-trois-actions` (fiche
+utilisateur), `recherche-mobile-effacer` (Répertoire) ; le scénario de la
+barre échoue avec l’ancienne règle. E2E réussi en 2,3 min avec le contrôle élargi, sans violation.
+
+## Seconde revue de code, 30 octobre 2026
+
+Neuf constats sur les corrections du 29, tous retenus (« ok go »).
+
+| Constat | Correction |
+| --- | --- |
+| « Accordées » vidé : retour à la liste sans focus, état corrigé pendant le rendu (et sur ordinateur), note de cascade et « Annuler » perdus | Une autorisation retirée reste affichée jusqu’à l’enregistrement ; vue déduite ; un changement de filtre ramène à la liste |
+| Contrôle E2E « cible rognée » : axe horizontal et premier parent seulement | Deux axes, tous les parents jusqu’au premier qui défile ; seule une coupe partielle compte |
+| Barre `docked` : une ou deux lignes selon le nombre d’actions | Selon la place : `flex: 1 1 0%` et largeur minimale du contenu ; marge intérieure de 8 px, qui garde « Annuler » et « Enregistrer » côte à côte à 320 px (il manquait 0,5 px) |
+| Hauteur de la barre réduite recopiée à quatre endroits | Variables `--editor-bar` et `--editor-inset` ; le script lit la marge de défilement |
+| Croix de recherche par-dessus la bordure et le coin du champ | Carré de 36 px dans la bordure, zone tactile de 44 px par `::after` |
+| Connexion : hauteur encore redéclarée | Retirée |
+| Compteurs : cache à la main recréé à chaque rendu | Table calculée une fois par brouillon (`useMemo`) |
+
+Vérifié : bancs fiche utilisateur 61/61, Répertoire 42/42, Utilisateurs 42/42 et
+les six autres bancs touchés ; E2E réussi en 2,3 min, contrôle mobile élargi
+sans violation.
+
 **À vérifier, hors mobile.**
 
 - L’éditeur d’autorisations affichait « Double authentification non activée »

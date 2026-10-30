@@ -32,12 +32,14 @@
   /*
    * Docked (28 October 2026): a screen of switches, without a keyboard to
    * cover, keeps its bar in view on a phone so a change is never forgotten
-   * below the fold. Compact: status on one line, both actions side by side.
+   * below the fold. Compact: actions side by side while their words fit,
+   * otherwise on the next line, never cut. Lines break on each action's
+   * narrowest width (basis 0, content minimum), not on its natural width.
    */
   .bar[data-placement='docked'][data-dirty='true'] {
     position: sticky;
     margin: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem;
     box-shadow: var(--shadow-panel-strong);
   }
 
@@ -45,8 +47,8 @@
     gap: 0.5rem;
   }
 
-  .bar[data-placement='docked'] .actions {
-    flex-wrap: nowrap;
+  .bar[data-placement='docked'] .actions > [data-slot='button'] {
+    flex: 1 1 0%;
   }
 }
 

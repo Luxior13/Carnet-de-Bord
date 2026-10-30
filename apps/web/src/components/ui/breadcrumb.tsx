@@ -421,8 +421,8 @@ function BreadcrumbTrail({
                     </Link>
                   </BreadcrumbLink>
                 ) : !isLast ? (
-                  <span className="text-muted-foreground inline-flex max-w-40 min-w-0 items-center gap-1.5 truncate sm:max-w-56">
-                    {item.label}
+                  <span className="text-muted-foreground inline-flex max-w-40 min-w-0 items-center gap-1.5 sm:max-w-56">
+                    <span className="min-w-0 truncate">{item.label}</span>
                   </span>
                 ) : (
                   <>

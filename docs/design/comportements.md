@@ -237,7 +237,7 @@ composants partagés : une page qui les utilise est conforme sans réglage.
 | Texte saisi à 16 px sous 1024 px (sinon Safari iOS zoome) | `Input`, recherche des listes |
 | Texte long tronqué avec « … », jamais coupé net ; valeur complète accessible | Fil d’Ariane, cellules et titres de ligne |
 | Actions d’une carte en pleine largeur, empilées, sous 640 px | Pieds de carte, rangée sous un bandeau de rubrique |
-| Filtres rapides : une rangée par groupe, qui glisse horizontalement sous 640 px | `QuickFilterGroup` |
+| Filtres rapides d’une barre de liste : une rangée par groupe, qui glisse horizontalement sous 640 px, avec 4 px au-dessus et au-dessous pour l’anneau de focus ; un groupe isolé ailleurs (en-tête des Autorisations) passe à la ligne | `QuickFilterGroup` dans `.quickFilterSets` |
 | Onglets d’une fiche : « Plus ▾ » puis sélecteur de section sur un écran étroit | `EntityHeader` |
 | Fenêtres en plein écran sur téléphone | Fenêtres partagées |
 
@@ -249,13 +249,20 @@ composants partagés : une page qui les utilise est conforme sans réglage.
 - **Contrôle automatique** : `e2e/mobile-layout.checks.ts`, lancé par l’E2E,
   visite chaque page sur un téléphone émulé (tactile, barres de défilement
   superposées) à 320, 390 et 768 px. Il échoue sur un défilement horizontal,
-  un élément hors de l’écran ou une cible sous 44 px, et si une page vivante
+  un élément hors de l’écran, une cible sous 44 px ou en partie rognée, sur
+  l’un ou l’autre axe, par un parent qui coupe son contenu (29 octobre 2026 ;
+  une cible entièrement cachée, comme un dépliant fermé, est volontaire), et
+  si une page vivante
   du registre des fonctionnalités n’est pas dans sa liste. **Une nouvelle page
   s’y ajoute en même temps qu’elle est créée.** `MOBILE_TOUR_DIR` garde une
   capture de chaque écran.
 - La barre d’enregistrement reste dans le flux en faible largeur ou hauteur,
   sauf placement `docked` (écran d’interrupteurs sans clavier, comme
   Autorisations) où elle reste visible en bas de l’écran (28 octobre 2026).
+  Ses actions restent côte à côte tant que leurs mots tiennent, sinon elles
+  passent à la ligne, jamais coupées : la ligne se décide sur la largeur
+  minimale de chaque action (`flex: 1 1 0%`), pas sur leur nombre (revues de
+  code des 29 et 30 octobre 2026).
 - Un écran de réglages à deux niveaux (liste puis détail) suit sur téléphone
   le modèle des réglages d’un smartphone : liste complète, détail ouvert en
   haut avec sa ligne de titre et son retour collés (Autorisations, 28 octobre

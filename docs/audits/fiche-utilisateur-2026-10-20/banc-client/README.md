@@ -146,3 +146,22 @@ de liste, page ouverte, milieu, bas, après modification, retour, compte
 personnel) ; il vérifie que la barre d’enregistrement reste visible après une
 modification. Attente « 2 sur 6 » du Répertoire mise à jour après le retrait
 de la provenance. Passe complète : 59/59.
+
+## Reprise du 29 octobre 2026
+
+Revue de code du lot mobile ([rapport](../../2026-10-28-vues-mobiles.md#revue-de-code-du-29-octobre-2026)).
+Scénario `permissions-mobile-revue` (320 px) : page ouverte depuis le bas de
+la liste à son début, page en cours marquée au retour, filtre « Afficher »
+non défilant, retour à la liste quand plus rien n’est accordé, actions de la
+barre dans la barre pendant un conflit. Scénario
+`compte-mobile-trois-actions` (320 px) : « Réinitialiser au rôle »,
+« Annuler » et « Enregistrer » entiers dans la barre ; il échoue avec
+l’ancienne règle qui les forçait sur une ligne. Passe complète : 61/61.
+
+## Reprise du 30 octobre 2026
+
+Seconde revue de code. `permissions-mobile-revue` : sous « Accordées », la
+dernière autorisation retirée reste affichée et garde le focus ; après
+enregistrement, la liste vide (« Aucune page. ») avec ses filtres ; pendant
+un conflit, « Annuler » et « Enregistrer » côte à côte à 320 px. Passe
+complète : 61/61.

@@ -1,4 +1,9 @@
 .editor {
+  /* Condensed record bar (48 px and its border) that page titles and jumps
+     land under, and the padding of the detail pane a title bleeds over. */
+  --editor-bar: calc(3rem + 1px);
+  --editor-inset: 16px;
+
   container-type: inline-size;
   min-width: 0;
 }
@@ -95,7 +100,7 @@
 .navigationPane,
 .detailPane {
   min-width: 0;
-  padding: 16px;
+  padding: var(--editor-inset);
 }
 
 /*
@@ -132,7 +137,7 @@
 
 /* A page brought into view lands under the sticky section bar. */
 .detailPane {
-  scroll-margin-top: 4rem;
+  scroll-margin-top: calc(var(--editor-bar) + var(--editor-inset));
 }
 
 .body[data-narrow-view='list'][data-results='false'] .detailPane,
@@ -196,7 +201,7 @@
 /* A jump from the index lands under the sticky section bar (page scroll). */
 .resultHeading {
   outline: none;
-  scroll-margin-top: 4rem;
+  scroll-margin-top: calc(var(--editor-bar) + var(--editor-inset));
 }
 
 /* In the computer layout the column scrolls itself: no bar to clear. */
@@ -222,18 +227,20 @@
 .page {
   display: grid;
   gap: 16px;
+  /* Opened from its start: its title, bled over the inset, lands under the bar. */
+  scroll-margin-top: calc(var(--editor-bar) + var(--editor-inset));
 }
 
 .pageHeader {
   position: sticky;
-  top: calc(3rem + 1px);
+  top: var(--editor-bar);
   z-index: 10;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 4px 8px;
-  margin: -16px -16px 0;
-  padding: 6px 16px 6px 8px;
+  margin: calc(-1 * var(--editor-inset)) calc(-1 * var(--editor-inset)) 0;
+  padding: 6px var(--editor-inset) 6px 8px;
   border-bottom: 1px solid var(--border-divider);
   background: var(--surface-panel);
 }
@@ -386,13 +393,13 @@
 
   /*
    * The navigation stays in view while the page scrolls (owner request of
-   * 26 October 2026): sticky under the section bar (48 px + 16 px), with its
+   * 26 October 2026): sticky under the section bar and its inset, with its
    * own scroll only when it outgrows the screen. The page keeps one main
    * scroll for the content and the save bar.
    */
   .navigationPane {
     position: sticky;
-    top: 4rem;
+    top: calc(var(--editor-bar) + var(--editor-inset));
     align-self: start;
     max-height: calc(100dvh - 8.5rem);
     overflow-y: auto;

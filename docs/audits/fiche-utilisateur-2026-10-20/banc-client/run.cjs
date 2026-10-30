@@ -1118,6 +1118,153 @@ async function main() {
     },
     { height: 780, section: "access" },
   );
+  // Code review of 29 October 2026, on a phone: a page opened from the
+  // bottom of the list starts at its top; the current page is marked in the
+  // list; nothing left under « Accordées » returns to the list; no action of
+  // the docked bar is cut, even three of them during a version conflict.
+  const barActionsInside = async (page) => {
+    const boxes = await page
+      .locator("[data-slot=section-action-bar]")
+      .evaluate((bar) => {
+        const outer = bar.getBoundingClientRect();
+        return Array.from(bar.querySelectorAll("button")).map((button) => {
+          const box = button.getBoundingClientRect();
+          return {
+            label: button.textContent.trim(),
+            inside: box.left >= outer.left - 1 && box.right <= outer.right + 1,
+          };
+        });
+      });
+    assert.ok(boxes.length >= 1, JSON.stringify(boxes));
+    for (const box of boxes) assert.ok(box.inside, JSON.stringify(boxes));
+    return boxes.map((box) => box.label);
+  };
+  await run(
+    "permissions-mobile-revue",
+    320,
+    async ({ page, api }) => {
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      // Nothing opened yet: no page is marked as the current one.
+      await expect(
+        navigation.locator("[data-page-key]:visible[aria-current]"),
+      ).toHaveCount(0);
+      await page.evaluate(() => {
+        const main = document.getElementById("main-content");
+        main.scrollTop = main.scrollHeight;
+      });
+      const last = navigation.locator("[data-page-key]:visible").last();
+      const lastKey = await last.getAttribute("data-page-key");
+      await last.click();
+      await page.waitForTimeout(250);
+      const header = await page
+        .locator("[data-page-header]")
+        .evaluate((element) => element.getBoundingClientRect().top);
+      const section = await page
+        .locator("[data-editor-page]")
+        .evaluate((element) => element.getBoundingClientRect().top);
+      // From its start: never scrolled past it, under the 48 px bar (a
+      // short last page may not scroll that far up).
+      assert.ok(header >= 47, String(header));
+      assert.ok(section - header >= 14 && section - header <= 18, String(section));
+      await page.getByRole("button", { name: "Toutes les pages" }).click();
+      await expect(
+        navigation.locator(`[data-page-key="${lastKey}"]:visible`),
+      ).toHaveAttribute("aria-current", "page");
+      await expect(
+        navigation.locator(`[data-page-key="${lastKey}"]:visible`),
+      ).toBeFocused();
+      // « Afficher » wraps in the header: it does not slide over its
+      // neighbours like the rows of a list toolbar.
+      assert.equal(
+        await page
+          .getByRole("group", { name: "Filtrer les autorisations" })
+          .evaluate((group) => getComputedStyle(group).overflowX),
+        "visible",
+      );
+      // « Accordées », then the last granted permission switched off: it
+      // stays in place, focused, until saved; then nothing is left and the
+      // phone shows the list with its header.
+      await page.getByRole("button", { name: /^Accordées/ }).click();
+      await navigation.getByRole("button", { name: /^Répertoire/ }).click();
+      const lastGranted = page
+        .locator('[data-permission="persons:view"]')
+        .getByRole("switch");
+      await lastGranted.click();
+      await expect(lastGranted).toBeVisible();
+      await expect(lastGranted).toBeFocused();
+      await expect(lastGranted).toHaveAttribute("aria-checked", "false");
+      await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+      await expect(page.getByRole("button", { name: /^Toutes/ })).toBeVisible();
+      await expect(
+        navigation.locator("p:visible", { hasText: "Aucune page." }),
+      ).toBeVisible();
+      await page.screenshot({
+        path: path.join(work, "permissions-mobile-revue-vide-320.png"),
+      });
+      await page.getByRole("button", { name: /^Toutes/ }).click();
+      await navigation.getByRole("button", { name: /^Répertoire/ }).click();
+      await page
+        .locator('[data-permission="persons:update"]')
+        .getByRole("switch")
+        .click();
+      api.patchMode = "conflict";
+      await page
+        .getByRole("button", { name: "Enregistrer", exact: true })
+        .click();
+      await expect(
+        page.getByText("Version fictive modifiée par un autre responsable.", {
+          exact: true,
+        }),
+      ).toBeVisible();
+      await barActionsInside(page);
+      // Two short actions stay side by side, even at 320 px.
+      const tops = await page
+        .locator("[data-slot=section-action-bar] button")
+        .evaluateAll((buttons) =>
+          buttons.map((button) => Math.round(button.getBoundingClientRect().top)),
+        );
+      assert.equal(new Set(tops).size, 1, JSON.stringify(tops));
+      await page.screenshot({
+        path: path.join(work, "permissions-mobile-revue-conflit-320.png"),
+      });
+    },
+    {
+      height: 640,
+      section: "access",
+      user: { permissions: { "persons:view": true } },
+    },
+  );
+  await run(
+    "compte-mobile-trois-actions",
+    320,
+    async ({ page }) => {
+      await expect(
+        page.getByRole("button", { name: /Réinitialiser au rôle/ }),
+      ).toBeVisible();
+      // The exception alone, then changed: every action inside the bar.
+      await barActionsInside(page);
+      await page
+        .locator("[data-slot=section-action-bar]")
+        .screenshot({
+          path: path.join(work, "compte-mobile-exception-320.png"),
+        });
+      await page.locator("[role=switch]:not([disabled])").last().click();
+      await expect(
+        page.getByRole("button", { name: "Enregistrer", exact: true }),
+      ).toBeVisible();
+      await barActionsInside(page);
+      await page.screenshot({
+        path: path.join(work, "compte-mobile-trois-actions-320.png"),
+      });
+    },
+    {
+      height: 640,
+      section: "account",
+      user: { permissions: { "account:update_profile": false } },
+    },
+  );
   await run(
     "permissions-granted-filter",
     1440,

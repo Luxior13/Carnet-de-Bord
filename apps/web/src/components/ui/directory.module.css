@@ -430,31 +430,57 @@
     font-size: 16px;
   }
 
+  .directory .search > svg {
+    top: 14px;
+  }
+
+  /*
+   * The clear button stays a 36 px square inside the border and rounded
+   * corner of the field; an invisible ::after brings its touch area to 44 px.
+   */
+  .directory .searchClear {
+    top: 4px;
+    right: 4px;
+    width: 36px;
+    min-width: 0;
+    height: 36px;
+    min-height: 0;
+  }
+
+  .directory .searchClear::after {
+    position: absolute;
+    inset: -4px;
+    content: '';
+  }
+
   .directory .iconButton {
     width: 44px;
     height: 44px;
   }
 
   /*
-   * One row per filter group that slides sideways, bleeding to the card
-   * edges: the first result stays near the top (mobile audit, 28 October
-   * 2026). A cut chip at the edge shows there is more.
+   * One row per filter group of a list toolbar that slides sideways,
+   * bleeding to the card edges: the first result stays near the top (mobile
+   * audit, 28 October 2026). A cut chip at the edge shows there is more.
+   * Only inside .quickFilterSets, which sits at the padded card edge; a lone
+   * group elsewhere (Autorisations header) wraps. The block padding keeps
+   * the focus ring inside the scroller, which clips both axes.
    */
   .directory .quickFilterSets {
     display: grid;
     gap: 8px;
   }
 
-  .directory .quickFilters {
+  .directory .quickFilterSets .quickFilters {
     flex-wrap: nowrap;
-    margin-inline: -16px;
-    padding-inline: 16px;
+    margin: -4px -16px;
+    padding: 4px 16px;
     overflow-x: auto;
     scroll-padding-inline: 16px;
     scrollbar-width: none;
   }
 
-  .directory .quickFilters::-webkit-scrollbar {
+  .directory .quickFilterSets .quickFilters::-webkit-scrollbar {
     display: none;
   }
 

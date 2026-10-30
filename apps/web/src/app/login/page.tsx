@@ -463,7 +463,7 @@ function LoginPage(): React.ReactNode {
                 </Label>
               </div>
               <Button
-                className="h-11 w-full sm:h-10"
+                className="w-full"
                 disabled={
                   isSubmitting || !!userData || !loginName.trim() || !password
                 }

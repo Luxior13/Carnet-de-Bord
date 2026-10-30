@@ -119,6 +119,9 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   const [narrowView, setNarrowView] = useState<'detail' | 'list'>(
     openPageOnNarrow ? 'detail' : 'list',
   );
+  // The phone list marks a page only once one has been opened: the page a
+  // computer shows by default was never chosen there (30 October 2026).
+  const [pageOpened, setPageOpened] = useState(openPageOnNarrow);
   const state = useMemo(
     () => buildPermissionEditorState(role, permissions),
     [role, permissions],
@@ -155,8 +158,18 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   // 26 October 2026).
   const resultsActive = normalizedQuery !== '';
   const grantedOnly = filter === 'granted';
+  // « Accordées » also keeps what the draft just changed: a permission
+  // switched off stays in place, with its note and undo, until saved or
+  // cancelled (code review of 29 October 2026).
+  const isListed = (key: string): boolean =>
+    isGranted(key) || changedPermissionKeys.has(key);
   const hasGranted = (category: PermissionEditorCategory): boolean =>
-    category.permissions.some((item) => isGranted(item.key));
+    category.permissions.some((item) => isListed(item.key));
+  // Nothing at all to show: a phone stays on the list, where the header and
+  // its filters are, instead of an empty page without a way back.
+  const nothingListed =
+    grantedOnly && !ALL_PERMISSIONS.some((item) => isListed(item.key));
+  const shownNarrowView = nothingListed ? 'list' : narrowView;
   const requestedCategory =
     PERMISSION_EDITOR_CATEGORIES.find(
       (category) => category.key === selectedPageKey,
@@ -261,7 +274,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
                 searchTerms,
                 pole.label,
               ) &&
-              (!grantedOnly || isGranted(item.key)),
+              (!grantedOnly || isListed(item.key)),
           ),
           pole,
         })),
@@ -291,6 +304,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     onSelectedPageChange(pageKey);
     setQuery('');
     setNarrowView('detail');
+    setPageOpened(true);
     requestAnimationFrame(() => {
       const button = findVisiblePageButton(pageKey);
       if (button) {
@@ -301,20 +315,26 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
         );
         if (!detail) return;
         // Its own scroll (computer layout) restarts at the top; otherwise
-        // the page brings it under the sticky section bar (48 px).
+        // the page brings it under the sticky section bar, where its scroll
+        // margin (--editor-bar) lands it.
         detail.scrollTop = 0;
-        if (detail.getBoundingClientRect().top < 48)
+        if (
+          detail.getBoundingClientRect().top <
+          parseFloat(getComputedStyle(detail).scrollMarginTop)
+        )
           detail.scrollIntoView({ block: 'start' });
 
         return;
       }
       // Phone (28 October 2026): the page opens from its start, under the
-      // condensed record bar, with its sticky title and back button.
+      // condensed record bar, with its sticky title and back button. Its
+      // section is aimed at, not the title: a stuck title reports its stuck
+      // place, not its own.
       const heading = bodyRef.current?.querySelector<HTMLElement>(
         '[data-editor-heading]',
       );
       heading
-        ?.closest<HTMLElement>('[data-page-header]')
+        ?.closest<HTMLElement>('[data-editor-page]')
         ?.scrollIntoView({ block: 'start' });
       heading?.focus({ preventScroll: true });
     });
@@ -334,6 +354,12 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
       );
       if (detail) detail.scrollTop = 0;
     });
+  };
+  // The filters sit in the header, shown with the list on a phone: a new
+  // filter keeps the list, never reopens a page hidden behind it.
+  const changeFilter = (next: PermissionListFilter): void => {
+    setFilter(next);
+    setNarrowView('list');
   };
   const showPageList = (): void => {
     setNarrowView('list');
@@ -383,7 +409,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
           )
         : undefined;
     const shown = (item: PermissionItem): boolean =>
-      !grantedOnly || isGranted(item.key);
+      !grantedOnly || isListed(item.key);
     const groups = groupByModule(
       category.permissions.filter(
         (item) => item !== accessPermission && shown(item),
@@ -420,6 +446,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
       <section
         aria-label={`Autorisations de la page ${category.label}`}
         className={styles.page}
+        data-editor-page
       >
         {/* On a phone this line sticks under the record bar, with the way
             back to the pages; a direct child of the page so it stays stuck
@@ -571,7 +598,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   return (
     <div
       className={styles.editor}
-      data-narrow-view={resultsActive ? 'results' : narrowView}
+      data-narrow-view={resultsActive ? 'results' : shownNarrowView}
       data-workspace={workspace}
     >
       <AuthorizationsHeader
@@ -598,7 +625,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
             <PermissionListFilters
               filter={filter}
               grantedCount={grantedCount}
-              onFilterChange={setFilter}
+              onFilterChange={changeFilter}
               totalCount={ALL_PERMISSIONS.length}
             />
           </>
@@ -606,7 +633,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
       />
       <div
         className={styles.body}
-        data-narrow-view={narrowView}
+        data-narrow-view={shownNarrowView}
         data-results={resultsActive}
         ref={bodyRef}
       >
@@ -624,6 +651,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
             isPageListed={grantedOnly ? hasGranted : undefined}
             onJumpToResult={jumpToResult}
             results={resultGroups}
+            openedPageKey={pageOpened ? (selectedCategory?.key ?? '') : ''}
             selectedPageKey={selectedCategory?.key ?? ''}
           />
         </div>
@@ -636,7 +664,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
         >
           {resultsActive ? (
             renderResults()
-          ) : grantedOnly && grantedCount === 0 ? (
+          ) : nothingListed ? (
             <p className="text-muted-foreground text-sm">
               Aucune autorisation n’est accordée.
             </p>

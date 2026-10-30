@@ -113,7 +113,7 @@ porte la composition et l’adaptation à l’espace disponible.
 
 | Situation | Contrat commun |
 | --- | --- |
-| Placement | `sticky` (défaut) : collée en bas sur ordinateur, dans le flux sur téléphone ; `inline` : dans le flux ; `docked` (28 octobre 2026) : reste aussi en bas de l’écran sur téléphone, compacte, pour un écran d’interrupteurs sans saisie au clavier (Autorisations). Une barre collée doit avoir pour parent le bloc qu’elle accompagne : une enveloppe de sa seule hauteur l’empêche de coller. |
+| Placement | `sticky` (défaut) : collée en bas sur ordinateur, dans le flux sur téléphone ; `inline` : dans le flux ; `docked` (28 octobre 2026) : reste aussi en bas de l’écran sur téléphone, compacte, pour un écran d’interrupteurs sans saisie au clavier (Autorisations) ; actions côte à côte tant que leurs mots tiennent, sinon à la ligne, jamais coupées (30 octobre 2026). Une barre collée doit avoir pour parent le bloc qu’elle accompagne : une enveloppe de sa seule hauteur l’empêche de coller. |
 | Formulaire inchangé | `hasChanges={false}` : enregistrement inactif et barre dans le flux ; le module peut aussi masquer la barre. |
 | Brouillon modifié | Message de modifications non enregistrées, Annuler et Enregistrer. Une éventuelle confirmation d’abandon reste au formulaire. |
 | Formulaire de création | `status={null}` : aucun message de brouillon, trompeur sur un formulaire encore vide ; un `status` explicite reste possible pour un état à signaler. |

@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRight, Search } from 'lucide-react';
-import React, { type FC, useId } from 'react';
+import React, { type FC, useId, useMemo } from 'react';
 
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { type PermissionItem } from '$constants/permissions.constants';
@@ -46,6 +46,8 @@ type PermissionNavigationProps = {
   onQueryChange: (query: string) => void;
   onSelectPage: (pageKey: string) => void;
   onSelectPole: (poleKey: string) => void;
+  /** Phone list: the page opened during this visit, none before. */
+  openedPageKey: string;
   /**
    * Pages holding the shown search or granted results. While set, the column
    * becomes their index instead of the pole menu (26 October 2026).
@@ -133,6 +135,7 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
   onQueryChange,
   onSelectPage,
   onSelectPole,
+  openedPageKey,
   query,
   results,
   selectedPageKey,
@@ -152,12 +155,27 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
     listedPoles.find((pole) =>
       pole.categories.some((category) => category.key === selectedPageKey),
     ) ?? listedPoles[0];
+  // Every page counted once per draft, not per render: the phone list, the
+  // pole totals and the computer menu all show it, and a search re-renders.
+  const counts = useMemo(
+    () =>
+      new Map(
+        PERMISSION_EDITOR_POLES.flatMap((pole) => pole.categories).map(
+          (category) => [category.key, countCategory(category)] as const,
+        ),
+      ),
+    [countCategory],
+  );
+  const countPage = (
+    category: PermissionEditorCategory,
+  ): PermissionCategoryResult =>
+    counts.get(category.key) ?? countCategory(category);
   const countPole = (
     pole: (typeof PERMISSION_EDITOR_POLES)[number],
   ): Pick<PermissionCategoryResult, 'incomplete' | 'ready' | 'total'> =>
     pole.categories.reduce(
       (sum, category) => {
-        const result = countCategory(category);
+        const result = countPage(category);
 
         return {
           incomplete: sum.incomplete + result.incomplete,
@@ -261,6 +279,9 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
                     {pole.categories.map((category) => (
                       <li key={category.key}>
                         <Button
+                          aria-current={
+                            category.key === openedPageKey ? 'page' : undefined
+                          }
                           className={styles.pageButton}
                           data-page-key={category.key}
                           onClick={() => onSelectPage(category.key)}
@@ -271,7 +292,7 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
                             {category.label}
                           </span>
                           {isChanged(category) && <ChangedDot />}
-                          <UsableCount result={countCategory(category)} />
+                          <UsableCount result={countPage(category)} />
                           <ChevronRight
                             aria-hidden="true"
                             className="text-muted-foreground size-4 shrink-0"
@@ -336,7 +357,7 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
                         {category.label}
                       </span>
                       {isChanged(category) && <ChangedDot />}
-                      <UsableCount result={countCategory(category)} />
+                      <UsableCount result={countPage(category)} />
                     </Button>
                   </li>
                 );

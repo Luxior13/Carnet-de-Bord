@@ -116,6 +116,37 @@ async function measure(page: Page, width: number): Promise<Violation[]> {
         violations.push(
           `cible ${Math.round(targetWidth)}×${Math.round(height)} : ${describe(element)}`,
         );
+      // No clipping box may cut a target, on either axis, up to the first
+      // scroller: a button half hidden by its card cannot be reached (code
+      // review, 29 October 2026). A target wholly outside a box is hidden on
+      // purpose (closed disclosure), so only a partial cut counts.
+      for (
+        let node = element.parentElement;
+        node && node !== main && node !== document.body;
+        node = node.parentElement
+      ) {
+        const style = getComputedStyle(node);
+        const axes = [style.overflowX, style.overflowY];
+        if (axes.some((value) => value === 'auto' || value === 'scroll'))
+          break;
+        if (!axes.some((value) => value === 'hidden' || value === 'clip'))
+          continue;
+        const box = node.getBoundingClientRect();
+        const within =
+          rect.left >= box.left - 1 &&
+          rect.right <= box.right + 1 &&
+          rect.top >= box.top - 1 &&
+          rect.bottom <= box.bottom + 1;
+        const outside =
+          rect.right <= box.left ||
+          rect.left >= box.right ||
+          rect.bottom <= box.top ||
+          rect.top >= box.bottom;
+        if (!within && !outside) {
+          violations.push(`cible rognée : ${describe(element)}`);
+          break;
+        }
+      }
     }
 
     return violations;

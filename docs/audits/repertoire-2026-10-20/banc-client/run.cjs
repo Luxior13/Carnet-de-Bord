@@ -445,6 +445,60 @@ async function main() {
       },
       { featureLoading: true },
     );
+    // Code review of 29 October 2026: on a phone the clear button stays
+    // inside the 44 px search and its border, with a 44 px touch area, over no typed text, beside a centred icon;
+    // the sliding filter rows leave room for the focus ring.
+    await run(
+      "recherche-mobile-effacer",
+      390,
+      async (page) => {
+        await loaded(page);
+        await search(page).fill("Une recherche assez longue pour le champ");
+        const clear = page.getByRole("button", { name: /Effacer/ });
+        await expect(clear).toBeVisible();
+        const boxes = await page.evaluate(() => {
+          const input = document.querySelector('input[type="search"]');
+          const field = input.parentElement;
+          const button = field.querySelector("button");
+          const icon = field.querySelector(":scope > svg");
+          const box = (element) => element.getBoundingClientRect().toJSON();
+          const after = getComputedStyle(button, "::after");
+          return {
+            button: box(button),
+            // Invisible ::after around the button: its touch area.
+            hitGrow:
+              after.content === "none"
+                ? 0
+                : Math.max(0, -parseFloat(after.top) || 0) +
+                  Math.max(0, -parseFloat(after.bottom) || 0),
+            icon: box(icon),
+            input: box(input),
+            paddingRight: parseFloat(getComputedStyle(input).paddingRight),
+            ringRoom: parseFloat(
+              getComputedStyle(
+                document.querySelector('[role="group"][aria-label="Filtrer par statut"]'),
+              ).paddingTop,
+            ),
+          };
+        });
+        const { button, icon, input } = boxes;
+        const report = JSON.stringify(boxes);
+        assert.ok(button.top >= input.top - 1, report);
+        assert.ok(button.bottom <= input.bottom + 1, report);
+        assert.ok(button.right <= input.right + 1, report);
+        assert.ok(button.height + boxes.hitGrow >= 43.5, report);
+        // Inside the 1 px border and the rounded corner of the field.
+        assert.ok(button.top >= input.top + 2, report);
+        assert.ok(button.right <= input.right - 2, report);
+        assert.ok(boxes.paddingRight >= button.width - 1, report);
+        const middle = (box) => box.top + box.height / 2;
+        assert.ok(Math.abs(middle(icon) - middle(input)) <= 1, report);
+        assert.ok(boxes.ringRoom >= 3, report);
+        await page.screenshot({
+          path: path.join(work, "recherche-mobile-effacer-390.png"),
+        });
+      },
+    );
     await run(
       "global-empty",
       390,
