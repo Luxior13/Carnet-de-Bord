@@ -188,3 +188,58 @@ export const countUsablePermissions = (
     total: permissions.length,
   };
 };
+
+export type GrantedFilterView = {
+  /** Count for « Accordées », only when it equals the rows the filter shows. */
+  chipCount: number | null;
+  hasListed: (category: PermissionEditorCategory) => boolean;
+  isListed: (key: string) => boolean;
+  /** « Accordées » with nothing granted nor changed: no page to show. */
+  nothingListed: boolean;
+  /** « Accordées » hides the requested page; another one is shown. */
+  requestedHidden: boolean;
+  selectedCategory: PermissionEditorCategory | undefined;
+};
+
+/**
+ * « Accordées » (26 October 2026) lists what is granted plus what the draft
+ * just changed: a permission switched off stays in place, with its note and
+ * undo, until saved or cancelled (code reviews of 29 and 30 October 2026).
+ */
+export const buildGrantedFilterView = ({
+  changedKeys,
+  grantedOnly,
+  isGranted,
+  requestedKey,
+}: {
+  changedKeys: ReadonlySet<string>;
+  grantedOnly: boolean;
+  isGranted: (key: string) => boolean;
+  requestedKey: string;
+}): GrantedFilterView => {
+  const permissions = PERMISSION_EDITOR_CATEGORIES.flatMap(
+    (category) => category.permissions,
+  );
+  const isListed = (key: string): boolean =>
+    isGranted(key) || changedKeys.has(key);
+  const hasListed = (category: PermissionEditorCategory): boolean =>
+    category.permissions.some((item) => isListed(item.key));
+  const grantedCount = permissions.filter((item) => isGranted(item.key)).length;
+  const listedCount = permissions.filter((item) => isListed(item.key)).length;
+  const requested =
+    PERMISSION_EDITOR_CATEGORIES.find(
+      (category) => category.key === requestedKey,
+    ) ?? PERMISSION_EDITOR_CATEGORIES[0];
+  const requestedHidden = grantedOnly && !!requested && !hasListed(requested);
+
+  return {
+    chipCount: listedCount === grantedCount ? grantedCount : null,
+    hasListed,
+    isListed,
+    nothingListed: grantedOnly && listedCount === 0,
+    requestedHidden,
+    selectedCategory: requestedHidden
+      ? (PERMISSION_EDITOR_CATEGORIES.find(hasListed) ?? requested)
+      : requested,
+  };
+};

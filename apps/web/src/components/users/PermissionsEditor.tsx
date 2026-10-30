@@ -2,7 +2,7 @@
 
 import { type UserRole } from '@repo/shared';
 import { ChevronLeft, LockKeyhole, ShieldCheck, X } from 'lucide-react';
-import React, { type FC, useCallback, useMemo, useRef, useState } from 'react';
+import React, { type FC, useMemo, useRef, useState } from 'react';
 
 import {
   getAccessPermissionKeys,
@@ -23,6 +23,7 @@ import {
   type PermissionMutationPolicy,
 } from './permission-editor-policy';
 import {
+  buildGrantedFilterView,
   buildPermissionEditorState,
   countCategoryPermissionResults,
   countUsablePermissions,
@@ -31,6 +32,7 @@ import {
   normalizePermissionSearch,
   PERMISSION_EDITOR_CATEGORIES,
   PERMISSION_EDITOR_POLES,
+  type PermissionCategoryResult,
   type PermissionEditorCategory,
 } from './permission-editor-view';
 import { PermissionDecisionButton } from './PermissionDecisionButton';
@@ -130,15 +132,24 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
     () => new Map(Object.entries(permissions ?? {})),
     [permissions],
   );
-  const countCategory = useCallback(
-    (category: PermissionEditorCategory) =>
-      countCategoryPermissionResults(
+  // Each page counted at most once per draft, however many places show it
+  // (phone list, pole totals, menu, page title).
+  const countCategory = useMemo(() => {
+    const counts = new Map<string, PermissionCategoryResult>();
+
+    return (category: PermissionEditorCategory): PermissionCategoryResult => {
+      const known = counts.get(category.key);
+      if (known) return known;
+      const result = countCategoryPermissionResults(
         category,
         state.configured,
         state.effective,
-      ),
-    [state],
-  );
+      );
+      counts.set(category.key, result);
+
+      return result;
+    };
+  }, [state]);
   const completeAccess = hasCompleteAccessByRole(role);
   // Total of the draft, like the per-page counts (decision of 2026-10-20).
   const usable = countUsablePermissions(state.effective);
@@ -148,9 +159,6 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   ).length;
   const isGranted = (key: string): boolean =>
     (state.configured.get(key) || state.effective.get(key)) ?? false;
-  const grantedCount = ALL_PERMISSIONS.filter((item) =>
-    isGranted(item.key),
-  ).length;
   const normalizedQuery = normalizePermissionSearch(query);
   const searchTerms = getPermissionSearchTerms(query);
   // Only a search lists results across poles; « Accordées » narrows the
@@ -158,26 +166,29 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   // 26 October 2026).
   const resultsActive = normalizedQuery !== '';
   const grantedOnly = filter === 'granted';
-  // « Accordées » also keeps what the draft just changed: a permission
-  // switched off stays in place, with its note and undo, until saved or
-  // cancelled (code review of 29 October 2026).
-  const isListed = (key: string): boolean =>
-    isGranted(key) || changedPermissionKeys.has(key);
-  const hasGranted = (category: PermissionEditorCategory): boolean =>
-    category.permissions.some((item) => isListed(item.key));
-  // Nothing at all to show: a phone stays on the list, where the header and
-  // its filters are, instead of an empty page without a way back.
-  const nothingListed =
-    grantedOnly && !ALL_PERMISSIONS.some((item) => isListed(item.key));
-  const shownNarrowView = nothingListed ? 'list' : narrowView;
-  const requestedCategory =
-    PERMISSION_EDITOR_CATEGORIES.find(
-      (category) => category.key === selectedPageKey,
-    ) ?? PERMISSION_EDITOR_CATEGORIES[0];
-  const selectedCategory =
-    grantedOnly && requestedCategory && !hasGranted(requestedCategory)
-      ? (PERMISSION_EDITOR_CATEGORIES.find(hasGranted) ?? requestedCategory)
-      : requestedCategory;
+  const {
+    chipCount,
+    hasListed: hasGranted,
+    isListed,
+    nothingListed,
+    requestedHidden,
+    selectedCategory,
+  } = buildGrantedFilterView({
+    changedKeys: changedPermissionKeys,
+    grantedOnly,
+    isGranted,
+    requestedKey: selectedPageKey,
+  });
+  // The open page leaves « Accordées » (nothing left, or its last granted
+  // permission saved off): a phone returns once to the list, where the
+  // header and its filters are, rather than opening another page by itself.
+  // Only on that change, so a page chosen afterwards opens normally.
+  const pageGone = nothingListed || requestedHidden;
+  const [wasPageGone, setWasPageGone] = useState(pageGone);
+  if (pageGone !== wasPageGone) {
+    setWasPageGone(pageGone);
+    if (pageGone) setNarrowView('list');
+  }
 
   const getBatchDecision = (
     nextPermissions: PermissionsData | null,
@@ -598,7 +609,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
   return (
     <div
       className={styles.editor}
-      data-narrow-view={resultsActive ? 'results' : shownNarrowView}
+      data-narrow-view={resultsActive ? 'results' : narrowView}
       data-workspace={workspace}
     >
       <AuthorizationsHeader
@@ -624,7 +635,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
             />
             <PermissionListFilters
               filter={filter}
-              grantedCount={grantedCount}
+              grantedCount={chipCount}
               onFilterChange={changeFilter}
               totalCount={ALL_PERMISSIONS.length}
             />
@@ -633,7 +644,7 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
       />
       <div
         className={styles.body}
-        data-narrow-view={shownNarrowView}
+        data-narrow-view={narrowView}
         data-results={resultsActive}
         ref={bodyRef}
       >
@@ -651,7 +662,11 @@ export const PermissionsEditor: FC<PermissionsEditorProps> = ({
             isPageListed={grantedOnly ? hasGranted : undefined}
             onJumpToResult={jumpToResult}
             results={resultGroups}
-            openedPageKey={pageOpened ? (selectedCategory?.key ?? '') : ''}
+            openedPageKey={
+              pageOpened && !requestedHidden
+                ? (selectedCategory?.key ?? '')
+                : ''
+            }
             selectedPageKey={selectedCategory?.key ?? ''}
           />
         </div>

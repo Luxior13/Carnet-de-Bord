@@ -249,10 +249,11 @@ composants partagés : une page qui les utilise est conforme sans réglage.
 - **Contrôle automatique** : `e2e/mobile-layout.checks.ts`, lancé par l’E2E,
   visite chaque page sur un téléphone émulé (tactile, barres de défilement
   superposées) à 320, 390 et 768 px. Il échoue sur un défilement horizontal,
-  un élément hors de l’écran, une cible sous 44 px ou en partie rognée, sur
-  l’un ou l’autre axe, par un parent qui coupe son contenu (29 octobre 2026 ;
-  une cible entièrement cachée, comme un dépliant fermé, est volontaire), et
-  si une page vivante
+  un élément hors de l’écran, une cible sous 44 px ou en partie rognée par un
+  parent qui coupe son contenu. Chaque axe est jugé seul : contrôlé tant que
+  ses parents le coupent (`hidden`, `clip`), arrêté au premier qui défile
+  (`auto`, `scroll`) ; une cible entièrement cachée, comme un dépliant fermé,
+  est volontaire (29 et 30 octobre 2026). Il échoue aussi si une page vivante
   du registre des fonctionnalités n’est pas dans sa liste. **Une nouvelle page
   s’y ajoute en même temps qu’elle est créée.** `MOBILE_TOUR_DIR` garde une
   capture de chaque écran.

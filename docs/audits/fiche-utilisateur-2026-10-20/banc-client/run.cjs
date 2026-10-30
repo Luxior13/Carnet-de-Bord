@@ -1236,6 +1236,48 @@ async function main() {
       user: { permissions: { "persons:view": true } },
     },
   );
+  // Second review of 30 October 2026: the open page leaves « Accordées »
+  // once saved (another page still holds a grant): the phone returns to the
+  // list, opens no other page, marks none; changing the role there then
+  // keeps the list and its header.
+  await run(
+    "permissions-mobile-page-sortie",
+    320,
+    async ({ page }) => {
+      const navigation = page.getByRole("navigation", {
+        name: "Pages des autorisations",
+      });
+      await page.getByRole("button", { name: /^Accordées/ }).click();
+      await navigation.getByRole("button", { name: /^Répertoire/ }).click();
+      const view = page
+        .locator('[data-permission="persons:view"]')
+        .getByRole("switch");
+      await view.click();
+      await expect(view).toBeFocused();
+      await page.getByRole("button", { name: "Enregistrer", exact: true }).click();
+      await expect(
+        navigation.locator("[data-page-key]:visible", { hasText: "Utilisateurs" }),
+      ).toBeVisible();
+      await expect(page.locator("[data-editor-page]:visible")).toHaveCount(0);
+      await expect(
+        navigation.locator("[data-page-key]:visible[aria-current]"),
+      ).toHaveCount(0);
+      await page.screenshot({
+        path: path.join(work, "permissions-mobile-page-sortie-320.png"),
+      });
+      await page.locator("#user-role").click();
+      await page
+        .getByRole("option", { name: "Administrateur", exact: true })
+        .click();
+      await expect(page.locator("#user-role")).toBeVisible();
+      await expect(page.locator("[data-editor-page]:visible")).toHaveCount(0);
+    },
+    {
+      height: 640,
+      section: "access",
+      user: { permissions: { "persons:view": true, "users:view": true } },
+    },
+  );
   await run(
     "compte-mobile-trois-actions",
     320,

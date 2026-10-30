@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRight, Search } from 'lucide-react';
-import React, { type FC, useId, useMemo } from 'react';
+import React, { type FC, useId } from 'react';
 
 import { getNavigationIcon } from '$constants/navigation-icon.constants';
 import { type PermissionItem } from '$constants/permissions.constants';
@@ -97,7 +97,8 @@ const UsableCount: FC<{
  */
 export const PermissionListFilters: FC<{
   filter: PermissionListFilter;
-  grantedCount: number;
+  /** Null when the count would not match the rows « Accordées » shows. */
+  grantedCount: number | null;
   onFilterChange: (filter: PermissionListFilter) => void;
   totalCount: number;
 }> = ({ filter, grantedCount, onFilterChange, totalCount }) => (
@@ -155,27 +156,12 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
     listedPoles.find((pole) =>
       pole.categories.some((category) => category.key === selectedPageKey),
     ) ?? listedPoles[0];
-  // Every page counted once per draft, not per render: the phone list, the
-  // pole totals and the computer menu all show it, and a search re-renders.
-  const counts = useMemo(
-    () =>
-      new Map(
-        PERMISSION_EDITOR_POLES.flatMap((pole) => pole.categories).map(
-          (category) => [category.key, countCategory(category)] as const,
-        ),
-      ),
-    [countCategory],
-  );
-  const countPage = (
-    category: PermissionEditorCategory,
-  ): PermissionCategoryResult =>
-    counts.get(category.key) ?? countCategory(category);
   const countPole = (
     pole: (typeof PERMISSION_EDITOR_POLES)[number],
   ): Pick<PermissionCategoryResult, 'incomplete' | 'ready' | 'total'> =>
     pole.categories.reduce(
       (sum, category) => {
-        const result = countPage(category);
+        const result = countCategory(category);
 
         return {
           incomplete: sum.incomplete + result.incomplete,
@@ -292,7 +278,7 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
                             {category.label}
                           </span>
                           {isChanged(category) && <ChangedDot />}
-                          <UsableCount result={countPage(category)} />
+                          <UsableCount result={countCategory(category)} />
                           <ChevronRight
                             aria-hidden="true"
                             className="text-muted-foreground size-4 shrink-0"
@@ -357,7 +343,7 @@ export const PermissionNavigation: FC<PermissionNavigationProps> = ({
                         {category.label}
                       </span>
                       {isChanged(category) && <ChangedDot />}
-                      <UsableCount result={countPage(category)} />
+                      <UsableCount result={countCategory(category)} />
                     </Button>
                   </li>
                 );

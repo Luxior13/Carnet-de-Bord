@@ -99,6 +99,26 @@ Vérifié : bancs fiche utilisateur 61/61, Répertoire 42/42, Utilisateurs 42/42
 les six autres bancs touchés ; E2E réussi en 2,3 min, contrôle mobile élargi
 sans violation.
 
+## Troisième revue de code, 30 octobre 2026
+
+Huit constats sur la seconde passe, tous retenus (« ok go »).
+
+| Constat | Correction |
+| --- | --- |
+| Compteur « Accordées » différent des lignes affichées pendant des retraits | Compteur masqué tant qu’il ne correspond pas |
+| Vue détail cachée mais conservée : elle revenait après un changement de rôle | Retour à la liste au moment où la page ouverte sort du filtre, une seule fois |
+| Page ouverte remplacée par une autre et marquée sans action de l’utilisateur | Même retour à la liste ; aucune page marquée |
+| Contrôle E2E : `overflow-x: hidden` (axe vertical calculé `auto`) jamais vérifié | Chaque axe jugé seul |
+| Contrôle E2E : axe non coupé comparé quand même (`clip` sur un seul axe) | Idem |
+| Connexion : bouton à 36 px sur ordinateur sous des champs à 40 px | Bouton à 40 px ; doublons de hauteur des champs retirés |
+| Nouveaux comportements couverts seulement par les bancs | Logique extraite (`buildGrantedFilterView`), 5 tests Vitest |
+| Compteurs : cache partiel et branche morte | Cache paresseux unique dans l’éditeur, passé à la navigation |
+
+Vérifié : Vitest 1 249, fiche utilisateur 62/62 et les autres bancs touchés
+(Mon compte 27/28 en passe complète : scénario de contact instable connu,
+3/3 relancé seul) ; E2E réussi en 2,3 min, contrôle mobile par axe sans
+violation.
+
 **À vérifier, hors mobile.**
 
 - L’éditeur d’autorisations affichait « Double authentification non activée »

@@ -394,7 +394,7 @@ function LoginPage(): React.ReactNode {
                     autoCapitalize="none"
                     autoComplete="username"
                     autoCorrect="off"
-                    className="h-11 pl-10 sm:h-10"
+                    className="pl-10"
                     disabled={isSubmitting || !!userData}
                     id="loginName"
                     ref={loginInputRef}
@@ -417,7 +417,7 @@ function LoginPage(): React.ReactNode {
                   <Lock className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                   <Input
                     autoComplete="current-password"
-                    className="h-11 px-10 sm:h-10"
+                    className="px-10"
                     disabled={isSubmitting || !!userData}
                     id="password"
                     name="password"
@@ -463,7 +463,7 @@ function LoginPage(): React.ReactNode {
                 </Label>
               </div>
               <Button
-                className="w-full"
+                className="w-full lg:h-10"
                 disabled={
                   isSubmitting || !!userData || !loginName.trim() || !password
                 }

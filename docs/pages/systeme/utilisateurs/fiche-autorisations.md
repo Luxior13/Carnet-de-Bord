@@ -74,8 +74,15 @@ dépliable « Voir les modifications avant enregistrement » depuis le
   vide plus sous les doigts et le focus reste sur l’interrupteur. Sans rien
   d’accordé ni de modifié, le téléphone montre la liste (« Aucune page. »),
   avec l’en-tête et ses filtres ; changer de filtre ramène toujours à la
-  liste, puisque les filtres n’y sont visibles que là. Vue déduite, sans état
-  corrigé pendant le rendu.
+  liste, puisque les filtres n’y sont visibles que là. Le compteur du filtre
+  « Accordées » disparaît tant qu’il ne correspondrait pas aux lignes
+  affichées (retraits en attente). Quand la page ouverte sort du filtre (plus
+  rien d’accordé, ou sa dernière autorisation retirée puis enregistrée), le
+  téléphone revient une fois à la liste, sans ouvrir ni marquer une autre
+  page ; un rôle changé ensuite depuis l’en-tête garde la liste. Logique dans
+  `buildGrantedFilterView` (`permission-editor-view.ts`), testée par Vitest
+  (`permission-editor-granted-filter.test.ts`) ; banc
+  `permissions-mobile-page-sortie`.
 - **30 octobre 2026 — page en cours sur téléphone** (choix laissé à l’agent :
   « comme tu veux »). La liste de tous les pôles ne marque aucune page tant
   qu’aucune n’a été ouverte pendant la visite : la page qu’un ordinateur

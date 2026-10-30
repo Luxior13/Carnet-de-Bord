@@ -165,3 +165,11 @@ dernière autorisation retirée reste affichée et garde le focus ; après
 enregistrement, la liste vide (« Aucune page. ») avec ses filtres ; pendant
 un conflit, « Annuler » et « Enregistrer » côte à côte à 320 px. Passe
 complète : 61/61.
+
+## Reprise du 30 octobre 2026, troisième revue
+
+Scénario `permissions-mobile-page-sortie` (320 px) : sous « Accordées », la
+page ouverte qui sort du filtre après enregistrement ramène à la liste, sans
+ouvrir ni marquer une autre page ; un rôle changé ensuite garde la liste. Il
+échoue si l’on retire ce retour. `permissions-mobile-revue` vérifie aussi
+qu’aucune page n’est marquée à l’arrivée. Passe complète : 62/62.

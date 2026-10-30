@@ -46,6 +46,10 @@ revue répond à un changement, un défaut constaté ou une règle nouvelle.
 
 ## Décisions courantes — complétées le 12 octobre 2026
 
+- 30 octobre 2026 : les hauteurs viennent des composants partagés (champs
+  `Input`, bouton `Button`, 44 px sous 640 px) ; sur ordinateur, le bouton
+  « Se connecter » prend la hauteur des champs (40 px) au lieu de 36 px
+  (revue de code).
 - 26 octobre 2026 : case « Rester connecté sur cet appareil » (ancien
   « Faire confiance à cet appareil », qui laissait croire que le code ne serait
   plus demandé) ; session de 30 jours sans limite d’inactivité plus courte ;
