@@ -305,17 +305,19 @@ async function main() {
       // 27 October 2026: quick choices in years replace the one-day steps.
       const preset = (name) =>
         row(page).getByRole("button", { name, exact: true });
-      await expect(preset("3 ans (défaut)")).toHaveAttribute(
+      // One year is the default since 30 October 2026.
+      await expect(preset("1 an (défaut)")).toHaveAttribute(
         "aria-pressed",
-        "true",
+        "false",
       );
+      await expect(preset("3 ans")).toHaveAttribute("aria-pressed", "true");
       await expect(row(page)).toContainText("soit 3 ans");
       await preset("5 ans").focus();
       await preset("5 ans").press("Space");
       await expect(field(page)).toHaveValue("1825");
       await expect(preset("5 ans")).toHaveAttribute("aria-pressed", "true");
       await expect(preset("5 ans")).toBeFocused();
-      await preset("3 ans (défaut)").click();
+      await preset("3 ans").click();
       await expect(field(page)).toHaveValue("1095");
       await field(page).press("ArrowUp");
       await expect(field(page)).toHaveValue("1096");
@@ -382,11 +384,11 @@ async function main() {
       await expect(field(page)).toHaveValue("1460");
       await expect(save(page)).toHaveCount(0);
       const defaultChoice = row(page).getByRole("button", {
-        name: "3 ans (défaut)",
+        name: "1 an (défaut)",
         exact: true,
       });
       await defaultChoice.click();
-      await expect(field(page)).toHaveValue("1095");
+      await expect(field(page)).toHaveValue("365");
       await expect(defaultChoice).toBeFocused();
       await save(page).click();
       await expect(page.getByRole("alertdialog")).toBeVisible();
@@ -459,13 +461,13 @@ async function main() {
       await expect(page.getByRole("alertdialog")).toHaveCount(0);
       await expect(field(page)).toHaveValue("1095");
       await write(page, 1400);
-      const defaultChoice = row(page).getByRole("button", {
-        name: "3 ans (défaut)",
+      const storedChoice = row(page).getByRole("button", {
+        name: "3 ans",
         exact: true,
       });
-      await defaultChoice.click();
+      await storedChoice.click();
       await expect(field(page)).toHaveValue("1095");
-      await expect(defaultChoice).toBeFocused();
+      await expect(storedChoice).toBeFocused();
       await expect(save(page)).toHaveCount(0);
       await field(page).fill("900");
       await save(page).click();

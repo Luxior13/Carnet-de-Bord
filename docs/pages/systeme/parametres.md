@@ -19,11 +19,12 @@
 Le propriétaire demande une vérification de la page, puis « ok go » sur les
 cinq points proposés.
 
-- **Choix rapides** : « 1 an · 2 ans · 3 ans (défaut) · 5 ans · 10 ans »
+- **Choix rapides** : « 1 an (défaut) · 2 ans · 3 ans · 5 ans · 10 ans »
+  (défaut à 1 an depuis le 30 octobre 2026, voir plus bas)
   (boutons à bascule, `aria-pressed`, groupe « Durées courantes ») au lieu des
   boutons − et + qui avançaient d’un jour (365 clics pour un an). Le champ
   garde toute valeur entre les bornes ; les flèches du clavier restent
-  disponibles. « Rétablir le défaut » disparaît : le choix « 3 ans (défaut) »
+  disponibles. « Rétablir le défaut » disparaît : le choix marqué « (défaut) »
   le remplace, et le focus reste sur le choix pressé.
 - **Équivalence en années** : « jours · soit 3 ans », « soit environ 2,5 ans » ;
   champ de 112 px au lieu de 320 px. En modification, l’aide ne répète plus le
@@ -289,7 +290,7 @@ indépendant par réglage, car leurs risques diffèrent.
 
 | Réglage | Défaut logiciel | Bornes | Portée réelle |
 | --- | --- | --- | --- |
-| Journal d'activité | 1 095 jours | 365–3 650 | Journal et détails des changements associés, y compris historique des personnes |
+| Journal d'activité | 365 jours (1 095 jusqu’au 30 octobre 2026) | 365–3 650 | Journal et détails des changements associés, y compris historique des personnes |
 
 Le réglage de conservation des notifications a été retiré le 9 octobre 2026 avec
 le module : le catalogue ne contient plus que le journal d'activité. Une ancienne
@@ -437,9 +438,20 @@ elle-même le nettoyage et ne change pas la politique de conservation.
 
 ### Portée du journal : constat et séparation à préparer
 
+**Décision du propriétaire du 30 octobre 2026 : conservation d’un an.** Le
+défaut logiciel passe de 1 095 à **365 jours**, dans le catalogue et dans la
+valeur de secours de `purge_expired_audit_logs` (migration
+`20261030120000_audit_retention_one_year`, corps de la fonction inchangé par
+ailleurs, vérifié par `person-audit-deletion-guards.test.ts`). Une base sans
+valeur enregistrée passe à un an dès la migration ; une base qui a déjà une
+valeur la garde : la changer depuis cette page (choix « 1 an »), avec la
+confirmation de réduction habituelle. Repère : la CNIL recommande en général six
+mois à un an pour la journalisation. Aucun événement n’a plus d’un an à cette
+date (premières traces en juillet 2026) : le prochain nettoyage ne supprime rien.
+
 Examen du code le 27 septembre 2026, sans changement de durée ni exécution de purge.
-Le défaut logiciel reste **1 095 jours** ; ce maintien ne valide pas sa pertinence
-pour chaque finalité. L’ancien défaut de **180 jours** des notifications ne
+Le défaut logiciel était alors de **1 095 jours** ; ce maintien ne validait pas sa
+pertinence pour chaque finalité. L’ancien défaut de **180 jours** des notifications ne
 s’applique plus au site : le module et son réglage ont été retirés le 9 octobre.
 
 | Ensemble constaté | Données et usages actuels | Point à trancher avant de séparer les durées |

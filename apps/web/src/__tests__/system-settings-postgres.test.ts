@@ -15,6 +15,7 @@ import {
 import { PUT } from '$app/api/systeme/parametres/[key]/route';
 import { GET } from '$app/api/systeme/parametres/route';
 import { PERMISSIONS } from '$constants/permissions.constants';
+import { getSystemSettingDefinition } from '$constants/system-setting-catalog.constants';
 import { getSystemSettingValue } from '$server/system-settings';
 import { mapUserToUserType } from '$server/user-projection';
 
@@ -54,6 +55,8 @@ vi.mock('$server/session', async (importOriginal) => ({
 
 const target = process.env.SETTINGS_TEST_DATABASE_URL;
 const settingKey = 'audit.retentionDays';
+// One year since 30 October 2026, also the minimum: leaving it never reduces.
+const defaultDays = getSystemSettingDefinition(settingKey).defaultValue;
 const DAY_MS = 86_400_000;
 
 const gate = (): { open: () => void; promise: Promise<void> } => {
@@ -316,7 +319,7 @@ describe.skipIf(!target)(
       expect(body.data).toHaveLength(1);
       expect(body.data[0]).toMatchObject({
         key: settingKey,
-        value: 1095,
+        value: defaultDays,
         version: 0,
       });
       for (const key of [
@@ -353,7 +356,7 @@ describe.skipIf(!target)(
 
     it('keeps valid no-ops unchanged and audits actual updates with their versions and actor', async () => {
       const before = await auditCount();
-      expect((await put(1095, 0)).status).toBe(200);
+      expect((await put(defaultDays, 0)).status).toBe(200);
       expect(await stored()).toBeNull();
       const created = await put(1460, 0);
       expect(created.status).toBe(200);
@@ -384,9 +387,9 @@ describe.skipIf(!target)(
       });
     });
 
-    it('requires only a recent password for reductions, including from the implicit default', async () => {
+    it('requires only a recent password for reductions, never to leave the one-year default', async () => {
       await authenticate(actor, null);
-      expect((await put(730, 0)).status).toBe(403);
+      expect(defaultDays).toBe(365);
       expect((await put(1460, 0)).status).toBe(200);
       for (const proof of [
         null,
@@ -434,8 +437,8 @@ describe.skipIf(!target)(
       const response = await list();
       expect(response.status).toBe(200);
       const body = await response.json();
-      expect(await getSystemSettingValue(settingKey)).toBe(1095);
-      await expect(purge(db, 1095)).rejects.toThrow(
+      expect(await getSystemSettingValue(settingKey)).toBe(defaultDays);
+      await expect(purge(db, defaultDays)).rejects.toThrow(
         'Stored audit retention is invalid',
       );
       expect(
@@ -443,7 +446,7 @@ describe.skipIf(!target)(
       ).not.toBeNull();
       expect(body.data[0]).toMatchObject({
         isStoredValueInvalid: true,
-        value: 1095,
+        value: defaultDays,
         version: 1,
       });
       expect(JSON.stringify(body)).not.toContain('fictive-invalid-storage');
@@ -452,17 +455,17 @@ describe.skipIf(!target)(
     it('requires a recent password to repair invalid storage even when restoring the proposed default', async () => {
       await fixture('invalid');
       await authenticate(actor, null);
-      expect((await put(1095, 1)).status).toBe(403);
+      expect((await put(defaultDays, 1)).status).toBe(403);
       await authenticate();
       const before = await auditCount();
-      const response = await put(1095, 1);
+      const response = await put(defaultDays, 1);
       expect(response.status).toBe(200);
       expect((await response.json()).data).toMatchObject({
         isStoredValueInvalid: false,
-        value: 1095,
+        value: defaultDays,
         version: 2,
       });
-      expect(await stored()).toMatchObject({ value: 1095, version: 2 });
+      expect(await stored()).toMatchObject({ value: defaultDays, version: 2 });
       expect(await auditCount()).toBe(before + 1);
     });
 
@@ -611,7 +614,8 @@ describe.skipIf(!target)(
     it.each([false, true])(
       'waits for a retention increase and refuses its old cutoff, with an existing row: %s',
       async (existing) => {
-        const expected = existing ? 365 : 1095;
+        // Without a row, the cleanup falls back to the one-year default.
+        const expected = 365;
         const next = existing ? 1095 : 1460;
         if (existing) await fixture(expected);
         const old = await event(existing ? 730 : 1200);

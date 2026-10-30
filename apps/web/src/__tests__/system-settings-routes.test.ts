@@ -225,9 +225,10 @@ describe('system settings routes', () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
+    // The proposed repair is the one-year default (30 October 2026).
     expect(body.data[0]).toMatchObject({
       isStoredValueInvalid: true,
-      value: 1095,
+      value: 365,
       version: 2,
     });
     expect(JSON.stringify(body)).not.toContain('invalid-fixture');
@@ -490,8 +491,9 @@ describe('system settings routes', () => {
       routeParams('audit.retentionDays'),
     );
 
+    // From the one-year default, two years is an increase: no password.
     expect(response.status).toBe(200);
-    expect(mocks.assertRecentPasswordReauthentication).toHaveBeenCalledTimes(1);
+    expect(mocks.assertRecentPasswordReauthentication).not.toHaveBeenCalled();
     expect(mocks.transaction.systemSetting.create).toHaveBeenCalled();
     expect(String(mocks.transaction.$queryRaw.mock.calls[0]?.[0])).toContain(
       'system-setting:audit.retentionDays',

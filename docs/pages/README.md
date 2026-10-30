@@ -50,7 +50,7 @@ mention « Suivi à compléter ».
 | [États techniques](transverse/etats-techniques.md) | États client et 404 réelle revérifiés le 13 octobre |
 | [Composants partagés](transverse/composants-partages.md) | UI-C10 réconcilié, UI-C11 conservé pour les moteurs et aides techniques non testés |
 | [Modales](transverse/modales.md) | MOD-INT réconcilié, MOD-A11Y conservé |
-| [Journal d’activité](systeme/journal-activite.md) | Page retirée le 9 octobre 2026, replanifiée ; fiche conservée |
+| [Journal d’activité](systeme/journal-activite.md) | Page retirée le 9 octobre 2026 ; reconstruction cadrée le 30 octobre 2026, à valider |
 
 ### Complément transverse du 15 octobre 2026
 

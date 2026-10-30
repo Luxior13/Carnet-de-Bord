@@ -21,6 +21,143 @@
 > personnes persistent. L’onglet Activité utilisateur a depuis été retiré ;
 > l’existence d’une API historique ne signifie pas qu’une vue est disponible.
 
+## Reconstruction — cadrage du 30 octobre 2026
+
+**État : cadrage à valider par le propriétaire avant tout code.** Les
+sections suivantes (revue du 27 septembre) restent l’historique de l’ancienne
+version ; en cas d’écart, ce cadrage prime.
+
+### Besoin
+
+Le serveur trace chaque action depuis le début, mais rien ne permet de la
+relire. Le propriétaire a retiré le 27 octobre 2026 les icônes de provenance
+des champs « en attendant les logs » : le journal est l’endroit où retrouver
+qui a fait quoi, quand, sur quel objet, avec quel résultat. Usage : enquête
+ponctuelle d’un administrateur (« qui a changé ce rôle ? », « ces échecs de
+connexion viennent-ils du même endroit ? »), pas une consultation quotidienne.
+Réussite : retrouver un fait en moins d’une minute à partir d’une personne,
+d’un compte ou d’une période, sans exposer plus que le droit du lecteur.
+
+### Décisions retenues (propriétaire, « ok go » du 30 octobre 2026)
+
+| Sujet | Décision | Motif |
+| --- | --- | --- |
+| Lecteurs | Permission `audit:view` ; les administrateurs l’ont par la règle « un ADMIN possède toutes les autorisations administratives » ; un utilisateur seulement si elle lui est accordée | Même mécanisme que les autres pages ; portée par équipe plus tard, avec les droits par périmètre |
+| Sécurité | **Un seul journal**, filtre « Sécurité » ; l’ancienne séparation Activité / Connexions est abandonnée | Une enquête suit une seule ligne de temps (connexion, puis droits modifiés) |
+| Export | **Pas dans la première version** ; `audit:export` reste planifiée | Données personnelles hors de l’outil ; à ajouter sur besoin réel (demande RGPD, contrôle) |
+| Conservation | **Un an** (« mets 1 an pour la conservation », 30 octobre 2026) ; défaut logiciel et valeur de secours SQL à 365 jours | Repère CNIL de six mois à un an pour la journalisation |
+| Adresses IP | Visibles par le superadmin seulement, dans le détail ; « Adresse masquée » pour les autres ; navigateur lisible pour tous (« Windows · Chrome ») | Donnée personnelle utile à l’enquête seulement |
+| Modification | Lecture seule stricte ; seule la purge de conservation des Paramètres supprime | Un journal modifiable ne prouve rien |
+| Suivi des accès | Ouvrir la page laisse une trace (un événement par affichage, pas par filtre) | Celui qui surveille est surveillé ; prévu par la feuille de route |
+
+### Proposition de page
+
+Gabarit [A. Liste de gestion](../../design/gabarits.md#a-liste-de-gestion),
+aligné sur Répertoire et Utilisateurs (recherche, filtres rapides, pagination
+commune), en lecture seule et sans bouton d’ajout.
+
+```text
+Système › Journal d’activité
+┌──────────────────────────────────────────────────────────────┐
+│ Journal d’activité                                           │
+│ Qui a fait quoi, quand et sur quel dossier.                  │
+├──────────────────────────────────────────────────────────────┤
+│ [🔍 Auteur ou compte concerné        ]  [Période : 7 jours ▾] │
+│ Type  [Tous] [Sécurité] [Comptes et droits] [Personnes]      │
+│       [Paramètres]                                           │
+│ Afficher [Tout] [Importants] [Échecs]                        │
+│ 128 événements                                               │
+├──────────────────────────────────────────────────────────────┤
+│ ● Autorisations modifiées              Camille Exemple   14:32│
+│   Compte : alex.exemple · 3 accordées, 1 retirée          ›  │
+│ ● Connexion échouée                    —                 14:05│
+│   Identifiant : alex.exemple · mot de passe incorrect     ›  │
+│ ● Fiche modifiée                       Camille Exemple   hier │
+│   Personne : MaxLaFontaine · Coordonnées (2 champs)       ›  │
+├──────────────────────────────────────────────────────────────┤
+│ 1–50 sur 128                                       [‹] [›]   │
+└──────────────────────────────────────────────────────────────┘
+```
+
+- **Ligne** : pastille de gravité (neutre, avertissement, critique, échec
+  distingués par texte et couleur), libellé français du fait, objet concerné,
+  auteur, date courte ; dépliable au clavier et au toucher.
+- **Détail déplié** : date exacte avec fuseau ; auteur et compte concerné
+  (noms figés au moment du fait, nom actuel d’une fiche personne s’il a
+  changé) ; changements Avant → Après champ par champ, contact précis
+  identifié ; navigateur ; IP selon le droit ; liens « Filtrer sur cet
+  auteur / ce compte / cette fiche » et « Ouvrir la fiche ».
+- **Filtres** : période (24 h, 7 jours par défaut, 30 jours, 1 an,
+  personnalisée bornée à la conservation) ; type, regroupant les flux
+  existants (`AUTHENTICATION` + `SECURITY` → Sécurité ; `IDENTITY` comptes +
+  `AUTHORIZATION` → Comptes et droits ; `IDENTITY` personnes → Personnes ;
+  `SYSTEM` → Paramètres) ; « Importants » = avertissement ou critique ;
+  « Échecs » = résultat en échec ; recherche par nom ou identifiant (trois
+  caractères minimum). Filtres dans l’URL, comme les autres listes.
+- **Pagination** par curseur (stable quand de nouveaux faits arrivent), 50 par
+  page, avec les flèches communes ; pas de « Charger plus » infini.
+- **Entrées contextuelles** : sur la fiche utilisateur et la fiche personne,
+  un lien « Historique » vers le journal filtré sur ce compte ou cette fiche,
+  visible seulement avec `audit:view`. Il remplace la provenance retirée.
+- **Téléphone** : lignes en cartes, détail déplié en place, filtres en rangées
+  glissantes (règles mobiles communes) ; page ajoutée au contrôle mobile E2E.
+- **États** : chargement, aucun événement (avec rappel de la période),
+  aucun résultat pour ces filtres (avec « Effacer les filtres »), erreur avec
+  reprise, accès refusé.
+
+### Données et droits
+
+| Donnée | Superadmin | Lecteur `audit:view` | Remarque |
+| --- | --- | --- | --- |
+| Fait, date, auteur, compte, résultat, gravité | Oui | Oui | Noms figés dans l’événement |
+| Événements concernant le compte protégé | Oui | **Non** | Règle existante conservée |
+| Changements de champs en clair | Oui | Oui | Identité de la personne |
+| Changements chiffrés (coordonnées) | Oui | Seulement s’il a aussi `persons:view_contact` | Le journal ne donne pas plus que le module propriétaire |
+| Navigateur | Oui | Oui | Forme courte commune aux sessions |
+| Adresse IP | Oui | « Adresse masquée » | Jamais en colonne |
+| Métadonnées techniques | Liste autorisée | Liste autorisée | Clés de secrets toujours exclues |
+
+Projection et masquage côté serveur, jamais dans le navigateur.
+
+### Hors première version
+
+Export CSV/JSON ; portée par équipe ou entité ; alertes et tableaux
+d’anomalies ; durées de conservation séparées par finalité (la
+[fiche Paramètres](parametres.md#portée-du-journal--constat-et-séparation-à-préparer)
+garde ce chantier). **Conservation tranchée le 30 octobre 2026 : un an**
+(défaut logiciel passé de 1 095 à 365 jours, repère CNIL de six mois à un an),
+la période personnalisée du journal est donc bornée à un an.
+
+### Construction prévue
+
+- Module `features/audit` : `server/` (lecture, curseur, projection et
+  masquage, trace de consultation), `schemas/` (Zod des filtres),
+  `components/`, libellés français de chaque action dans un catalogue testé
+  contre l’énumération Prisma (toute nouvelle action sans libellé fait
+  échouer les tests).
+- Route `GET /api/audit` : `requireAuth` → `requirePermission(AUDIT.VIEW)` →
+  filtres validés → service ; page serveur `/systeme/journal-activite`.
+- Registre : fonctionnalité `system-activity` passée `live`, `audit:view`
+  devient effective. Schéma : une valeur `AUDIT_VIEW` ajoutée à `AuditAction`
+  (migration), classée Sécurité, gravité normale. Les index existants couvrent
+  date, flux, résultat, gravité, entité et recherche par trigrammes.
+- Vérifications : tests Vitest du service (filtres, curseur, masquage IP,
+  compte protégé, valeurs chiffrées, catalogue complet), suite PostgreSQL du
+  dépôt, banc client (largeurs, états, clavier), E2E sur base jetable avec
+  consultation réelle et contrôles mobile et CSP, mesure de lecture sur
+  10 000 événements générés.
+
+### Sélection des 36 points
+
+À examiner : Q01–Q07, Q09–Q12 (une valeur d’énumération), Q13 (migration
+additive), Q14 (curseur et instantané), Q15, Q17, Q19, Q22, Q27, Q30, Q33–Q36.
+Non applicable : Q08 (aucun destinataire), Q20 et Q21 (pas d’export ni de
+fichier dans cette version), Q24 et Q26 (ni gouvernance ni finances), Q23
+(aucun traitement différé ajouté). Hors impact : Q16 (rien n’est supprimé ;
+purge existante inchangée), Q18 (aucun problème mesuré), Q25 (fiches lues
+comme objets d’audit), Q28 et Q29 (déploiement et sauvegarde inchangés ; la
+nouvelle valeur d’énumération est couverte par les sauvegardes existantes).
+
 ## Identité et état
 
 - Route : `/systeme/journal-activite`, module `features/audit`.

@@ -24,7 +24,7 @@ describe('platform foundation without a persistent worker', () => {
     expect(isSystemSettingKey('jobs.retentionDays')).toBe(false);
     expect(isSystemSettingKey('ui.defaultPageSize')).toBe(false);
     expect(getSystemSettingDefinition('audit.retentionDays').defaultValue).toBe(
-      1_095,
+      365,
     );
   });
 

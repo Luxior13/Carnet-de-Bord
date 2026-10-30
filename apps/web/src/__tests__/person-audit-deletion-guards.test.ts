@@ -2,8 +2,15 @@ import { readFileSync } from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
+import { getSystemSettingDefinition } from '$constants/system-setting-catalog.constants';
+
 const migrationUrl = new URL(
   '../../../../packages/database/prisma/migrations/20260721120000_person_identity_foundation/migration.sql',
+  import.meta.url,
+);
+// 30 October 2026: one-year fallback, the rest of the function unchanged.
+const retentionMigrationUrl = new URL(
+  '../../../../packages/database/prisma/migrations/20261030120000_audit_retention_one_year/migration.sql',
   import.meta.url,
 );
 const maintenanceCommandUrl = new URL(
@@ -23,6 +30,14 @@ const maintenanceCommandSource = readFileSync(maintenanceCommandUrl, 'utf8');
 // eslint-disable-next-line security/detect-non-literal-fs-filename
 const personDeletionSource = readFileSync(personDeletionUrl, 'utf8');
 const compactSql = migrationSql.replaceAll(/\s+/gu, ' ').trim();
+// eslint-disable-next-line security/detect-non-literal-fs-filename
+const retentionMigrationSql = readFileSync(retentionMigrationUrl, 'utf8');
+const purgeFunction = (sql: string): string =>
+  sql
+    .replaceAll(/\s+/gu, ' ')
+    .match(
+      /CREATE OR REPLACE FUNCTION "purge_expired_audit_logs".*?\$\$;/u,
+    )?.[0] ?? '';
 
 describe('controlled audit deletion boundary', () => {
   it('makes both audit tables append-only outside controlled procedures', () => {
@@ -57,6 +72,24 @@ describe('controlled audit deletion boundary', () => {
     );
     expect(compactSql).toContain(
       'DELETE FROM "public"."AuditLog" WHERE "createdAt" < (CURRENT_TIMESTAMP AT TIME ZONE \'UTC\') - make_interval(days => configured_retention_days)',
+    );
+  });
+
+  it('falls back to the application default, with an otherwise unchanged cleanup', () => {
+    const defaultDays = getSystemSettingDefinition(
+      'audit.retentionDays',
+    ).defaultValue;
+    const current = purgeFunction(retentionMigrationSql);
+
+    expect(defaultDays).toBe(365);
+    expect(current).toContain(
+      `IF NOT FOUND THEN configured_retention_days := ${defaultDays}; END IF;`,
+    );
+    expect(current).toBe(
+      purgeFunction(migrationSql).replace(
+        'configured_retention_days := 1095;',
+        `configured_retention_days := ${defaultDays};`,
+      ),
     );
   });
 

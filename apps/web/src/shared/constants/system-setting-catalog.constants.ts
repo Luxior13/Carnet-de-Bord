@@ -22,7 +22,9 @@ const defineSystemSetting = <const TSetting extends SystemSettingCatalogItem>(
  */
 export const SYSTEM_SETTING_CATALOG = {
   'audit.retentionDays': defineSystemSetting({
-    defaultValue: 1_095,
+    // One year (owner decision of 30 October 2026); the SQL cleanup falls
+    // back to the same value when no row is stored.
+    defaultValue: 365,
     description: "Durée de conservation du journal d'activité en jours",
     label: "Journal d'activité",
     max: 3_650,
