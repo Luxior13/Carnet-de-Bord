@@ -22,7 +22,9 @@
 Établir quelques scénarios d’abus réalistes puis tester les frontières concernées.
 Réutiliser les mécanismes du projet ; ne pas créer une cryptographie ou un système
 d’authentification propre à une page. Une simulation de permission ne valide pas
-l’intégration session/politique/base.
+l’intégration session/politique/base. Un script, une origine ou un `eval`
+nouveaux passent par la politique CSP décrite dans l’[architecture](../systeme/architecture.md#flux-dune-requête) ;
+l’E2E échoue sur tout refus.
 
 ## Trace attendue
 

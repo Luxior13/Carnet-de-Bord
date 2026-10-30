@@ -106,11 +106,14 @@ function addResponseHeaders(
 
 function createContentSecurityPolicy(nonce: string, isApi: boolean): string {
   const isDev = process.env.NODE_ENV !== 'production';
+  // Same-origin files and nonced inline scripts only. No 'strict-dynamic'
+  // (30 October 2026): it disables 'self', and React's chunk preloads on a
+  // client navigation carry no nonce, so each one was refused. The origin
+  // serves no user-provided file and its JSON is `nosniff`, so 'self' admits
+  // only the application's own bundles; injected inline code stays refused.
   const scriptPolicy = isApi
     ? "script-src 'none'"
-    : `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${
-        isDev ? " 'unsafe-eval'" : ''
-      }`;
+    : `script-src 'self' 'nonce-${nonce}'${isDev ? " 'unsafe-eval'" : ''}`;
 
   return [
     "default-src 'self'",

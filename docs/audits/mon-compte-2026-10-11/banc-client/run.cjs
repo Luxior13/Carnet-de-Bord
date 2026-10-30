@@ -728,6 +728,10 @@ async function main() {
         "nouveau@example.test",
       );
       assert.equal(attempts().length, 1);
+      // The refresh brings focus back to the address to check, a frame
+      // later: typing before it lands sent the password into the address
+      // (flaky run, fixed on 30 October 2026).
+      await expect(dialog.locator("#account-contact-email")).toBeFocused();
       api.modes["PATCH /api/auth/contact-email"] = "success";
       await dialog
         .locator("#account-contact-current-password")

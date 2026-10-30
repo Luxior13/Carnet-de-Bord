@@ -123,9 +123,29 @@ violation.
 
 - L’éditeur d’autorisations affichait « Double authentification non activée »
   pour un compte de test créé directement en base avec `mfaEnabledAt`, sans
-  secret d’application, alors que le bandeau indiquait « activée ». À vérifier
-  sur un compte réellement enrôlé avant de qualifier.
+  secret d’application, alors que le bandeau indiquait « activée ». **Qualifié
+  le 30 octobre 2026 : pas un défaut.** Le bandeau lit la date, l’éditeur exige
+  la date et le secret ; activation, réinitialisation (administrateur, racine
+  hors ligne) et suppression écrivent les deux dans la même transaction, donc
+  aucun parcours réel ne produit l’écart. Le message n’apparaît qu’à un acteur
+  qui reçoit l’information (changer un rôle est réservé au superadmin,
+  accorder demande la permission d’accorder).
+- **Banc Mon compte instable, corrigé le 30 octobre 2026** : le scénario
+  `contact-snapshot-conflict-explicit-retry` tapait le mot de passe avant que
+  la fenêtre, une image après l’actualisation, remette le focus sur l’adresse ;
+  le mot de passe partait dans l’adresse (2 échecs sur 6 sous charge). Le banc
+  attend désormais ce focus : 10 réussites sur 10 sous charge. L’application
+  n’est pas en cause.
 - Le journal du navigateur de l’E2E montre des chargements de morceaux
   JavaScript refusés par la politique de sécurité du contenu (`script-src`),
-  sans échec de parcours. Origine (préchargement ou chargement réel) non
-  qualifiée.
+  sans échec de parcours. **Qualifié et corrigé le 30 octobre 2026.** Un
+  relevé dans l’E2E a compté 25 refus : 24 préchargements
+  (`<link rel="preload">`) sans jeton ajoutés par React lors des navigations
+  internes (fiche utilisateur, Mon compte, fiche personne), les scripts
+  eux-mêmes chargés normalement ; 1 sonde `new Function` de Zod 4.
+  Aucune page privée de ses scripts. Corrections : `'strict-dynamic'` retiré
+  de `script-src` (`'self'` et le jeton restent ; justification dans
+  l’[architecture](../systeme/architecture.md#flux-dune-requête)), Zod en
+  `jitless` dans le navigateur, et contrôle permanent `e2e/csp.checks.ts`
+  qui fait échouer l’E2E sur tout refus. E2E réussi ensuite en 2,3 min,
+  aucun refus sur l’ordinateur ni sur les téléphones émulés.

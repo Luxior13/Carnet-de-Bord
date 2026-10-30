@@ -49,6 +49,19 @@ Navigateur
          └─ Prisma (transaction ; version optimiste et audit dans la même transaction)
 ```
 
+**Politique de sécurité du contenu (CSP)** : un jeton (`nonce`) par requête,
+transmis à Next par l’en-tête de requête, qui le pose sur ses propres scripts.
+`script-src 'self' 'nonce-…'`, sans `'strict-dynamic'` depuis le
+30 octobre 2026 : ce mot-clé désactive `'self'`, et les préchargements de
+morceaux que React ajoute lors d’une navigation interne, sans jeton, étaient
+tous refusés. `'self'` reste sûr tant que l’origine ne sert aucun fichier
+fourni par un utilisateur ni réponse exécutable (JSON en `nosniff`) ; à
+réexaminer si cela change. `script-src-attr 'none'` ; `'unsafe-eval'` en
+développement seulement ; Zod tourne sans compilation à la volée dans le
+navigateur (`jitless`, `instrumentation-client.ts`). L’E2E échoue sur tout
+refus CSP (`e2e/csp.checks.ts`) : un script ou une origine tierce s’ajoute
+explicitement à la politique.
+
 La session est un cookie (`session`, `__Host-session` en production) résolu
 par `$server/session`. Depuis le 25 octobre 2026, l’ancien `auth.ts` est réparti
 par responsabilité dans `shared/server` :

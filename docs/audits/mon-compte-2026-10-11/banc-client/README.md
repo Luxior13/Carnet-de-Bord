@@ -134,3 +134,10 @@ carte « Droits d’administration » : attente du titre mise à jour. Trois pas
 pendant que la fenêtre de contact place son focus d’ouverture sur l’email, et
 le texte part dans l’email (capture d’échec relue). Course propre au banc,
 sans lien avec les onglets ; non corrigée.
+
+## Reprise du 30 octobre 2026
+
+`contact-snapshot-conflict-explicit-retry` était instable (2 échecs sur 6 sous
+charge) : le mot de passe était tapé avant que la fenêtre, une image après
+l’actualisation, remette le focus sur l’adresse, et partait dans l’adresse. Le
+banc attend ce focus ; 10 réussites sur 10 sous charge.

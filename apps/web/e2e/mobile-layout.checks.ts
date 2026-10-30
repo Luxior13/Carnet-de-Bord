@@ -11,6 +11,7 @@ import {
 
 import { FEATURES } from '../src/shared/constants/feature-registry.constants';
 import { browserApi } from './browser-api';
+import { watchContentSecurityPolicy } from './csp.checks';
 
 /**
  * Mobile layout of every page (mobile audit of 28 October 2026): on an
@@ -178,20 +179,27 @@ async function visit(
     problems.push(`${name} à ${width} px — ${violation}`);
 }
 
-async function phone(page: Page, signedIn: boolean): Promise<BrowserContext> {
+async function phone(
+  page: Page,
+  signedIn: boolean,
+  cspRefusals: string[],
+): Promise<BrowserContext> {
   const browser = page.context().browser();
   if (!browser) throw new Error('The mobile check needs a browser.');
-
-  return browser.newContext({
+  const context = await browser.newContext({
     ...devices['Pixel 7'],
     storageState: signedIn ? await page.context().storageState() : undefined,
     viewport: { height: HEIGHT, width: WIDTHS[0] },
   });
+  watchContentSecurityPolicy(context, cspRefusals);
+
+  return context;
 }
 
 export async function expectMobileLayouts(
   page: Page,
   otherUserId: string,
+  cspRefusals: string[],
 ): Promise<void> {
   // About 50 screens: their own time on top of the smoke test.
   test.setTimeout(test.info().timeout + 300_000);
@@ -269,8 +277,8 @@ export async function expectMobileLayouts(
   ).toEqual([]);
 
   const problems: string[] = [];
-  const signedOut = await phone(page, false);
-  const signedIn = await phone(page, true);
+  const signedOut = await phone(page, false, cspRefusals);
+  const signedIn = await phone(page, true, cspRefusals);
   try {
     const loginPage = await signedOut.newPage();
     const mobile = await signedIn.newPage();

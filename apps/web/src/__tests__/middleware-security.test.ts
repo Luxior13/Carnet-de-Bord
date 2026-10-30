@@ -60,13 +60,20 @@ describe('middleware security', () => {
   });
 
   it('forwards a per-request nonce and rejects inline scripts in the CSP', () => {
+    // The policy served in production (development adds 'unsafe-eval').
+    vi.stubEnv('NODE_ENV', 'production');
     const response = middleware(new NextRequest('http://localhost/login'));
+    vi.unstubAllEnvs();
     const csp = response.headers.get('content-security-policy');
     const nonce = csp?.match(/script-src[^;]*'nonce-([^']+)'/)?.[1];
 
     expect(nonce).toMatch(/^[0-9a-f]{64}$/);
-    expect(csp).toContain("'strict-dynamic'");
-    expect(csp?.match(/script-src[^;]*/)?.[0]).not.toContain("'unsafe-inline'");
+    // Same-origin bundles and nonced inline scripts only: 'strict-dynamic'
+    // would disable 'self' and refuse React's chunk preloads (30 October 2026).
+    const scriptSrc = csp?.match(/script-src[^;]*/)?.[0];
+    expect(scriptSrc).toBe(`script-src 'self' 'nonce-${nonce}'`);
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
+    expect(csp).toContain("script-src-attr 'none'");
     expect(
       response.headers.get('x-middleware-request-content-security-policy'),
     ).toBe(csp);
