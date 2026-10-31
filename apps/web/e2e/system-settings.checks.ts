@@ -9,12 +9,17 @@ async function expectSystemSettingDurationControls(
 ): Promise<void> {
   const input = row.getByRole('spinbutton');
   const save = row.getByRole('button', { name: /^Enregistrer/ });
-  // Quick choices in years replace the one-day steps (27 October 2026).
-  const shortest = row.getByRole('button', { exact: true, name: '1 an' });
+  // Quick choices in years replace the one-day steps (27 October 2026); one
+  // year is the default since 30 October 2026, the simulated value is three.
+  const shortest = row.getByRole('button', {
+    exact: true,
+    name: '1 an (défaut)',
+  });
   const longest = row.getByRole('button', { exact: true, name: '10 ans' });
-  const initialChoice = row.getByRole('button', { name: /\(défaut\)$/ });
+  const initialChoice = row.getByRole('button', { exact: true, name: '3 ans' });
   await expect(input).toHaveValue(String(initial));
   await expect(initialChoice).toHaveAttribute('aria-pressed', 'true');
+  await expect(shortest).toHaveAttribute('aria-pressed', 'false');
   await shortest.click();
   await expect(input).toHaveValue(String(min));
   await expect(shortest).toHaveAttribute('aria-pressed', 'true');
@@ -263,7 +268,7 @@ export async function expectSystemSettingsDraftSafety(
     await expect(input).toBeDisabled();
     await expect(save).toBeDisabled();
     await expect(
-      auditRow.getByRole('button', { exact: true, name: '1 an' }),
+      auditRow.getByRole('button', { exact: true, name: '1 an (défaut)' }),
     ).toBeDisabled();
     await expect(
       auditRow.getByRole('button', { exact: true, name: '10 ans' }),

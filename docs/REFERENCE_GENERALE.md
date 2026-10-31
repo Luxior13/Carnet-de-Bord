@@ -235,7 +235,7 @@ erreurs et attente avec [les formulaires](references/formulaires-actions.md) et
 | --- | --- |
 | Champ ajouté | Besoin, données, API, droits de champ, formulaire, listes, historique, export, rétention, sauvegarde |
 | Permission modifiée | Routes, ressources, compteurs, recherche, caches, notifications, fichiers, export et révocation en session |
-| Mutation | Validation, concurrence, transaction, audit nécessaire, retour immédiat, événement durable éventuel |
+| Mutation | Validation, concurrence, transaction, trace obligatoire et lisible dans le journal d’activité ([Q15](references/audit-historique.md)), retour immédiat, événement durable éventuel |
 | Notification | Événement source, destinataires, droits, déduplication, rétention, lien supprimé et canal externe |
 | Index, cache, optimisation | Mesure initiale, fraîcheur, isolation des droits, invalidation, coût d’écriture, reprise |
 | Suppression ou retrait | Références entrantes, historique, pièces, tâches, routes, droits, exports, sauvegardes et récupération |

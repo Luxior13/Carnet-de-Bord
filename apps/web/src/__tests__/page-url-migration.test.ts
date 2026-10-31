@@ -163,16 +163,17 @@ describe('page URL migration', () => {
     });
   });
 
-  it('parks the removed activity journal page on the roadmap', () => {
+  it('serves the rebuilt activity journal at its own address', () => {
+    // Parked on the roadmap from 9 to 30 October 2026, then rebuilt.
     expect(isKnownInternalPageHref(PAGE_PATHS.systemActivity)).toBe(true);
     expect(getCanonicalInternalHref(PAGE_PATHS.systemActivity)).toBe(
-      PAGE_PATHS.roadmap,
+      PAGE_PATHS.systemActivity,
     );
-    expect(PAGE_REDIRECTS).toContainEqual({
-      destination: PAGE_PATHS.roadmap,
-      permanent: true,
-      source: PAGE_PATHS.systemActivity,
-    });
+    expect(
+      PAGE_REDIRECTS.some(
+        (redirect) => redirect.source === PAGE_PATHS.systemActivity,
+      ),
+    ).toBe(false);
   });
 
   it('checks the same navigation permission for the canonical and legacy list', () => {

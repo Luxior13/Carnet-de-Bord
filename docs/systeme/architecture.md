@@ -109,7 +109,7 @@ Les permissions d’une fonctionnalité `planned` ne sont jamais effectives.
 | `users` | Utilisateurs | Système | `/systeme/utilisateurs` | `live` |
 | `systemSettings` | Paramètres système | Système | `/systeme/parametres` | `live` |
 | `roadmap` | Feuille de route | Système | `/systeme/feuille-de-route` | `live` |
-| `systemActivity` | Journal d’activité | Système | `/systeme/journal-activite` | `planned` (page retirée le 9 octobre 2026) |
+| `systemActivity` | Journal d’activité | Système | `/systeme/journal-activite` | `live` (reconstruite le 30 octobre 2026, retirée du 9 au 30) |
 
 Mon compte (`/mon-compte`) et la connexion ne sont pas des fonctionnalités du
 registre : ils relèvent du socle personnel et de l’authentification.

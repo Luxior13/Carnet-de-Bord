@@ -14,7 +14,7 @@ redirige vers la première page visible du pôle pour le compte connecté
 | `/systeme/utilisateurs`, `/nouveau`, `/[id]` | [Utilisateurs](utilisateurs/README.md) : liste, création, Profil, Autorisations, Sécurité | A, C, B | Pages de référence (liste en complément, fiche pour la barre d’enregistrement) |
 | `/systeme/parametres` | [Paramètres système](parametres.md) | D | Servie par `/systeme/[[...slug]]` |
 | `/systeme/feuille-de-route` | [Feuille de route](feuille-de-route.md) | E | Aligné |
-| `/systeme/journal-activite` | [Journal d’activité (retirée)](journal-activite.md) | — | Retirée le 9 octobre 2026, alias vers la feuille de route ; reconstruction cadrée le 30 octobre 2026 |
+| `/systeme/journal-activite` | [Journal d’activité](journal-activite.md) | A | Reconstruite le 30 octobre 2026 (retirée du 9 au 30 octobre) |
 
 Les alias `/administration` et `/administration/utilisateurs/*` redirigent vers
 les Utilisateurs ([routes](../../systeme/routes.md#alias-et-redirections-permanentes)).

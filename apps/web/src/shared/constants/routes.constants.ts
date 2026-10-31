@@ -67,13 +67,6 @@ export const LEGACY_PAGE_ALIASES = [
     destination: PAGE_PATHS.roadmap,
     source: '/tableau-de-bord/mes-notifications',
   },
-  // The activity journal page is parked on the roadmap: its former URL now
-  // leads to the planning page while the server-side audit log keeps running.
-  {
-    collection: false,
-    destination: PAGE_PATHS.roadmap,
-    source: PAGE_PATHS.systemActivity,
-  },
   // The full search page was removed: its former URL returns to the home page
   // while the header quick navigation keeps the shared page catalogue.
   {

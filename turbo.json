@@ -54,6 +54,7 @@
       "dependsOn": ["^build"],
       "env": [
         "ACCOUNT_TEST_DATABASE_URL",
+        "AUDIT_JOURNAL_TEST_DATABASE_URL",
         "LOGIN_TEST_DATABASE_URL",
         "PERSON_CREATION_TEST_DATABASE_URL",
         "PERSON_DETAIL_TEST_DATABASE_URL",

@@ -1,0 +1,245 @@
+/*
+ * Activity journal (30 October 2026): one dense chronological line per
+ * event, unfolded in place. Narrow: fact and time on the first line, object
+ * and author below. Wide (nearest container, the list card): aligned
+ * columns. Unnamed on purpose: a CSS module may rename a container name.
+ */
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item + .item {
+  border-top: 1px solid var(--border-divider);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto 16px;
+  grid-template-areas:
+    'dot label time chevron'
+    '. subject subject .'
+    '. actor actor .';
+  align-items: center;
+  gap: 2px 10px;
+  width: 100%;
+  height: auto;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+  white-space: normal;
+  cursor: pointer;
+}
+
+.row:hover {
+  background: var(--surface-row-hover);
+}
+
+.row:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+
+.row[aria-expanded='true'] {
+  background: var(--surface-row-hover);
+}
+
+.dot {
+  grid-area: dot;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--text-muted);
+}
+
+.dot[data-tone='warning'] {
+  background: var(--warning);
+}
+
+.dot[data-tone='critical'] {
+  background: var(--primary);
+}
+
+.dot[data-tone='failure'] {
+  background: var(--destructive);
+}
+
+/* The fact is shortened first; its importance stays whole beside it. */
+.label {
+  grid-area: label;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.labelText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tone {
+  flex: none;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.tone[data-tone='warning'] {
+  color: var(--warning);
+}
+
+.tone[data-tone='critical'] {
+  color: var(--primary-emphasis);
+}
+
+.tone[data-tone='failure'] {
+  color: var(--destructive);
+}
+
+.subject {
+  grid-area: subject;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actor {
+  grid-area: actor;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  grid-area: time;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chevron {
+  grid-area: chevron;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: transform 150ms ease;
+}
+
+.row[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+@container (min-width: 44rem) {
+  .row {
+    grid-template-columns: 12px minmax(0, 1.1fr) minmax(0, 1.2fr) minmax(0, 0.9fr) 112px 16px;
+    grid-template-areas: 'dot label subject actor time chevron';
+    min-height: 48px;
+    padding: 8px 20px;
+  }
+
+  .time {
+    text-align: right;
+  }
+}
+
+.details {
+  display: grid;
+  gap: 14px;
+  padding: 4px 16px 16px 38px;
+  background: var(--surface-row-hover);
+}
+
+@container (min-width: 44rem) {
+  .details {
+    padding: 4px 20px 18px 42px;
+  }
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 12px;
+}
+
+.facts dt {
+  color: var(--text-muted);
+}
+
+.facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--foreground);
+}
+
+.changes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.changes caption {
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: left;
+}
+
+.changes th,
+.changes td {
+  padding: 6px 8px;
+  border-top: 1px solid var(--border-divider);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+
+.changes thead th {
+  border-top: 0;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.changes tbody th {
+  font-weight: 500;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.focus {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.focusName {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

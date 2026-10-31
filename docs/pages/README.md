@@ -24,7 +24,7 @@ mention « Suivi à compléter ».
 | Hors cadre | [Connexion](connexion.md) | `/login`, double authentification |
 | Compte personnel | [Mon compte](mon-compte/README.md) | Profil, Accès et Sécurité |
 | Membres | [membres/](membres/README.md) | Répertoire : liste de référence, création, fiche à deux sections |
-| Système | [systeme/](systeme/README.md) | Utilisateurs, Paramètres, Feuille de route, Journal d’activité (retiré) |
+| Système | [systeme/](systeme/README.md) | Utilisateurs, Journal d’activité, Paramètres, Feuille de route |
 | Transverse | [transverse/](transverse/README.md) | Navigation générale, états techniques, composants partagés, modales |
 
 ## Pages de référence du design
@@ -50,7 +50,7 @@ mention « Suivi à compléter ».
 | [États techniques](transverse/etats-techniques.md) | États client et 404 réelle revérifiés le 13 octobre |
 | [Composants partagés](transverse/composants-partages.md) | UI-C10 réconcilié, UI-C11 conservé pour les moteurs et aides techniques non testés |
 | [Modales](transverse/modales.md) | MOD-INT réconcilié, MOD-A11Y conservé |
-| [Journal d’activité](systeme/journal-activite.md) | Page retirée le 9 octobre 2026 ; reconstruction cadrée le 30 octobre 2026, à valider |
+| [Journal d’activité](systeme/journal-activite.md) | Reconstruite et livrée le 30 octobre 2026 (retirée du 9 au 30 octobre) |
 
 ### Complément transverse du 15 octobre 2026
 

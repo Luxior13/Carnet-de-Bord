@@ -43,7 +43,7 @@ describe('/systeme route availability', () => {
     [
       {
         isProtected: false,
-        permissions: { [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true },
+        permissions: { [ROADMAP_PERMISSIONS.BACKUPS.VIEW]: true },
         role: 'USER',
       },
       '/systeme/feuille-de-route',
@@ -60,7 +60,7 @@ describe('/systeme route availability', () => {
       {
         isProtected: false,
         permissions: {
-          [ROADMAP_PERMISSIONS.AUDIT.VIEW]: false,
+          [PERMISSIONS.AUDIT.VIEW]: false,
           [PERMISSIONS.USERS.VIEW]: false,
         },
         role: 'ADMIN',

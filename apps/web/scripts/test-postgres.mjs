@@ -17,6 +17,10 @@ const LOCAL_HOSTS = new Set(['127.0.0.1', '::1', '[::1]', 'localhost']);
 // create and drop their own schema inside the database.
 const SUITE_DATABASES = [
   { database: 'account_service_test', variable: 'ACCOUNT_TEST_DATABASE_URL' },
+  {
+    database: 'audit_journal_service_test',
+    variable: 'AUDIT_JOURNAL_TEST_DATABASE_URL',
+  },
   { database: 'creation_service_test', variable: 'USER_CREATION_TEST_DATABASE_URL' },
   { database: 'login_service_test', variable: 'LOGIN_TEST_DATABASE_URL' },
   {

@@ -100,14 +100,14 @@ export const FEATURES = {
       poleKey: 'system',
       poleLabel: 'Système',
     },
-    availability: 'planned',
-    description: 'Historique admin et actions sensibles.',
+    availability: 'live',
+    description: 'Qui a fait quoi, quand et sur quel dossier.',
     href: PAGE_PATHS.systemActivity,
     icon: 'History',
     id: 'system-activity',
     label: "Journal d'activité",
     permissionMode: 'all',
-    requiredPermissions: [ROADMAP_PERMISSIONS.AUDIT.VIEW],
+    requiredPermissions: [PERMISSIONS.AUDIT.VIEW],
   }),
   systemSettings: defineFeature({
     audit: {

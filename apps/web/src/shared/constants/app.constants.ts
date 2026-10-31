@@ -101,6 +101,7 @@ export const NAV_SPACES: NavigationSpace[] = [
         id: 'system',
         items: [
           featureNavigation(FEATURES.users),
+          featureNavigation(FEATURES.systemActivity),
           featureNavigation(FEATURES.systemSettings),
         ],
         label: 'Administration',

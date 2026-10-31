@@ -42,6 +42,7 @@ Ce relevé ne remplace pas la [référence des permissions](../domaines/permissi
 | `/systeme/utilisateurs` | Page | Session, `users:view` | oui | [Liste des utilisateurs](../pages/systeme/utilisateurs/liste.md) |
 | `/systeme/utilisateurs/nouveau` | Page | Session, `users:create` | intégré | [Nouvel utilisateur](../pages/systeme/utilisateurs/creation.md) |
 | `/systeme/utilisateurs/[id]` | Page | `getPageAuthSession`, `users:view`, sections selon les capacités | oui | [Profil](../pages/systeme/utilisateurs/fiche-profil.md), [Autorisations](../pages/systeme/utilisateurs/fiche-autorisations.md), [Sécurité](../pages/systeme/utilisateurs/fiche-securite.md) |
+| `/systeme/journal-activite` | Page | Session, `audit:view` ; l’API refait le contrôle et trace la lecture | intégré | [Journal d’activité](../pages/systeme/journal-activite.md) |
 | `/systeme/feuille-de-route` | Page | Session | commun | [Feuille de route](../pages/systeme/feuille-de-route.md) |
 | `/systeme/[[...slug]]` | Routage du pôle | Sans segment : redirection vers la première page visible du pôle ; `/systeme/parametres` rend la page si la fonctionnalité est `live` ; sinon 404 | — | [Paramètres système](../pages/systeme/parametres.md), [espace Système](../pages/systeme/README.md) |
 
@@ -58,14 +59,13 @@ avant le rendu des pages.
 | `/administration/utilisateurs/*`, `/administration` | `/systeme/utilisateurs/*` |
 | `/vie-interne/actualite-interne`, `/activite/actualites`, `/feuille-de-route` | `/systeme/feuille-de-route` |
 | `/mes-notifications`, `/tableau-de-bord/mes-notifications` | `/systeme/feuille-de-route` |
-| `/systeme/journal-activite` | `/systeme/feuille-de-route` |
 | `/tableau-de-bord`, `/recherche` | `/` |
 
 ## Pages retirées
 
 | Ancienne page | Date | Remplacement | Fiche |
 | --- | --- | --- | --- |
-| Journal d’activité `/systeme/journal-activite` | 9 octobre 2026 | Alias vers la feuille de route ; journal serveur conservé | [Journal d’activité (retirée)](../pages/systeme/journal-activite.md) |
+| Journal d’activité `/systeme/journal-activite` | 9 octobre 2026, **reconstruite le 30 octobre 2026** | Alias vers la feuille de route pendant le retrait, retiré à la reconstruction | [Journal d’activité](../pages/systeme/journal-activite.md) |
 | Notifications `/mes-notifications` | 9 octobre 2026 (migration `remove_notifications_module`) | Alias vers la feuille de route | Aucune fiche : retirée avant la création des fiches |
 | Recherche complète `/recherche` | Avant le 12 octobre 2026 | Navigation rapide du header | [Navigation générale](../pages/transverse/navigation-generale.md) |
 | Sponsors et partenaires | 21 septembre 2026 | Reconstruction à cadrer | [Proposition](../propositions/relations-sponsors-partenaires.md) |

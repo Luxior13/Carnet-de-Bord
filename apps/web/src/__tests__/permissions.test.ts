@@ -59,7 +59,11 @@ describe('hasPermission', () => {
     expect(hasPermission('ADMIN', PERMISSIONS.USERS.DELEGATE_ACCESS)).toBe(
       true,
     );
-    expect(hasPermission('ADMIN', ROADMAP_PERMISSIONS.AUDIT.VIEW)).toBe(false);
+    // The activity journal is live since 30 October 2026.
+    expect(hasPermission('ADMIN', PERMISSIONS.AUDIT.VIEW)).toBe(true);
+    expect(hasPermission('ADMIN', ROADMAP_PERMISSIONS.BACKUPS.VIEW)).toBe(
+      false,
+    );
     // Field history left the catalogue on 27 October 2026.
     expect(hasPermission('ADMIN', 'audit:view_field_history')).toBe(false);
     expect(hasPermission('ADMIN', PERMISSIONS.PERSONS.VIEW)).toBe(true);
@@ -76,7 +80,7 @@ describe('hasPermission', () => {
     expect(hasPermission('USER', PERMISSIONS.USERS.REVOKE_SESSIONS)).toBe(
       false,
     );
-    expect(hasPermission('USER', ROADMAP_PERMISSIONS.AUDIT.VIEW)).toBe(false);
+    expect(hasPermission('USER', PERMISSIONS.AUDIT.VIEW)).toBe(false);
     expect(hasPermission('USER', PERMISSIONS.PERSONS.VIEW)).toBe(false);
   });
 
@@ -204,8 +208,9 @@ describe('hasPermission', () => {
     }
     expect(userRoleBasePermissions[PERMISSIONS.DASHBOARD.VIEW]).toBe(true);
     expect(userRoleBasePermissions[PERMISSIONS.USERS.VIEW]).toBe(false);
+    expect(userRoleBasePermissions[PERMISSIONS.AUDIT.VIEW]).toBe(false);
     expect(userRoleBasePermissions).not.toHaveProperty(
-      ROADMAP_PERMISSIONS.AUDIT.VIEW,
+      ROADMAP_PERMISSIONS.BACKUPS.VIEW,
     );
     expect(userRoleBasePermissions).not.toHaveProperty(
       ROADMAP_PERMISSIONS.INTERNAL.VIEW,
@@ -290,10 +295,16 @@ describe('hasPermission', () => {
       }),
     ).toBe(false);
     expect(
-      hasPermission('USER', ROADMAP_PERMISSIONS.AUDIT.VIEW, {
-        [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
+      hasPermission('USER', ROADMAP_PERMISSIONS.BACKUPS.VIEW, {
+        [ROADMAP_PERMISSIONS.BACKUPS.VIEW]: true,
       }),
     ).toBe(false);
+    // A granted journal access is effective, like any live page.
+    expect(
+      hasPermission('USER', PERMISSIONS.AUDIT.VIEW, {
+        [PERMISSIONS.AUDIT.VIEW]: true,
+      }),
+    ).toBe(true);
   });
 
   it('enforces the persons read dependency without coupling contextual audit', () => {
@@ -479,6 +490,7 @@ describe('permission catalogue', () => {
       'users:view_sessions',
       'users:revoke_sessions',
       'users:delete_account',
+      'audit:view',
       'account:view_profile',
       'account:update_profile',
       'account:update_contact',
@@ -493,11 +505,12 @@ describe('permission catalogue', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.key)).toEqual([
       'persons',
       'users',
+      'system-activity',
       'system-settings',
     ]);
     expect(
       DELEGABLE_PERMISSION_CATEGORIES.map((category) => category.key),
-    ).toEqual(['persons', 'users']);
+    ).toEqual(['persons', 'users', 'system-activity']);
     expect(getAccessPermissionKeys()).toEqual(
       DELEGABLE_PERMISSION_CATEGORIES.flatMap((category) =>
         category.permissions.map((permission) => permission.key),
@@ -562,6 +575,7 @@ describe('permission catalogue', () => {
     expect(PERMISSION_CATEGORIES.map((category) => category.label)).toEqual([
       'Répertoire',
       'Utilisateurs',
+      "Journal d'activité",
       'Paramètres système',
     ]);
     expect(

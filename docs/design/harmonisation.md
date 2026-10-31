@@ -61,6 +61,7 @@ codées** : valeurs hexadécimales dans les styles chargés par la page ;
 | `/systeme/utilisateurs` | A | **Référence** (complément) ; reprise du 20 octobre 2026, banc client 42/42, ligne de filtres revue sur le rendu réel | 0 | 0 | `DataTableSection`, `QuickFilter`, `StatusBadge` |
 | `/systeme/utilisateurs/nouveau` | C | Aligné ; reprise du 23 octobre 2026, banc client 28/28 | 0 | 0 | `PageIdentityHero` compact, `SectionActionBar` |
 | `/systeme/utilisateurs/[id]` | B | **Référence** (barre d’enregistrement, en-tête de fiche) ; reprise du 20 octobre 2026 ; éditeur d’autorisations refait le 26 octobre 2026 ; `EntityHeader` et cartes de rubrique (`RubricCard`) le 27 octobre 2026, banc client 58/58 | 0 | 0 | `EntityHeader`, `RubricCard`, `UserIdentityStatus`, `PermissionsEditor`, `PermissionNavigation`, `SectionActionBar` |
+| `/systeme/journal-activite` | A | Aligné ; reconstruit le 30 octobre 2026 en lecture seule (recherche, période, filtres rapides, lignes dépliables, pagination commune), banc client 12/12 | 0 | 0 | `PageIdentityHero`, `DataTableSection`, `QuickFilter`, `ListPagination` |
 | `/systeme/parametres` | D | Aligné (refonte du 14 octobre 2026) ; revu le 23 octobre 2026 ; choix rapides, équivalence en années et avertissements encadrés le 27 octobre 2026, banc client 34/34 | 0 | 0 | `PageIdentityHero`, `SectionActionBar` |
 | `/systeme/feuille-de-route` | E | Aligné | 0 | 0 | `PageIdentityHero`, `directory.module.css` |
 | États techniques (erreur, 404, chargement) | G | Aligné | 0 | 0 | `RouteErrorState`, `PageState`, `Skeleton` |

@@ -186,7 +186,7 @@ describe('navigation availability', () => {
 
   it('shows system settings live for administrators and removes them from the roadmap', () => {
     const liveHrefs = getVisibleHrefs({
-      [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
+      [ROADMAP_PERMISSIONS.BACKUPS.VIEW]: true,
     });
     const adminHrefs = getVisibleNavigationSpaces(buildAdmin()).flatMap(
       (space) =>
@@ -282,6 +282,7 @@ describe('navigation availability', () => {
       '/',
       '/membres/repertoire',
       '/systeme/utilisateurs',
+      '/systeme/journal-activite',
       '/systeme/parametres',
       '/systeme/feuille-de-route',
     ]);

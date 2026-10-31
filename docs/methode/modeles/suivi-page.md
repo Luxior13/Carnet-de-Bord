@@ -40,6 +40,12 @@ Zones et sections, champs, actions, états (vide, chargement, erreur, lecture
 seule, conflit), mobile, fenêtres. Relevé avec la grille de questions pour une
 reprise approfondie ; regrouper les éléments de même comportement.
 
+## Traces dans le journal
+
+Actions de la page et événement écrit pour chacune (`AuditAction`, objet
+rattaché, champs libellés), selon la [règle Q15](…/references/audit-historique.md).
+« Lecture seule, rien à tracer » si la page ne modifie rien.
+
 ## Décisions retenues
 
 Décisions explicites du propriétaire, datées, et adaptations locales aux règles

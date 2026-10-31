@@ -1,20 +1,21 @@
-# Journal d’activité (retirée)
+# Journal d’activité
 
 [Index des pages](../../pages/README.md) · [Espace Système](README.md) · [Design](../../design/README.md) · [Guide général](../../REFERENCE_GENERALE.md)
 
-> **Page retirée le 9 octobre 2026**, replanifiée (`planned` dans le registre des
-> fonctionnalités). Aucune route `page.tsx` ne l’affiche ; l’ancien
-> `GET /api/users/[id]/audit` est supprimé depuis le 25 octobre 2026. Cette fiche conserve les décisions et constats pour sa reconstruction.
+> **Reconstruite et livrée le 30 octobre 2026** (`live` dans le registre).
+> Retirée du 9 au 30 octobre 2026 ; l’ancien `GET /api/users/[id]/audit` reste
+> supprimé. Les sections datées de septembre décrivent l’ancienne version.
 
 ## Identité
 
 | Élément | Valeur |
 | --- | --- |
-| Route | `/systeme/journal-activite` (prévue, non servie) |
-| Espace | Système |
-| Gabarit visé | [A. Liste de gestion](../../design/gabarits.md#a-liste-de-gestion) |
-| État d’harmonisation | Sans objet tant que la page est retirée |
-| Contrôle d’accès prévu | `audit:view` (permission planifiée, jamais effective) |
+| Route | `/systeme/journal-activite`, API `GET /api/audit` |
+| Espace | Système, section Administration |
+| Gabarit | [A. Liste de gestion](../../design/gabarits.md#a-liste-de-gestion), en lecture seule |
+| État d’harmonisation | Aligné à la livraison (banc client 12/12) |
+| Contrôle d’accès | `audit:view` : administrateurs par la règle du rôle, utilisateur sur octroi (critique : double authentification exigée du destinataire) |
+| Code | `features/audit` (types, page, liste, hook, lien « Historique »), `features/audit/server` (service, projection, libellés), `app/api/audit/route.ts`, `app/systeme/journal-activite/page.tsx` |
 
 > Page retirée le 9 octobre 2026 et replanifiée sur `/systeme/feuille-de-route`.
 > Ce suivi est conservé comme historique ; l’audit serveur et l’historique des
@@ -23,9 +24,10 @@
 
 ## Reconstruction — cadrage du 30 octobre 2026
 
-**État : cadrage à valider par le propriétaire avant tout code.** Les
-sections suivantes (revue du 27 septembre) restent l’historique de l’ancienne
-version ; en cas d’écart, ce cadrage prime.
+**État : validé (« ok go » du 30 octobre 2026) et livré le même jour** ; les
+écarts de livraison sont dans la section suivante. Les sections datées de
+septembre restent l’historique de l’ancienne version ; en cas d’écart, ce
+cadrage et sa livraison priment.
 
 ### Besoin
 
@@ -146,6 +148,47 @@ la période personnalisée du journal est donc bornée à un an.
   dépôt, banc client (largeurs, états, clavier), E2E sur base jetable avec
   consultation réelle et contrôles mobile et CSP, mesure de lecture sur
   10 000 événements générés.
+
+### Règle pour toutes les pages (31 octobre 2026)
+
+Décision du propriétaire : toute page ou API qui modifie une donnée doit être
+lisible dans ce journal dès sa livraison. Liste de contrôle et relevé de
+couverture dans [Q15 — Audit et historique](../../references/audit-historique.md).
+
+### Livraison du 30 octobre 2026
+
+Livrée telle que cadrée, avec ces écarts, tous vérifiés :
+
+| Sujet | Livré | Motif |
+| --- | --- | --- |
+| Pagination | Pages numérotées de 50 lues à un **instantané** (`asOf`) fixé par la première page et repris par les suivantes ; « Actualiser » et tout filtre en prennent un nouveau ; 200 pages au plus | Même stabilité qu’un curseur, avec la pagination commune et le total annoncé |
+| Trace de consultation | `AUDIT_VIEW` écrit **par le serveur** avant toute réponse, au plus une fois par lecteur et par quart d’heure ; si la trace échoue, rien n’est lu | Une trace demandée par le navigateur pourrait être omise ; filtrer ne doit pas inonder la ligne de temps |
+| Période | 24 h, 7 jours (défaut), 30 jours, 1 an ; **pas de dates personnalisées** | « 1 an » couvre toute la conservation ; à ajouter sur besoin |
+| Filtres rapides | Sans compteur ; le total de la vue s’affiche dessous | Un compteur par filtre demanderait une requête chacun |
+| Recherche | Noms et identifiants figés de l’auteur et du compte concerné, sans repli des accents ; trois lettres ou chiffres minimum ; `%` ignoré | Index trigrammes existants |
+| Auteur absent | « Aucun compte reconnu » pour une tentative de connexion, « Système » sinon, décidé par le serveur | Ne pas le déduire du libellé |
+| Lignes | Composant `Button` (règle des primitives) ; mention d’importance (« Échec », « Important », « À surveiller ») jamais tronquée, le libellé l’est | Captures à 768 px |
+| Requêtes de conteneur | Sans nom (`@container (min-width: 44rem)`) | Un module CSS peut renommer un nom de conteneur (constaté avec esbuild) |
+| Fiches | Lien « Historique » dans l’en-tête de la fiche utilisateur et de la fiche personne : journal sur 1 an filtré sur ce compte ou cette fiche ; absent pour le compte protégé vu par un autre | Remplace la provenance retirée le 27 octobre |
+
+**Droits, vérifiés par les tests** : le compte protégé et ses événements sont
+exclus pour tout autre lecteur ; l’IP n’est servie qu’au superadmin ;
+coordonnées et réseaux d’une fiche en clair seulement avec
+`persons:view_contact`, identité et rattachement avec `persons:view` (sinon
+« Valeur masquée », nom « Fiche du répertoire ») ; email de contact d’un compte
+seulement avec `users:view_contact` ; les métadonnées brutes ne quittent
+jamais le serveur (liste fermée de champs et de faits).
+
+**Vérifications** : 11 tests Vitest (`audit-journal.test.ts` : URL, libellé
+de chaque action Prisma, masquages, filtres, instantané, trace) ; suite
+PostgreSQL `audit-journal-postgres.test.ts` (vraie route : refus, trace
+unique, compte protégé, IP, filtres, recherche insensible à la casse) ; banc
+client [journal-activite-2026-10-30](../../audits/journal-activite-2026-10-30/banc-client/README.md)
+12/12 à 1 440, 768, 390 et 320 px, captures relues ; E2E : parcours réel
+(`e2e/activity-journal.checks.ts`) et contrôle mobile, **réussi le 31 octobre 2026**
+(base jetable locale, build de production : trace « Journal consulté », compte
+créé listé, IP visible pour le superadmin, filtre Sécurité, lien « Historique »
+de la fiche utilisateur ; contrôle mobile de la page et aucun refus CSP).
 
 ### Sélection des 36 points
 

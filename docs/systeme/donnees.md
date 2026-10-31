@@ -71,15 +71,15 @@ L’actualité interne redéfinira son stockage à sa reconstruction.
 
 ## Migrations
 
-**58 migrations** dans `packages/database/prisma/migrations`, de
-`20250723121213_init` à `20261030120000_audit_retention_one_year`. Repères :
+**59 migrations** dans `packages/database/prisma/migrations`, de
+`20250723121213_init` à `20261030130000_audit_view_action` (valeur `AUDIT_VIEW` de `AuditAction`, consultation du journal). Repères :
 
 | Période | Migrations notables |
 | --- | --- |
 | Janvier–février 2026 | Ancien périmètre financier et sportif (`add_sponsors`, `add_structure`, `float_to_decimal`, `add_fiscal_years`, `add_expense_reports`…), puis réduction aux comptes (`users_only_schema`, juin) |
 | Juin–juillet 2026 | Sessions, audit durable, MFA obligatoire, permissions canoniques, suppression irréversible d’un compte, socle Personnes, retrait du worker |
 | Juillet 2026 | Module Partenaires (retiré le 21 septembre 2026 par `remove_partner_module`), actualité interne |
-| Septembre–octobre 2026 | Retrait des notifications, nom facultatif, propriété des coordonnées, version positive des paramètres, permissions du site actuel, retrait du verrou par compte, retrait des tables sans code, retrait de l’autorisation de provenance des champs, conservation du journal à un an par défaut |
+| Septembre–octobre 2026 | Retrait des notifications, nom facultatif, propriété des coordonnées, version positive des paramètres, permissions du site actuel, retrait du verrou par compte, retrait des tables sans code, retrait de l’autorisation de provenance des champs, conservation du journal à un an par défaut, type d’événement « Journal consulté » |
 
 **Regroupement de l’historique — décision du 25 octobre 2026 (REV-19)** : les
 migrations seront regroupées en une migration de base **juste avant la

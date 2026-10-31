@@ -96,7 +96,7 @@ docs/pages/
 │                              fiche-identite, fiche-coordonnees)
 ├── systeme/                   README + utilisateurs/ (README, liste, creation,
 │                              fiche-profil, fiche-autorisations, fiche-securite),
-│                              parametres, feuille-de-route, journal-activite (retirée)
+│                              parametres, feuille-de-route, journal-activite
 └── transverse/                README + navigation-generale, etats-techniques,
                                composants-partages, modales
 ```

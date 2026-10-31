@@ -331,7 +331,7 @@ identifiant de connexion, sauf lorsque le lecteur est ce compte protégé.
 L'identité originale demeure dans les snapshots d'audit.
 
 `users:view_activity`, `users:export_activity` et `account:view_activity`
-n'existent plus ; `audit:view` est un nom réservé du journal global prévu.
+n'existent plus ; `audit:view` porte le journal global depuis le 30 octobre 2026.
 L'ancien endpoint `/api/users/[id]/audit` a été supprimé le 25 octobre 2026.
 Les alias (`system:audit`, `users:export`,
 `users:update_access`…) et leurs libellés « historique » ont été retirés le
@@ -375,7 +375,7 @@ pas en droits délégables individuellement.
 | `/systeme/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
 | `/systeme/utilisateurs/[id]?section=history` | ancien onglet normalisé vers Profil ; aucun endpoint d'activité, aucune capacité active |
 | `/systeme/parametres`                                | `settings:view` pour lire ; `settings:update` pour modifier ; droits exclusivement liés au rôle ADMIN                                                      |
-| `/systeme/journal-activite`                          | redirection vers `/systeme/feuille-de-route` ; la vue globale est replanifiée, sans permission active                                                       |
+| `/systeme/journal-activite`                          | `audit:view` (critique, délégable ; ADMIN par la règle du rôle) ; IP réservée au superadmin, valeurs des fiches selon `persons:view` / `persons:view_contact`, email de compte selon `users:view_contact` ; lecture tracée (`AUDIT_VIEW`) |
 | pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |
 
 Les routes génériques présentes pour les pôles Vie interne, Bureau & juridique,
@@ -467,7 +467,6 @@ pas des permissions effectives :
 
 - Dashboard : `dashboard:manage_widgets` ;
 - actualité interne : `internal_news:view`, `internal_news:manage` ;
-- journal global : `audit:view` ;
 - tâches : `tasks:view`, `tasks:create`, `tasks:update`, `tasks:assign`,
   `tasks:delete` ;
 - notifications : `notifications:manage` ;

@@ -24,6 +24,9 @@ export const PERMISSIONS = {
     VIEW_PROFILE: 'account:view_profile',
     VIEW_SECURITY: 'account:view_security',
   },
+  AUDIT: {
+    VIEW: 'audit:view',
+  },
   DASHBOARD: {
     VIEW: 'dashboard:view',
   },
@@ -67,9 +70,6 @@ export const PERMISSIONS = {
  * `hasPermission`, not assignable and absent from every role preset.
  */
 export const ROADMAP_PERMISSIONS = {
-  AUDIT: {
-    VIEW: 'audit:view',
-  },
   BACKUPS: {
     VIEW: 'backups:view',
   },
@@ -676,6 +676,34 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     ],
     poleKey: 'system',
     routes: [PAGE_PATHS.users, PAGE_PATHS.newUser, `${PAGE_PATHS.users}/[id]`],
+    surface: 'page',
+    tone: 'system',
+  },
+  {
+    // Rebuilt on 30 October 2026: read-only, every reader is traced.
+    accessPermissionKey: PERMISSIONS.AUDIT.VIEW,
+    assignment: 'delegable',
+    description:
+      'Qui a fait quoi, quand et sur quel dossier, en lecture seule.',
+    icon: 'History',
+    key: 'system-activity',
+    label: "Journal d'activité",
+    permissions: [
+      activePermission({
+        action: 'view',
+        description:
+          'Consulter les connexions, comptes, autorisations, personnes et paramètres modifiés ; chaque consultation est tracée',
+        grantable: true,
+        key: PERMISSIONS.AUDIT.VIEW,
+        label: "Consulter le journal d'activité",
+        module: 'Journal',
+        risk: 'critical',
+        route: PAGE_PATHS.systemActivity,
+        surface: 'page',
+      }),
+    ],
+    poleKey: 'system',
+    routes: [PAGE_PATHS.systemActivity],
     surface: 'page',
     tone: 'system',
   },

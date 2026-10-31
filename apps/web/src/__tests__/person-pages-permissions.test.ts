@@ -88,7 +88,7 @@ describe('direct Person page permission boundaries', () => {
     expect(
       getPersonCapabilities(
         user({
-          [ROADMAP_PERMISSIONS.AUDIT.VIEW]: true,
+          [ROADMAP_PERMISSIONS.BACKUPS.VIEW]: true,
           'audit:view_field_history': true,
           [PERMISSIONS.PERSONS.CREATE]: true,
           [PERMISSIONS.PERSONS.DELETE]: true,

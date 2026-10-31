@@ -6,9 +6,9 @@ Le catalogue exécutable se trouve dans [features/roadmap](../../apps/web/src/fe
 
 ## État réel et lecture du plan
 
-Les comptes et leur sécurité, le répertoire et les paramètres techniques existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier. La page de recherche de pages et la vue globale du journal d’activité ont été retirées le 9 octobre 2026 ; la navigation rapide de l’en-tête conserve un accès direct aux pages autorisées, et l’audit serveur continue d’enregistrer les actions.
+Les comptes et leur sécurité, le répertoire et les paramètres techniques existent. Les paramètres actuels ne constituent pas encore un profil juridique métier. La recherche ne parcourt pas encore les futurs dossiers métier. La page de recherche de pages a été retirée le 9 octobre 2026 ; la navigation rapide de l’en-tête conserve un accès direct aux pages autorisées. La vue globale du journal d’activité, retirée le même jour, a été reconstruite le 30 octobre 2026 en lecture seule.
 
-Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction est planifiée. Le module notifications a été retiré le 9 octobre 2026 : sa reconstruction est planifiée après clarification du design et des canaux. La vue globale du journal d’activité a été retirée le 9 octobre 2026 : sa reconstruction est planifiée, sans interrompre l’audit serveur. Les migrations historiques ne prouvent pas qu’un modèle ou un écran est encore présent.
+Le module partenaires a été retiré le 21 septembre 2026 : sa reconstruction est planifiée. Le module notifications a été retiré le 9 octobre 2026 : sa reconstruction est planifiée après clarification du design et des canaux. La vue globale du journal d’activité, retirée le 9 octobre 2026, est reconstruite depuis le 30 octobre 2026 (première version : lecture filtrable et suivi des consultations ; export et portée par équipe restent à faire). Les migrations historiques ne prouvent pas qu’un modèle ou un écran est encore présent.
 
 - **À cadrer** : nouveau périmètre, non livré.
 - **À compléter** : une base existe ; la carte précise ce qui reste à construire.
@@ -80,7 +80,7 @@ Suivre les documents, les personnes, les réunions et les actions.
 - **Réunions & décisions de séance** (Activité) : Participants du répertoire, ordre du jour, compte rendu, décisions et tâches liées.
 - **Débriefs** (Activité) : Points positifs, axes de progrès, audience et tâches liées à l’événement source.
 - **Actualité interne & audiences** (Activité) : Audiences adaptées aux équipes et aux contenus liés ; annonces distinctes du journal.
-- **Journal d’activité** (Système) : Vue globale filtrable, recherche par acteur et par catégorie, export autorisé et suivi des accès.
+- **Journal d’activité** (Système, **à compléter**) : Vue globale filtrable, recherche par acteur et par catégorie, export autorisé et suivi des accès. Livré le 30 octobre 2026 : vue filtrable, recherche par auteur ou compte, suivi des consultations ; restent l’export et la portée par équipe.
 
 ## 4. Relations & finances
 

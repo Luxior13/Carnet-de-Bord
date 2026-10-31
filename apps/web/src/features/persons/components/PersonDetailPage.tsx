@@ -20,6 +20,7 @@ import { FEATURES } from '$constants/feature-registry.constants';
 import { personDetailPath } from '$constants/routes.constants';
 import { useFeatureAvailability } from '$context/FeatureAvailabilityContext';
 import { useUser } from '$context/UserContext';
+import { JournalHistoryLink } from '$features/audit/JournalHistoryLink';
 import { Button } from '$ui/button';
 import { PageCanvas, PageShell } from '$ui/page-shell';
 import { ApiClientError } from '$utils/api.utils';
@@ -316,6 +317,7 @@ const PersonDetailContent: FC<PersonDetailPageProps> = ({
         condensedAside={<PersonStatusBadge status={person.structureStatus} />}
         dirtySections={identityDirty ? ['identite'] : []}
         ariaLiveLabel={`Section ${activeSection === 'identite' ? 'Identité' : 'Coordonnées'} affichée`}
+        heroActions={<JournalHistoryLink person={person.id} />}
         heroDescription={<PersonRecordDates person={person} />}
         heroIcon={
           <PersonAvatar className="size-full rounded-md" person={person} />

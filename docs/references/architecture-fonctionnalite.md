@@ -39,8 +39,9 @@ app/api/<module>/   adaptation HTTP mince
 ```
 
 Une route HTTP réalise dans cet ordre : authentification, permission,
-validation, appel du service métier, transaction et audit obligatoire pour les
-mutations sensibles, puis réponse standard. Les règles métier ne vivent pas
+validation, appel du service métier, transaction et audit obligatoire pour
+toute mutation, lisible dans le journal d’activité
+([règle Q15](audit-historique.md)), puis réponse standard. Les règles métier ne vivent pas
 dans les composants React.
 
 ## 3. Listes et volumes

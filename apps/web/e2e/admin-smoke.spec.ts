@@ -7,6 +7,7 @@ import type {
   PersonMutationResponse,
   PersonsListResponse,
 } from '../src/features/persons/types/person.types';
+import { expectActivityJournal } from './activity-journal.checks';
 import { browserApi } from './browser-api';
 import {
   expectNoContentSecurityPolicyRefusal,
@@ -995,6 +996,7 @@ test('authenticates and reaches the admin surfaces', async ({ page }) => {
 
   await expectSelfProfileSyncWithoutReload(page);
   await expectPersonIdentityLifecycle(page);
+  await expectActivityJournal(page, createdUserId);
   await expectMobileLayouts(page, createdUserId, cspRefusals);
   expectNoContentSecurityPolicyRefusal(cspRefusals);
 });

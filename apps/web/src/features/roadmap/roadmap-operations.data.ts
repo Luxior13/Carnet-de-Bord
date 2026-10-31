@@ -373,7 +373,7 @@ export const OPERATIONS_ROADMAP_ITEMS: readonly RoadmapItem[] = [
     area: 'system',
     audience: 'Responsables habilités et administrateurs',
     baseline:
-      'L’audit serveur continue d’enregistrer les actions et les historiques embarqués restent disponibles ; la vue globale a été retirée le 9 octobre 2026.',
+      'Vue globale reconstruite le 30 octobre 2026 : lecture filtrable par type, importance, période et compte, recherche par auteur ou compte concerné, consultations tracées. Restent l’export autorisé et la portée par équipe.',
     dependsOn: ['access-scopes'],
     description:
       'Expliquer qui a fait quoi, quand et sur quel dossier, sans exposer les données sensibles.',

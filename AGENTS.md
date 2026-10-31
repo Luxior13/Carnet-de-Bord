@@ -37,6 +37,11 @@
   applicable » ; justifier brièvement.
 - Adapter la profondeur de contrôle au risque ; une retouche de texte ne demande
   pas le même travail qu’une migration ou un changement de permissions.
+- **Toute action qui crée, modifie ou supprime une donnée, ou touche à
+  l’authentification, doit être lisible dans le journal d’activité dès sa
+  livraison** (décision du propriétaire du 31 octobre 2026) : trace dans la même
+  transaction, libellé français, objet rattaché, champs modifiés libellés.
+  Liste de contrôle : [Q15 — Audit et historique](docs/references/audit-historique.md#règle--toute-action-est-lisible-dans-le-journal-dactivité).
 - Ne pas transformer une fiche en exigence de créer une notification, une table,
   un cache, un service ou une permission. Réutiliser les mécanismes communs.
 - Revoir la sélection si le périmètre change. Pour un composant partagé, suivre

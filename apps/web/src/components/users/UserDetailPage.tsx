@@ -73,6 +73,7 @@ import {
 import { FEATURES } from '$constants/feature-registry.constants';
 import { PAGE_PATHS, userDetailPath } from '$constants/routes.constants';
 import { useUser } from '$context/UserContext';
+import { JournalHistoryLink } from '$features/audit/JournalHistoryLink';
 import { UserAccessBadge } from '$features/users/user-badges';
 import { getUserDetailScope } from '$features/users/user-detail-scope';
 import { useUnsavedNavigationGuard } from '$hooks/useUnsavedNavigationGuard';
@@ -664,7 +665,15 @@ const UserDetailPageContent: FC<UserDetailPageProps> = ({
                 <UserAvatar user={user} className="rounded-tile size-full" />
               }
               meta={<UserIdentityStatus user={user} />}
-              actions={<UserAccessBadge user={user} />}
+              actions={
+                <>
+                  <UserAccessBadge user={user} />
+                  <JournalHistoryLink
+                    targetProtected={user.isProtected}
+                    user={user.id}
+                  />
+                </>
+              }
               condensedAside={<UserAccessBadge user={user} />}
               navigation={{
                 activeSection: activeRailSection,

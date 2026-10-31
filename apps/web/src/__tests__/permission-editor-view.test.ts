@@ -96,19 +96,14 @@ describe('permission editor configured and effective access', () => {
       PERMISSION_EDITOR_CATEGORIES.filter(
         (category) => category.scope === 'page',
       ).map((category) => category.key),
-    ).toEqual(['persons', 'users', 'system-settings']);
+    ).toEqual(['persons', 'users', 'system-activity', 'system-settings']);
     expect(
       PERMISSION_EDITOR_CATEGORIES.some(
         (category) => category.key === 'internal-news',
       ),
     ).toBe(false);
-    expect(
-      PERMISSION_EDITOR_CATEGORIES.find(
-        (category) => category.key === 'system-activity',
-      )?.scope,
-    ).toBeUndefined();
   });
-  it('ignores the retired field history key and presents 27 current capabilities', () => {
+  it('ignores the retired field history key and presents 28 current capabilities', () => {
     // Field history left the catalogue on 27 October 2026.
     const state = buildPermissionEditorState(UserRole.USER, {
       'audit:view_field_history': true,
@@ -117,6 +112,6 @@ describe('permission editor configured and effective access', () => {
     expect(state.effective.has('audit:view_field_history')).toBe(false);
     expect(
       PERMISSION_EDITOR_CATEGORIES.flatMap((category) => category.permissions),
-    ).toHaveLength(27);
+    ).toHaveLength(28);
   });
 });

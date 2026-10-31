@@ -60,6 +60,9 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     AuditStream.SYSTEM,
     AuditSeverity.CRITICAL,
   ),
+  // Opening the activity journal (30 October 2026): whoever watches is
+  // watched too, on the security timeline.
+  [AuditAction.AUDIT_VIEW]: activity(AuditStream.SECURITY),
   [AuditAction.BACKGROUND_JOB_UPDATE]: activity(
     AuditStream.SYSTEM,
     AuditSeverity.WARNING,

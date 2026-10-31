@@ -262,6 +262,7 @@ export async function expectMobileLayouts(
       'utilisateur-securite',
       `/systeme/utilisateurs/${otherUserId}?section=security`,
     ],
+    ['journal', '/systeme/journal-activite'],
     ['parametres', '/systeme/parametres'],
     ['feuille-de-route', '/systeme/feuille-de-route'],
     ['introuvable', '/page-qui-n-existe-pas'],

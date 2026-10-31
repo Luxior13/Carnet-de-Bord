@@ -51,6 +51,7 @@ Toutes ces routes répondent avec `withPrivateNoStore`.
 
 | Route | Méthodes | Protections relevées |
 | --- | --- | --- |
+| `/api/audit` | GET | `audit:view` ; écrit d’abord la trace `AUDIT_VIEW` (une par quart d’heure et par lecteur) ; filtres `type`, `show`, `period`, `search`, `user`, `person`, `page`, instantané `asOf` ; masquage selon le lecteur (30 octobre 2026) |
 | `/api/users` | GET, POST | `users:view`, colonnes `users:view_contact` / `users:view_security` ; POST `users:create`, `users:update_contact`, preuve récente. GET renvoie `stats`, compteurs à facettes des filtres rapides (20 octobre 2026) |
 | `/api/users/[id]` | GET, PATCH, DELETE | `users:view`, `users:update_profile`, `users:update_login`, `users:update_contact`, `users:update_status`, `users:delete_account`, preuves récentes |
 | `/api/users/[id]/sessions` | GET, DELETE | `users:view_sessions`, `users:revoke_sessions`, preuve récente |

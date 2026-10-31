@@ -25,7 +25,6 @@ describe('retired activity surfaces', () => {
   it.each([
     'users:view_activity',
     'users:export_activity',
-    'audit:view',
     'account:view_activity',
   ])('never grants retired %s, even through old overrides', (key) => {
     expect(getAllPermissionKeys()).not.toContain(key);
@@ -47,7 +46,8 @@ describe('retired activity surfaces', () => {
       // eslint-disable-next-line security/detect-non-literal-fs-filename
       expect(existsSync(sourceUrl(retired))).toBe(false);
     }
-    expect(userDetailSource).not.toContain('/audit');
+    // The record links to the journal page, never to an account audit API.
+    expect(userDetailSource).not.toMatch(/\/api\/users\/[^'"`]*audit/u);
     expect(normalizeUserDetailSection('history')).toBe('profile');
   });
 });

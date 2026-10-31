@@ -16,7 +16,7 @@ Cinq entrées sont déclarées dans trois pôles. Leur visibilité dépend des a
 
 Le pôle « Membres » regroupe le Répertoire actuel et les futurs espaces Adhésions et rôles, Recrutement, Arrivées et départs. La page actuelle conserve le titre « Répertoire » et l’action « Ajouter une fiche » ; une fiche porte le nom ou le pseudo de la personne. Le fil d’Ariane présente « Membres → Répertoire → fiche » ; le nom du pôle ne crée pas un lien vers une page d’accueil fictive.
 
-`/administration` et `/tableau-de-bord` sont des accès de compatibilité. `/mes-notifications`, `/tableau-de-bord/mes-notifications` et `/systeme/journal-activite` redirigent vers la feuille de route, où ces modules sont replanifiés. `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
+`/administration` et `/tableau-de-bord` sont des accès de compatibilité. `/mes-notifications` et `/tableau-de-bord/mes-notifications` redirigent vers la feuille de route, où ces modules sont replanifiés ; `/systeme/journal-activite` est de nouveau servie depuis le 30 octobre 2026 (section Administration, entre Utilisateurs et Paramètres). `/systeme` sert d’entrée au pôle. Les routes non livrées ne sont pas des écrans vides utilisables.
 
 Les 46 anciennes destinations planifiées ont été retirées du catalogue de navigation. Elles restent référencées dans le catalogue de projets et dans une liste de destinations réservées pour conserver le refus d’ouverture par les helpers de navigation. Cette liste ne remplace aucune politique serveur.
 
