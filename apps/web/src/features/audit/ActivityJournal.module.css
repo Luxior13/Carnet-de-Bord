@@ -46,8 +46,15 @@
   outline-offset: -2px;
 }
 
-.row[aria-expanded='true'] {
-  background: var(--surface-row-hover);
+/*
+ * An open event is one block one step above the list (surface-content) and
+ * below its toolbar (surface-content-header): surface-row-alternate, with a
+ * thin rail on the left. surface-row-hover, the lightest, stays the hover
+ * (preference of 31 October 2026: the open block must not outshine the page).
+ */
+.item:has(> .row[aria-expanded='true']) {
+  background: var(--surface-row-alternate);
+  box-shadow: inset 2px 0 0 var(--border-strong);
 }
 
 .dot {
@@ -104,6 +111,21 @@
 
 .tone[data-tone='failure'] {
   color: var(--destructive);
+}
+
+/*
+ * Changed fields after the fact (31 October 2026). A zero basis makes them
+ * take only the room left: they are shortened before the fact itself.
+ */
+.changed {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .subject {
@@ -163,7 +185,6 @@
   display: grid;
   gap: 14px;
   padding: 4px 16px 16px 38px;
-  background: var(--surface-row-hover);
 }
 
 @container (min-width: 44rem) {
@@ -221,6 +242,16 @@
 
 .changes tbody th {
   font-weight: 500;
+}
+
+.changesBlock {
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+}
+
+.moreChanges {
+  margin-left: -4px;
 }
 
 .links {

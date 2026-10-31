@@ -7,7 +7,13 @@ import React, { type FC, useId, useState } from 'react';
 import { Button } from '$ui/button';
 
 import styles from './ActivityJournal.module.css';
-import type { JournalEvent, JournalQuery } from './audit-journal.types';
+import {
+  JOURNAL_VISIBLE_CHANGES,
+  type JournalChange,
+  type JournalEvent,
+  type JournalQuery,
+  summarizeJournalChanges,
+} from './audit-journal.types';
 
 const TONE_LABELS: Record<JournalEvent['tone'], string | null> = {
   critical: 'Important',
@@ -48,6 +54,63 @@ const formatJournalTime = (iso: string, now = new Date()): string => {
   return `${(date.getFullYear() === now.getFullYear() ? DAY : DAY_YEAR).format(date)} ${time}`;
 };
 
+/**
+ * What changed comes first (31 October 2026). Past six, the rest waits behind
+ * one button; a single extra change is shown rather than hidden.
+ */
+const EventChanges: FC<{ changes: JournalChange[]; id: string }> = ({
+  changes,
+  id,
+}) => {
+  const [showAll, setShowAll] = useState(false);
+  const hidden = changes.length - JOURNAL_VISIBLE_CHANGES;
+  const collapsible = hidden > 1;
+  const shown =
+    collapsible && !showAll
+      ? changes.slice(0, JOURNAL_VISIBLE_CHANGES)
+      : changes;
+
+  return (
+    <div className={styles.changesBlock}>
+      <table className={styles.changes}>
+        <caption>Changements</caption>
+        <thead>
+          <tr>
+            <th scope="col">Champ</th>
+            <th scope="col">Avant</th>
+            <th scope="col">Après</th>
+          </tr>
+        </thead>
+        <tbody id={id}>
+          {shown.map((change, index) => (
+            // Two contacts may change the same field: the index separates them.
+            <tr key={`${change.label}-${index}`}>
+              <th scope="row">{change.label}</th>
+              <td>{change.before}</td>
+              <td>{change.after}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {collapsible && (
+        <Button
+          aria-controls={id}
+          aria-expanded={showAll}
+          className={styles.moreChanges}
+          onClick={() => setShowAll(!showAll)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          {showAll
+            ? 'Afficher moins'
+            : `Afficher les ${hidden} autres changements`}
+        </Button>
+      )}
+    </div>
+  );
+};
+
 const EventDetails: FC<{
   event: JournalEvent;
   id: string;
@@ -59,6 +122,9 @@ const EventDetails: FC<{
 
   return (
     <div className={styles.details} id={id}>
+      {event.changes.length > 0 && (
+        <EventChanges changes={event.changes} id={`${id}-changes`} />
+      )}
       <dl className={styles.facts}>
         <dt>Date</dt>
         <dd>
@@ -104,28 +170,6 @@ const EventDetails: FC<{
           </>
         )}
       </dl>
-      {event.changes.length > 0 && (
-        <table className={styles.changes}>
-          <caption>Changements</caption>
-          <thead>
-            <tr>
-              <th scope="col">Champ</th>
-              <th scope="col">Avant</th>
-              <th scope="col">Après</th>
-            </tr>
-          </thead>
-          <tbody>
-            {event.changes.map((change, index) => (
-              // Two contacts may change the same field: the index separates them.
-              <tr key={`${change.label}-${index}`}>
-                <th scope="row">{change.label}</th>
-                <td>{change.before}</td>
-                <td>{change.after}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
       <div className={styles.links}>
         {actorId && query.user !== actorId && (
           <Button
@@ -191,6 +235,11 @@ export const ActivityJournalList: FC<{
         const open = openId === event.id;
         const detailsId = `${baseId}-${event.id}`;
         const tone = TONE_LABELS[event.tone];
+        // Without a record or account, the next column already names what
+        // changed (a setting): the summary would only repeat it.
+        const changed = event.target
+          ? summarizeJournalChanges(event.changes)
+          : null;
 
         return (
           <li className={styles.item} key={event.id}>
@@ -213,6 +262,12 @@ export const ActivityJournalList: FC<{
                 {tone && (
                   <span className={styles.tone} data-tone={event.tone}>
                     {tone}
+                  </span>
+                )}
+                {changed && (
+                  <span className={styles.changed}>
+                    <span className="sr-only">, champs : </span>
+                    {changed}
                   </span>
                 )}
               </span>

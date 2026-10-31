@@ -33,6 +33,8 @@ import type {
   JournalTone,
 } from '../audit-journal.types';
 import {
+  BLOCKED_ATTEMPT_PROOFS,
+  BLOCKED_ATTEMPT_STEPS,
   JOURNAL_ACTION_LABELS,
   LOGIN_FAILURE_REASONS,
   PERSON_FIELD_LABELS,
@@ -111,14 +113,18 @@ const projectPersonChange = (
   change: AuditFieldChange,
   rights: ReaderRights,
 ): JournalChange => {
-  const label = [
-    PERSON_SECTION_LABELS[change.sectionKey] ?? change.sectionKey,
-    PERSON_FIELD_LABELS[change.fieldKey] ?? change.fieldKey,
-  ].join(' · ');
+  const field = PERSON_FIELD_LABELS[change.fieldKey] ?? change.fieldKey;
+  const names = {
+    field,
+    label: [
+      PERSON_SECTION_LABELS[change.sectionKey] ?? change.sectionKey,
+      field,
+    ].join(' · '),
+  };
   if (change.valueMode === 'NONE')
-    return { after: 'Valeur effacée', before: 'Valeur effacée', label };
+    return { after: 'Valeur effacée', before: 'Valeur effacée', ...names };
   if (!canReadPersonSection(change.sectionKey, rights))
-    return { after: MASKED, before: MASKED, label };
+    return { after: MASKED, before: MASKED, ...names };
 
   let values: { after: unknown; before: unknown };
   try {
@@ -142,13 +148,13 @@ const projectPersonChange = (
           })
         : decodePlainPersonAuditValues(change);
   } catch {
-    return { after: 'Valeur illisible', before: 'Valeur illisible', label };
+    return { after: 'Valeur illisible', before: 'Valeur illisible', ...names };
   }
 
   return {
     after: formatValue(change.fieldKey, values.after),
     before: formatValue(change.fieldKey, values.before),
-    label,
+    ...names,
   };
 };
 
@@ -200,6 +206,23 @@ const projectFacts = (row: JournalRow): JournalFact[] => {
       label: 'Motif',
       value: LOGIN_FAILURE_REASONS[metadata.reason] ?? 'Autre motif',
     });
+  if (row.action === 'ATTEMPTS_BLOCKED') {
+    if (typeof metadata.step === 'string')
+      facts.push({
+        label: 'Étape',
+        value: BLOCKED_ATTEMPT_STEPS[metadata.step] ?? 'Autre étape',
+      });
+    if (typeof metadata.proof === 'string')
+      facts.push({
+        label: 'Preuve refusée',
+        value: BLOCKED_ATTEMPT_PROOFS[metadata.proof] ?? 'Autre preuve',
+      });
+    if (typeof metadata.blockedForSeconds === 'number')
+      facts.push({
+        label: 'Durée du blocage',
+        value: `environ ${Math.max(1, Math.ceil(metadata.blockedForSeconds / 60))} min`,
+      });
+  }
 
   return facts;
 };

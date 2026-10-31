@@ -94,8 +94,15 @@ export const confirmStepUp = async (input: {
     const verifiesTotp = kind === 'full';
     const passwordRateLimitKey = `sensitive-step-up-password:${storedUser.id}`;
     const rateLimitKeys: string[] = [passwordRateLimitKey];
-    const passwordLimit =
-      await reserveSensitiveActionRateLimit(passwordRateLimitKey);
+    const passwordLimit = await reserveSensitiveActionRateLimit(
+      passwordRateLimitKey,
+      {
+        actorUserId: storedUser.id,
+        proof: 'password',
+        step: 'step_up',
+        targetUserId: storedUser.id,
+      },
+    );
     if (!passwordLimit.allowed)
       throw serviceErrors.rateLimited(passwordLimit.retryAfter);
     if (
@@ -110,7 +117,15 @@ export const confirmStepUp = async (input: {
     if (verifiesTotp) {
       const totpRateLimitKey = `sensitive-step-up-totp:${storedUser.id}`;
       rateLimitKeys.push(totpRateLimitKey);
-      const totpLimit = await reserveSensitiveActionRateLimit(totpRateLimitKey);
+      const totpLimit = await reserveSensitiveActionRateLimit(
+        totpRateLimitKey,
+        {
+          actorUserId: storedUser.id,
+          proof: 'code',
+          step: 'step_up',
+          targetUserId: storedUser.id,
+        },
+      );
       if (!totpLimit.allowed)
         throw serviceErrors.rateLimited(totpLimit.retryAfter);
       verifiedMfaProof = await verifyMfaProof({

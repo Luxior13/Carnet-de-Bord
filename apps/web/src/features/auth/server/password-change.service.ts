@@ -65,7 +65,12 @@ export const changeOwnPassword = async (
   if (!user.mustChangePassword) {
     if (!currentPassword)
       throw serviceErrors.validation('Le mot de passe actuel est requis');
-    const rateLimit = await reserveSensitiveActionRateLimit(rateLimitKey);
+    const rateLimit = await reserveSensitiveActionRateLimit(rateLimitKey, {
+      actorUserId: user.id,
+      proof: 'password',
+      step: 'password_change',
+      targetUserId: user.id,
+    });
     if (!rateLimit.allowed)
       throw serviceErrors.rateLimited(rateLimit.retryAfter);
     if (!(await verifyPassword(currentPassword, storedUser.passwordHash)))

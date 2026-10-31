@@ -4,6 +4,8 @@ import { createHash, randomUUID } from 'node:crypto';
 
 import type { Prisma } from '@prisma/client';
 
+import { createAuditLogWithHeaders } from './audit-log';
+import { logger } from './logger';
 import { prisma } from './prisma';
 
 type RateLimitPolicy = {
@@ -30,10 +32,42 @@ type RateLimitResult = {
   retryAfter?: number;
 };
 
+/**
+ * Where a refused password or code check was asked. The journal labels this
+ * closed list; a new caller adds its step here and in the journal labels.
+ */
+type BlockedAttemptStep =
+  | 'contact_email'
+  | 'login'
+  | 'mfa_manage'
+  | 'mfa_reset'
+  | 'mfa_setup'
+  | 'password_change'
+  | 'step_up';
+
+/**
+ * Who was asked for which proof, so that a block reaches the activity journal
+ * (rule of 31 October 2026: every authentication refusal is readable there).
+ */
+export type BlockedAttemptReport = {
+  /** Signed-in account asked for the proof; null while logging in. */
+  actorUserId: string | null;
+  /** Identifier typed at a password login; the target account is looked up from it. */
+  loginName?: string;
+  proof: 'code' | 'password';
+  step: BlockedAttemptStep;
+  targetUserId?: string;
+};
+
+type DeniedBucket = { key: string; retryAfter: number };
+
 type RateLimitReservationClient = Pick<Prisma.TransactionClient, '$queryRaw'>;
 
 class RateLimitDeniedError extends Error {
-  constructor(readonly result: RateLimitResult) {
+  constructor(
+    readonly result: RateLimitResult,
+    readonly denied: readonly DeniedBucket[],
+  ) {
     super('Rate-limit reservation denied');
     this.name = 'RateLimitDeniedError';
   }
@@ -258,6 +292,73 @@ const reserveRateLimitAttempt = async (
   };
 };
 
+const BLOCKED_ATTEMPT_AUDIT_LOCATION = {
+  pageKey: 'authentication',
+  pageLabel: 'Authentification',
+  poleKey: 'system',
+  poleLabel: 'Système',
+  tabKey: 'blocked-attempts',
+  tabLabel: 'Tentatives bloquées',
+} as const;
+
+const findLoginTarget = async (loginName: string): Promise<string | null> =>
+  (
+    await prisma.user.findFirst({
+      select: { id: true },
+      where: { deletedAt: null, loginName: normalizeLoginName(loginName) },
+    })
+  )?.id ?? null;
+
+/**
+ * Writes one « Tentatives bloquées » event per block. Each refused bucket
+ * claims a one-slot report bucket lasting until it unblocks, with the same
+ * atomic UPSERT as the limiter: parallel refusals claim it once, and a later
+ * block is reported again. Best-effort, so a refusal never becomes a 500.
+ */
+const reportBlockedAttempts = async (
+  denied: readonly DeniedBucket[],
+  report: BlockedAttemptReport,
+): Promise<void> => {
+  try {
+    let claimed = false;
+    for (const { key, retryAfter } of denied) {
+      const windowMs = retryAfter * 1000;
+      const claim = await reserveRateLimitAttempt(
+        prisma,
+        `blocked-report:${hashKeyPart('blocked-report', key)}`,
+        { blockDurationMs: windowMs, maxAttempts: 1, windowMs },
+      );
+      claimed ||= claim.allowed;
+    }
+    if (!claimed) return;
+
+    const targetUserId =
+      report.targetUserId ??
+      (report.loginName ? await findLoginTarget(report.loginName) : null);
+    await createAuditLogWithHeaders({
+      action: 'ATTEMPTS_BLOCKED',
+      category: 'AUTH',
+      description: report.loginName
+        ? `Tentatives bloquées: ${report.loginName}`
+        : 'Tentatives bloquées',
+      metadata: {
+        ...BLOCKED_ATTEMPT_AUDIT_LOCATION,
+        blockedForSeconds: Math.max(...denied.map((item) => item.retryAfter)),
+        proof: report.proof,
+        step: report.step,
+        ...(report.loginName ? { loginName: report.loginName } : {}),
+      },
+      targetUserId,
+      userId: report.actorUserId,
+    });
+  } catch (error) {
+    logger.error('Blocked attempts report error', {
+      error,
+      metadata: { step: report.step },
+    });
+  }
+};
+
 /**
  * Reserves every bucket in one transaction before the expensive or sensitive
  * check. A refusal or database error rolls every earlier reservation back,
@@ -265,13 +366,14 @@ const reserveRateLimitAttempt = async (
  */
 const reserveRateLimitBuckets = async (
   buckets: readonly (readonly [key: string, policy: RateLimitPolicy])[],
+  report?: BlockedAttemptReport,
 ): Promise<RateLimitResult> => {
   scheduleExpiredEntriesCleanup(new Date());
 
   try {
     return await prisma.$transaction(async (transaction) => {
       const reservations: RateLimitResult[] = [];
-      const denials: RateLimitResult[] = [];
+      const denials: DeniedBucket[] = [];
 
       for (const [key, policy] of buckets) {
         const reservation = await reserveRateLimitAttempt(
@@ -279,17 +381,19 @@ const reserveRateLimitBuckets = async (
           key,
           policy,
         );
-        (reservation.allowed ? reservations : denials).push(reservation);
+        if (reservation.allowed) reservations.push(reservation);
+        else denials.push({ key, retryAfter: reservation.retryAfter ?? 1 });
       }
 
       if (denials.length > 0) {
-        throw new RateLimitDeniedError({
-          allowed: false,
-          remainingAttempts: 0,
-          retryAfter: Math.max(
-            ...denials.map((denial) => denial.retryAfter ?? 1),
-          ),
-        });
+        throw new RateLimitDeniedError(
+          {
+            allowed: false,
+            remainingAttempts: 0,
+            retryAfter: Math.max(...denials.map((denial) => denial.retryAfter)),
+          },
+          denials,
+        );
       }
 
       return {
@@ -300,7 +404,11 @@ const reserveRateLimitBuckets = async (
       };
     });
   } catch (error) {
-    if (error instanceof RateLimitDeniedError) return error.result;
+    if (error instanceof RateLimitDeniedError) {
+      if (report) await reportBlockedAttempts(error.denied, report);
+
+      return error.result;
+    }
     throw error;
   }
 };
@@ -323,12 +431,16 @@ export const reserveAuthenticatedApiRateLimit = (
 /** Reserves the IP, account and pair buckets before the password hash is verified. */
 export const reserveLoginRateLimits = (
   keys: LoginRateLimitKeys,
+  report: BlockedAttemptReport,
 ): Promise<RateLimitResult> =>
-  reserveRateLimitBuckets([
-    [keys.ip, LOGIN_POLICIES.ip],
-    [keys.account, LOGIN_POLICIES.account],
-    [keys.pair, LOGIN_POLICIES.pair],
-  ]);
+  reserveRateLimitBuckets(
+    [
+      [keys.ip, LOGIN_POLICIES.ip],
+      [keys.account, LOGIN_POLICIES.account],
+      [keys.pair, LOGIN_POLICIES.pair],
+    ],
+    report,
+  );
 
 /**
  * Reserves account, source-IP and challenge quotas before an OTP or recovery
@@ -337,12 +449,16 @@ export const reserveLoginRateLimits = (
  */
 export const reserveMfaRateLimits = (
   keys: MfaRateLimitKeys,
+  report: BlockedAttemptReport,
 ): Promise<RateLimitResult> =>
-  reserveRateLimitBuckets([
-    [keys.ip, MFA_POLICIES.ip],
-    [keys.account, MFA_POLICIES.account],
-    [keys.challenge, MFA_POLICIES.challenge],
-  ]);
+  reserveRateLimitBuckets(
+    [
+      [keys.ip, MFA_POLICIES.ip],
+      [keys.account, MFA_POLICIES.account],
+      [keys.challenge, MFA_POLICIES.challenge],
+    ],
+    report,
+  );
 
 /**
  * Atomically consumes one password or code verification for an authenticated
@@ -351,8 +467,9 @@ export const reserveMfaRateLimits = (
  */
 export const reserveSensitiveActionRateLimit = (
   identifier: string,
+  report: BlockedAttemptReport,
 ): Promise<RateLimitResult> =>
-  reserveRateLimitBuckets([[identifier, DEFAULT_POLICY]]);
+  reserveRateLimitBuckets([[identifier, DEFAULT_POLICY]], report);
 
 /** A verified proof clears its sensitive-action bucket. */
 export const clearRateLimit = async (identifier: string): Promise<void> => {

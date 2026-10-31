@@ -149,11 +149,31 @@ la période personnalisée du journal est donc bornée à un an.
   consultation réelle et contrôles mobile et CSP, mesure de lecture sur
   10 000 événements générés.
 
+### Retouche du 31 octobre 2026 : hiérarchie de la ligne dépliée
+
+Retour du propriétaire : « la hiérarchie de couleur n’est pas bonne ». Le bloc
+ouvert prenait `surface-row-hover`, plus clair que la barre de filtres ; il
+passe en `surface-row-alternate` avec un filet à gauche
+([règle](../../design/fondations.md#hiérarchie-de-couleurs)). Capture relue à
+1 440 px (banc, scénario `detail-et-filtre-auteur`). Question ouverte
+[JA-Q1](../../design/preferences.md#questions-tranchées) tranchée le même jour
+(« ok go ») : la ligne fermée nomme les champs modifiés, chacun une fois
+(`summarizeJournalChanges` : « Prénom, Nom, Email », puis « Prénom, Nom et 9
+autres » ; rien pour un paramètre, déjà nommé dans la colonne voisine) ; le
+détail commence par le tableau des changements, puis les faits ; au-delà de
+six changements, « Afficher les N autres changements » / « Afficher moins »
+(un seul changement de plus est affiché directement). Un changement de fiche
+porte son champ seul (`field`) en plus du libellé « Rubrique · Champ ». Banc
+14/14, captures relues à 1 440 et 390 px.
+
 ### Règle pour toutes les pages (31 octobre 2026)
 
 Décision du propriétaire : toute page ou API qui modifie une donnée doit être
 lisible dans ce journal dès sa livraison. Liste de contrôle et relevé de
 couverture dans [Q15 — Audit et historique](../../references/audit-historique.md).
+Premier effet, le même jour : les refus de la limitation de débit apparaissent
+en « Tentatives bloquées » (type Sécurité, mention « Échec », retenues par
+les filtres « Importants » et « Échecs »), une fois par blocage, avec l’étape, la preuve refusée et la durée.
 
 ### Livraison du 30 octobre 2026
 

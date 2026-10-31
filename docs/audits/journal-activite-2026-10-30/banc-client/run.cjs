@@ -25,6 +25,29 @@ const actor = (id, name, loginName) => ({ id, loginName, name });
 const camille = actor("admin-1", "Camille Exemple", "camille.exemple");
 const alex = actor("user-2", "Alex Martin-Fontaine de la Grande Rivière", "alex.martin");
 
+/** A record rewritten in one save: fourteen changes (31 October 2026). */
+const MANY_CHANGES = [
+  ["Identité", "Prénom", "Maxime", "Maximilien"],
+  ["Identité", "Nom", "Fontaine", "De La Fontaine"],
+  ["Identité", "Pseudo", "MaxLF", "MaxLaFontaineOfficiel"],
+  ["Identité", "Naissance", "—", "12 mars 2001"],
+  ["Identité", "Statut", "Membre", "Bénévole"],
+  ["Structure", "Rattachement", "Hors structure", "Dans la structure"],
+  ["Coordonnées", "Email", "—", "max@exemple-association.fr"],
+  ["Coordonnées", "Email", "—", "maximilien@exemple.fr"],
+  ["Coordonnées", "Téléphone", "—", "Valeur masquée"],
+  ["Coordonnées", "Principal", "Non", "Oui"],
+  ["Réseaux", "Réseau", "—", "Twitch"],
+  ["Réseaux", "Lien du profil", "—", "twitch.tv/maxlf"],
+  ["Réseaux", "Réseau", "—", "X"],
+  ["Réseaux", "Lien du profil", "—", "x.com/maxlf"],
+].map(([section, field, before, after]) => ({
+  after,
+  before,
+  field,
+  label: `${section} · ${field}`,
+}));
+
 /** 120 fictive events, newest first, as the server projects them. */
 const buildEvents = () => {
   const events = [];
@@ -68,11 +91,14 @@ const buildEvents = () => {
       events.push({
         ...base,
         actor: camille,
-        changes: [
-          { after: "Hors structure", before: "Dans la structure", label: "Structure · Rattachement" },
-          { after: "maximilien.alexandre.de-la-fontaine@exemple-association.fr", before: "—", label: "Coordonnées · Email" },
-          { after: "Valeur masquée", before: "Valeur masquée", label: "Coordonnées · Téléphone" },
-        ],
+        changes:
+          index === 7
+            ? MANY_CHANGES
+            : [
+                { after: "Hors structure", before: "Dans la structure", field: "Rattachement", label: "Structure · Rattachement" },
+                { after: "maximilien.alexandre.de-la-fontaine@exemple-association.fr", before: "—", field: "Email", label: "Coordonnées · Email" },
+                { after: "Valeur masquée", before: "Valeur masquée", field: "Téléphone", label: "Coordonnées · Téléphone" },
+              ],
         label: "Fiche modifiée",
         target: { href: "/membres/repertoire/person-1", id: "person-1", kind: "person", name: "MaxLaFontaineOfficiel · Maximilien-Alexandre De La Fontaine" },
         tone: "neutral",
@@ -270,8 +296,42 @@ async function main() {
         return { heights };
       });
 
+    for (const width of [1440, 390])
+      await run("nombreux-changements", width, async (page) => {
+        const fiche = rows(page).filter({ hasText: "Fiche modifiée" }).nth(1);
+        const line = fiche.getByRole("button").first();
+        // The collapsed line names the changed fields, each once.
+        await expect(line).toContainText("Prénom, Nom et 9 autres");
+        await line.click();
+        const table = fiche.getByRole("table");
+        // What changed comes before the facts, six changes first.
+        const order = await fiche.evaluate((item) => {
+          const details = item.querySelector("[id]:not(button)");
+          return [...details.children].map((child) => child.tagName);
+        });
+        assert.equal(order[0], "DIV");
+        assert.equal(order[1], "DL");
+        await expect(table.getByRole("rowheader")).toHaveCount(6);
+        const more = fiche.getByRole("button", { name: "Afficher les 8 autres changements" });
+        await expect(more).toHaveAttribute("aria-expanded", "false");
+        await page.screenshot({ path: path.join(work, `journal-nombreux-${width}.png`) });
+        await more.click();
+        await expect(table.getByRole("rowheader")).toHaveCount(14);
+        const less = fiche.getByRole("button", { name: "Afficher moins" });
+        await expect(less).toBeFocused();
+        await expect(less).toHaveAttribute("aria-expanded", "true");
+        await page.screenshot({ path: path.join(work, `journal-nombreux-tout-${width}.png`), fullPage: true });
+        await less.click();
+        await expect(table.getByRole("rowheader")).toHaveCount(6);
+        return {};
+      });
+
     await run("detail-et-filtre-auteur", 1440, async (page, api) => {
       const fiche = rows(page).filter({ hasText: "Fiche modifiée" }).first();
+      await expect(fiche.getByRole("button").first()).toContainText("Rattachement, Email, Téléphone");
+      // A setting has no record: its line keeps the column that already names it.
+      const setting = rows(page).filter({ hasText: "Paramètre modifié" }).first().getByRole("button").first();
+      assert.equal((await setting.innerText()).split("Journal d'activité").length - 1, 1);
       await fiche.getByRole("button").first().click();
       await expect(fiche.getByRole("button").first()).toHaveAttribute("aria-expanded", "true");
       const changes = fiche.getByRole("table");

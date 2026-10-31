@@ -470,6 +470,12 @@ describe('account security routes', () => {
       expect(body.error.message).toBe('Le mot de passe actuel est incorrect');
       expect(mockReserveSensitiveActionRateLimit).toHaveBeenCalledWith(
         'account-reauth:user-1',
+        {
+          actorUserId: 'user-1',
+          proof: 'password',
+          step: 'password_change',
+          targetUserId: 'user-1',
+        },
       );
       expect(
         mockReserveSensitiveActionRateLimit.mock.invocationCallOrder[0],
@@ -505,6 +511,12 @@ describe('account security routes', () => {
       expect(body.error.code).toBe(ErrorCode.RATE_LIMITED);
       expect(mockReserveSensitiveActionRateLimit).toHaveBeenCalledWith(
         'account-reauth:user-1',
+        {
+          actorUserId: 'user-1',
+          proof: 'password',
+          step: 'password_change',
+          targetUserId: 'user-1',
+        },
       );
       expect(mockVerifyPassword).not.toHaveBeenCalled();
       expect(mockClearRateLimit).not.toHaveBeenCalled();

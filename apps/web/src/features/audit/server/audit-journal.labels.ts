@@ -9,6 +9,7 @@ import type { AuditAction } from '@repo/database';
  */
 export const JOURNAL_ACTION_LABELS: Record<AuditAction, string> = {
   ACCOUNT_LOCKED: 'Compte verrouillé',
+  ATTEMPTS_BLOCKED: 'Tentatives bloquées',
   AUDIT_EXPORT: 'Journal exporté',
   AUDIT_VIEW: 'Journal consulté',
   BACKGROUND_JOB_UPDATE: 'Tâche de fond modifiée',
@@ -83,6 +84,22 @@ export const USER_FIELD_LABELS: ReadonlyArray<readonly [string, string]> = [
   ['role', 'Rôle'],
   ['isActive', 'Compte actif'],
 ];
+
+/** Steps of a « Tentatives bloquées » event, as the rate limiter writes them. */
+export const BLOCKED_ATTEMPT_STEPS: Readonly<Record<string, string>> = {
+  contact_email: 'Changement de l’email de contact',
+  login: 'Connexion',
+  mfa_manage: 'Gestion de la double authentification',
+  mfa_reset: 'Réinitialisation d’une double authentification',
+  mfa_setup: 'Activation de la double authentification',
+  password_change: 'Changement de mot de passe',
+  step_up: 'Confirmation d’identité',
+};
+
+export const BLOCKED_ATTEMPT_PROOFS: Readonly<Record<string, string>> = {
+  code: 'Code de double authentification',
+  password: 'Mot de passe',
+};
 
 export const LOGIN_FAILURE_REASONS: Readonly<Record<string, string>> = {
   ACCOUNT_DISABLED: 'Compte désactivé',

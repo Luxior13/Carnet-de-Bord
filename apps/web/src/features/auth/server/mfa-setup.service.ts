@@ -139,7 +139,12 @@ const proveAuthenticatedSetup = async (
     throw serviceErrors.validation('Le mot de passe actuel est requis');
 
   const reauthKey = `account-reauth:${actor.userId}`;
-  const passwordLimit = await reserveSensitiveActionRateLimit(reauthKey);
+  const passwordLimit = await reserveSensitiveActionRateLimit(reauthKey, {
+    actorUserId: actor.userId,
+    proof: 'password',
+    step: 'mfa_manage',
+    targetUserId: actor.userId,
+  });
   if (!passwordLimit.allowed)
     throw serviceErrors.rateLimited(passwordLimit.retryAfter);
 
@@ -170,7 +175,12 @@ const proveAuthenticatedSetup = async (
       throw serviceErrors.validation('Le code actuel est requis');
 
     const mfaManageKey = `account-mfa-manage:${storedUser.id}`;
-    const mfaLimit = await reserveSensitiveActionRateLimit(mfaManageKey);
+    const mfaLimit = await reserveSensitiveActionRateLimit(mfaManageKey, {
+      actorUserId: storedUser.id,
+      proof: 'code',
+      step: 'mfa_manage',
+      targetUserId: storedUser.id,
+    });
     if (!mfaLimit.allowed) throw serviceErrors.rateLimited(mfaLimit.retryAfter);
     proof = await verifyMfaProof({
       code: proofs.currentCode,
@@ -431,7 +441,13 @@ export const confirmMfaSetup = async (
     challenge.userId,
     tokenHash,
   );
-  const rateLimit = await reserveMfaRateLimits(rateLimitKeys);
+  const rateLimit = await reserveMfaRateLimits(rateLimitKeys, {
+    // The mandatory enrollment happens before any session exists.
+    actorUserId: isMandatoryBootstrap ? null : challenge.userId,
+    proof: 'code',
+    step: 'mfa_setup',
+    targetUserId: challenge.userId,
+  });
   if (!rateLimit.allowed) throw serviceErrors.rateLimited(rateLimit.retryAfter);
 
   const enrollment = challenge.user.totpEnrollment;

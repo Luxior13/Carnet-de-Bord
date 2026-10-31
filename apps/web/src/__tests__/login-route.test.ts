@@ -126,6 +126,12 @@ describe('POST /api/auth/login', () => {
     );
     expect(mocks.reserveLoginRateLimits).toHaveBeenCalledWith(
       LOGIN_RATE_LIMIT_KEYS,
+      {
+        actorUserId: null,
+        loginName: 'user.name',
+        proof: 'password',
+        step: 'login',
+      },
     );
     expect(
       mocks.reserveLoginRateLimits.mock.invocationCallOrder[0],

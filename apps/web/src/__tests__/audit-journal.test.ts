@@ -22,6 +22,7 @@ import {
   DEFAULT_JOURNAL_QUERY,
   isJournalSearchApplicable,
   readJournalQuery,
+  summarizeJournalChanges,
 } from '$features/audit/audit-journal.types';
 import { JOURNAL_ACTION_LABELS } from '$features/audit/server/audit-journal.labels';
 import {
@@ -117,6 +118,38 @@ describe('activity journal query (30 October 2026)', () => {
     expect(isJournalSearchApplicable('al')).toBe(false);
     expect(isJournalSearchApplicable('a.l')).toBe(false);
     expect(isJournalSearchApplicable('ale')).toBe(true);
+  });
+
+  it('names each changed field once on the collapsed line', () => {
+    const change = (
+      label: string,
+      field?: string,
+    ): { after: string; before: string; field?: string; label: string } => ({
+      after: 'b',
+      before: 'a',
+      field,
+      label,
+    });
+
+    expect(summarizeJournalChanges([])).toBeNull();
+    expect(summarizeJournalChanges([change('Prénom'), change('Nom')])).toBe(
+      'Prénom, Nom',
+    );
+    expect(
+      summarizeJournalChanges([
+        change('Coordonnées · Email', 'Email'),
+        change('Coordonnées · Email', 'Email'),
+        change('Coordonnées · Téléphone', 'Téléphone'),
+        change('Identité · Prénom', 'Prénom'),
+      ]),
+    ).toBe('Email, Téléphone, Prénom');
+    expect(
+      summarizeJournalChanges(
+        ['Prénom', 'Nom', 'Pseudo', 'Naissance', 'Statut', 'Email'].map(
+          (label) => change(label),
+        ),
+      ),
+    ).toBe('Prénom, Nom et 4 autres');
   });
 
   it('has a French label for every persisted action', () => {
@@ -224,6 +257,42 @@ describe('activity journal projection', () => {
     });
   });
 
+  it('explains a block of refused attempts with its step, proof and duration', () => {
+    const blocked = projectJournalEvent(
+      row({
+        action: 'ATTEMPTS_BLOCKED',
+        actorDisplayNameSnapshot: null,
+        actorLoginNameSnapshot: null,
+        category: 'AUTH',
+        eventKind: 'CONNECTION',
+        metadata: {
+          blockedForSeconds: 1790,
+          loginName: 'alex.exemple',
+          proof: 'password',
+          step: 'login',
+        },
+        outcome: 'FAILURE',
+        severity: 'WARNING',
+        stream: 'AUTHENTICATION',
+        userId: null,
+      }),
+      getReaderRights(admin),
+      new Map(),
+    );
+
+    expect(blocked).toMatchObject({
+      actor: { id: null, name: 'Aucun compte reconnu' },
+      facts: [
+        { label: 'Étape', value: 'Connexion' },
+        { label: 'Preuve refusée', value: 'Mot de passe' },
+        { label: 'Durée du blocage', value: 'environ 30 min' },
+      ],
+      label: 'Tentatives bloquées',
+      tone: 'failure',
+      typeLabel: 'Sécurité',
+    });
+  });
+
   it('follows the Répertoire rights for a person record and its values', () => {
     const personEvent = row({
       action: 'PERSON_UPDATE',
@@ -297,11 +366,13 @@ describe('activity journal projection', () => {
       {
         after: 'Hors structure',
         before: 'Dans la structure',
+        field: 'Rattachement',
         label: 'Structure · Rattachement',
       },
       {
         after: 'Valeur effacée',
         before: 'Valeur effacée',
+        field: 'Email',
         label: 'Coordonnées · Email',
       },
     ]);

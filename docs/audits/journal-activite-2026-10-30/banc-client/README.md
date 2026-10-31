@@ -20,7 +20,8 @@ captures et `observations.json` sont écrits dans le dossier temporaire affiché
 | Scénario | Largeurs | Vérifie |
 | --- | --- | --- |
 | `liste` | 1 440, 768, 390, 320 | 50 lignes, total annoncé, titre, lignes de 44 px au moins, aucun débordement |
-| `detail-et-filtre-auteur` | 1 440 | Ligne dépliée : tableau des changements, « Adresse masquée », lien de fiche ; « Filtrer sur cet auteur » dans l’URL, puce retirée |
+| `nombreux-changements` | 1 440, 390 | Fiche à 14 changements : « Prénom, Nom et 9 autres » sur la ligne, changements avant les faits, 6 lignes puis « Afficher les 8 autres changements », 14 lignes, focus gardé sur « Afficher moins » (31 octobre 2026) |
+| `detail-et-filtre-auteur` | 1 440 | Champs résumés sur la ligne (aucun pour un paramètre) ; ligne dépliée : tableau des changements, « Adresse masquée », lien de fiche ; « Filtrer sur cet auteur » dans l’URL, puce retirée |
 | `filtres-rapides-et-periode` | 1 440 | Sécurité, Échecs, période 30 jours dans l’URL et la requête ; réinitialisation et focus sur la recherche |
 | `recherche-trois-caracteres` | 1 440 | Deux lettres : consigne, aucune requête ; trois : recherche appliquée |
 | `pagination-instantane` | 1 440 | Page 2 avec l’instantané de la page 1 ; « Actualiser » repart sans instantané |
@@ -28,6 +29,13 @@ captures et `observations.json` sont écrits dans le dossier temporaire affiché
 | `vide`, `erreur-et-reprise`, `acces-refuse` | 390 | État vide, erreur puis reprise, refus sans requête |
 
 ## Résultat
+
+14/14 le 31 octobre 2026 après la retouche du bloc déplié (couleurs, résumé
+des champs, changements en tête, « Afficher les N autres changements ») ;
+captures relues à 1 440 et 390 px. Un doublon trouvé et corrigé : le résumé
+répétait le nom d’un paramètre déjà présent dans la colonne voisine.
+
+Premier passage :
 
 12/12 le 30 octobre 2026. Captures relues à 1 440, 768 et 390 px : colonnes
 alignées sur grand écran, lignes empilées sur téléphone, mention d’importance

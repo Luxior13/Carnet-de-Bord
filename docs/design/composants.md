@@ -65,6 +65,13 @@ affichent un panneau avec des lignes sélectionnables.
 | Précédent et suivant, avec curseur ou numéro de page | [ListPagination](../../apps/web/src/components/ui/pagination.tsx) | Fournir `canPrevious`, `canNext`, page et total de pages seulement s’il est connu. Gérer chargement, curseurs et retour vers une page accessible ; la primitive ne les invente pas. |
 | Accès direct à des pages numérotées connues | [Pagination](../../apps/web/src/components/ui/pagination.tsx) | Fournir des bornes et totaux fiables. Conserver cette variante uniquement lorsque le contrat permet effectivement le saut de page. |
 
+Une liste à lignes dépliables (journal d’activité) garde le détail en place,
+même long : la ligne fermée résume son contenu sans répéter une colonne
+voisine, le plus important ouvre le détail, et au-delà de six éléments un
+bouton « Afficher les N autres… » (`aria-expanded`, devient « Afficher moins »
+et garde le focus) montre le reste ; un seul élément de plus s’affiche
+directement. Couleurs du bloc ouvert : [fondations](fondations.md#hiérarchie-de-couleurs).
+
 Les listes Répertoire et Utilisateurs partagent recherche et pagination.
 Leurs contrats de requête restent distincts. Un total, une recherche serveur,
 une sélection multiple ou une virtualisation se justifient par un besoin réel,

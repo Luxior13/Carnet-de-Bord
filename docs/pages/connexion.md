@@ -109,6 +109,18 @@ Le premier enregistrement du profil réussit ainsi sans conflit artificiel.
 Régression de route/service et parcours Next/PostgreSQL vérifiés ; cette preuve
 complète l'audit Connexion précédent sans en réécrire les résultats datés.
 
+## Traces dans le journal
+
+Selon la [règle Q15](../references/audit-historique.md) (31 octobre 2026) :
+
+| Action | Événement |
+| --- | --- |
+| Connexion réussie (mot de passe puis code ou code de secours) | `LOGIN_SUCCESS`, plus `MFA_RECOVERY_CODE_USED` pour un code de secours |
+| Mot de passe ou code refusé | `LOGIN_FAILED` avec son motif ; auteur « Aucun compte reconnu » |
+| Trop d’essais : la limitation de débit refuse | `ATTEMPTS_BLOCKED` « Tentatives bloquées », une fois par blocage, compte visé retrouvé depuis l’identifiant saisi |
+| Activation obligatoire de la double authentification | `MFA_ENABLED` ; un blocage du code donne `ATTEMPTS_BLOCKED` |
+| Déconnexion | `LOGOUT` |
+
 ## Questions pour une modification
 
 Examiner Q01–Q04, Q06–Q07, Q09–Q11, Q14, Q27 et Q28 selon les effets ; Q30 si

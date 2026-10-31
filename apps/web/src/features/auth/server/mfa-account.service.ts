@@ -90,7 +90,12 @@ export const regenerateRecoveryCodes = async (input: {
   }
 
   const reauthKey = `account-reauth:${storedUser.id}`;
-  const passwordLimit = await reserveSensitiveActionRateLimit(reauthKey);
+  const passwordLimit = await reserveSensitiveActionRateLimit(reauthKey, {
+    actorUserId: storedUser.id,
+    proof: 'password',
+    step: 'mfa_manage',
+    targetUserId: storedUser.id,
+  });
   if (!passwordLimit.allowed)
     throw serviceErrors.rateLimited(passwordLimit.retryAfter);
   if (!(await verifyPassword(input.currentPassword, storedUser.passwordHash)))
@@ -98,7 +103,12 @@ export const regenerateRecoveryCodes = async (input: {
   await clearRateLimit(reauthKey);
 
   const mfaManageKey = `account-mfa-manage:${storedUser.id}`;
-  const mfaLimit = await reserveSensitiveActionRateLimit(mfaManageKey);
+  const mfaLimit = await reserveSensitiveActionRateLimit(mfaManageKey, {
+    actorUserId: storedUser.id,
+    proof: 'code',
+    step: 'mfa_manage',
+    targetUserId: storedUser.id,
+  });
   if (!mfaLimit.allowed) throw serviceErrors.rateLimited(mfaLimit.retryAfter);
   const proof = await verifyMfaProof({
     code: input.currentTotpCode,

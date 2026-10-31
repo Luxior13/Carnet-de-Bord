@@ -88,8 +88,16 @@ export const resetUserMfaForActor = async (input: {
     );
 
   const passwordRateLimitKey = `admin-mfa-reset-password:${actorRow.id}`;
-  const passwordLimit =
-    await reserveSensitiveActionRateLimit(passwordRateLimitKey);
+  // The administrator's own proof is refused: they are actor and target.
+  const passwordLimit = await reserveSensitiveActionRateLimit(
+    passwordRateLimitKey,
+    {
+      actorUserId: actorRow.id,
+      proof: 'password',
+      step: 'mfa_reset',
+      targetUserId: actorRow.id,
+    },
+  );
   if (!passwordLimit.allowed)
     throw serviceErrors.rateLimited(passwordLimit.retryAfter);
   if (!(await verifyPassword(input.currentPassword, actorRow.passwordHash)))
@@ -97,7 +105,12 @@ export const resetUserMfaForActor = async (input: {
   await clearRateLimit(passwordRateLimitKey);
 
   const totpRateLimitKey = `admin-mfa-reset-totp:${actorRow.id}`;
-  const totpLimit = await reserveSensitiveActionRateLimit(totpRateLimitKey);
+  const totpLimit = await reserveSensitiveActionRateLimit(totpRateLimitKey, {
+    actorUserId: actorRow.id,
+    proof: 'code',
+    step: 'mfa_reset',
+    targetUserId: actorRow.id,
+  });
   if (!totpLimit.allowed) throw serviceErrors.rateLimited(totpLimit.retryAfter);
   const proof = await verifyMfaProof({
     code: input.currentTotpCode,

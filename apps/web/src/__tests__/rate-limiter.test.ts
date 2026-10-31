@@ -1,25 +1,40 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
+  auditLog: vi.fn(),
+  loggerError: vi.fn(),
   queryRaw: vi.fn(),
   rateLimitDeleteMany: vi.fn(),
   rateLimitFindUnique: vi.fn(),
   rateLimitUpdateMany: vi.fn(),
+  reportQueryRaw: vi.fn(),
   transaction: vi.fn(),
   transactionRollback: vi.fn(),
+  userFindFirst: vi.fn(),
 }));
 
 vi.mock('server-only', () => ({}));
 
 vi.mock('$server/prisma', () => ({
   prisma: {
+    // Outside a transaction: only the block report claims use it.
+    $queryRaw: mocks.reportQueryRaw,
     $transaction: mocks.transaction,
     rateLimit: {
       deleteMany: mocks.rateLimitDeleteMany,
       findUnique: mocks.rateLimitFindUnique,
       updateMany: mocks.rateLimitUpdateMany,
     },
+    user: { findFirst: mocks.userFindFirst },
   },
+}));
+
+vi.mock('$server/audit-log', () => ({
+  createAuditLogWithHeaders: mocks.auditLog,
+}));
+
+vi.mock('$server/logger', () => ({
+  logger: { error: mocks.loggerError },
 }));
 
 import {
@@ -32,6 +47,25 @@ import {
   reserveSensitiveActionRateLimit,
 } from '$server/rate-limiter';
 
+const LOGIN_REPORT = {
+  actorUserId: null,
+  loginName: 'Member.One',
+  proof: 'password',
+  step: 'login',
+} as const;
+const REAUTH_REPORT = {
+  actorUserId: 'user-1',
+  proof: 'password',
+  step: 'contact_email',
+  targetUserId: 'user-1',
+} as const;
+const MFA_REPORT = {
+  actorUserId: null,
+  proof: 'code',
+  step: 'login',
+  targetUserId: 'user-1',
+} as const;
+
 describe('login rate limiter', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -41,6 +75,12 @@ describe('login rate limiter', () => {
     mocks.rateLimitDeleteMany.mockResolvedValue({ count: 0 });
     mocks.rateLimitFindUnique.mockResolvedValue(null);
     mocks.rateLimitUpdateMany.mockResolvedValue({ count: 0 });
+    // The first refusal of a block claims its one-slot report bucket.
+    mocks.reportQueryRaw.mockResolvedValue([
+      { blockedUntil: new Date('2026-07-14T12:10:00.000Z'), count: 1 },
+    ]);
+    mocks.userFindFirst.mockResolvedValue({ id: 'user-1' });
+    mocks.auditLog.mockResolvedValue(undefined);
     mocks.transaction.mockImplementation(
       async (
         callback: (client: {
@@ -132,7 +172,7 @@ describe('login rate limiter', () => {
   it('reserves all three MFA buckets in one transaction', async () => {
     const keys = createMfaRateLimitKeys('203.0.113.7', 'user-1', 'challenge-1');
 
-    const result = await reserveMfaRateLimits(keys);
+    const result = await reserveMfaRateLimits(keys, MFA_REPORT);
 
     expect(result).toEqual({ allowed: true, remainingAttempts: 4 });
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
@@ -142,7 +182,7 @@ describe('login rate limiter', () => {
   it('reserves all login buckets in one transaction before bcrypt', async () => {
     const keys = createLoginRateLimitKeys('203.0.113.7', 'member.one');
 
-    const result = await reserveLoginRateLimits(keys);
+    const result = await reserveLoginRateLimits(keys, LOGIN_REPORT);
 
     expect(result).toEqual({
       allowed: true,
@@ -182,7 +222,7 @@ describe('login rate limiter', () => {
         },
       ]);
 
-    const result = await reserveLoginRateLimits(keys);
+    const result = await reserveLoginRateLimits(keys, LOGIN_REPORT);
 
     expect(result).toEqual({ allowed: true, remainingAttempts: 0 });
   });
@@ -197,7 +237,7 @@ describe('login rate limiter', () => {
         { blockedUntil: new Date('2026-07-14T12:30:00.000Z'), count: 5 },
       ]);
 
-    await reserveLoginRateLimits(keys);
+    await reserveLoginRateLimits(keys, LOGIN_REPORT);
 
     // The pair blocks at five (30 minutes); the account only at twenty, for
     // one 15-minute window, so a single source can never block the account.
@@ -219,7 +259,7 @@ describe('login rate limiter', () => {
         },
       ]);
 
-    const result = await reserveLoginRateLimits(keys);
+    const result = await reserveLoginRateLimits(keys, LOGIN_REPORT);
 
     expect(result).toEqual({
       allowed: false,
@@ -249,7 +289,7 @@ describe('login rate limiter', () => {
       ])
       .mockResolvedValueOnce([{ blockedUntil: null, count: 1 }]);
 
-    const result = await reserveLoginRateLimits(keys);
+    const result = await reserveLoginRateLimits(keys, LOGIN_REPORT);
 
     expect(result).toEqual({
       allowed: false,
@@ -271,6 +311,7 @@ describe('login rate limiter', () => {
   it('atomically reserves one sensitive password check', async () => {
     const result = await reserveSensitiveActionRateLimit(
       'account-reauth:user-1',
+      REAUTH_REPORT,
     );
 
     expect(result).toEqual({ allowed: true, remainingAttempts: 4 });
@@ -294,6 +335,7 @@ describe('login rate limiter', () => {
 
     const result = await reserveSensitiveActionRateLimit(
       'account-reauth:user-1',
+      REAUTH_REPORT,
     );
 
     expect(result).toEqual({
@@ -303,6 +345,100 @@ describe('login rate limiter', () => {
     });
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
     expect(mocks.queryRaw).toHaveBeenCalledTimes(2);
+  });
+
+  it('reports the first refusal of a block in the activity journal', async () => {
+    const keys = createLoginRateLimitKeys('203.0.113.7', 'member.one');
+    mocks.queryRaw
+      .mockResolvedValueOnce([{ blockedUntil: null, count: 1 }])
+      .mockResolvedValueOnce([{ blockedUntil: null, count: 1 }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([
+        {
+          blockedUntil: new Date('2026-07-14T12:10:00.000Z'),
+          firstAttempt: new Date('2026-07-14T11:59:00.000Z'),
+        },
+      ]);
+
+    await reserveLoginRateLimits(keys, LOGIN_REPORT);
+
+    // One claim for the refused pair bucket, lasting until it unblocks.
+    expect(mocks.reportQueryRaw).toHaveBeenCalledTimes(1);
+    const [claimSql, ...claimValues] = mocks.reportQueryRaw.mock.calls[0] ?? [];
+    expect((claimSql as readonly string[]).join('')).toContain(
+      'ON CONFLICT ("key") DO UPDATE',
+    );
+    const claimKey = claimValues.find(
+      (value) =>
+        typeof value === 'string' && value.startsWith('blocked-report:'),
+    );
+    expect(claimKey).toBeDefined();
+    expect(claimKey).not.toContain(keys.pair);
+    expect(mocks.userFindFirst).toHaveBeenCalledWith({
+      select: { id: true },
+      where: { deletedAt: null, loginName: 'member.one' },
+    });
+    expect(mocks.auditLog).toHaveBeenCalledTimes(1);
+    expect(mocks.auditLog).toHaveBeenCalledWith({
+      action: 'ATTEMPTS_BLOCKED',
+      category: 'AUTH',
+      description: 'Tentatives bloquées: Member.One',
+      metadata: expect.objectContaining({
+        blockedForSeconds: 600,
+        loginName: 'Member.One',
+        proof: 'password',
+        step: 'login',
+      }),
+      targetUserId: 'user-1',
+      userId: null,
+    });
+  });
+
+  it('writes nothing more while the same block is already reported', async () => {
+    mocks.queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        blockedUntil: new Date('2026-07-14T12:10:00.000Z'),
+        firstAttempt: new Date('2026-07-14T11:59:00.000Z'),
+      },
+    ]);
+    // The report bucket is already taken: its UPSERT returns no row.
+    mocks.reportQueryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        blockedUntil: new Date('2026-07-14T12:10:00.000Z'),
+        firstAttempt: new Date('2026-07-14T11:58:00.000Z'),
+      },
+    ]);
+
+    const result = await reserveSensitiveActionRateLimit(
+      'account-reauth:user-1',
+      REAUTH_REPORT,
+    );
+
+    expect(result.allowed).toBe(false);
+    expect(mocks.auditLog).not.toHaveBeenCalled();
+    expect(mocks.userFindFirst).not.toHaveBeenCalled();
+  });
+
+  it('still refuses when the block report cannot be written', async () => {
+    mocks.queryRaw.mockResolvedValueOnce([]).mockResolvedValueOnce([
+      {
+        blockedUntil: new Date('2026-07-14T12:10:00.000Z'),
+        firstAttempt: new Date('2026-07-14T11:59:00.000Z'),
+      },
+    ]);
+    mocks.auditLog.mockRejectedValueOnce(new Error('database unavailable'));
+
+    const result = await reserveSensitiveActionRateLimit(
+      'account-reauth:user-1',
+      REAUTH_REPORT,
+    );
+
+    expect(result).toEqual({
+      allowed: false,
+      remainingAttempts: 0,
+      retryAfter: 600,
+    });
+    expect(mocks.loggerError).toHaveBeenCalledTimes(1);
   });
 
   it('releases exactly one reservation from every bucket on success', async () => {

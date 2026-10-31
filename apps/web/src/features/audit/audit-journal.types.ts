@@ -72,7 +72,28 @@ export type JournalTone = 'critical' | 'failure' | 'neutral' | 'warning';
 export type JournalChange = {
   after: string;
   before: string;
+  /** Field alone, when `label` also names its section (« Email »). */
+  field?: string;
   label: string;
+};
+
+/** Changes shown before « Afficher les N autres changements ». */
+export const JOURNAL_VISIBLE_CHANGES = 6;
+
+/**
+ * The changed fields, each named once, for the collapsed line (31 October
+ * 2026): « Prénom, Nom, Email », then « Prénom, Nom et 4 autres ».
+ */
+export const summarizeJournalChanges = (
+  changes: readonly JournalChange[],
+): string | null => {
+  const names = [
+    ...new Set(changes.map((change) => change.field ?? change.label)),
+  ];
+  if (names.length === 0) return null;
+  if (names.length <= 3) return names.join(', ');
+
+  return `${names.slice(0, 2).join(', ')} et ${names.length - 2} autres`;
 };
 
 export type JournalFact = {

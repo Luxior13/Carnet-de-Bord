@@ -290,6 +290,23 @@ describe.skipIf(!target)(
           where: { action: 'ACCOUNT_LOCKED', targetUserId: user.id },
         }),
       ).toBe(0);
+      // 31 October 2026: the block reaches the activity journal once, however
+      // many refusals follow while it lasts.
+      expect(
+        (await login(request('login', { loginName: user.loginName, password })))
+          .status,
+      ).toBe(429);
+      const reports = await db.auditLog.findMany({
+        where: { action: 'ATTEMPTS_BLOCKED', targetUserId: user.id },
+      });
+      expect(reports).toHaveLength(1);
+      expect(reports[0]).toMatchObject({
+        metadata: expect.objectContaining({ proof: 'password', step: 'login' }),
+        outcome: 'FAILURE',
+        severity: 'WARNING',
+        stream: 'AUTHENTICATION',
+        userId: null,
+      });
       const keys = createLoginRateLimitKeys(null, user.loginName);
       expect(
         await db.rateLimit.findUnique({ where: { key: keys.pair } }),

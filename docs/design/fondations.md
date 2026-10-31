@@ -146,6 +146,13 @@ et leur survol `surface-row-hover`. Les champs utilisent `surface-inset`.
 Le bandeau d'identité compose `surface-hero-start` et `surface-hero-end` avec
 `border-hero`. La sidebar réutilise `surface-content` et `border-content`.
 
+Une ligne dépliée d’une liste et son détail forment un seul bloc en
+`surface-row-alternate` : un cran au-dessus de la liste, sous sa barre de
+filtres, avec un filet `border-strong` de 2 px à gauche. `surface-row-hover`,
+la teinte la plus claire d’une liste, reste le survol et la sélection d’une
+ligne ; elle ne colore jamais un bloc de contenu, qui dominerait sinon la page
+(préférence du 31 octobre 2026, [journal d’activité](../pages/systeme/journal-activite.md)).
+
 Les éléments de navigation sélectionnés utilisent un bleu ardoise proche des
 panneaux, avec une bordure fine `border-strong/60` pour délimiter le pôle et la
 page actifs. Contrôler le contraste sur les fonds réellement rendus.

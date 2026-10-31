@@ -93,7 +93,12 @@ export const startPasswordLogin = async (input: {
     input.clientIp ?? 'unknown',
     input.loginName,
   );
-  const rateLimit = await reserveLoginRateLimits(rateLimitKeys);
+  const rateLimit = await reserveLoginRateLimits(rateLimitKeys, {
+    actorUserId: null,
+    loginName: input.loginName,
+    proof: 'password',
+    step: 'login',
+  });
   if (!rateLimit.allowed) throw serviceErrors.rateLimited(rateLimit.retryAfter);
 
   const result = await authenticateUser(input.loginName, input.password);
@@ -194,7 +199,12 @@ export const completeMfaLogin = async (input: {
     challenge.userId,
     tokenHash,
   );
-  const rateLimit = await reserveMfaRateLimits(rateLimitKeys);
+  const rateLimit = await reserveMfaRateLimits(rateLimitKeys, {
+    actorUserId: null,
+    proof: 'code',
+    step: 'login',
+    targetUserId: challenge.userId,
+  });
   if (!rateLimit.allowed) throw serviceErrors.rateLimited(rateLimit.retryAfter);
 
   const proof = await verifyMfaProof({

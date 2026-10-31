@@ -39,7 +39,12 @@ export const updateOwnContactEmail = async (
   },
 ): Promise<UserType> => {
   const rateLimitKey = `account-reauth:${userId}`;
-  const rateLimit = await reserveSensitiveActionRateLimit(rateLimitKey);
+  const rateLimit = await reserveSensitiveActionRateLimit(rateLimitKey, {
+    actorUserId: userId,
+    proof: 'password',
+    step: 'contact_email',
+    targetUserId: userId,
+  });
   if (!rateLimit.allowed) throw serviceErrors.rateLimited(rateLimit.retryAfter);
 
   const storedUser = await prisma.user.findUnique({

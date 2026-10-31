@@ -253,6 +253,12 @@ describe('PATCH /api/auth/contact-email', () => {
     expect(body.error.code).toBe(ErrorCode.RATE_LIMITED);
     expect(mocks.reserveRateLimit).toHaveBeenCalledWith(
       'account-reauth:user-1',
+      {
+        actorUserId: 'user-1',
+        proof: 'password',
+        step: 'contact_email',
+        targetUserId: 'user-1',
+      },
     );
     expect(mocks.userFindUnique).not.toHaveBeenCalled();
     expect(mocks.verifyPassword).not.toHaveBeenCalled();

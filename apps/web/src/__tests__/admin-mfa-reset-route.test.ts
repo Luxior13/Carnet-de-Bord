@@ -255,6 +255,12 @@ describe('POST /api/users/[id]/reset-mfa', () => {
     expect(response.status).toBe(200);
     expect(mocks.reserveSensitiveActionRateLimit).toHaveBeenCalledWith(
       'admin-mfa-reset-password:admin-user',
+      {
+        actorUserId: 'admin-user',
+        proof: 'password',
+        step: 'mfa_reset',
+        targetUserId: 'admin-user',
+      },
     );
     expect(mocks.createAuditLogWithHeaders).toHaveBeenCalledWith(
       expect.objectContaining({

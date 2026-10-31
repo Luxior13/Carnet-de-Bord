@@ -49,6 +49,12 @@ Liste de contrôle pour toute nouvelle mutation :
    un nouveau domaine, la suite `audit-journal-postgres`.
 8. **Fiche de la page** : rubrique « Traces dans le journal » listant les
    actions écrites (modèle de [fiche de page](../methode/modeles/suivi-page.md)).
+9. **Mot de passe ou code redemandé** : passer par le limiteur
+   (`reserveSensitiveActionRateLimit`, `reserveLoginRateLimits`,
+   `reserveMfaRateLimits` de `shared/server/rate-limiter.ts`) avec son
+   `BlockedAttemptReport`, exigé par la signature : le blocage écrit alors seul
+   « Tentatives bloquées ». Une nouvelle étape s’ajoute à la liste fermée du
+   limiteur et à `BLOCKED_ATTEMPT_STEPS` du journal.
 
 ### État au 31 octobre 2026
 
@@ -57,6 +63,7 @@ Relevé du code (routes `app/api` et services `features/*/server`) :
 | Page ou module | Actions tracées |
 | --- | --- |
 | Connexion et déconnexion | `LOGIN_SUCCESS`, `LOGIN_FAILED` (motif), `LOGOUT`, `MFA_RECOVERY_CODE_USED` |
+| Tout mot de passe ou code refusé par le limiteur | `ATTEMPTS_BLOCKED` « Tentatives bloquées » (étape, preuve, durée), une fois par blocage |
 | Confirmation d’identité avant une action sensible | `STEP_UP_SUCCESS`, `STEP_UP_FAILED` |
 | Mon compte | `USER_UPDATE` (profil, email de contact), `PASSWORD_CHANGE`, `MFA_ENABLED`, `MFA_RECOVERY_CODES_REGENERATED`, `SESSION_INVALIDATE` |
 | Utilisateurs et fiche utilisateur | `USER_CREATE`, `USER_UPDATE`, `USER_ACTIVATE` / `USER_DEACTIVATE`, `PERMISSION_UPDATE`, `PASSWORD_RESET`, `MFA_RESET`, `SESSION_INVALIDATE`, `USER_DELETE` |
@@ -67,11 +74,18 @@ Relevé du code (routes `app/api` et services `features/*/server`) :
 
 Toutes les mutations livrées écrivent leur trace. Points relevés :
 
-- **Tentatives de connexion refusées par la limitation de débit** : refusées
-  avant la vérification du mot de passe, elles ne laissent aucune trace. Les
-  échecs qui précèdent le blocage sont tracés. *Proposition à discuter* : une
-  trace « Connexion bloquée » au premier refus de chaque fenêtre, sans en
-  écrire une par tentative.
+- **Tentatives refusées par la limitation de débit** : **corrigé le 31 octobre
+  2026** (« ok go » du propriétaire). Elles ne laissaient aucune trace ; chaque
+  blocage écrit désormais une seule `ATTEMPTS_BLOCKED` (migration
+  `20261031120000_audit_attempts_blocked`). La connexion (mot de passe et
+  code), l’activation de la double authentification et les sept vérifications
+  d’un compte connecté (confirmation d’identité, mot de passe, email de
+  contact, gestion et réinitialisation de la double authentification) sont
+  couvertes. Le premier refus de chaque compteur bloqué réserve un compteur de
+  signalement d’une place, valable jusqu’au déblocage : les refus parallèles
+  ne l’écrivent qu’une fois, un nouveau blocage est signalé de nouveau.
+  Écriture sans effet sur la réponse : un échec de trace ne change pas le 429.
+  `ACCOUNT_LOCKED` n’est pas réutilisé : aucun compte n’est verrouillé (REV-01).
 - **Actions réservées sans producteur** : `ACCOUNT_LOCKED` (aucun compte n’est
   verrouillé, seule la limitation de débit freine), `MFA_DISABLED` (pas de
   désactivation volontaire, seule la réinitialisation par un administrateur),

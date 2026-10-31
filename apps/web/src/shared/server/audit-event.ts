@@ -56,6 +56,12 @@ const AUDIT_EVENT_CLASSIFICATIONS = {
     AuditOutcome.FAILURE,
     AuditSeverity.WARNING,
   ),
+  // A password or code check refused by the rate limiter (31 October 2026):
+  // one event per block, written by the limiter itself.
+  [AuditAction.ATTEMPTS_BLOCKED]: connection(
+    AuditOutcome.FAILURE,
+    AuditSeverity.WARNING,
+  ),
   [AuditAction.AUDIT_EXPORT]: activity(
     AuditStream.SYSTEM,
     AuditSeverity.CRITICAL,
