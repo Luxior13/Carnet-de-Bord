@@ -213,6 +213,20 @@ describe('activity journal projection', () => {
     });
   });
 
+  it('links an account only for a reader who may open its page', () => {
+    const event = row({});
+
+    expect(
+      projectJournalEvent(event, getReaderRights(admin), new Map()).target,
+    ).toMatchObject({
+      href: expect.stringContaining('/systeme/utilisateurs/'),
+    });
+    // The auditor holds audit:view alone: the account stays named, unlinked.
+    expect(
+      projectJournalEvent(event, getReaderRights(auditor), new Map()).target,
+    ).toMatchObject({ href: null, kind: 'user', name: 'Alex Exemple' });
+  });
+
   it('names granted and revoked permissions and the reason of a failed login', () => {
     const permissions = projectJournalEvent(
       row({

@@ -191,8 +191,17 @@ Livrée telle que cadrée, avec ces écarts, tous vérifiés :
 | Requêtes de conteneur | Sans nom (`@container (min-width: 44rem)`) | Un module CSS peut renommer un nom de conteneur (constaté avec esbuild) |
 | Fiches | Lien « Historique » dans l’en-tête de la fiche utilisateur et de la fiche personne : journal sur 1 an filtré sur ce compte ou cette fiche ; absent pour le compte protégé vu par un autre | Remplace la provenance retirée le 27 octobre |
 
+**Modèle de lecture, confirmé par le propriétaire le 31 octobre 2026** (« ok go ») :
+`audit:view` montre **tous les événements**, de tous les types, avec les noms
+de l’auteur et du compte concerné ; les autres droits du lecteur ne règlent que
+les **valeurs** et les **liens** du détail. Un journal limité à ce que le lecteur
+peut déjà consulter laisserait des actions hors de sa surveillance ; la
+permission est critique (double authentification) et chaque lecture est tracée.
+
 **Droits, vérifiés par les tests** : le compte protégé et ses événements sont
-exclus pour tout autre lecteur ; l’IP n’est servie qu’au superadmin ;
+exclus pour tout autre lecteur ; lien « Ouvrir le compte » seulement avec
+`users:view` (corrigé le 31 octobre 2026 : il menait à une page refusée), comme
+« Ouvrir la fiche » avec `persons:view` ; l’IP n’est servie qu’au superadmin ;
 coordonnées et réseaux d’une fiche en clair seulement avec
 `persons:view_contact`, identité et rattachement avec `persons:view` (sinon
 « Valeur masquée », nom « Fiche du répertoire ») ; email de contact d’un compte

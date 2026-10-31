@@ -53,6 +53,7 @@ type ReaderRights = {
   canViewPersonContacts: boolean;
   canViewPersons: boolean;
   canViewUserContacts: boolean;
+  canViewUsers: boolean;
   isProtected: boolean;
 };
 
@@ -64,6 +65,7 @@ export const getReaderRights = (reader: JournalReader): ReaderRights => {
     canViewPersonContacts: can(PERMISSIONS.PERSONS.VIEW_CONTACT),
     canViewPersons: can(PERMISSIONS.PERSONS.VIEW),
     canViewUserContacts: can(PERMISSIONS.USERS.VIEW_CONTACT),
+    canViewUsers: can(PERMISSIONS.USERS.VIEW),
     isProtected: reader.isProtected,
   };
 };
@@ -293,7 +295,8 @@ export const projectJournalEvent = (
         }
       : row.targetUserId
         ? {
-            href: userDetailPath(row.targetUserId),
+            // Same rule as a record: no link to a page the reader cannot open.
+            href: rights.canViewUsers ? userDetailPath(row.targetUserId) : null,
             id: row.targetUserId,
             kind: 'user',
             name:

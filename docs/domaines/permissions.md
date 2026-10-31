@@ -375,7 +375,7 @@ pas en droits délégables individuellement.
 | `/systeme/utilisateurs/[id]?section=account`  | `users:view_account_policy` pour lire ; `users:update_account_policy` pour modifier                                                                        |
 | `/systeme/utilisateurs/[id]?section=history` | ancien onglet normalisé vers Profil ; aucun endpoint d'activité, aucune capacité active |
 | `/systeme/parametres`                                | `settings:view` pour lire ; `settings:update` pour modifier ; droits exclusivement liés au rôle ADMIN                                                      |
-| `/systeme/journal-activite`                          | `audit:view` (critique, délégable ; ADMIN par la règle du rôle) ; IP réservée au superadmin, valeurs des fiches selon `persons:view` / `persons:view_contact`, email de compte selon `users:view_contact` ; lecture tracée (`AUDIT_VIEW`) |
+| `/systeme/journal-activite`                          | `audit:view` (critique, délégable ; ADMIN par la règle du rôle) ; tous les événements visibles, seuls valeurs et liens suivent les autres droits (31 octobre 2026) : IP réservée au superadmin, valeurs des fiches selon `persons:view` / `persons:view_contact`, email de compte selon `users:view_contact`, lien vers un compte selon `users:view` ; lecture tracée (`AUDIT_VIEW`) |
 | pages d'erreur et page introuvable                   | support technique, sans capacité métier accordée                                                                                                           |
 
 Les routes génériques présentes pour les pôles Vie interne, Bureau & juridique,
